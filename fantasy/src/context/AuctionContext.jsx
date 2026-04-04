@@ -55,13 +55,35 @@ export function AuctionProvider({ children }) {
     setBids(data ?? []);
   }
 
-  // Returns highest bid for a given player in the current round
+  // Returns highest bid for a given player in the current round.
+  // Tie-break: earliest created_at wins (first bidder).
   function getHighestBid(playerId) {
     const playerBids = bids.filter(
       (b) => b.player_id === playerId && b.round_number === auctionState?.current_round
     );
     if (!playerBids.length) return null;
-    return playerBids.reduce((max, b) => (b.bid_amount > max.bid_amount ? b : max));
+    return playerBids.sort((a, b) =>
+      a.bid_amount !== b.bid_amount
+        ? b.bid_amount - a.bid_amount
+        : new Date(a.created_at) - new Date(b.created_at)
+    )[0];
+  }
+
+  // Place a bid. Enforces max 10 active bids per user per round.
+  async function placeBid(playerId, amount, userId) {
+    const activeBids = bids.filter(
+      (b) => b.user_id === userId && b.round_number === auctionState?.current_round
+    );
+    if (activeBids.length >= 10) {
+      return { error: 'You already have 10 active bids this round.' };
+    }
+    const { data, error } = await supabase.from('auction_bids').insert({
+      user_id: userId,
+      player_id: playerId,
+      bid_amount: amount,
+      round_number: auctionState?.current_round,
+    });
+    return { data, error };
   }
 
   const value = {
@@ -69,6 +91,7 @@ export function AuctionProvider({ children }) {
     bids,
     loading,
     getHighestBid,
+    placeBid,
     refreshBids: fetchBids,
   };
 
