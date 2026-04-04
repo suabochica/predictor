@@ -69,6 +69,48 @@ export function AuctionProvider({ children }) {
     )[0];
   }
 
+  // ── Admin controls ──────────────────────────────────────────────────────────
+
+  async function updateAuctionState(updates) {
+    const { error } = await supabase
+      .from('auction_state')
+      .update(updates)
+      .eq('id', auctionState.id);
+    return { error };
+  }
+
+  async function startAuction() {
+    return updateAuctionState({
+      status: 'active',
+      current_round: 1,
+      round_started_at: new Date().toISOString(),
+    });
+  }
+
+  async function pauseAuction() {
+    return updateAuctionState({ status: 'paused' });
+  }
+
+  async function resumeAuction() {
+    return updateAuctionState({
+      status: 'active',
+      round_started_at: new Date().toISOString(),
+    });
+  }
+
+  async function completeAuction() {
+    return updateAuctionState({ status: 'completed' });
+  }
+
+  async function nextRound() {
+    return updateAuctionState({
+      current_round: auctionState.current_round + 1,
+      round_started_at: new Date().toISOString(),
+    });
+  }
+
+  // ── Bidding ─────────────────────────────────────────────────────────────────
+
   // Place a bid. Enforces max 10 active bids per user per round.
   async function placeBid(playerId, amount, userId) {
     const activeBids = bids.filter(
@@ -92,6 +134,11 @@ export function AuctionProvider({ children }) {
     loading,
     getHighestBid,
     placeBid,
+    startAuction,
+    pauseAuction,
+    resumeAuction,
+    completeAuction,
+    nextRound,
     refreshBids: fetchBids,
   };
 
