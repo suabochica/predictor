@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { AUCTION_STATUSES } from '../config/constants';
@@ -27,9 +28,13 @@ export default function Admin() {
     resumeAuction,
     completeAuction,
     nextRound,
+    resolveRound,
   } = useAuction();
 
   const { players, loading: playersLoading } = usePlayers();
+  const [confirming, setConfirming] = useState(false);
+  const [resolving, setResolving]   = useState(false);
+  const [resolveErrors, setResolveErrors] = useState([]);
 
   if (loading) {
     return <div className="text-gray-400 p-6">Loading auction state…</div>;
@@ -50,6 +55,33 @@ export default function Admin() {
 
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const biddedPlayerIds  = [...new Set(currentRoundBids.map((b) => b.player_id))];
+
+  // Build winner summary for the confirmation panel
+  const winnersPreview = biddedPlayerIds.map((playerId) => {
+    const highBid = getHighestBid(playerId);
+    return {
+      playerId,
+      playerName: highBid?.players?.name ?? `Player #${playerId}`,
+      position:   highBid?.players?.position ?? '—',
+      winnerName: highBid?.users?.display_name ?? '?',
+      amount:     highBid?.bid_amount ?? 0,
+      bidCount:   currentRoundBids.filter((b) => b.player_id === playerId).length,
+    };
+  });
+
+  async function handleResolveAndAdvance() {
+    setResolving(true);
+    setResolveErrors([]);
+    const { errors } = await resolveRound();
+    if (errors.length > 0) {
+      setResolveErrors(errors);
+      setResolving(false);
+      return; // stay on confirmation panel so admin can see errors
+    }
+    await nextRound();
+    setResolving(false);
+    setConfirming(false);
+  }
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -103,10 +135,11 @@ export default function Admin() {
                 Pause
               </button>
               <button
-                onClick={nextRound}
-                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+                onClick={() => { setConfirming(true); setResolveErrors([]); }}
+                disabled={confirming}
+                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold transition-colors"
               >
-                Next Round →
+                Resolve & Next Round →
               </button>
               <button
                 onClick={completeAuction}
@@ -139,6 +172,89 @@ export default function Admin() {
           )}
         </div>
       </section>
+
+      {/* ── Round Resolution Confirmation ───────────────────────────────── */}
+      {confirming && (
+        <section className="bg-gray-900 rounded-xl p-6 space-y-4 border border-emerald-800/50">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold text-white">
+              Resolve Round {current_round} &amp; Advance
+            </h2>
+            <button
+              onClick={() => { setConfirming(false); setResolveErrors([]); }}
+              disabled={resolving}
+              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+
+          {winnersPreview.length === 0 ? (
+            <p className="text-gray-500 text-sm">
+              No bids were placed this round. Advancing will skip resolution.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="pb-3 pr-4 font-medium">Player</th>
+                    <th className="pb-3 pr-4 font-medium">Pos</th>
+                    <th className="pb-3 pr-4 font-medium">Winning Bid</th>
+                    <th className="pb-3 pr-4 font-medium">Winner</th>
+                    <th className="pb-3 font-medium">Bids</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {winnersPreview.map((row) => (
+                    <tr key={row.playerId} className="text-gray-300">
+                      <td className="py-2.5 pr-4 text-white font-medium">{row.playerName}</td>
+                      <td className="py-2.5 pr-4">
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-gray-800 text-gray-400'}`}>
+                          {row.position}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-4 font-bold text-emerald-400">
+                        £{row.amount.toFixed(1)}
+                      </td>
+                      <td className="py-2.5 pr-4 text-white">{row.winnerName}</td>
+                      <td className="py-2.5 text-gray-500">{row.bidCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {resolveErrors.length > 0 && (
+            <div className="bg-red-900/40 border border-red-800/50 rounded-lg p-4 space-y-1">
+              <p className="text-red-300 text-sm font-semibold">Resolution errors — round not advanced:</p>
+              {resolveErrors.map((e, i) => (
+                <p key={i} className="text-red-400 text-xs">
+                  Player #{e.playerId}: {e.reason}
+                </p>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              onClick={handleResolveAndAdvance}
+              disabled={resolving}
+              className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-semibold transition-colors"
+            >
+              {resolving ? 'Resolving…' : `Confirm & Advance to Round ${current_round + 1}`}
+            </button>
+            <button
+              onClick={() => { setConfirming(false); setResolveErrors([]); }}
+              disabled={resolving}
+              className="px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 font-semibold transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* ── Live Bids ────────────────────────────────────────────────────── */}
       {(isActive || isPaused) && (

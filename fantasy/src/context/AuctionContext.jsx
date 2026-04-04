@@ -109,6 +109,80 @@ export function AuctionProvider({ children }) {
     });
   }
 
+  // Resolves the current round: marks winning bids, assigns players to teams,
+  // and deducts acquisition cost from each winner's budget.
+  // Returns { resolved: [...], errors: [...] }
+  async function resolveRound() {
+    const round = auctionState.current_round;
+    const roundBids = bids.filter((b) => b.round_number === round);
+    const playerIds = [...new Set(roundBids.map((b) => b.player_id))];
+
+    const resolved = [];
+    const errors   = [];
+
+    for (const playerId of playerIds) {
+      const winner = getHighestBid(playerId);
+      if (!winner) continue;
+
+      // 1. Mark winning bid
+      const { error: bidErr } = await supabase
+        .from('auction_bids')
+        .update({ is_winning: true })
+        .eq('id', winner.id);
+
+      if (bidErr) {
+        errors.push({ playerId, reason: `Bid update failed: ${bidErr.message}` });
+        continue;
+      }
+
+      // 2. Look up winner's team
+      const { data: team, error: teamErr } = await supabase
+        .from('teams')
+        .select('id, budget_remaining')
+        .eq('user_id', winner.user_id)
+        .single();
+
+      if (teamErr || !team) {
+        errors.push({ playerId, reason: 'Winner has no team registered.' });
+        continue;
+      }
+
+      // 3. Assign player to team (ignore if already assigned from a re-run)
+      const { error: tpErr } = await supabase.from('team_players').upsert(
+        {
+          team_id: team.id,
+          player_id: playerId,
+          is_locked: false,
+          acquisition_price: winner.bid_amount,
+          slot_type: 'free',
+        },
+        { onConflict: 'team_id,player_id', ignoreDuplicates: true }
+      );
+
+      if (tpErr) {
+        errors.push({ playerId, reason: `Team assignment failed: ${tpErr.message}` });
+        continue;
+      }
+
+      // 4. Deduct from team budget
+      await supabase
+        .from('teams')
+        .update({
+          budget_remaining: +(team.budget_remaining - winner.bid_amount).toFixed(1),
+        })
+        .eq('id', team.id);
+
+      resolved.push({
+        playerId,
+        playerName: winner.players?.name ?? `Player #${playerId}`,
+        winnerName: winner.users?.display_name ?? '?',
+        amount: winner.bid_amount,
+      });
+    }
+
+    return { resolved, errors };
+  }
+
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
   // Place a bid. Enforces max 10 active bids per user per round.
@@ -139,6 +213,7 @@ export function AuctionProvider({ children }) {
     resumeAuction,
     completeAuction,
     nextRound,
+    resolveRound,
     refreshBids: fetchBids,
   };
 
