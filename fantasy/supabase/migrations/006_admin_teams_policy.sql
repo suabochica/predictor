@@ -5,6 +5,8 @@
 -- The existing "Users can insert own team" policy only allows uid() = user_id,
 -- which blocks admin inserts on behalf of other users.
 
+DROP POLICY IF EXISTS "Admins can manage all teams" ON teams;
+
 CREATE POLICY "Admins can manage all teams"
   ON teams FOR ALL
   TO authenticated
