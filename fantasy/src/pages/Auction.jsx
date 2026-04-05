@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLeague } from '../context/LeagueContext';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
@@ -41,6 +42,7 @@ const POSITION_GRADIENT = {
 
 export default function Auction() {
   const { user } = useAuth();
+  const { team } = useLeague();
   const { auctionState, bids, loading, getHighestBid, placeBid } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
 
@@ -59,6 +61,8 @@ export default function Auction() {
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const myBids           = currentRoundBids.filter((b) => b.user_id === user?.id);
   const myBidCount       = myBids.length;
+  // Players already won in any previous round — show a badge and disable bidding.
+  const wonPlayerIds     = new Set(bids.filter((b) => b.is_winning).map((b) => b.player_id));
 
   const filteredPlayers =
     posFilter === 'All' ? players : players.filter((p) => p.position === posFilter);
@@ -70,6 +74,11 @@ export default function Auction() {
   }
 
   async function handleBid(playerId) {
+    if (!team) {
+      setErrors((prev) => ({ ...prev, [playerId]: 'You must have a registered team to bid.' }));
+      return;
+    }
+
     const amount = parseFloat(bidAmounts[playerId]);
     const player = players.find((p) => p.id === playerId);
     const minBid = minBidFor(player);
@@ -82,17 +91,20 @@ export default function Auction() {
     setSubmitting((prev) => new Set(prev).add(playerId));
     setErrors((prev) => { const n = { ...prev }; delete n[playerId]; return n; });
 
-    const { error } = await placeBid(playerId, amount, user.id);
-
-    setSubmitting((prev) => { const n = new Set(prev); n.delete(playerId); return n; });
-
-    if (error) {
-      setErrors((prev) => ({
-        ...prev,
-        [playerId]: typeof error === 'string' ? error : error.message,
-      }));
-    } else {
-      setBidAmounts((prev) => { const n = { ...prev }; delete n[playerId]; return n; });
+    try {
+      const { error } = await placeBid(playerId, amount, user.id);
+      if (error) {
+        setErrors((prev) => ({
+          ...prev,
+          [playerId]: typeof error === 'string' ? error : error.message,
+        }));
+      } else {
+        setBidAmounts((prev) => { const n = { ...prev }; delete n[playerId]; return n; });
+      }
+    } catch {
+      setErrors((prev) => ({ ...prev, [playerId]: 'Failed to place bid. Please try again.' }));
+    } finally {
+      setSubmitting((prev) => { const n = new Set(prev); n.delete(playerId); return n; });
     }
   }
 
@@ -224,10 +236,11 @@ export default function Auction() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPlayers.map((player) => {
+            const isWon         = wonPlayerIds.has(player.id);
             const highBid       = getHighestBid(player.id);
             const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
             const isLeading     = myBidOnPlayer && highBid?.user_id === user?.id;
-            const canBid        = isActive && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
+            const canBid        = isActive && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
             const minBid        = minBidFor(player);
             const isSubmitting  = submitting.has(player.id);
 
@@ -275,8 +288,15 @@ export default function Auction() {
                       )}
                     </div>
 
+                    {/* Won badge */}
+                    {isWon && (
+                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-purple-900/50 text-purple-300 border border-purple-800/50">
+                        ✓ Won — player is on a squad
+                      </div>
+                    )}
+
                     {/* My bid status badge */}
-                    {myBidOnPlayer && (
+                    {!isWon && myBidOnPlayer && (
                       <div
                         className={`text-xs font-medium rounded-lg px-3 py-1.5 ${
                           isLeading

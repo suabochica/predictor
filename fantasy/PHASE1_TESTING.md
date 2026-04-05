@@ -69,7 +69,7 @@ Resize viewport to ≥768px. Log in as a user who has a `teams` row.
 | 5.1 | Observe sidebar on any protected page | Team name shown, budget shown (£105.0 if untouched) |
 | 5.2 | Log in as user with no `teams` row | Sidebar shows no team name / blank budget — no crash |
 | 5.3 | In Supabase, set an active matchday (`is_active = true` on a matchdays row) | "Matchday active" badge appears in sidebar |
-| 5.4 | In Supabase, set a transfer window with `open_at <= NOW() <= close_at` | "Transfers open" badge appears in sidebar |
+| 5.4 | In Supabase Table Editor, set `is_active = true` on a `transfer_windows` row | "Transfers open" badge appears in sidebar |
 | 5.5 | Click each nav link | Active link highlights in emerald; admin link highlights in amber (admin only) |
 
 ---

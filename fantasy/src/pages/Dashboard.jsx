@@ -33,7 +33,7 @@ export default function Dashboard() {
         <div className="bg-gray-900 border border-gray-700 rounded-xl p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wider">Budget Remaining</p>
           <p className="text-lg font-semibold text-emerald-400 mt-1">
-            {team ? formatPrice(team.budget_remaining) : '105.0M'}
+            {team ? formatPrice(team.budget_remaining) : '—'}
           </p>
           <p className="text-xs text-gray-500 mt-1">of 105.0M total</p>
         </div>

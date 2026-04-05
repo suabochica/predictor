@@ -18,8 +18,14 @@ export function AuctionProvider({ children }) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'auction_bids' },
-        (payload) => {
-          setBids((prev) => [...prev, payload.new]);
+        async (payload) => {
+          // Re-fetch the inserted bid with joins — Realtime payloads lack joined data.
+          const { data } = await supabase
+            .from('auction_bids')
+            .select('*, players(name, position, price), users(display_name)')
+            .eq('id', payload.new.id)
+            .single();
+          if (data) setBids((prev) => [...prev, data]);
         }
       )
       .on(
@@ -121,6 +127,9 @@ export function AuctionProvider({ children }) {
     const errors   = [];
 
     for (const playerId of playerIds) {
+      // Skip players already resolved in a previous resolveRound() call (prevents double budget deduction).
+      if (roundBids.some((b) => b.player_id === playerId && b.is_winning)) continue;
+
       const winner = getHighestBid(playerId);
       if (!winner) continue;
 
@@ -185,13 +194,16 @@ export function AuctionProvider({ children }) {
 
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
-  // Place a bid. Enforces max 10 active bids per user per round.
+  // Place a bid. Enforces max 10 active bids per user per round and one bid per player per round.
   async function placeBid(playerId, amount, userId) {
     const activeBids = bids.filter(
       (b) => b.user_id === userId && b.round_number === auctionState?.current_round
     );
     if (activeBids.length >= 10) {
       return { error: 'You already have 10 active bids this round.' };
+    }
+    if (activeBids.some((b) => b.player_id === playerId)) {
+      return { error: 'You already have a bid on this player this round.' };
     }
     const { data, error } = await supabase.from('auction_bids').insert({
       user_id: userId,

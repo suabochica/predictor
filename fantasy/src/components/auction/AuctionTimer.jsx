@@ -16,7 +16,9 @@ export default function AuctionTimer({ roundStartedAt, roundDurationSeconds, onE
         setRemaining(roundDurationSeconds);
         return;
       }
-      const elapsed = Math.floor((Date.now() - new Date(roundStartedAt).getTime()) / 1000);
+      // Supabase returns timestamps without a Z suffix — treat as UTC explicitly.
+      const utcStr = roundStartedAt.endsWith('Z') ? roundStartedAt : roundStartedAt + 'Z';
+      const elapsed = Math.floor((Date.now() - new Date(utcStr).getTime()) / 1000);
       const left = Math.max(0, roundDurationSeconds - elapsed);
       setRemaining(left);
       if (left === 0 && !expiredRef.current) {
