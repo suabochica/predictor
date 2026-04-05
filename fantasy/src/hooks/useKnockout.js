@@ -12,8 +12,14 @@ export function useKnockout() {
   async function fetchMatches() {
     const { data } = await supabase
       .from('knockout_matches')
-      .select('*, teams!team_a_id(name), teams!team_b_id(name)')
-      .order('round');
+      .select(
+        `*,
+        team_a:teams!team_a_id(id, name, user_id, users(display_name)),
+        team_b:teams!team_b_id(id, name, user_id, users(display_name)),
+        winner:teams!winner_id(id, name, users(display_name))`
+      )
+      .order('round')
+      .order('id');
     setMatches(data ?? []);
     setLoading(false);
   }
