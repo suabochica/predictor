@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
+import { supabase } from '../lib/supabase';
 import { AUCTION_STATUSES } from '../config/constants';
 
 const STATUS_BADGE = {
@@ -35,6 +36,40 @@ export default function Admin() {
   const [confirming, setConfirming] = useState(false);
   const [resolving, setResolving]   = useState(false);
   const [resolveErrors, setResolveErrors] = useState([]);
+
+  // ── League Participants ────────────────────────────────────────────────────
+  const [participants, setParticipants] = useState([]);
+  const [participantsLoading, setParticipantsLoading] = useState(true);
+  const [addingTeamFor, setAddingTeamFor] = useState(null);
+
+  useEffect(() => { fetchParticipants(); }, []);
+
+  async function fetchParticipants() {
+    setParticipantsLoading(true);
+    const { data } = await supabase
+      .from('users')
+      .select('id, display_name, email, teams(id, name, budget_remaining)')
+      .order('created_at', { ascending: true });
+    setParticipants(data ?? []);
+    setParticipantsLoading(false);
+  }
+
+  async function handleAddToLeague(user) {
+    setAddingTeamFor(user.id);
+    await supabase.from('teams').insert({
+      user_id: user.id,
+      name: user.display_name,
+      budget_remaining: 105.0,
+    });
+    await fetchParticipants();
+    setAddingTeamFor(null);
+  }
+
+  async function handleRemoveFromLeague(userId) {
+    await supabase.from('teams').delete().eq('user_id', userId);
+    await fetchParticipants();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
 
   if (loading) {
     return <div className="text-gray-400 p-6">Loading auction state…</div>;
@@ -92,6 +127,84 @@ export default function Admin() {
           {status}
         </span>
       </div>
+
+      {/* ── League Participants ──────────────────────────────────────────── */}
+      <section className="bg-gray-900 rounded-xl p-6 space-y-4">
+        <div className="flex items-baseline gap-3">
+          <h2 className="text-lg font-semibold text-white">League Participants</h2>
+          {!participantsLoading && (
+            <span className="text-sm text-gray-500">
+              {participants.filter((u) => u.teams).length} of {participants.length} users enrolled
+            </span>
+          )}
+        </div>
+
+        {isCompleted && (
+          <p className="text-xs text-gray-500 bg-gray-800 rounded-lg px-3 py-2">
+            Auction complete. New enrollments will access unwon players via the free market.
+          </p>
+        )}
+
+        {participantsLoading ? (
+          <p className="text-gray-500 text-sm">Loading users…</p>
+        ) : participants.length === 0 ? (
+          <p className="text-gray-500 text-sm">No registered users found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <th className="pb-3 pr-4 font-medium">User</th>
+                  <th className="pb-3 pr-4 font-medium">Email</th>
+                  <th className="pb-3 pr-4 font-medium">Status</th>
+                  <th className="pb-3 pr-4 font-medium">Budget</th>
+                  <th className="pb-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {participants.map((u) => (
+                  <tr key={u.id} className="text-gray-300 hover:bg-gray-800/40">
+                    <td className="py-2.5 pr-4 text-white font-medium">{u.display_name}</td>
+                    <td className="py-2.5 pr-4 text-gray-400 text-xs">{u.email}</td>
+                    <td className="py-2.5 pr-4">
+                      {u.teams ? (
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-900 text-emerald-300">
+                          Enrolled
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-gray-700 text-gray-400">
+                          No team
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-4 text-gray-400">
+                      {u.teams ? `£${Number(u.teams.budget_remaining).toFixed(1)}` : '—'}
+                    </td>
+                    <td className="py-2.5">
+                      {u.teams ? (
+                        <button
+                          onClick={() => handleRemoveFromLeague(u.id)}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToLeague(u)}
+                          disabled={addingTeamFor === u.id}
+                          className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-semibold transition-colors"
+                        >
+                          {addingTeamFor === u.id ? 'Adding…' : 'Add to League'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* ── Auction Controls ─────────────────────────────────────────────── */}
       <section className="bg-gray-900 rounded-xl p-6 space-y-5">
