@@ -1,26 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import PredictionForm from '../components/PredictionForm';
-import '../styles/predictions.css';
+import LeaderboardTable from '../components/LeaderboardTable';
+import '../styles/leaderboard.css';
 ---
 
-<Layout title="Predictions">
-  <main class="predictions-page">
+<Layout title="Leaderboard">
+  <main class="leaderboard-page">
     <header class="page-header">
-      <h1>⚽ Match Predictions</h1>
-      <p class="subtitle">Enter your predicted scores for each match. Scores must be between 0 and 9.</p>
+      <h1>📊 Leaderboard</h1>
+      <p class="subtitle">See how you stack up against the competition</p>
     </header>
 
-    <PredictionForm client:load />
+    <LeaderboardTable client:load currentUser={1} />
 
     <nav class="back-nav">
       <a href="/">← Back to Home</a>
+      <a href="/predictions">Make Predictions →</a>
     </nav>
   </main>
 </Layout>
 
 <style>
-  .predictions-page {
+  .leaderboard-page {
     max-width: 1000px;
     margin: 0 auto;
     padding: 2rem 1rem;
@@ -44,7 +45,9 @@ import '../styles/predictions.css';
 
   .back-nav {
     margin-top: 2rem;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
   }
 
   .back-nav a {
@@ -57,5 +60,13 @@ import '../styles/predictions.css';
   .back-nav a:hover {
     color: #3a0ca3;
     text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .back-nav {
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
   }
 </style>

@@ -1,0 +1,154 @@
+.leaderboard-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-table thead {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.leaderboard-table th {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leaderboard-table th:nth-child(2) {
+  text-align: left;
+}
+
+.leaderboard-table td {
+  padding: 0.875rem 0.75rem;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.leaderboard-table td:nth-child(2) {
+  text-align: left;
+}
+
+.leaderboard-row {
+  transition: background 0.2s ease;
+}
+
+.leaderboard-row:hover {
+  background: #f8f9fa;
+}
+
+.leaderboard-row.current-user {
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(58, 12, 163, 0.1) 100%);
+}
+
+.leaderboard-row.current-user:hover {
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.15) 0%, rgba(58, 12, 163, 0.15) 100%);
+}
+
+/* Rank colors */
+.leaderboard-row.rank-gold {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.15) 100%);
+}
+
+.leaderboard-row.rank-silver {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(169, 169, 169, 0.2) 100%);
+}
+
+.leaderboard-row.rank-bronze {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(184, 115, 51, 0.15) 100%);
+}
+
+.rank-cell {
+  width: 60px;
+}
+
+.rank-badge {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.player-avatar {
+  font-size: 1.75rem;
+}
+
+.player-name {
+  font-weight: 500;
+  color: #212529;
+}
+
+.you-badge {
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  background: #4361ee;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.points-cell {
+  width: 80px;
+}
+
+.points-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.stats-cell {
+  width: 100px;
+  color: #6c757d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .leaderboard-container {
+    padding: 0.5rem;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.625rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .player-avatar {
+    font-size: 1.5rem;
+  }
+
+  .player-name {
+    font-size: 0.9rem;
+  }
+
+  .points-value {
+    font-size: 1rem;
+  }
+
+  /* Hide stats columns on mobile */
+  .leaderboard-table th:nth-child(4),
+  .leaderboard-table th:nth-child(5),
+  .leaderboard-table td:nth-child(4),
+  .leaderboard-table td:nth-child(5) {
+    display: none;
+  }
+}
