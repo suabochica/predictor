@@ -1,21 +1,33 @@
 ---
-// Home page - Landing page with upcoming matches
+import Layout from '../layouts/Layout.astro';
+import '../styles/home.css';
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>World Cup 2026 Predictor</title>
-</head>
-<body>
-  <h1>FIFA World Cup 2026 Score Predictor</h1>
-  <p>Welcome! Predict match scores and compete with friends.</p>
-  <nav>
-    <a href="/predictions">Make Predictions</a>
-    <a href="/leaderboard">Leaderboard</a>
-    <a href="/rules">Rules</a>
-  </nav>
-</body>
-</html>
+<Layout title="Home">
+  <main class="home-page">
+    <section class="hero">
+      <span class="trophy">🏆</span>
+      <h1>FIFA World Cup 2026</h1>
+      <p class="subtitle">Predict match scores and compete with friends. Earn points based on accuracy!</p>
+    </section>
+
+    <nav class="nav-menu">
+      <a href="/predictions" class="nav-link predictions">
+        <span>Make Predictions</span>
+        <span class="icon">⚽</span>
+      </a>
+      <a href="/leaderboard" class="nav-link leaderboard">
+        <span>Leaderboard</span>
+        <span class="icon">📊</span>
+      </a>
+      <a href="/rules" class="nav-link rules">
+        <span>Scoring Rules</span>
+        <span class="icon">📋</span>
+      </a>
+    </nav>
+
+    <footer class="footer">
+      <p>World Cup 2026 • June 11 - July 19, 2026</p>
+    </footer>
+  </main>
+</Layout>
