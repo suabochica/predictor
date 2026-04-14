@@ -1,0 +1,61 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PredictionForm from '../components/PredictionForm';
+import '../styles/predictions.css';
+---
+
+<Layout title="Predictions">
+  <main class="predictions-page">
+    <header class="page-header">
+      <h1>Match Predictions</h1>
+      <p class="subtitle">Enter your predicted scores for each match. Scores must be between 0 and 9.</p>
+    </header>
+
+    <PredictionForm client:load />
+
+    <nav class="back-nav">
+      <a href="/">← Back to Home</a>
+    </nav>
+  </main>
+</Layout>
+
+<style>
+  .predictions-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    color: #1a1a2e;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #6c757d;
+    font-size: 1rem;
+  }
+
+  .back-nav {
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  .back-nav a {
+    color: #4361ee;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .back-nav a:hover {
+    color: #3a0ca3;
+    text-decoration: underline;
+  }
+</style>
