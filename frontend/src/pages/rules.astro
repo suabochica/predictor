@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/rules.css';
+---
+
+<Layout title="Scoring Rules">
+  <main class="rules-page">
+    <header class="page-header">
+      <h1>📋 Scoring Rules</h1>
+      <p class="subtitle">Understand how points are calculated for your predictions</p>
+    </header>
+
+    <div class="rules-content">
+      <section class="rules-section">
+        <h2>Tournament Structure</h2>
+        <p>
+          Football tournaments are structured with an initial group stage or round-robin phase,
+          followed by a second round of final quadrangular groups before determining the best team in the tournament.
+        </p>
+        <p>
+          For all matches, users can predict the result. The objective is to correctly predict
+          the match outcome and earn points.
+        </p>
+      </section>
+
+      <section class="rules-section">
+        <h2>Prediction Rules</h2>
+        <ul>
+          <li>You can change your prediction up to a maximum of <strong>10 minutes before</strong> the match start date and time.</li>
+          <li>
+            The prediction only includes the <strong>90 MINUTES</strong> of regular time plus (+) stoppage time
+            given by the referee, but <strong>EXCLUDES</strong> any extra time (2 × 15 minutes) or penalty shootout results.
+          </li>
+        </ul>
+      </section>
+
+      <section class="rules-section">
+        <h2>Scoring System</h2>
+        <p>
+          For each match, you can make a prediction of the result (example: Brazil 2 – Germany 1).
+          In each match, you can accumulate points according to the following rules:
+        </p>
+
+        <h3>For predicting the result (winner or draw)</h3>
+        <div class="example-box">
+          <p>
+            <strong>5 points in the first round and 10 in knockout stages</strong>
+          </p>
+          <p>
+            If you correctly predict the winning team or a draw, you will earn 5 points in the first round
+            or 10 points in knockout stages. For example, if your prediction was 2–1 and the match ended 1–0,
+            you will earn 5 points for getting the result right (in the first round). The same applies if the
+            match ends 2–2 and your prediction was 0–0.
+          </p>
+        </div>
+
+        <h3>For predicting the number of goals for each team</h3>
+        <div class="example-box">
+          <p>
+            <strong>2 points in the first round and 4 in knockout stages</strong>
+          </p>
+          <p>
+            If you correctly predict the number of goals scored by each team, for example, if the match
+            ends 2–1 and your prediction was 0–1, you earn 2 points for correctly predicting the away team's goals.
+          </p>
+        </div>
+
+        <h3>For predicting the goal difference</h3>
+        <div class="example-box">
+          <p>
+            <strong>1 point in the first round and 2 in knockout stages</strong>
+          </p>
+          <p>
+            If the match ends 3–1 and your prediction was 2–0, you will earn 1 or 2 points for correctly
+            predicting the goal difference.
+          </p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <h2>Scoring Summary</h2>
+        <table class="scoring-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>First Round</th>
+              <th>Knockout Stages</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Correct result (winner/draw)</td>
+              <td><span class="points-value">5</span> points</td>
+              <td><span class="points-value">10</span> points</td>
+            </tr>
+            <tr>
+              <td>Correct home team goals</td>
+              <td><span class="points-value">2</span> points</td>
+              <td><span class="points-value">4</span> points</td>
+            </tr>
+            <tr>
+              <td>Correct away team goals</td>
+              <td><span class="points-value">2</span> points</td>
+              <td><span class="points-value">4</span> points</td>
+            </tr>
+            <tr>
+              <td>Correct goal difference</td>
+              <td><span class="points-value">1</span> point</td>
+              <td><span class="points-value">2</span> points</td>
+            </tr>
+            <tr>
+              <td><strong>MAX TOTAL</strong></td>
+              <td><strong>10 points</strong></td>
+              <td><strong>20 points</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          The standings table will reflect the accumulated score and the registration/join date to the group,
+          shown in the last column. Within each group, tiebreakers may include factors such as the highest
+          number of matches with full or partial scores (10 points, 7 points, 6 points, 5 points).
+        </p>
+      </section>
+
+      <section class="rules-section">
+        <h2>Examples</h2>
+
+        <h3>Example 1: Perfect Prediction (1:0 → 1:0)</h3>
+        <p>If your prediction was 1:0 and the match ended 1:0, you will earn:</p>
+        <table class="scoring-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>First Round</th>
+              <th>Knockout Stages</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Correct result (winner)</td>
+              <td>5 points</td>
+              <td>10 points</td>
+            </tr>
+            <tr>
+              <td>Correct home team goals</td>
+              <td>2 points</td>
+              <td>4 points</td>
+            </tr>
+            <tr>
+              <td>Correct away team goals</td>
+              <td>2 points</td>
+              <td>4 points</td>
+            </tr>
+            <tr>
+              <td>Correct goal difference</td>
+              <td>1 point</td>
+              <td>2 points</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>TOTAL</strong></td>
+              <td><strong>10 points</strong></td>
+              <td><strong>20 points</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Example 2: Partial Match (2:0 → 3:1)</h3>
+        <p>If your prediction was 2:0 and the match ended 3:1, you will earn:</p>
+        <table class="scoring-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>First Round</th>
+              <th>Knockout Stages</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Correct result (home team wins regardless of score)</td>
+              <td>5 points</td>
+              <td>10 points</td>
+            </tr>
+            <tr>
+              <td>Correct home team goals</td>
+              <td>0 points</td>
+              <td>0 points</td>
+            </tr>
+            <tr>
+              <td>Correct away team goals</td>
+              <td>0 points</td>
+              <td>0 points</td>
+            </tr>
+            <tr>
+              <td>Correct goal difference (2 goals)</td>
+              <td>1 point</td>
+              <td>2 points</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>TOTAL</strong></td>
+              <td><strong>6 points</strong></td>
+              <td><strong>12 points</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <nav class="back-nav">
+      <a href="/">← Back to Home</a>
+      <a href="/predictions">Make Predictions →</a>
+    </nav>
+  </main>
+</Layout>
