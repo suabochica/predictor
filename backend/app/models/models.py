@@ -57,3 +57,34 @@ class ScoringRule(BaseModel):
     rule_type: str
     points: int
     description: str
+
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    PARTICIPANT = "participant"
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class AuthUser(BaseModel):
+    user_id: int
+    username: str
+    password: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    role: UserRole
+    name: str  # Full name for display
+
+
+class AuthUserResponse(BaseModel):
+    user_id: int
+    username: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    role: UserRole
+    name: str  # Full name for display
