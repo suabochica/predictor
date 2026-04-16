@@ -23,7 +23,7 @@ Claude in this repository we want to create a tournament score predictor whose u
 
  However ollama offer [several models](https://ollama.com/search) that we can try
 
- The agentic code is:
+ The agent code is:
 
  - [Code Claude](https://claude.ai)
 

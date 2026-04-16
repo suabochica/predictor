@@ -1,4 +1,45 @@
-from app.models.models import User
+from app.models.models import User, AuthUser, UserRole
+
+# Auth users with credentials
+AUTH_USERS = [
+    AuthUser(
+        user_id=100,
+        username="serben",
+        password="Uruguay.1930",
+        first_name="Sergio",
+        last_name="Benítez",
+        phone_number="+57 3118095133",
+        role=UserRole.ADMIN,
+        name="Sergio Benítez",
+    ),
+    AuthUser(
+        user_id=101,
+        username="lucstu",
+        password="Italy.1934",
+        first_name="Lucas",
+        last_name="Stucky",
+        phone_number="+33 769365759",
+        role=UserRole.PARTICIPANT,
+        name="Lucas Stucky",
+    ),
+]
+
+
+def get_auth_user(username: str) -> AuthUser | None:
+    """Get an auth user by username."""
+    for user in AUTH_USERS:
+        if user.username == username:
+            return user
+    return None
+
+
+def validate_user(username: str, password: str) -> AuthUser | None:
+    """Validate user credentials."""
+    user = get_auth_user(username)
+    if user and user.password == password:
+        return user
+    return None
+
 
 # Mock data for 15 users
 USERS = [
