@@ -41,3 +41,20 @@ export interface ScoringRule {
   points: number;
   description: string;
 }
+
+export type UserRole = 'admin' | 'participant';
+
+export interface AuthUser {
+  user_id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  role: UserRole;
+  name: string;
+}
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}

@@ -20,6 +20,14 @@ import '../styles/leaderboard.css';
   </main>
 </Layout>
 
+<script>
+  // Redirect to login if not authenticated
+  const userJson = localStorage.getItem('worldCupUser');
+  if (!userJson) {
+    window.location.href = '/login';
+  }
+</script>
+
 <style>
   .leaderboard-page {
     max-width: 1000px;

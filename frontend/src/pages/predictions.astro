@@ -19,6 +19,14 @@ import '../styles/predictions.css';
   </main>
 </Layout>
 
+<script>
+  // Redirect to login if not authenticated
+  const userJson = localStorage.getItem('worldCupUser');
+  if (!userJson) {
+    window.location.href = '/login';
+  }
+</script>
+
 <style>
   .predictions-page {
     max-width: 1000px;

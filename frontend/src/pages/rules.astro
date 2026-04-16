@@ -4,6 +4,13 @@ import '../styles/rules.css';
 ---
 
 <Layout title="Scoring Rules">
+  <script>
+    // Redirect to login if not authenticated
+    const userJson = localStorage.getItem('worldCupUser');
+    if (!userJson) {
+      window.location.href = '/login';
+    }
+  </script>
   <main class="rules-page">
     <header class="page-header">
       <h1>📋 Scoring Rules</h1>
