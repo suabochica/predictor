@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLeague } from '../context/LeagueContext';
 import { useAuction } from '../context/AuctionContext';
@@ -50,6 +50,12 @@ export default function Auction() {
   const [bidAmounts, setBidAmounts] = useState({});
   const [submitting, setSubmitting] = useState(new Set());
   const [errors, setErrors]         = useState({});
+  const [roundExpired, setRoundExpired] = useState(false);
+
+  const handleRoundExpire = useCallback(() => setRoundExpired(true), []);
+
+  // Reset expired flag whenever a new round starts
+  useEffect(() => { setRoundExpired(false); }, [current_round, round_started_at]);
 
   if (loading || !auctionState) {
     return <div className="text-gray-400 p-6">Loading auction…</div>;
@@ -124,6 +130,7 @@ export default function Auction() {
             <AuctionTimer
               roundStartedAt={round_started_at}
               roundDurationSeconds={round_duration_seconds}
+              onExpire={handleRoundExpire}
             />
             <div className="text-right">
               <p className="text-2xl font-bold text-white tabular-nums">
@@ -142,6 +149,13 @@ export default function Auction() {
       {STATUS_BANNER[status] && (
         <div className={`rounded-xl px-5 py-4 text-sm font-medium ${STATUS_BANNER[status].cls}`}>
           {STATUS_BANNER[status].text}
+        </div>
+      )}
+
+      {/* ── Round expired banner ──────────────────────────────────────── */}
+      {isActive && roundExpired && (
+        <div className="rounded-xl px-5 py-4 text-sm font-medium bg-yellow-900/50 text-yellow-300 border border-yellow-800/50">
+          Round {current_round} has ended — bidding locked. Waiting for admin to advance.
         </div>
       )}
 
@@ -240,7 +254,7 @@ export default function Auction() {
             const highBid       = getHighestBid(player.id);
             const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
             const isLeading     = myBidOnPlayer && highBid?.user_id === user?.id;
-            const canBid        = isActive && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
+            const canBid        = isActive && !roundExpired && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
             const minBid        = minBidFor(player);
             const isSubmitting  = submitting.has(player.id);
 

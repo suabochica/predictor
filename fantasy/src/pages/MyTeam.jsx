@@ -154,7 +154,18 @@ export default function MyTeam() {
     const p2IsStarter = starters.some((s) => s.id === p2.id);
 
     if (p1IsStarter && p2IsStarter) {
-      // Starter ↔ Starter: no meaningful swap in this model
+      // Starter ↔ Starter: only meaningful if they're different positions — allow freely
+      const newStarters = starters.map((s) =>
+        s.id === p1.id ? p2 : s.id === p2.id ? p1 : s
+      );
+      if (newStarters.length === 11 && !isLineupValidForFormation(newStarters)) {
+        setSwapError(
+          `Can't swap ${p1.name} (${p1.position}) with ${p2.name} (${p2.position}) — formation ${formation} would be broken.`
+        );
+        return;
+      }
+      setStarters(newStarters);
+      setSwapError(null);
       return;
     }
 
@@ -162,7 +173,8 @@ export default function MyTeam() {
 
     if (p1IsStarter && !p2IsStarter) {
       newStarters = starters.filter((s) => s.id !== p1.id).concat(p2);
-      if (!isLineupValidForFormation(newStarters)) {
+      // Only enforce formation check when the lineup is complete (11 starters)
+      if (newStarters.length === 11 && !isLineupValidForFormation(newStarters)) {
         setSwapError(
           `Can't swap ${p1.name} (${p1.position}) with ${p2.name} (${p2.position}) — formation ${formation} would be broken.`
         );
@@ -172,7 +184,8 @@ export default function MyTeam() {
       if (captainId === p1.id) setCaptainId(null);
     } else if (!p1IsStarter && p2IsStarter) {
       newStarters = starters.filter((s) => s.id !== p2.id).concat(p1);
-      if (!isLineupValidForFormation(newStarters)) {
+      // Only enforce formation check when the lineup is complete (11 starters)
+      if (newStarters.length === 11 && !isLineupValidForFormation(newStarters)) {
         setSwapError(
           `Can't swap ${p1.name} (${p1.position}) with ${p2.name} (${p2.position}) — formation ${formation} would be broken.`
         );
@@ -275,6 +288,8 @@ export default function MyTeam() {
   const lineupValid = isLineupValidForFormation(starters);
   const hasCaptain = captainId !== null;
   const canSave = lineupValid && hasCaptain && starters.length === 11 && bench.length === 4;
+  // Only warn about formation mismatch when the starting XI is fully populated
+  const formationMismatch = starters.length === 11 && !lineupValid;
 
   const selectedIsStarter =
     selectedPlayer && starters.some((s) => s.id === selectedPlayer.id);
@@ -344,7 +359,7 @@ export default function MyTeam() {
       </div>
 
       {/* ── Lineup validity warning ── */}
-      {!lineupValid && starters.length > 0 && (
+      {formationMismatch && (
         <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 text-sm text-yellow-300">
           Lineup doesn't match formation {formation}. Check your starting XI.
         </div>

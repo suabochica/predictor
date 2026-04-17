@@ -517,11 +517,11 @@ export default function Transfers() {
                   W{t.window_number}
                 </span>
                 <span className="text-red-300">
-                  {t['players!player_out_id']?.name ?? `Player #${t.player_out_id}`}
+                  {t.player_out?.name ?? `Player #${t.player_out_id}`}
                 </span>
                 <span className="text-gray-600">→</span>
                 <span className="text-emerald-300">
-                  {t['players!player_in_id']?.name ?? `Player #${t.player_in_id}`}
+                  {t.player_in?.name ?? `Player #${t.player_in_id}`}
                 </span>
                 {t.price_difference != null && (
                   <span
