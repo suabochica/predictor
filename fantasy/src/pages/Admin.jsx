@@ -1,8 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '../lib/supabase';
 import { AUCTION_STATUSES } from '../config/constants';
+import { calculatePlayerPoints } from '../lib/scoring';
+import { calculateTeamMatchdayPoints } from '../lib/matchday';
+
+const WC_STAGES = [
+  'Group Stage MD1',
+  'Group Stage MD2',
+  'Group Stage MD3',
+  'Round of 32',
+  'Round of 16',
+  'Quarter-finals',
+  'Semi-finals',
+  'Third Place',
+  'Final',
+];
 
 const STATUS_BADGE = {
   pending:   'bg-gray-700 text-gray-300',
@@ -68,6 +82,244 @@ export default function Admin() {
   async function handleRemoveFromLeague(userId) {
     await supabase.from('teams').delete().eq('user_id', userId);
     await fetchParticipants();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── Matchday Management ───────────────────────────────────────────────────
+  const EMPTY_FORM = { name: '', wc_stage: WC_STAGES[0], start_date: '', deadline: '' };
+  const [matchdays, setMatchdays] = useState([]);
+  const [matchdaysLoading, setMatchdaysLoading] = useState(true);
+  const [mdForm, setMdForm] = useState(EMPTY_FORM);
+  const [mdSaving, setMdSaving] = useState(false);
+  const [mdError, setMdError] = useState('');
+
+  const fetchMatchdays = useCallback(async () => {
+    setMatchdaysLoading(true);
+    const { data } = await supabase
+      .from('matchdays')
+      .select('*')
+      .order('id', { ascending: true });
+    setMatchdays(data ?? []);
+    setMatchdaysLoading(false);
+  }, []);
+
+  useEffect(() => { fetchMatchdays(); }, [fetchMatchdays]);
+
+  async function handleCreateMatchday(e) {
+    e.preventDefault();
+    setMdError('');
+    if (!mdForm.name.trim()) { setMdError('Name is required.'); return; }
+    if (!mdForm.deadline)    { setMdError('Deadline is required.'); return; }
+    setMdSaving(true);
+    const { error } = await supabase.from('matchdays').insert({
+      name:       mdForm.name.trim(),
+      wc_stage:   mdForm.wc_stage,
+      start_date: mdForm.start_date || null,
+      deadline:   mdForm.deadline,
+    });
+    setMdSaving(false);
+    if (error) { setMdError(error.message); return; }
+    setMdForm(EMPTY_FORM);
+    await fetchMatchdays();
+  }
+
+  async function handleToggleActive(md) {
+    await supabase
+      .from('matchdays')
+      .update({ is_active: !md.is_active })
+      .eq('id', md.id);
+    await fetchMatchdays();
+  }
+
+  async function handleToggleCompleted(md) {
+    await supabase
+      .from('matchdays')
+      .update({ is_completed: !md.is_completed, is_active: md.is_completed ? md.is_active : false })
+      .eq('id', md.id);
+    await fetchMatchdays();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── Stats CSV Upload ──────────────────────────────────────────────────────
+  const [statsMatchdayId, setStatsMatchdayId] = useState('');
+  const [statsFile, setStatsFile] = useState(null);
+  const [statsUploading, setStatsUploading] = useState(false);
+  const [statsResult, setStatsResult] = useState(null); // { inserted, errors }
+
+  function parseCsv(text) {
+    const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    return lines.slice(1).map(line => {
+      const vals = line.split(',').map(v => v.trim());
+      return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+    });
+  }
+
+  async function handleStatsUpload(e) {
+    e.preventDefault();
+    setStatsResult(null);
+    if (!statsMatchdayId) { setStatsResult({ errors: ['Select a matchday first.'] }); return; }
+    if (!statsFile)        { setStatsResult({ errors: ['Select a CSV file.'] }); return; }
+
+    setStatsUploading(true);
+    const text = await statsFile.text();
+    const rows = parseCsv(text);
+    if (rows.length === 0) {
+      setStatsResult({ errors: ['CSV is empty or has no data rows.'] });
+      setStatsUploading(false);
+      return;
+    }
+
+    // Fetch all players to resolve names → id + position
+    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
+    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [p.name.toLowerCase(), p]));
+
+    const toUpsert = [];
+    const errors   = [];
+
+    for (const row of rows) {
+      const name   = (row['player_name'] ?? '').trim();
+      const player = playerMap[name.toLowerCase()];
+      if (!player) { errors.push(`Player not found: "${name}"`); continue; }
+
+      const minutes        = parseInt(row['minutes'] ?? '0', 10) || 0;
+      const goals          = parseInt(row['goals'] ?? '0', 10) || 0;
+      const assists        = parseInt(row['assists'] ?? '0', 10) || 0;
+      const clean_sheet    = row['clean_sheet'] === '1' || row['clean_sheet'] === 'true';
+      const saves          = parseInt(row['saves'] ?? '0', 10) || 0;
+      const penalty_saves  = parseInt(row['penalty_saves'] ?? '0', 10) || 0;
+      const penalty_misses = parseInt(row['penalty_misses'] ?? '0', 10) || 0;
+      const yellow_cards   = parseInt(row['yellow'] ?? '0', 10) || 0;
+      const red_cards      = parseInt(row['red'] ?? '0', 10) || 0;
+      const own_goals      = parseInt(row['own_goals'] ?? '0', 10) || 0;
+      const goals_conceded = parseInt(row['goals_conceded'] ?? '0', 10) || 0;
+      const game_time      = row['game_time'] ?? null;
+
+      const stats = { minutes_played: minutes, goals, assists, clean_sheet, saves,
+                      penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded };
+      const total_points = calculatePlayerPoints(stats, player.position);
+
+      toUpsert.push({
+        player_id: player.id,
+        matchday_id: parseInt(statsMatchdayId, 10),
+        ...stats,
+        total_points,
+        game_started_at: game_time || null,
+      });
+    }
+
+    if (toUpsert.length > 0) {
+      const { error } = await supabase
+        .from('player_stats')
+        .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
+      if (error) errors.push(`DB error: ${error.message}`);
+    }
+
+    setStatsResult({ inserted: toUpsert.length, errors });
+    setStatsFile(null);
+    setStatsUploading(false);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── Standings Calculation ─────────────────────────────────────────────────
+  const [calcMatchdayId, setCalcMatchdayId] = useState('');
+  const [calcRunning, setCalcRunning] = useState(false);
+  const [calcResult, setCalcResult] = useState(null);
+
+  async function handleCalculateStandings(e) {
+    e.preventDefault();
+    setCalcResult(null);
+    if (!calcMatchdayId) { setCalcResult({ errors: ['Select a matchday.'] }); return; }
+    setCalcRunning(true);
+
+    const matchdayIdInt = parseInt(calcMatchdayId, 10);
+    const errors = [];
+
+    // 1. Fetch all teams
+    const { data: teams } = await supabase.from('teams').select('id, name');
+    if (!teams?.length) { setCalcResult({ errors: ['No teams found.'] }); setCalcRunning(false); return; }
+
+    // 2. Fetch all player_stats for this matchday
+    const { data: allStats } = await supabase
+      .from('player_stats')
+      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points')
+      .eq('matchday_id', matchdayIdInt);
+    const statsMap = Object.fromEntries((allStats ?? []).map(s => [s.player_id, s]));
+
+    // 3. Fetch all players for position lookup
+    const { data: allPlayers } = await supabase.from('players').select('id, position');
+    const positionMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.position]));
+
+    // 4. Fetch all lineups for this matchday (or null matchday for pre-tournament)
+    const { data: allLineups } = await supabase
+      .from('lineups')
+      .select('team_id, player_id, is_starting, is_captain, bench_order')
+      .eq('matchday_id', matchdayIdInt);
+
+    // 5. Fetch existing fantasy_standings totals for cumulative points
+    const { data: existingStandings } = await supabase
+      .from('fantasy_standings')
+      .select('team_id, total_points, goals_scored');
+    const standingsMap = Object.fromEntries(
+      (existingStandings ?? []).map(s => [s.team_id, s])
+    );
+
+    const upsertRows = [];
+    let teamsScored = 0;
+
+    for (const team of teams) {
+      const teamLineupRows = (allLineups ?? []).filter(r => r.team_id === team.id);
+      if (teamLineupRows.length === 0) {
+        errors.push(`${team.name}: no lineup found for this matchday — skipped.`);
+        continue;
+      }
+
+      const starters = teamLineupRows
+        .filter(r => r.is_starting)
+        .map(r => ({ id: r.player_id, position: positionMap[r.player_id] ?? 'FWD' }));
+      const benchRows = teamLineupRows
+        .filter(r => !r.is_starting)
+        .sort((a, b) => (a.bench_order ?? 99) - (b.bench_order ?? 99));
+      const bench = benchRows.map(r => ({ id: r.player_id, position: positionMap[r.player_id] ?? 'FWD' }));
+      const captainRow = teamLineupRows.find(r => r.is_captain);
+      const captainId = captainRow?.player_id ?? null;
+
+      // Infer formation from starters
+      const defCount = starters.filter(p => p.position === 'DEF').length;
+      const midCount = starters.filter(p => p.position === 'MID').length;
+      const fwdCount = starters.filter(p => p.position === 'FWD').length;
+      const formation = `${defCount}-${midCount}-${fwdCount}`;
+
+      const { totalPoints, goalsScored } = calculateTeamMatchdayPoints(
+        { starters, bench, captainId, formation },
+        statsMap,
+        positionMap,
+      );
+
+      const prev = standingsMap[team.id];
+      const prevTotal = prev?.total_points ?? 0;
+      const prevGoals = prev?.goals_scored ?? 0;
+
+      upsertRows.push({
+        team_id: team.id,
+        matchday_id: matchdayIdInt,
+        matchday_points: totalPoints,
+        total_points: prevTotal + totalPoints,
+        goals_scored: prevGoals + goalsScored,
+      });
+      teamsScored++;
+    }
+
+    if (upsertRows.length > 0) {
+      const { error } = await supabase
+        .from('fantasy_standings')
+        .upsert(upsertRows, { onConflict: 'team_id,matchday_id' });
+      if (error) errors.push(`DB error: ${error.message}`);
+    }
+
+    setCalcResult({ teamsScored, errors });
+    setCalcRunning(false);
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -432,6 +684,226 @@ export default function Admin() {
           )}
         </section>
       )}
+
+      {/* ── Matchday Management ─────────────────────────────────────────── */}
+      <section className="bg-gray-900 rounded-xl p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-white">Matchday Management</h2>
+
+        {/* Create form */}
+        <form onSubmit={handleCreateMatchday} className="space-y-4">
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Create Matchday</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Name</label>
+              <input
+                type="text"
+                value={mdForm.name}
+                onChange={e => setMdForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Matchday 1"
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">WC Stage</label>
+              <select
+                value={mdForm.wc_stage}
+                onChange={e => setMdForm(f => ({ ...f, wc_stage: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+              >
+                {WC_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Start Date (optional)</label>
+              <input
+                type="date"
+                value={mdForm.start_date}
+                onChange={e => setMdForm(f => ({ ...f, start_date: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Lineup Deadline</label>
+              <input
+                type="datetime-local"
+                value={mdForm.deadline}
+                onChange={e => setMdForm(f => ({ ...f, deadline: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+          </div>
+          {mdError && <p className="text-red-400 text-sm">{mdError}</p>}
+          <button
+            type="submit"
+            disabled={mdSaving}
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+          >
+            {mdSaving ? 'Creating…' : 'Create Matchday'}
+          </button>
+        </form>
+
+        {/* Matchday list */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">All Matchdays</h3>
+          {matchdaysLoading ? (
+            <p className="text-gray-500 text-sm">Loading…</p>
+          ) : matchdays.length === 0 ? (
+            <p className="text-gray-500 text-sm">No matchdays yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="pb-3 pr-4 font-medium">Name</th>
+                    <th className="pb-3 pr-4 font-medium">Stage</th>
+                    <th className="pb-3 pr-4 font-medium">Deadline</th>
+                    <th className="pb-3 pr-4 font-medium">Active</th>
+                    <th className="pb-3 font-medium">Completed</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {matchdays.map(md => (
+                    <tr key={md.id} className="text-gray-300 hover:bg-gray-800/40">
+                      <td className="py-2.5 pr-4 text-white font-medium">{md.name}</td>
+                      <td className="py-2.5 pr-4 text-gray-400 text-xs">{md.wc_stage}</td>
+                      <td className="py-2.5 pr-4 text-gray-400 text-xs">
+                        {md.deadline ? new Date(md.deadline).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '—'}
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <button
+                          onClick={() => handleToggleActive(md)}
+                          disabled={md.is_completed}
+                          className={`px-3 py-1 rounded text-xs font-semibold transition-colors disabled:opacity-40 ${
+                            md.is_active
+                              ? 'bg-emerald-700 text-emerald-100 hover:bg-emerald-600'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          {md.is_active ? 'Active' : 'Inactive'}
+                        </button>
+                      </td>
+                      <td className="py-2.5">
+                        <button
+                          onClick={() => handleToggleCompleted(md)}
+                          className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                            md.is_completed
+                              ? 'bg-blue-700 text-blue-100 hover:bg-blue-600'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          {md.is_completed ? 'Completed' : 'Mark Complete'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Stats CSV Upload ─────────────────────────────────────────────── */}
+      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-white">Stats CSV Upload</h2>
+        <p className="text-xs text-gray-500">
+          CSV columns: <code className="text-gray-300">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
+        </p>
+
+        <form onSubmit={handleStatsUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Matchday</label>
+              <select
+                value={statsMatchdayId}
+                onChange={e => setStatsMatchdayId(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+              >
+                <option value="">Select matchday…</option>
+                {matchdays.map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">CSV File</label>
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={e => setStatsFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-gray-300 hover:file:bg-gray-600"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={statsUploading}
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+          >
+            {statsUploading ? 'Uploading…' : 'Upload Stats'}
+          </button>
+        </form>
+
+        {statsResult && (
+          <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-red-900/40 border border-red-800/50' : 'bg-gray-800'}`}>
+            {statsResult.inserted > 0 && (
+              <p className="text-emerald-400 text-sm font-semibold">
+                ✓ {statsResult.inserted} player stat row{statsResult.inserted !== 1 ? 's' : ''} saved.
+              </p>
+            )}
+            {statsResult.errors?.map((err, i) => (
+              <p key={i} className="text-red-400 text-xs">{err}</p>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Standings Calculation ───────────────────────────────────────── */}
+      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Calculate Standings</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Run after uploading stats. Scores all teams for the matchday (with auto-subs) and writes to fantasy_standings.
+          </p>
+        </div>
+
+        <form onSubmit={handleCalculateStandings} className="flex items-end gap-4 flex-wrap">
+          <div className="flex-1 min-w-48">
+            <label className="block text-xs text-gray-500 mb-1">Matchday</label>
+            <select
+              value={calcMatchdayId}
+              onChange={e => setCalcMatchdayId(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+            >
+              <option value="">Select matchday…</option>
+              {matchdays.map(md => (
+                <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={calcRunning}
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+          >
+            {calcRunning ? 'Calculating…' : 'Calculate Standings'}
+          </button>
+        </form>
+
+        {calcResult && (
+          <div className={`rounded-lg p-4 space-y-1 ${calcResult.errors?.length && !calcResult.teamsScored ? 'bg-red-900/40 border border-red-800/50' : 'bg-gray-800'}`}>
+            {calcResult.teamsScored > 0 && (
+              <p className="text-emerald-400 text-sm font-semibold">
+                ✓ Standings calculated for {calcResult.teamsScored} team{calcResult.teamsScored !== 1 ? 's' : ''}.
+              </p>
+            )}
+            {calcResult.errors?.map((err, i) => (
+              <p key={i} className="text-yellow-400 text-xs">{err}</p>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* ── Player Pool ──────────────────────────────────────────────────── */}
       <section className="bg-gray-900 rounded-xl p-6 space-y-4">

@@ -68,7 +68,32 @@ export default function MyTeam() {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // player_id → game_started_at (ISO string) for active matchday
+  const [playerGameTimes, setPlayerGameTimes] = useState({});
+
   const squad = normalizeSquad(players);
+
+  // A player is rolling-locked if their game_started_at is in the past
+  const now = Date.now();
+  function isGameLocked(playerId) {
+    const gt = playerGameTimes[playerId];
+    return gt ? new Date(gt).getTime() <= now : false;
+  }
+
+  // ── Load game start times for rolling lockout ────────────────────────────
+  useEffect(() => {
+    if (!activeMatchday) { setPlayerGameTimes({}); return; }
+    supabase
+      .from('player_stats')
+      .select('player_id, game_started_at')
+      .eq('matchday_id', activeMatchday.id)
+      .not('game_started_at', 'is', null)
+      .then(({ data }) => {
+        const map = {};
+        for (const row of data ?? []) map[row.player_id] = row.game_started_at;
+        setPlayerGameTimes(map);
+      });
+  }, [activeMatchday?.id]); // eslint-disable-line
 
   // ── Load lineup from DB (or build default) ──────────────────────────────
   const loadLineup = useCallback(async () => {
@@ -150,6 +175,14 @@ export default function MyTeam() {
   }
 
   function doSwap(p1, p2) {
+    if (isGameLocked(p1.id)) {
+      setSwapError(`${p1.name}'s game has already started — they cannot be moved.`);
+      return;
+    }
+    if (isGameLocked(p2.id)) {
+      setSwapError(`${p2.name}'s game has already started — they cannot be moved.`);
+      return;
+    }
     const p1IsStarter = starters.some((s) => s.id === p1.id);
     const p2IsStarter = starters.some((s) => s.id === p2.id);
 
@@ -290,6 +323,8 @@ export default function MyTeam() {
   const canSave = lineupValid && hasCaptain && starters.length === 11 && bench.length === 4;
   // Only warn about formation mismatch when the starting XI is fully populated
   const formationMismatch = starters.length === 11 && !lineupValid;
+  // Captain warning: game started AND 0 minutes played (stats uploaded)
+  const captainGameLocked = captainId ? isGameLocked(captainId) : false;
 
   const selectedIsStarter =
     selectedPlayer && starters.some((s) => s.id === selectedPlayer.id);
@@ -362,6 +397,20 @@ export default function MyTeam() {
       {formationMismatch && (
         <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 text-sm text-yellow-300">
           Lineup doesn't match formation {formation}. Check your starting XI.
+        </div>
+      )}
+
+      {/* ── Captain warning ── */}
+      {captainGameLocked && (
+        <div className="bg-orange-900/30 border border-orange-700/50 rounded-xl p-3 text-sm text-orange-300">
+          Your captain's game has already kicked off. If they don't play, you'll score 0 × 2 = 0 pts — captains are not auto-subbed.
+        </div>
+      )}
+
+      {/* ── Rolling lockout notice ── */}
+      {activeMatchday && Object.keys(playerGameTimes).length > 0 && (
+        <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-3 text-xs text-gray-400">
+          Rolling lockout active — players whose game has kicked off cannot be moved.
         </div>
       )}
 
@@ -507,7 +556,8 @@ export default function MyTeam() {
                   <span className="text-xs text-gray-400 flex-shrink-0 w-12 text-right">
                     {formatPrice(p.price)}
                   </span>
-                  <span className="text-[10px] flex-shrink-0 w-16 text-right">
+                  <span className="text-[10px] flex-shrink-0 w-20 text-right flex items-center justify-end gap-1">
+                    {isGameLocked(p.id) && <span title="Locked — game started">🔒</span>}
                     {isCaptain ? (
                       <span className="text-yellow-400 font-semibold">Captain</span>
                     ) : isStarter ? (
