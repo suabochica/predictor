@@ -7,9 +7,9 @@
 
 ## Current status
 
-**Last updated:** 2026-04-20
+**Last updated:** 2026-04-22
 **Branch:** `Fantasy`
-**Phase:** 4 complete — ready for Phase 4 testing, then Phase 5
+**Phase:** 4 testing in progress — blocked on My Team lineup refactor (see below)
 
 ---
 
@@ -88,6 +88,27 @@ Key DB table: `knockout_matches` (already exists from migration 001)
 
 ---
 
+## My Team lineup refactor (blocking Phase 4 testing)
+
+Full plan in `MYTEAM_LINEUP_REFACTOR.md`. Must complete before resuming Phase 4 testing.
+
+**What changes:**
+- Formation picker removed — formation derived live from actual starters (count DEF/MID/FWD)
+- New player auto-placement: bought players fill starters until 11; GK exception (2nd GK goes to bench)
+- Empty slots (pitch + bench) become clickable — select a player, click empty slot to place them
+- `doSwap` — formation validity checks removed entirely
+- `canSave` — only requires: exactly 1 GK in XI, captain set (partial lineups saveable)
+
+**Files to change:** `MyTeam.jsx`, `LineupGrid.jsx`, `BenchList.jsx` (remove `FormationPicker`)
+
+**After refactor — resume Phase 4 testing at:**
+1. Save a lineup via the UI (or re-run `02_test_lineups.sql` with correct matchday ID)
+2. Admin → Calculate Standings
+3. Check `/history` breakdown modal
+4. Check `/my-team` rolling lockout
+
+---
+
 ## Known issues (not blocking Phase 5)
 
 | Issue | Detail |
@@ -105,8 +126,10 @@ Key DB table: `knockout_matches` (already exists from migration 001)
 | File | Purpose |
 |------|---------|
 | `MASTER_DOCUMENT.md` | Full spec — read before implementing any feature |
+| `MYTEAM_LINEUP_REFACTOR.md` | Lineup overhaul plan — read before touching MyTeam |
 | `PHASE4_TESTING.md` | Phase 4 test guide |
 | `supabase/test-data/` | SQL files for dummy test data and cleanup |
+| `data/test_matchday1_stats.csv` | Test stats CSV (25 players, varied scoring scenarios) |
 | `src/config/scoring.json` | Scoring config (admin-editable values) |
 | `src/lib/matchday.js` | Auto-sub + team points calculation |
 | `src/lib/scoring.js` | Per-player point calculation |
