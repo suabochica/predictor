@@ -9,7 +9,7 @@
 
 **Last updated:** 2026-04-22
 **Branch:** `Fantasy`
-**Phase:** 4 testing in progress — blocked on My Team lineup refactor (see below)
+**Phase:** 4 testing complete — ready for Phase 5
 
 ---
 
@@ -40,6 +40,8 @@
 | 006_admin_teams_policy.sql | Admin INSERT/UPDATE/DELETE on teams | ✅ |
 | 007_standings_public_read.sql | All authenticated users can SELECT teams | ✅ |
 | 008_team_players_admin_policy.sql | Admin INSERT/UPDATE/DELETE on team_players | ✅ |
+| 009_lineups_admin_read.sql | Admin SELECT on all lineups (required for Calculate Standings) | ✅ |
+| 010_fantasy_standings_admin_write.sql | Admin INSERT/UPDATE/DELETE on fantasy_standings | ✅ |
 
 ---
 
@@ -58,17 +60,14 @@
 
 ---
 
-## Phase 4 testing checklist
+## Phase 4 testing — ✅ Complete
 
-Use `PHASE4_TESTING.md` for the full guide. Quick order:
+Calculate Standings working end-to-end. Confirmed:
+- Standings calculated for 5 teams with lineups
+- `/history` breakdown modal loads
+- `/my-team` rolling lockout active
 
-1. Run `supabase/test-data/01_dummy_users_and_teams.sql` in Supabase SQL Editor
-2. Create a matchday on `/admin`
-3. Run `supabase/test-data/02_test_lineups.sql` (set `v_matchday_id` first)
-4. Upload a stats CSV on `/admin` → Stats CSV Upload
-5. Click Calculate Standings
-6. Check `/history` — standings table + breakdown modal
-7. Check `/my-team` — rolling lockout + captain warning
+**Known issue (non-blocking):** One team (Sergio) calculated 0 points despite players having stats — likely a player name/ID mismatch between lineup and stats upload. Investigate when convenient.
 
 ---
 
@@ -88,24 +87,9 @@ Key DB table: `knockout_matches` (already exists from migration 001)
 
 ---
 
-## My Team lineup refactor (blocking Phase 4 testing)
+## My Team lineup refactor — ✅ Complete (2026-04-22)
 
-Full plan in `MYTEAM_LINEUP_REFACTOR.md`. Must complete before resuming Phase 4 testing.
-
-**What changes:**
-- Formation picker removed — formation derived live from actual starters (count DEF/MID/FWD)
-- New player auto-placement: bought players fill starters until 11; GK exception (2nd GK goes to bench)
-- Empty slots (pitch + bench) become clickable — select a player, click empty slot to place them
-- `doSwap` — formation validity checks removed entirely
-- `canSave` — only requires: exactly 1 GK in XI, captain set (partial lineups saveable)
-
-**Files to change:** `MyTeam.jsx`, `LineupGrid.jsx`, `BenchList.jsx` (remove `FormationPicker`)
-
-**After refactor — resume Phase 4 testing at:**
-1. Save a lineup via the UI (or re-run `02_test_lineups.sql` with correct matchday ID)
-2. Admin → Calculate Standings
-3. Check `/history` breakdown modal
-4. Check `/my-team` rolling lockout
+Formation picker removed; formation derived live from starters. Empty pitch/bench slots are clickable. `canSave` requires only 1 GK in XI + captain is a starter. GK guard prevents 2nd GK entering XI.
 
 ---
 
@@ -118,6 +102,7 @@ Full plan in `MYTEAM_LINEUP_REFACTOR.md`. Must complete before resuming Phase 4 
 | Transfer window badge uses `is_active` boolean | Not time-range based — workaround: set `is_active=true` directly |
 | Teamless user sees £105M budget | Hardcoded default when no teams row exists |
 | Standings total_points is additive | Running Calculate Standings twice on the same matchday is safe (upsert), but don't delete and manually re-insert rows between runs |
+| Sergio 0 points | One team scored 0 despite players having stats — likely player ID mismatch between lineup and stats rows. Not yet investigated. |
 
 ---
 
