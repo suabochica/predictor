@@ -41,12 +41,21 @@ export default function History() {
     setBreakdown(null);
     setBreakdownLoading(true);
 
-    // Fetch lineup for this team + matchday
-    const { data: lineupRows } = await supabase
+    // Fetch lineup for this team + matchday; fall back to pre-tournament (null) lineup
+    let { data: lineupRows } = await supabase
       .from('lineups')
       .select('player_id, is_starting, is_captain, bench_order')
       .eq('team_id', teamId)
       .eq('matchday_id', matchday.id);
+
+    if (!lineupRows?.length) {
+      const { data: nullRows } = await supabase
+        .from('lineups')
+        .select('player_id, is_starting, is_captain, bench_order')
+        .eq('team_id', teamId)
+        .is('matchday_id', null);
+      lineupRows = nullRows;
+    }
 
     // Fetch player_stats for this matchday
     const { data: statsRows } = await supabase
@@ -119,7 +128,11 @@ export default function History() {
       }
     }
 
-    setBreakdown({ rows, total, subsApplied, captainId });
+    const namedSubs = subsApplied.map((s) => ({
+      playerOut: { ...s.playerOut, name: playerMap[s.playerOut.id]?.name ?? `#${s.playerOut.id}` },
+      playerIn:  { ...s.playerIn,  name: playerMap[s.playerIn.id]?.name  ?? `#${s.playerIn.id}` },
+    }));
+    setBreakdown({ rows, total, subsApplied: namedSubs, captainId });
     setBreakdownLoading(false);
   }
 
@@ -139,7 +152,7 @@ export default function History() {
   // All unique teams across standings
   const teamsInStandings = [...new Map(standings.map(s => [s.team_id, s.teams?.name ?? `Team ${s.team_id}`])).entries()];
 
-  const completedMatchdays = matchdays.filter(md => md.is_completed);
+  const completedMatchdays = matchdays.filter(md => md.is_completed || md.is_active);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -157,9 +170,14 @@ export default function History() {
 
             return (
               <section key={md.id} className="bg-gray-900 rounded-xl p-6 space-y-4">
-                <div className="flex items-baseline gap-3">
+                <div className="flex items-baseline gap-3 flex-wrap">
                   <h2 className="text-lg font-semibold text-white">{md.name}</h2>
                   <span className="text-xs text-gray-500">{md.wc_stage}</span>
+                  {md.is_active && !md.is_completed && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-400 border border-emerald-700/40">
+                      Live
+                    </span>
+                  )}
                 </div>
 
                 {!hasScores ? (
@@ -257,7 +275,7 @@ export default function History() {
                       <p className="font-semibold">Auto-substitutions</p>
                       {breakdown.subsApplied.map((s, i) => (
                         <p key={i}>
-                          {s.playerOut.id} → {s.playerIn.id} (didn't play)
+                          {s.playerOut.name} → {s.playerIn.name} (didn't play)
                         </p>
                       ))}
                     </div>

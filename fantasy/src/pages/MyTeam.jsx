@@ -64,6 +64,12 @@ export default function MyTeam() {
 
   // player_id → game_started_at (ISO string) for active matchday
   const [playerGameTimes, setPlayerGameTimes] = useState({});
+  // player_id → { total_points, minutes_played } for active matchday
+  const [playerMatchdayStats, setPlayerMatchdayStats] = useState({});
+  // Historical: completed matchdays + per-player stats across them
+  const [completedMatchdays, setCompletedMatchdays] = useState([]);
+  // { [matchday_id]: { [player_id]: { total_points, minutes_played, goals, assists } } }
+  const [historicalStats, setHistoricalStats] = useState({});
 
   const squad = normalizeSquad(players);
 
@@ -74,20 +80,60 @@ export default function MyTeam() {
     return gt ? new Date(gt).getTime() <= now : false;
   }
 
-  // ── Load game start times for rolling lockout ────────────────────────────
+  // ── Load game start times + per-player stats for active matchday ─────────
   useEffect(() => {
-    if (!activeMatchday) { setPlayerGameTimes({}); return; }
+    if (!activeMatchday) {
+      setPlayerGameTimes({});
+      setPlayerMatchdayStats({});
+      return;
+    }
     supabase
       .from('player_stats')
-      .select('player_id, game_started_at')
+      .select('player_id, game_started_at, total_points, minutes_played')
       .eq('matchday_id', activeMatchday.id)
-      .not('game_started_at', 'is', null)
       .then(({ data }) => {
-        const map = {};
-        for (const row of data ?? []) map[row.player_id] = row.game_started_at;
-        setPlayerGameTimes(map);
+        const times = {};
+        const stats = {};
+        for (const row of data ?? []) {
+          if (row.game_started_at) times[row.player_id] = row.game_started_at;
+          stats[row.player_id] = {
+            total_points: row.total_points ?? 0,
+            minutes_played: row.minutes_played ?? 0,
+          };
+        }
+        setPlayerGameTimes(times);
+        setPlayerMatchdayStats(stats);
       });
   }, [activeMatchday?.id]); // eslint-disable-line
+
+  // ── Load historical matchday stats for current squad players ────────────
+  useEffect(() => {
+    if (squad.length === 0) return;
+    const playerIds = squad.map(p => p.id);
+
+    supabase
+      .from('matchdays')
+      .select('id, name, wc_stage')
+      .eq('is_completed', true)
+      .order('id', { ascending: true })
+      .then(async ({ data: mds }) => {
+        if (!mds?.length) return;
+        setCompletedMatchdays(mds);
+
+        const { data: stats } = await supabase
+          .from('player_stats')
+          .select('player_id, matchday_id, total_points, minutes_played, goals, assists')
+          .in('player_id', playerIds)
+          .in('matchday_id', mds.map(m => m.id));
+
+        const byMatchday = {};
+        for (const s of stats ?? []) {
+          if (!byMatchday[s.matchday_id]) byMatchday[s.matchday_id] = {};
+          byMatchday[s.matchday_id][s.player_id] = s;
+        }
+        setHistoricalStats(byMatchday);
+      });
+  }, [squad.length]); // eslint-disable-line
 
   // ── Load lineup from DB (or build default) ──────────────────────────────
   const loadLineup = useCallback(async () => {
@@ -104,7 +150,19 @@ export default function MyTeam() {
       ? query.eq('matchday_id', matchdayId)
       : query.is('matchday_id', null);
 
-    const { data } = await query;
+    let { data } = await query;
+
+    // If the active matchday has no saved lineup yet, fall back to the
+    // pre-tournament (null) lineup so the user sees what they actually set up
+    // rather than a system-generated default.
+    if ((!data || data.length === 0) && matchdayId !== null) {
+      const { data: nullData } = await supabase
+        .from('lineups')
+        .select('*')
+        .eq('team_id', team.id)
+        .is('matchday_id', null);
+      data = nullData;
+    }
 
     if (data && data.length > 0) {
       const starterIds = new Set(
@@ -397,6 +455,37 @@ export default function MyTeam() {
         <p className="text-xs text-gray-500 ml-auto">{starters.length} / 11 starters</p>
       </div>
 
+      {/* ── Live matchday stats panel ── */}
+      {activeMatchday && Object.keys(playerMatchdayStats).length > 0 && (() => {
+        const livePts = starters.reduce((sum, p) => {
+          const pts = playerMatchdayStats[p.id]?.total_points ?? 0;
+          return sum + (p.id === captainId ? pts * 2 : pts);
+        }, 0);
+        const played    = starters.filter(p => (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0);
+        const notPlayed = starters.filter(p => !playerMatchdayStats[p.id] || playerMatchdayStats[p.id].minutes_played === 0);
+        return (
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-6 flex-wrap">
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider">Live Pts</p>
+              <p className="text-xl font-bold text-emerald-400">{livePts}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider">Played</p>
+              <p className="text-sm font-semibold text-white">{played.length} / {starters.length}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider">Yet to Play</p>
+              <p className={`text-sm font-semibold ${notPlayed.length > 0 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                {notPlayed.length}
+              </p>
+            </div>
+            <p className="text-[10px] text-gray-500 ml-auto hidden sm:block">
+              C ×2 applied · auto-subs at end
+            </p>
+          </div>
+        );
+      })()}
+
       {/* ── Captain warning ── */}
       {captainGameLocked && (
         <div className="bg-orange-900/30 border border-orange-700/50 rounded-xl p-3 text-sm text-orange-300">
@@ -538,6 +627,10 @@ export default function MyTeam() {
               const isStarter = starters.some((s) => s.id === p.id);
               const benchIdx = bench.findIndex((b) => b.id === p.id);
               const isCaptain = p.id === captainId;
+              const mdStats = playerMatchdayStats[p.id];
+              const liveCapPts = mdStats
+                ? (p.id === captainId ? mdStats.total_points * 2 : mdStats.total_points)
+                : null;
               return (
                 <button
                   key={p.id}
@@ -556,6 +649,21 @@ export default function MyTeam() {
                   <span className="text-xs text-gray-400 flex-shrink-0 w-12 text-right">
                     {formatPrice(p.price)}
                   </span>
+                  {activeMatchday && (
+                    <span className={`text-xs flex-shrink-0 w-12 text-right font-semibold ${
+                      liveCapPts === null
+                        ? 'text-gray-700'
+                        : mdStats.minutes_played > 0
+                        ? 'text-emerald-400'
+                        : 'text-gray-500'
+                    }`}>
+                      {liveCapPts === null
+                        ? '—'
+                        : mdStats.minutes_played > 0
+                        ? `${liveCapPts > 0 ? '+' : ''}${liveCapPts} pts`
+                        : '0 pts'}
+                    </span>
+                  )}
                   <span className="text-[10px] flex-shrink-0 w-20 text-right flex items-center justify-end gap-1">
                     {isGameLocked(p.id) && <span title="Locked — game started">🔒</span>}
                     {isCaptain ? (
@@ -574,6 +682,79 @@ export default function MyTeam() {
           })}
         </div>
       </div>
+
+      {/* ── Per-matchday player history ── */}
+      {completedMatchdays.length > 0 && (
+        <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-300">Player History</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Points scored per matchday by your squad players</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-gray-800">
+                  <th className="px-4 py-2.5 text-xs font-medium text-gray-500 min-w-[140px]">Player</th>
+                  {completedMatchdays.map(md => (
+                    <th key={md.id} className="px-3 py-2.5 text-xs font-medium text-gray-500 text-center whitespace-nowrap">
+                      {md.name.replace(/matchday\s*/i, 'MD').replace(/group stage /i, '')}
+                    </th>
+                  ))}
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {['GK', 'DEF', 'MID', 'FWD'].flatMap(pos =>
+                  squad
+                    .filter(p => p.position === pos)
+                    .map(p => {
+                      let total = 0;
+                      return (
+                        <tr key={p.id} className="hover:bg-gray-800/40">
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getPositionColor(pos)}`}>
+                                {pos}
+                              </span>
+                              <span className="text-white text-xs truncate">{p.name}</span>
+                            </div>
+                          </td>
+                          {completedMatchdays.map(md => {
+                            const s = historicalStats[md.id]?.[p.id];
+                            const pts = s?.total_points ?? null;
+                            if (pts !== null) total += pts;
+                            return (
+                              <td key={md.id} className="px-3 py-2.5 text-center">
+                                {pts === null ? (
+                                  <span className="text-gray-700">—</span>
+                                ) : s.minutes_played === 0 ? (
+                                  <span className="text-gray-600 text-xs" title="Did not play">0</span>
+                                ) : (
+                                  <span className={`font-semibold text-xs ${pts > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {pts}
+                                  </span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="px-3 py-2.5 text-center">
+                            <span className={`font-bold text-xs ${total > 0 ? 'text-white' : 'text-gray-600'}`}>
+                              {total > 0 ? total : '—'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="px-4 py-2 text-[10px] text-gray-600 border-t border-gray-800">
+            Points shown are base player points — captain ×2 is applied at team level during scoring.
+            "—" means no stats uploaded for that matchday for this player.
+          </p>
+        </div>
+      )}
 
       {/* ── Save button ── */}
       <div className="flex items-center gap-4 flex-wrap">

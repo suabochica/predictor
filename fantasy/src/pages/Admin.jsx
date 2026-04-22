@@ -124,10 +124,44 @@ export default function Admin() {
   }
 
   async function handleToggleActive(md) {
+    const activating = !md.is_active;
     await supabase
       .from('matchdays')
-      .update({ is_active: !md.is_active })
+      .update({ is_active: activating })
       .eq('id', md.id);
+
+    // On activation: stamp every team's current pre-tournament (null) lineup
+    // with this matchday_id. This ensures every team has a matchday-specific
+    // record from the moment the matchday goes live, even if they set their
+    // lineup before the matchday existed. Teams that already saved a lineup
+    // specifically for this matchday are left untouched.
+    if (activating) {
+      const [{ data: existing }, { data: nullLineups }] = await Promise.all([
+        supabase.from('lineups').select('team_id').eq('matchday_id', md.id),
+        supabase.from('lineups')
+          .select('team_id, player_id, is_starting, is_captain, bench_order')
+          .is('matchday_id', null),
+      ]);
+
+      const alreadyStamped = new Set((existing ?? []).map(r => r.team_id));
+      const toStamp = (nullLineups ?? [])
+        .filter(r => !alreadyStamped.has(r.team_id))
+        .map(r => ({
+          team_id:    r.team_id,
+          player_id:  r.player_id,
+          matchday_id: md.id,
+          is_starting: r.is_starting,
+          is_captain:  r.is_captain,
+          bench_order: r.bench_order,
+        }));
+
+      if (toStamp.length > 0) {
+        await supabase
+          .from('lineups')
+          .upsert(toStamp, { onConflict: 'team_id,matchday_id,player_id' });
+      }
+    }
+
     await fetchMatchdays();
   }
 
@@ -270,13 +304,19 @@ export default function Admin() {
       ...(nullLineups ?? []).filter(r => !matchdayTeamIds.has(r.team_id)),
     ];
 
-    // 5. Fetch existing fantasy_standings totals for cumulative points
-    const { data: existingStandings } = await supabase
+    // 5. Fetch matchday_points from OTHER matchdays so recalculating the same
+    //    matchday is idempotent — we never read the cumulative total_points column.
+    const { data: otherStandings } = await supabase
       .from('fantasy_standings')
-      .select('team_id, total_points, goals_scored');
-    const standingsMap = Object.fromEntries(
-      (existingStandings ?? []).map(s => [s.team_id, s])
-    );
+      .select('team_id, matchday_points, goals_scored')
+      .neq('matchday_id', matchdayIdInt);
+
+    const prevByTeam = {};
+    for (const s of otherStandings ?? []) {
+      if (!prevByTeam[s.team_id]) prevByTeam[s.team_id] = { pts: 0, goals: 0 };
+      prevByTeam[s.team_id].pts   += s.matchday_points ?? 0;
+      prevByTeam[s.team_id].goals += s.goals_scored    ?? 0;
+    }
 
     const upsertRows = [];
     let teamsScored = 0;
@@ -310,16 +350,14 @@ export default function Admin() {
         positionMap,
       );
 
-      const prev = standingsMap[team.id];
-      const prevTotal = prev?.total_points ?? 0;
-      const prevGoals = prev?.goals_scored ?? 0;
+      const prev = prevByTeam[team.id] ?? { pts: 0, goals: 0 };
 
       upsertRows.push({
         team_id: team.id,
         matchday_id: matchdayIdInt,
         matchday_points: totalPoints,
-        total_points: prevTotal + totalPoints,
-        goals_scored: prevGoals + goalsScored,
+        total_points: prev.pts + totalPoints,
+        goals_scored: goalsScored,
       });
       teamsScored++;
     }
@@ -329,6 +367,26 @@ export default function Admin() {
         .from('fantasy_standings')
         .upsert(upsertRows, { onConflict: 'team_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
+    }
+
+    // Stamp null-matchday lineups as matchday-specific — creates the permanent
+    // historical record so History and per-matchday breakdowns always find a lineup.
+    // Only runs for teams that used the null fallback; idempotent on re-runs.
+    const toStamp = (nullLineups ?? [])
+      .filter(r => !matchdayTeamIds.has(r.team_id))
+      .map(r => ({
+        team_id: r.team_id,
+        player_id: r.player_id,
+        matchday_id: matchdayIdInt,
+        is_starting: r.is_starting,
+        is_captain: r.is_captain,
+        bench_order: r.bench_order,
+      }));
+    if (toStamp.length > 0) {
+      const { error: stampErr } = await supabase
+        .from('lineups')
+        .upsert(toStamp, { onConflict: 'team_id,matchday_id,player_id' });
+      if (stampErr) errors.push(`Lineup stamp error: ${stampErr.message}`);
     }
 
     setCalcResult({ teamsScored, errors });

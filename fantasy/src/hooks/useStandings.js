@@ -47,10 +47,11 @@ export function useStandings() {
     for (const row of standingsData) {
       if (!byTeam[row.team_id]) continue;
       byTeam[row.team_id].matchday_points[row.matchday_id] = row.matchday_points;
-      // total_points is cumulative; the row with the highest value has the running total
+      // goals_scored is stored per-matchday; sum across all rows for tiebreaker
+      byTeam[row.team_id].goals_scored += row.goals_scored ?? 0;
+      // total_points is cumulative; highest row = running total
       if (row.total_points > byTeam[row.team_id].total_points) {
         byTeam[row.team_id].total_points = row.total_points;
-        byTeam[row.team_id].goals_scored = row.goals_scored;
       }
     }
 

@@ -9,7 +9,7 @@
 
 **Last updated:** 2026-04-22
 **Branch:** `Fantasy`
-**Phase:** 4 testing complete — ready for Phase 5
+**Phase:** 4 bugs fixed + Phase 4 polish — ready for Phase 5 after DB reset + re-test
 
 ---
 
@@ -42,6 +42,7 @@
 | 008_team_players_admin_policy.sql | Admin INSERT/UPDATE/DELETE on team_players | ✅ |
 | 009_lineups_admin_read.sql | Admin SELECT on all lineups (required for Calculate Standings) | ✅ |
 | 010_fantasy_standings_admin_write.sql | Admin INSERT/UPDATE/DELETE on fantasy_standings | ✅ |
+| 011_lineups_admin_write.sql | Admin INSERT/UPDATE/DELETE on lineups (required for lineup stamps) | ⚠️ Needs applying |
 
 ---
 
@@ -68,6 +69,27 @@ Calculate Standings working end-to-end. Confirmed:
 - `/my-team` rolling lockout active
 
 **Known issue (non-blocking):** One team (Sergio) calculated 0 points despite players having stats — likely a player name/ID mismatch between lineup and stats upload. Investigate when convenient.
+
+---
+
+## Phase 4 bug fixes + polish (2026-04-22)
+
+| Fix | Files |
+|-----|-------|
+| Double-counting on recalculate — now uses `matchday_points` from other matchdays, never reads cumulative `total_points` | `Admin.jsx` |
+| `goals_scored` stored per-matchday (not cumulative); `useStandings` sums it across rows | `Admin.jsx`, `useStandings.js` |
+| History shows active (Live) matchdays, not just completed | `History.jsx` |
+| History breakdown falls back to null-matchday lineup if no matchday-specific one exists | `History.jsx` |
+| Auto-sub names in breakdown modal showed IDs — now shows player names | `History.jsx` |
+| MyTeam loads null-matchday lineup as fallback when active matchday has no saved lineup yet | `MyTeam.jsx` |
+| MyTeam: live stats panel (Live Pts / Played / Yet to Play) during active matchday | `MyTeam.jsx` |
+| MyTeam: pts column per player in squad table during active matchday | `MyTeam.jsx` |
+| MyTeam: Player History table — per-player × per-matchday base points grid | `MyTeam.jsx` |
+| Admin activation stamp — toggling a matchday active now copies all null-matchday lineups to the new matchday_id | `Admin.jsx` |
+| Calculate Standings stamp — also stamps null lineups after scoring (secondary safety net) | `Admin.jsx` |
+| Migration 011 — admin INSERT/UPDATE/DELETE on lineups (stamps were silently blocked by RLS) | `supabase/migrations/011_lineups_admin_write.sql` |
+
+**⚠️ DB reset needed:** test data has a null-matchday lineup for Sergio with no player_stats. Cleanest path: delete test data, apply migration 011 in Supabase, create a new matchday (activation will stamp lineups immediately), upload stats for all squad players, then Calculate Standings.
 
 ---
 
@@ -102,7 +124,7 @@ Formation picker removed; formation derived live from starters. Empty pitch/benc
 | Transfer window badge uses `is_active` boolean | Not time-range based — workaround: set `is_active=true` directly |
 | Teamless user sees £105M budget | Hardcoded default when no teams row exists |
 | Standings total_points is additive | Running Calculate Standings twice on the same matchday is safe (upsert), but don't delete and manually re-insert rows between runs |
-| Sergio 0 points | One team scored 0 despite players having stats — likely player ID mismatch between lineup and stats rows. Not yet investigated. |
+| Sergio 0 points | Lineup saved with null matchday_id (pre-activation) + players had no player_stats rows. Root cause fixed at system level (activation stamp + loadLineup fallback). Re-test after DB reset + migration 011. |
 
 ---
 
