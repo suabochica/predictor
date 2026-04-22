@@ -2,10 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { supabase } from '../lib/supabase';
-import { parseFormation, validateLineup } from '../lib/formations';
 import { getPositionColor, formatPrice } from '../lib/utils';
-import { VALID_FORMATIONS } from '../config/constants';
-import FormationPicker from '../components/team/FormationPicker';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 
@@ -25,37 +22,34 @@ function normalizeSquad(teamPlayers) {
   }));
 }
 
-// Build a default 4-3-3 lineup from the squad, most expensive starters
+// Build a default lineup from the squad — most expensive players fill starters first
+// GK exception: 2nd GK goes to bench regardless of price
 function buildDefault(squad) {
   const sorted = [...squad].sort((a, b) => b.price - a.price);
-  const gks = sorted.filter((p) => p.position === 'GK');
-  const defs = sorted.filter((p) => p.position === 'DEF');
-  const mids = sorted.filter((p) => p.position === 'MID');
-  const fwds = sorted.filter((p) => p.position === 'FWD');
+  const starters = [];
+  const bench = [];
+  let hasGkInXI = false;
 
-  const starters = [
-    ...gks.slice(0, 1),
-    ...defs.slice(0, 4),
-    ...mids.slice(0, 3),
-    ...fwds.slice(0, 3),
-  ].filter(Boolean);
+  for (const player of sorted) {
+    if (starters.length >= 11) {
+      bench.push(player);
+      continue;
+    }
+    if (player.position === 'GK') {
+      if (hasGkInXI) { bench.push(player); continue; }
+      hasGkInXI = true;
+    }
+    starters.push(player);
+  }
 
-  const starterIds = new Set(starters.map((p) => p.id));
-  const bench = squad.filter((p) => !starterIds.has(p.id));
-
-  const captainId =
-    starters.length > 0
-      ? starters.reduce((best, p) => (p.price > (best?.price ?? 0) ? p : best), null)?.id ?? null
-      : null;
-
-  return { formation: '4-3-3', starters, bench, captainId };
+  const captain = starters[0] ?? null;
+  return { starters, bench, captainId: captain?.id ?? null };
 }
 
 export default function MyTeam() {
   const { team, players, loading: teamLoading } = useTeam();
   const { activeMatchday } = useLeague();
 
-  const [formation, setFormation] = useState('4-3-3');
   const [starters, setStarters] = useState([]);
   const [bench, setBench] = useState([]);
   const [captainId, setCaptainId] = useState(null);
@@ -129,18 +123,8 @@ export default function MyTeam() {
       setStarters(savedStarters);
       setBench(savedBench);
       setCaptainId(captainRow?.player_id ?? null);
-
-      // Infer formation from saved starters
-      if (savedStarters.length === 11) {
-        const def = savedStarters.filter((p) => p.position === 'DEF').length;
-        const mid = savedStarters.filter((p) => p.position === 'MID').length;
-        const fwd = savedStarters.filter((p) => p.position === 'FWD').length;
-        const inferred = `${def}-${mid}-${fwd}`;
-        if (VALID_FORMATIONS.includes(inferred)) setFormation(inferred);
-      }
     } else {
       const defaults = buildDefault(squad);
-      setFormation(defaults.formation);
       setStarters(defaults.starters);
       setBench(defaults.bench);
       setCaptainId(defaults.captainId);
@@ -152,12 +136,6 @@ export default function MyTeam() {
   useEffect(() => {
     loadLineup();
   }, [loadLineup]);
-
-  // ── Formation change ─────────────────────────────────────────────────────
-  function handleFormationChange(newFormation) {
-    setFormation(newFormation);
-    setSwapError(null);
-  }
 
   // ── Player selection & swapping ──────────────────────────────────────────
   function handlePlayerClick(player) {
@@ -187,16 +165,9 @@ export default function MyTeam() {
     const p2IsStarter = starters.some((s) => s.id === p2.id);
 
     if (p1IsStarter && p2IsStarter) {
-      // Starter ↔ Starter: only meaningful if they're different positions — allow freely
       const newStarters = starters.map((s) =>
         s.id === p1.id ? p2 : s.id === p2.id ? p1 : s
       );
-      if (newStarters.length === 11 && !isLineupValidForFormation(newStarters)) {
-        setSwapError(
-          `Can't swap ${p1.name} (${p1.position}) with ${p2.name} (${p2.position}) — formation ${formation} would be broken.`
-        );
-        return;
-      }
       setStarters(newStarters);
       setSwapError(null);
       return;
@@ -205,25 +176,21 @@ export default function MyTeam() {
     let newStarters, newBench;
 
     if (p1IsStarter && !p2IsStarter) {
-      newStarters = starters.filter((s) => s.id !== p1.id).concat(p2);
-      // Only enforce formation check when the lineup is complete (11 starters)
-      if (newStarters.length === 11 && !isLineupValidForFormation(newStarters)) {
-        setSwapError(
-          `Can't swap ${p1.name} (${p1.position}) with ${p2.name} (${p2.position}) — formation ${formation} would be broken.`
-        );
+      const remainingStarters = starters.filter((s) => s.id !== p1.id);
+      if (p2.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
+        setSwapError(`Can't move ${p2.name} to XI — only 1 GK allowed in starting XI.`);
         return;
       }
+      newStarters = remainingStarters.concat(p2);
       newBench = bench.filter((b) => b.id !== p2.id).concat(p1);
       if (captainId === p1.id) setCaptainId(null);
     } else if (!p1IsStarter && p2IsStarter) {
-      newStarters = starters.filter((s) => s.id !== p2.id).concat(p1);
-      // Only enforce formation check when the lineup is complete (11 starters)
-      if (newStarters.length === 11 && !isLineupValidForFormation(newStarters)) {
-        setSwapError(
-          `Can't swap ${p1.name} (${p1.position}) with ${p2.name} (${p2.position}) — formation ${formation} would be broken.`
-        );
+      const remainingStarters = starters.filter((s) => s.id !== p2.id);
+      if (p1.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
+        setSwapError(`Can't move ${p1.name} to XI — only 1 GK allowed in starting XI.`);
         return;
       }
+      newStarters = remainingStarters.concat(p1);
       newBench = bench.filter((b) => b.id !== p1.id).concat(p2);
       if (captainId === p2.id) setCaptainId(null);
     } else {
@@ -242,17 +209,44 @@ export default function MyTeam() {
     setSwapError(null);
   }
 
-  function isLineupValidForFormation(proposedStarters) {
-    if (proposedStarters.length !== 11) return false;
-    const req = parseFormation(formation);
-    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-    for (const p of proposedStarters) counts[p.position] = (counts[p.position] ?? 0) + 1;
-    return (
-      counts.GK === req.GK &&
-      counts.DEF === req.DEF &&
-      counts.MID === req.MID &&
-      counts.FWD === req.FWD
-    );
+  // ── Empty slot handlers ──────────────────────────────────────────────────
+  function handleEmptySlotClick() {
+    if (!selectedPlayer) return;
+    if (isGameLocked(selectedPlayer.id)) {
+      setSwapError(`${selectedPlayer.name}'s game has already started — they cannot be moved.`);
+      return;
+    }
+    if (starters.some((s) => s.id === selectedPlayer.id)) {
+      setSelectedPlayer(null);
+      return;
+    }
+    if (selectedPlayer.position === 'GK' && starters.some((s) => s.position === 'GK')) {
+      setSwapError(`Can't add ${selectedPlayer.name} to XI — only 1 GK allowed in starting XI.`);
+      return;
+    }
+    setStarters([...starters, selectedPlayer]);
+    setBench(bench.filter((b) => b.id !== selectedPlayer.id));
+    setSelectedPlayer(null);
+    setSwapError(null);
+  }
+
+  function handleEmptyBenchSlotClick() {
+    if (!selectedPlayer) return;
+    if (isGameLocked(selectedPlayer.id)) {
+      setSwapError(`${selectedPlayer.name}'s game has already started — they cannot be moved.`);
+      return;
+    }
+    if (bench.some((b) => b.id === selectedPlayer.id)) {
+      setSelectedPlayer(null);
+      return;
+    }
+    if (starters.some((s) => s.id === selectedPlayer.id)) {
+      setStarters(starters.filter((s) => s.id !== selectedPlayer.id));
+      if (captainId === selectedPlayer.id) setCaptainId(null);
+    }
+    setBench([...bench, selectedPlayer]);
+    setSelectedPlayer(null);
+    setSwapError(null);
   }
 
   // ── Captain selection ────────────────────────────────────────────────────
@@ -318,12 +312,17 @@ export default function MyTeam() {
   }
 
   // ── Derived state ────────────────────────────────────────────────────────
-  const lineupValid = isLineupValidForFormation(starters);
-  const hasCaptain = captainId !== null;
-  const canSave = lineupValid && hasCaptain && starters.length === 11 && bench.length === 4;
-  // Only warn about formation mismatch when the starting XI is fully populated
-  const formationMismatch = starters.length === 11 && !lineupValid;
-  // Captain warning: game started AND 0 minutes played (stats uploaded)
+  const derivedFormation = (() => {
+    const def = starters.filter((p) => p.position === 'DEF').length;
+    const mid = starters.filter((p) => p.position === 'MID').length;
+    const fwd = starters.filter((p) => p.position === 'FWD').length;
+    return `${def}-${mid}-${fwd}`;
+  })();
+
+  const gkCount = starters.filter((p) => p.position === 'GK').length;
+  const captainIsStarter = captainId !== null && starters.some((s) => s.id === captainId);
+  const canSave = gkCount === 1 && captainIsStarter;
+  // Captain warning: captain's game has already kicked off
   const captainGameLocked = captainId ? isGameLocked(captainId) : false;
 
   const selectedIsStarter =
@@ -387,18 +386,16 @@ export default function MyTeam() {
         </div>
       </div>
 
-      {/* ── Formation picker ── */}
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 space-y-2">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Formation</p>
-        <FormationPicker value={formation} onChange={handleFormationChange} />
-      </div>
-
-      {/* ── Lineup validity warning ── */}
-      {formationMismatch && (
-        <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 text-sm text-yellow-300">
-          Lineup doesn't match formation {formation}. Check your starting XI.
+      {/* ── Formation label ── */}
+      <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-4">
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Formation</p>
+          <p className="text-lg font-bold text-emerald-400 mt-0.5">
+            {starters.length > 0 ? derivedFormation : '—'}
+          </p>
         </div>
-      )}
+        <p className="text-xs text-gray-500 ml-auto">{starters.length} / 11 starters</p>
+      </div>
 
       {/* ── Captain warning ── */}
       {captainGameLocked && (
@@ -424,10 +421,11 @@ export default function MyTeam() {
       {/* ── Pitch ── */}
       <LineupGrid
         starters={starters}
-        formation={formation}
         captainId={captainId}
         selectedId={selectedPlayer?.id ?? null}
         onPlayerClick={handlePlayerClick}
+        onEmptySlotClick={handleEmptySlotClick}
+        hasSelected={!!selectedPlayer}
       />
 
       {/* ── Bench ── */}
@@ -436,6 +434,8 @@ export default function MyTeam() {
         selectedId={selectedPlayer?.id ?? null}
         onPlayerClick={handlePlayerClick}
         onReorder={handleBenchReorder}
+        onEmptyBenchSlotClick={handleEmptyBenchSlotClick}
+        hasSelected={!!selectedPlayer}
       />
 
       {/* ── Action panel (shown when a player is selected) ── */}
@@ -587,10 +587,8 @@ export default function MyTeam() {
 
         {!canSave && !saving && (
           <p className="text-xs text-gray-500">
-            {!lineupValid && 'Lineup must match formation. '}
-            {!hasCaptain && 'Select a captain. '}
-            {starters.length !== 11 && `Need 11 starters (${starters.length}/11). `}
-            {bench.length !== 4 && `Need 4 bench players (${bench.length}/4).`}
+            {gkCount !== 1 && 'Need exactly 1 GK in starting XI. '}
+            {!captainIsStarter && 'Select a captain from your starters. '}
           </p>
         )}
 
