@@ -1,0 +1,30 @@
+-- Seed the players table from sample_players.csv
+-- Safe to re-run: uses INSERT ... ON CONFLICT DO NOTHING
+
+INSERT INTO players (name, country, country_code, position, price) VALUES
+  ('Kylian Mbappé',           'France',       'FRA', 'FWD', 11.0),
+  ('Jude Bellingham',         'England',       'ENG', 'MID', 10.5),
+  ('Erling Haaland',          'Norway',        'NOR', 'FWD', 10.5),
+  ('Vinicius Jr',             'Brazil',        'BRA', 'FWD', 10.0),
+  ('Pedri',                   'Spain',         'ESP', 'MID',  8.0),
+  ('Phil Foden',              'England',       'ENG', 'MID',  8.5),
+  ('Gavi',                    'Spain',         'ESP', 'MID',  7.5),
+  ('Lamine Yamal',            'Spain',         'ESP', 'FWD',  8.5),
+  ('Federico Valverde',       'Uruguay',       'URU', 'MID',  8.0),
+  ('Rodri',                   'Spain',         'ESP', 'MID',  8.5),
+  ('Virgil van Dijk',         'Netherlands',   'NED', 'DEF',  7.5),
+  ('Trent Alexander-Arnold',  'England',       'ENG', 'DEF',  8.0),
+  ('Achraf Hakimi',           'Morocco',       'MAR', 'DEF',  7.5),
+  ('Theo Hernández',          'France',        'FRA', 'DEF',  7.0),
+  ('Alejandro Grimaldo',      'Spain',         'ESP', 'DEF',  6.5),
+  ('Alisson Becker',          'Brazil',        'BRA', 'GK',   7.5),
+  ('Manuel Neuer',            'Germany',       'GER', 'GK',   7.0),
+  ('Thibaut Courtois',        'Belgium',       'BEL', 'GK',   7.5),
+  ('David Raya',              'Spain',         'ESP', 'GK',   6.5),
+  ('Gregor Kobel',            'Switzerland',   'SUI', 'GK',   6.0),
+  ('Ivan Toney',              'England',       'ENG', 'FWD',  7.5),
+  ('Dusan Vlahovic',          'Serbia',        'SRB', 'FWD',  7.5),
+  ('Serge Dest',              'USA',           'USA', 'DEF',  6.0),
+  ('Weston McKennie',         'USA',           'USA', 'MID',  6.5),
+  ('Christian Pulisic',       'USA',           'USA', 'MID',  7.5)
+ON CONFLICT DO NOTHING;

@@ -173,14 +173,15 @@ export default function Admin() {
 
     // Fetch all players to resolve names → id + position
     const { data: allPlayers } = await supabase.from('players').select('id, name, position');
-    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [p.name.toLowerCase(), p]));
+    const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
 
     const toUpsert = [];
     const errors   = [];
 
     for (const row of rows) {
       const name   = (row['player_name'] ?? '').trim();
-      const player = playerMap[name.toLowerCase()];
+      const player = playerMap[normName(name)];
       if (!player) { errors.push(`Player not found: "${name}"`); continue; }
 
       const minutes        = parseInt(row['minutes'] ?? '0', 10) || 0;

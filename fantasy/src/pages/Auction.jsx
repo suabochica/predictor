@@ -55,7 +55,7 @@ export default function Auction() {
   const handleRoundExpire = useCallback(() => setRoundExpired(true), []);
 
   // Reset expired flag whenever a new round starts
-  useEffect(() => { setRoundExpired(false); }, [current_round, round_started_at]);
+  useEffect(() => { setRoundExpired(false); }, [auctionState?.current_round, auctionState?.round_started_at]);
 
   if (loading || !auctionState) {
     return <div className="text-gray-400 p-6">Loading auction…</div>;
