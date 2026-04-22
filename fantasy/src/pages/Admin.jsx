@@ -252,11 +252,23 @@ export default function Admin() {
     const { data: allPlayers } = await supabase.from('players').select('id, position');
     const positionMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.position]));
 
-    // 4. Fetch all lineups for this matchday (or null matchday for pre-tournament)
-    const { data: allLineups } = await supabase
+    // 4. Fetch lineups for this matchday, then fall back to pre-tournament (null) lineups
+    const { data: matchdayLineups } = await supabase
       .from('lineups')
       .select('team_id, player_id, is_starting, is_captain, bench_order')
       .eq('matchday_id', matchdayIdInt);
+
+    const { data: nullLineups } = await supabase
+      .from('lineups')
+      .select('team_id, player_id, is_starting, is_captain, bench_order')
+      .is('matchday_id', null);
+
+    // Build a map of team_id → rows, preferring matchday-specific over pre-tournament
+    const matchdayTeamIds = new Set((matchdayLineups ?? []).map(r => r.team_id));
+    const allLineups = [
+      ...(matchdayLineups ?? []),
+      ...(nullLineups ?? []).filter(r => !matchdayTeamIds.has(r.team_id)),
+    ];
 
     // 5. Fetch existing fantasy_standings totals for cumulative points
     const { data: existingStandings } = await supabase
