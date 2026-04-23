@@ -9,7 +9,7 @@
 
 **Last updated:** 2026-04-23
 **Branch:** `Fantasy`
-**Phase:** Phase 5 complete — knockout bracket seeding, scoring, and advancement built
+**Phase:** Phase 6 complete — transfer windows admin, priority queue display, lineup cleanup
 
 ---
 
@@ -22,7 +22,7 @@
 | 3 | Squad management (My Team, Standings, Market, Transfers, Bracket) | ✅ Complete |
 | 4 | Matchday & Scoring | ✅ Complete |
 | 5 | Knockout System | ✅ Complete |
-| 6 | Transfer Windows | ⬜ Not started |
+| 6 | Transfer Windows | ✅ Complete |
 | 7 | Polish & Testing | ⬜ Not started |
 | 8 | Deployment | ⬜ Not started |
 
@@ -116,17 +116,32 @@ Calculate Standings working end-to-end. Confirmed:
 
 Key DB table: `knockout_matches` (existed from migration 001, RLS already correct)
 
-## Phase 6 scope (next)
+## Phase 6 — ✅ Complete (2026-04-23)
 
-From `MASTER_DOCUMENT.md` Section 8 / Phase 6:
+| Item | File(s) |
+|------|---------|
+| Migration 012 — RLS for `transfer_windows` (auth read, admin write) + admin read on all `transfers` | `supabase/migrations/012_transfer_windows_rls.sql` |
+| Admin: Transfer Windows section — create (presets + custom form), open/close, delete | `Admin.jsx` |
+| Admin: View transfer activity across all teams for active window | `Admin.jsx` |
+| Transfers: Priority queue display — inverse standings order with pip indicators | `Transfers.jsx` |
+| Transfers: Lineup cleanup — transferred-out player removed from active + null matchday lineups | `Transfers.jsx` |
+| All existing transfer logic already present: budget check, locked swap validation, history | `Transfers.jsx` (Phase 3) |
 
-- [ ] Transfer window state management
-- [ ] Inverse order queue logic (12th picks first → 1st picks last)
-- [ ] Transfer interface
-- [ ] Locked player swap validation (≤8.5M only, budget check)
-- [ ] Budget recalculation after transfers
-- [ ] Transfer history log
-- [ ] Admin: Open/close windows
+Key DB tables: `transfer_windows`, `transfers` (both existed from migration 001)
+
+---
+
+## Phase 7 scope (next)
+
+From `MASTER_DOCUMENT.md` Section 13 / Phase 7:
+
+- [ ] Mobile responsiveness audit
+- [ ] Error handling & validation
+- [ ] Loading states & skeletons
+- [ ] Empty states
+- [ ] Toast notifications
+- [ ] End-to-end testing
+- [ ] Performance optimization
 
 ---
 

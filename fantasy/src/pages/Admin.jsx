@@ -325,6 +325,86 @@ export default function Admin() {
   const [knockoutCalcRunning, setKnockoutCalcRunning] = useState(false);
   const [knockoutCalcResult, setKnockoutCalcResult] = useState(null);
 
+  // ── Transfer Windows ──────────────────────────────────────────────────────
+  const WINDOW_DEFAULTS = [
+    { window_number: 1, max_transfers: 7, label: 'Window 1 — After R32 (7 transfers)' },
+    { window_number: 2, max_transfers: 3, label: 'Window 2 — After R16 (3 transfers)' },
+    { window_number: 3, max_transfers: 3, label: 'Window 3 — After QF (3 transfers)' },
+  ];
+  const EMPTY_TW_FORM = { window_number: '1', max_transfers: '7', opens_at: '', closes_at: '' };
+  const [transferWindows, setTransferWindows] = useState([]);
+  const [twLoading, setTwLoading] = useState(true);
+  const [twForm, setTwForm] = useState(EMPTY_TW_FORM);
+  const [twSaving, setTwSaving] = useState(false);
+  const [twError, setTwError] = useState('');
+  const [windowActivity, setWindowActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+
+  const fetchTransferWindows = useCallback(async () => {
+    setTwLoading(true);
+    const { data } = await supabase
+      .from('transfer_windows')
+      .select('*')
+      .order('window_number');
+    setTransferWindows(data ?? []);
+    setTwLoading(false);
+  }, []);
+
+  useEffect(() => { fetchTransferWindows(); }, [fetchTransferWindows]);
+
+  async function fetchWindowActivity(windowNumber) {
+    setActivityLoading(true);
+    const { data } = await supabase
+      .from('transfers')
+      .select(`
+        id, window_number, transfer_type, price_difference, created_at,
+        team:teams(name, users(display_name)),
+        player_out:players!transfers_player_out_id_fkey(name, position),
+        player_in:players!transfers_player_in_id_fkey(name, position)
+      `)
+      .eq('window_number', windowNumber)
+      .order('created_at', { ascending: false });
+    setWindowActivity(data ?? []);
+    setActivityLoading(false);
+  }
+
+  async function handleCreateTransferWindow(preset) {
+    setTwError('');
+    setTwSaving(true);
+    const num = preset ? preset.window_number : parseInt(twForm.window_number, 10);
+    const max = preset ? preset.max_transfers : parseInt(twForm.max_transfers, 10);
+    if (!num || num < 1 || num > 3) { setTwError('Window number must be 1–3.'); setTwSaving(false); return; }
+    if (!max || max < 1)            { setTwError('Max transfers must be ≥ 1.'); setTwSaving(false); return; }
+    const { error } = await supabase.from('transfer_windows').insert({
+      window_number: num,
+      max_transfers: max,
+      is_active: false,
+      opens_at: twForm.opens_at || null,
+      closes_at: twForm.closes_at || null,
+    });
+    setTwSaving(false);
+    if (error) { setTwError(error.message); return; }
+    setTwForm(EMPTY_TW_FORM);
+    await fetchTransferWindows();
+  }
+
+  async function handleToggleTransferWindow(tw) {
+    const activating = !tw.is_active;
+    // Only one window active at a time — deactivate others first
+    if (activating) {
+      await supabase.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
+    }
+    await supabase.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
+    await fetchTransferWindows();
+    if (activating) await fetchWindowActivity(tw.window_number);
+  }
+
+  async function handleDeleteTransferWindow(tw) {
+    await supabase.from('transfer_windows').delete().eq('id', tw.id);
+    await fetchTransferWindows();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   async function handleCalculateStandings(e) {
     e.preventDefault();
     setCalcResult(null);
@@ -1477,6 +1557,228 @@ export default function Admin() {
       )}
 
       {/* ── Player Pool ──────────────────────────────────────────────────── */}
+      {/* ── Transfer Windows ─────────────────────────────────────────────── */}
+      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-white">Transfer Windows</h2>
+
+        {/* Quick-create preset buttons */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            Quick Create
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {WINDOW_DEFAULTS.map((preset) => (
+              <button
+                key={preset.window_number}
+                onClick={() => handleCreateTransferWindow(preset)}
+                disabled={twSaving}
+                className="px-3 py-1.5 rounded-lg text-sm bg-blue-800 hover:bg-blue-700 text-blue-100 transition-colors disabled:opacity-50"
+              >
+                + {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Custom create form */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            Custom Window
+          </p>
+          <div className="flex flex-wrap gap-3 items-end">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Window #</label>
+              <select
+                value={twForm.window_number}
+                onChange={(e) => setTwForm((f) => ({ ...f, window_number: e.target.value }))}
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+              >
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Max Transfers</label>
+              <input
+                type="number"
+                min="1"
+                value={twForm.max_transfers}
+                onChange={(e) => setTwForm((f) => ({ ...f, max_transfers: e.target.value }))}
+                className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Opens At (optional)</label>
+              <input
+                type="datetime-local"
+                value={twForm.opens_at}
+                onChange={(e) => setTwForm((f) => ({ ...f, opens_at: e.target.value }))}
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Closes At (optional)</label>
+              <input
+                type="datetime-local"
+                value={twForm.closes_at}
+                onChange={(e) => setTwForm((f) => ({ ...f, closes_at: e.target.value }))}
+                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <button
+              onClick={() => handleCreateTransferWindow(null)}
+              disabled={twSaving}
+              className="px-4 py-1.5 rounded-lg text-sm bg-blue-700 hover:bg-blue-600 text-white transition-colors disabled:opacity-50"
+            >
+              {twSaving ? 'Creating…' : 'Create'}
+            </button>
+          </div>
+          {twError && <p className="text-red-400 text-sm mt-2">{twError}</p>}
+        </div>
+
+        {/* Windows list */}
+        {twLoading ? (
+          <p className="text-gray-500 text-sm">Loading windows…</p>
+        ) : transferWindows.length === 0 ? (
+          <p className="text-gray-500 text-sm">No transfer windows created yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <th className="pb-2 pr-4 font-medium">Window</th>
+                  <th className="pb-2 pr-4 font-medium">Max</th>
+                  <th className="pb-2 pr-4 font-medium">Opens</th>
+                  <th className="pb-2 pr-4 font-medium">Closes</th>
+                  <th className="pb-2 pr-4 font-medium">Status</th>
+                  <th className="pb-2 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {transferWindows.map((tw) => (
+                  <tr key={tw.id} className="text-gray-300">
+                    <td className="py-2.5 pr-4 font-semibold text-white">Window {tw.window_number}</td>
+                    <td className="py-2.5 pr-4">{tw.max_transfers} transfers</td>
+                    <td className="py-2.5 pr-4 text-gray-500 text-xs">
+                      {tw.opens_at ? new Date(tw.opens_at).toLocaleString() : '—'}
+                    </td>
+                    <td className="py-2.5 pr-4 text-gray-500 text-xs">
+                      {tw.closes_at ? new Date(tw.closes_at).toLocaleString() : '—'}
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                        tw.is_active
+                          ? 'bg-emerald-800 text-emerald-200'
+                          : 'bg-gray-700 text-gray-400'
+                      }`}>
+                        {tw.is_active ? 'Open' : 'Closed'}
+                      </span>
+                    </td>
+                    <td className="py-2.5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleToggleTransferWindow(tw)}
+                          className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                            tw.is_active
+                              ? 'bg-red-800 hover:bg-red-700 text-red-200'
+                              : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200'
+                          }`}
+                        >
+                          {tw.is_active ? 'Close' : 'Open'}
+                        </button>
+                        {tw.is_active && (
+                          <button
+                            onClick={() => fetchWindowActivity(tw.window_number)}
+                            disabled={activityLoading}
+                            className="px-3 py-1 rounded text-xs font-semibold bg-blue-800 hover:bg-blue-700 text-blue-200 transition-colors"
+                          >
+                            {activityLoading ? 'Loading…' : 'View Activity'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteTransferWindow(tw)}
+                          className="px-3 py-1 rounded text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Transfer activity for active window */}
+        {windowActivity.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+              Transfer Activity — Window {windowActivity[0]?.window_number}
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="pb-2 pr-4 font-medium">Manager</th>
+                    <th className="pb-2 pr-4 font-medium">Out</th>
+                    <th className="pb-2 pr-4 font-medium">In</th>
+                    <th className="pb-2 pr-4 font-medium">Type</th>
+                    <th className="pb-2 pr-4 font-medium">Δ Budget</th>
+                    <th className="pb-2 font-medium">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {windowActivity.map((t) => (
+                    <tr key={t.id} className="text-gray-300">
+                      <td className="py-2 pr-4 font-medium text-white">
+                        {t.team?.users?.display_name ?? t.team?.name ?? '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-red-300">
+                        {t.player_out?.name ?? '—'}
+                        {t.player_out?.position && (
+                          <span className={`ml-1.5 text-[9px] px-1 py-0.5 rounded font-semibold ${POSITION_BADGE[t.player_out.position]}`}>
+                            {t.player_out.position}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4 text-emerald-300">
+                        {t.player_in?.name ?? '—'}
+                        {t.player_in?.position && (
+                          <span className={`ml-1.5 text-[9px] px-1 py-0.5 rounded font-semibold ${POSITION_BADGE[t.player_in.position]}`}>
+                            {t.player_in.position}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                          t.transfer_type === 'locked_swap'
+                            ? 'bg-purple-800/60 text-purple-300'
+                            : 'bg-blue-800/60 text-blue-300'
+                        }`}>
+                          {t.transfer_type === 'locked_swap' ? 'Locked' : 'Free'}
+                        </span>
+                      </td>
+                      <td className={`py-2 pr-4 text-xs font-semibold ${
+                        (t.price_difference ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'
+                      }`}>
+                        {t.price_difference != null
+                          ? `${(t.price_difference >= 0 ? '+' : '')}${Number(t.price_difference).toFixed(1)}M`
+                          : '—'}
+                      </td>
+                      <td className="py-2 text-gray-500 text-xs">
+                        {new Date(t.created_at).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="bg-gray-900 rounded-xl p-6 space-y-4">
         <div className="flex items-baseline gap-3">
           <h2 className="text-lg font-semibold text-white">Player Pool</h2>
