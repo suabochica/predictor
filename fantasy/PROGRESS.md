@@ -28,7 +28,7 @@
 
 ---
 
-## Migrations applied (all 11)
+## Migrations applied (all 12)
 
 | File | Purpose | Status |
 |------|---------|--------|
@@ -43,6 +43,7 @@
 | 009_lineups_admin_read.sql | Admin SELECT on all lineups (required for Calculate Standings) | ✅ |
 | 010_fantasy_standings_admin_write.sql | Admin INSERT/UPDATE/DELETE on fantasy_standings | ✅ |
 | 011_lineups_admin_write.sql | Admin INSERT/UPDATE/DELETE on lineups (required for lineup stamps) | ✅ |
+| 012_transfer_windows_rls.sql | Auth SELECT on transfer_windows; admin ALL on transfer_windows + SELECT on all transfers | ✅ |
 
 ---
 
@@ -151,7 +152,7 @@ Formation picker removed; formation derived live from starters. Empty pitch/benc
 
 ---
 
-## Known issues (not blocking Phase 5)
+## Known issues (not blocking Phase 7)
 
 | Issue | Detail |
 |-------|--------|
@@ -170,7 +171,10 @@ Formation picker removed; formation derived live from starters. Empty pitch/benc
 | `MASTER_DOCUMENT.md` | Full spec — read before implementing any feature |
 | `MYTEAM_LINEUP_REFACTOR.md` | Lineup overhaul plan — read before touching MyTeam |
 | `PHASE4_TESTING.md` | Phase 4 test guide |
+| `PHASE5_TESTING.md` | Phase 5 test guide (knockout bracket) |
+| `PHASE6_TESTING.md` | Phase 6 test guide (transfer windows) |
 | `supabase/test-data/` | SQL files for dummy test data and cleanup |
+| `supabase/test-data/06_dummy_teams_extra.sql` | Adds 6 more dummy teams (dummies 5–10) for 12-team testing |
 | `data/test_matchday1_stats.csv` | Test stats CSV (25 players, varied scoring scenarios) |
 | `src/config/scoring.json` | Scoring config (admin-editable values) |
 | `src/lib/matchday.js` | Auto-sub + team points calculation |
