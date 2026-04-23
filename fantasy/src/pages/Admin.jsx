@@ -46,6 +46,21 @@ export default function Admin() {
     resolveRound,
   } = useAuction();
 
+  // Completes the auction and auto-activates the first available matchday.
+  async function handleCompleteAuction() {
+    await completeAuction();
+    const { data: fresh } = await supabase
+      .from('matchdays')
+      .select('*')
+      .order('id', { ascending: true });
+    const firstInactive = (fresh ?? []).find((md) => !md.is_active && !md.is_completed);
+    if (firstInactive) {
+      await handleToggleActive(firstInactive);
+    } else {
+      await fetchMatchdays();
+    }
+  }
+
   const { players, loading: playersLoading } = usePlayers();
   const [confirming, setConfirming] = useState(false);
   const [resolving, setResolving]   = useState(false);
@@ -166,10 +181,25 @@ export default function Admin() {
   }
 
   async function handleToggleCompleted(md) {
+    const completing = !md.is_completed;
     await supabase
       .from('matchdays')
-      .update({ is_completed: !md.is_completed, is_active: md.is_completed ? md.is_active : false })
+      .update({ is_completed: completing, is_active: completing ? false : md.is_active })
       .eq('id', md.id);
+
+    // When marking a matchday complete, auto-activate the next one (by ID).
+    if (completing) {
+      const { data: fresh } = await supabase
+        .from('matchdays')
+        .select('*')
+        .order('id', { ascending: true });
+      const nextMd = (fresh ?? []).find((m) => m.id > md.id && !m.is_completed && !m.is_active);
+      if (nextMd) {
+        await handleToggleActive(nextMd);
+        return; // handleToggleActive calls fetchMatchdays()
+      }
+    }
+
     await fetchMatchdays();
   }
   // ──────────────────────────────────────────────────────────────────────────
@@ -414,18 +444,27 @@ export default function Admin() {
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const biddedPlayerIds  = [...new Set(currentRoundBids.map((b) => b.player_id))];
 
-  // Build winner summary for the confirmation panel
-  const winnersPreview = biddedPlayerIds.map((playerId) => {
-    const highBid = getHighestBid(playerId);
-    return {
+  // Split this round's players into single-bidder (awarded) vs multi-bidder (contested).
+  const winnersPreview  = [];
+  const contestedPreview = [];
+  for (const playerId of biddedPlayerIds) {
+    const highBid      = getHighestBid(playerId);
+    const playerBids   = currentRoundBids.filter((b) => b.player_id === playerId);
+    const uniqueBidders = new Set(playerBids.map((b) => b.user_id));
+    const row = {
       playerId,
       playerName: highBid?.players?.name ?? `Player #${playerId}`,
       position:   highBid?.players?.position ?? '—',
       winnerName: highBid?.users?.display_name ?? '?',
       amount:     highBid?.bid_amount ?? 0,
-      bidCount:   currentRoundBids.filter((b) => b.player_id === playerId).length,
+      bidCount:   playerBids.length,
     };
-  });
+    if (uniqueBidders.size > 1) {
+      contestedPreview.push(row);
+    } else {
+      winnersPreview.push(row);
+    }
+  }
 
   async function handleResolveAndAdvance() {
     setResolving(true);
@@ -434,7 +473,7 @@ export default function Admin() {
     if (errors.length > 0) {
       setResolveErrors(errors);
       setResolving(false);
-      return; // stay on confirmation panel so admin can see errors
+      return;
     }
     await nextRound();
     setResolving(false);
@@ -578,7 +617,7 @@ export default function Admin() {
                 Resolve & Next Round →
               </button>
               <button
-                onClick={completeAuction}
+                onClick={handleCompleteAuction}
                 className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold transition-colors"
               >
                 Complete Auction
@@ -595,7 +634,7 @@ export default function Admin() {
                 Resume
               </button>
               <button
-                onClick={completeAuction}
+                onClick={handleCompleteAuction}
                 className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold transition-colors"
               >
                 Complete Auction
@@ -625,40 +664,84 @@ export default function Admin() {
             </button>
           </div>
 
-          {winnersPreview.length === 0 ? (
+          {winnersPreview.length === 0 && contestedPreview.length === 0 ? (
             <p className="text-gray-500 text-sm">
               No bids were placed this round. Advancing will skip resolution.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
-                    <th className="pb-3 pr-4 font-medium">Player</th>
-                    <th className="pb-3 pr-4 font-medium">Pos</th>
-                    <th className="pb-3 pr-4 font-medium">Winning Bid</th>
-                    <th className="pb-3 pr-4 font-medium">Winner</th>
-                    <th className="pb-3 font-medium">Bids</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {winnersPreview.map((row) => (
-                    <tr key={row.playerId} className="text-gray-300">
-                      <td className="py-2.5 pr-4 text-white font-medium">{row.playerName}</td>
-                      <td className="py-2.5 pr-4">
-                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-gray-800 text-gray-400'}`}>
-                          {row.position}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-4 font-bold text-emerald-400">
-                        £{row.amount.toFixed(1)}
-                      </td>
-                      <td className="py-2.5 pr-4 text-white">{row.winnerName}</td>
-                      <td className="py-2.5 text-gray-500">{row.bidCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {/* Awarded — single bidder */}
+              {winnersPreview.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+                    Awarded ({winnersPreview.length}) — only one bidder
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-500 border-b border-gray-800">
+                          <th className="pb-2 pr-4 font-medium">Player</th>
+                          <th className="pb-2 pr-4 font-medium">Pos</th>
+                          <th className="pb-2 pr-4 font-medium">Bid</th>
+                          <th className="pb-2 font-medium">Winner</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-800">
+                        {winnersPreview.map((row) => (
+                          <tr key={row.playerId} className="text-gray-300">
+                            <td className="py-2 pr-4 text-white font-medium">{row.playerName}</td>
+                            <td className="py-2 pr-4">
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-gray-800 text-gray-400'}`}>
+                                {row.position}
+                              </span>
+                            </td>
+                            <td className="py-2 pr-4 font-bold text-emerald-400">£{row.amount.toFixed(1)}</td>
+                            <td className="py-2 text-white">{row.winnerName}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Contested — multiple bidders, carry over */}
+              {contestedPreview.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-2">
+                    Contested ({contestedPreview.length}) — multiple bidders, carry to next round
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-500 border-b border-gray-800">
+                          <th className="pb-2 pr-4 font-medium">Player</th>
+                          <th className="pb-2 pr-4 font-medium">Pos</th>
+                          <th className="pb-2 pr-4 font-medium">High Bid (floor)</th>
+                          <th className="pb-2 font-medium">Leading</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-800">
+                        {contestedPreview.map((row) => (
+                          <tr key={row.playerId} className="text-gray-300">
+                            <td className="py-2 pr-4 text-white font-medium">{row.playerName}</td>
+                            <td className="py-2 pr-4">
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-gray-800 text-gray-400'}`}>
+                                {row.position}
+                              </span>
+                            </td>
+                            <td className="py-2 pr-4 font-bold text-yellow-400">£{row.amount.toFixed(1)}</td>
+                            <td className="py-2 text-gray-400 text-xs">{row.winnerName} (outbid to win)</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    These players are NOT awarded yet. Next round opens with a bid floor above £{Math.max(...contestedPreview.map(r => r.amount)).toFixed(1)}.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

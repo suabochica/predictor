@@ -43,7 +43,7 @@ const POSITION_GRADIENT = {
 export default function Auction() {
   const { user } = useAuth();
   const { team } = useLeague();
-  const { auctionState, bids, loading, getHighestBid, placeBid } = useAuction();
+  const { auctionState, bids, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
 
   const [posFilter, setPosFilter]   = useState('All');
@@ -74,6 +74,8 @@ export default function Auction() {
     posFilter === 'All' ? players : players.filter((p) => p.position === posFilter);
 
   function minBidFor(player) {
+    const floor = getContestFloor(player.id);
+    if (floor !== null) return +(floor + MIN_BID_INCREMENT).toFixed(1);
     const high = getHighestBid(player.id);
     if (!high) return player.price;
     return +(high.bid_amount + MIN_BID_INCREMENT).toFixed(1);
@@ -252,6 +254,8 @@ export default function Auction() {
           {filteredPlayers.map((player) => {
             const isWon         = wonPlayerIds.has(player.id);
             const highBid       = getHighestBid(player.id);
+            const contestFloor  = getContestFloor(player.id);
+            const isContested   = contestFloor !== null && !isWon;
             const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
             const isLeading     = myBidOnPlayer && highBid?.user_id === user?.id;
             const canBid        = isActive && !roundExpired && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
@@ -306,6 +310,13 @@ export default function Auction() {
                     {isWon && (
                       <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-purple-900/50 text-purple-300 border border-purple-800/50">
                         ✓ Won — player is on a squad
+                      </div>
+                    )}
+
+                    {/* Contested carry-over badge */}
+                    {isContested && (
+                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-yellow-900/40 text-yellow-300 border border-yellow-800/50">
+                        ⚡ Contested — min bid £{(contestFloor + MIN_BID_INCREMENT).toFixed(1)} to win
                       </div>
                     )}
 

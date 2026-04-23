@@ -1,7 +1,7 @@
 import { getPositionColor, formatPrice } from '../../lib/utils';
 import { LOCK_PRICE_THRESHOLD } from '../../config/constants';
 
-export default function PlayerCard({ player, owned, canAfford, squadFull, onBuy }) {
+export default function PlayerCard({ player, owned, canAfford, squadFull, mustBuyGk, onBuy }) {
   const isLockable = player.price <= LOCK_PRICE_THRESHOLD;
   const isMarketOnly = !isLockable; // >8.5M — only obtainable here
 
@@ -16,6 +16,10 @@ export default function PlayerCard({ player, owned, canAfford, squadFull, onBuy 
     buyLabel = 'Squad Full';
     disabled = true;
     disabledReason = 'You already have 15 players';
+  } else if (mustBuyGk) {
+    buyLabel = 'GK required';
+    disabled = true;
+    disabledReason = 'Last slot must be a GK — your squad has none';
   } else if (!canAfford) {
     buyLabel = 'Over Budget';
     disabled = true;

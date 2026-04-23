@@ -239,6 +239,10 @@ export default function MyTeam() {
         setSwapError(`Can't move ${p2.name} to XI — only 1 GK allowed in starting XI.`);
         return;
       }
+      if (p1.position === 'GK' && p2.position !== 'GK') {
+        setSwapError(`Can't move the GK to bench — swap with a bench GK instead.`);
+        return;
+      }
       newStarters = remainingStarters.concat(p2);
       newBench = bench.filter((b) => b.id !== p2.id).concat(p1);
       if (captainId === p1.id) setCaptainId(null);
@@ -246,6 +250,10 @@ export default function MyTeam() {
       const remainingStarters = starters.filter((s) => s.id !== p2.id);
       if (p1.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
         setSwapError(`Can't move ${p1.name} to XI — only 1 GK allowed in starting XI.`);
+        return;
+      }
+      if (p2.position === 'GK' && p1.position !== 'GK') {
+        setSwapError(`Can't move the GK to bench — swap with a bench GK instead.`);
         return;
       }
       newStarters = remainingStarters.concat(p1);
@@ -299,6 +307,11 @@ export default function MyTeam() {
       return;
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
+      if (selectedPlayer.position === 'GK') {
+        setSwapError(`Can't move the GK to bench — swap with a bench GK instead.`);
+        setSelectedPlayer(null);
+        return;
+      }
       setStarters(starters.filter((s) => s.id !== selectedPlayer.id));
       if (captainId === selectedPlayer.id) setCaptainId(null);
     }
@@ -665,7 +678,9 @@ export default function MyTeam() {
                     </span>
                   )}
                   <span className="text-[10px] flex-shrink-0 w-20 text-right flex items-center justify-end gap-1">
-                    {isGameLocked(p.id) && <span title="Locked — game started">🔒</span>}
+                    {activeMatchday && (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0 && (
+                      <span title="Has played — locked">🔒</span>
+                    )}
                     {isCaptain ? (
                       <span className="text-yellow-400 font-semibold">Captain</span>
                     ) : isStarter ? (

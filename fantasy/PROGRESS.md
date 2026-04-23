@@ -9,7 +9,7 @@
 
 **Last updated:** 2026-04-23
 **Branch:** `Fantasy`
-**Phase:** Phase 4 re-test in progress — DB reset done, migration 011 applied, Sergio + Benja re-registering
+**Phase:** Phase 4 re-test bugs fixed — ready for full re-test, then Phase 5
 
 ---
 
@@ -68,11 +68,19 @@ Calculate Standings working end-to-end. Confirmed:
 - `/history` breakdown modal loads
 - `/my-team` rolling lockout active
 
-**Known issue (non-blocking):** One team (Sergio) calculated 0 points despite players having stats — likely a player name/ID mismatch between lineup and stats upload. Investigate when convenient.
-
 ---
 
-## Phase 4 bug fixes + polish (2026-04-22)
+## Phase 4 re-test bug fixes (2026-04-23)
+
+| Fix | Detail | Files |
+|-----|--------|-------|
+| **Auction carry-over** | Players with multiple bidders are no longer awarded — they carry over to the next round with the highest bid as the floor. `resolveRound()` returns `{ resolved, contested, errors }`. Admin panel shows "Awarded" (green) and "Contested → next round" (yellow) separately. Auction player cards show a "⚡ Contested — min bid £X" badge. `placeBid()` enforces the floor bid server-side. | `AuctionContext.jsx`, `Admin.jsx`, `Auction.jsx` |
+| **GK guard in lineup** | Swapping the starting GK to bench (with a non-GK) is now blocked in all three paths: `doSwap()` starter↔bench, `doSwap()` bench↔starter, and `handleEmptyBenchSlotClick()`. Error: "Can't move the GK to bench — swap with a bench GK instead." | `MyTeam.jsx` |
+| **Matchday auto-activation** | "Complete Auction" now auto-activates the first available matchday (with lineup stamp). "Mark Complete" on a matchday auto-activates the next matchday by ID. No more empty timeframes. | `Admin.jsx` |
+| **Lock icon fix** | 🔒 in squad table now shows when `minutes_played > 0` (player has actually played), not when `game_started_at` has merely passed. Swap-blocking logic unchanged (still uses `game_started_at`). | `MyTeam.jsx` |
+| **Market GK requirement** | When buying the last squad slot, the player must be a GK if the squad has none. Red hard-block banner + all non-GK cards disabled ("GK required"). Orange early-warning banner when ≤3 slots left and no GK. Final guard in `confirmBuy()`. | `Market.jsx`, `PlayerCard.jsx` |
+
+**Previous Phase 4 fixes (2026-04-22):**
 
 | Fix | Files |
 |-----|-------|
@@ -88,8 +96,6 @@ Calculate Standings working end-to-end. Confirmed:
 | Admin activation stamp — toggling a matchday active now copies all null-matchday lineups to the new matchday_id | `Admin.jsx` |
 | Calculate Standings stamp — also stamps null lineups after scoring (secondary safety net) | `Admin.jsx` |
 | Migration 011 — admin INSERT/UPDATE/DELETE on lineups (stamps were silently blocked by RLS) | `supabase/migrations/011_lineups_admin_write.sql` |
-
-**⚠️ DB reset needed:** test data has a null-matchday lineup for Sergio with no player_stats. Cleanest path: delete test data, apply migration 011 in Supabase, create a new matchday (activation will stamp lineups immediately), upload stats for all squad players, then Calculate Standings.
 
 ---
 
@@ -119,12 +125,11 @@ Formation picker removed; formation derived live from starters. Empty pitch/benc
 
 | Issue | Detail |
 |-------|--------|
-| Double budget deduction | `resolveRound()` triggered twice deducts budget twice — team_players upsert is idempotent but budget deduction is not |
+| Double budget deduction | `resolveRound()` triggered twice deducts budget twice — team_players upsert is idempotent but budget deduction is not. Don't click Resolve twice on the same round. |
 | Realtime bids lose user data | Bids via Realtime don't carry joined user data; can block resolution if one wins |
 | Transfer window badge uses `is_active` boolean | Not time-range based — workaround: set `is_active=true` directly |
 | Teamless user sees £105M budget | Hardcoded default when no teams row exists |
-| Standings total_points is additive | Running Calculate Standings twice on the same matchday is safe (upsert), but don't delete and manually re-insert rows between runs |
-| Sergio 0 points | Lineup saved with null matchday_id (pre-activation) + players had no player_stats rows. Root cause fixed at system level (activation stamp + loadLineup fallback). Re-test after DB reset + migration 011. |
+| Market purchase not atomic | Two-write purchase (insert team_player + update budget) — if the second write fails, player is added but budget not deducted |
 
 ---
 

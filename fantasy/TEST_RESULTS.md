@@ -280,3 +280,12 @@ Copy this block for each failure and fill it in:
 **Notes:**
   [anything else that might help]
 ```
+
+
+
+BUGs
+
+-in the auction if outbid in a round when resolving it just gives the player to the higest bidder. if more than one has bid on a player, it has to go to a new round to give the oportunity to outbid. the only way to win a player is complete a round being the only one bidding. if more than one bid on a player, the new round starts with the higest bid attached.
+-it allows to change the GK out and have a lineup with no GK- that is an error.
+- I saved lineups for everyone, but we should test what happens if a user forgets to save, when the matchday starts it should auto save everybody.(it did save but the users with a saved linup, dummy users didnt save their lineups. and now they have 2 saved linups? first saved lineup before admin activating the matchday was saved with matchday_id = NULL. that is a mistake. maybe once the auction is done the first matchday should be activated, once the first matchday is marked complete the second should be automatically activated and that way we dont have empty timeframes of activated matchdays. also lineup managemtn needs further thought, because users can change many times their lineups, for historical approach the linup at the end of the matchday should be saved with a special indicator, during the matchday it has to be saved and updated?
+- after the points are calculated, the points appear in the "my team" section and some players have lock sign on them and others not, but some with the lock have not played yet and some wihtout the lock have poitns so it is unclear, it should be lcoked if they have played and have points. seems like a bug
