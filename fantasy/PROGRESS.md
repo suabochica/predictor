@@ -9,7 +9,7 @@
 
 **Last updated:** 2026-04-23
 **Branch:** `Fantasy`
-**Phase:** Phase 4 re-test bugs fixed — ready for full re-test, then Phase 5
+**Phase:** Phase 5 complete — knockout bracket seeding, scoring, and advancement built
 
 ---
 
@@ -21,7 +21,7 @@
 | 2 | Auction system (real-time bidding, round resolution) | ✅ Complete |
 | 3 | Squad management (My Team, Standings, Market, Transfers, Bracket) | ✅ Complete |
 | 4 | Matchday & Scoring | ✅ Complete |
-| 5 | Knockout System | ⬜ Not started |
+| 5 | Knockout System | ✅ Complete |
 | 6 | Transfer Windows | ⬜ Not started |
 | 7 | Polish & Testing | ⬜ Not started |
 | 8 | Deployment | ⬜ Not started |
@@ -99,19 +99,34 @@ Calculate Standings working end-to-end. Confirmed:
 
 ---
 
-## Phase 5 scope (next)
+## Phase 5 — ✅ Complete (2026-04-23)
 
-From `MASTER_DOCUMENT.md` Section 13 / Phase 5:
+| Item | File(s) |
+|------|---------|
+| Bracket seeding — top 8 championship, bottom 4 relegation | `Admin.jsx`, `brackets.js` |
+| Admin: Seed Bracket button with seeding preview | `Admin.jsx` |
+| Admin: Calculate Round — resolves H2H matches, creates next round | `Admin.jsx` |
+| H2H tiebreaker: matchday pts → captain pts → goals → league rank | `brackets.js`, `Admin.jsx` |
+| Captain points fetched from lineups + player_stats and doubled | `Admin.jsx` |
+| Losers bracket: 5/6 Match, 7/8 Match (Round 2) → 5th/7th Place placards (Round 3) | `Admin.jsx` |
+| Relegation bracket advancement + placement assignment | `Admin.jsx` |
+| Bracket visualization — preview mode + actual mode with winner highlights | `Bracket.jsx` |
+| Final standings display (placement rows with winner highlight) | `Bracket.jsx` |
+| MatchCard fix: shows winner highlight even for placement-only rows (no score) | `Bracket.jsx` |
 
-- [ ] Bracket seeding logic — top 8 to championship, bottom 4 to relegation
-- [ ] Bracket visualization (already has a Bracket page stub from Phase 3)
-- [ ] H2H matchup cards — show each team's score for a knockout match
-- [ ] Tiebreaker implementation (goals scored)
-- [ ] Bracket advancement — admin marks winners, advances bracket
-- [ ] Losers bracket logic
-- [ ] Final standings display
+Key DB table: `knockout_matches` (existed from migration 001, RLS already correct)
 
-Key DB table: `knockout_matches` (already exists from migration 001)
+## Phase 6 scope (next)
+
+From `MASTER_DOCUMENT.md` Section 8 / Phase 6:
+
+- [ ] Transfer window state management
+- [ ] Inverse order queue logic (12th picks first → 1st picks last)
+- [ ] Transfer interface
+- [ ] Locked player swap validation (≤8.5M only, budget check)
+- [ ] Budget recalculation after transfers
+- [ ] Transfer history log
+- [ ] Admin: Open/close windows
 
 ---
 

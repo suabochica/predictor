@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { AUCTION_STATUSES } from '../config/constants';
 import { calculatePlayerPoints } from '../lib/scoring';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
+import { generateChampionshipBracket, generateRelegationBracket, resolveH2H } from '../lib/brackets';
 
 const WC_STAGES = [
   'Group Stage MD1',
@@ -119,6 +120,27 @@ export default function Admin() {
   }, []);
 
   useEffect(() => { fetchMatchdays(); }, [fetchMatchdays]);
+
+  const fetchKnockoutData = useCallback(async () => {
+    setKnockoutLoading(true);
+    const [{ data: km }, { data: sd }, { data: teams }] = await Promise.all([
+      supabase
+        .from('knockout_matches')
+        .select(`*,
+          team_a:teams!knockout_matches_team_a_id_fkey(id, name, users(display_name)),
+          team_b:teams!knockout_matches_team_b_id_fkey(id, name, users(display_name)),
+          winner:teams!knockout_matches_winner_id_fkey(id, name, users(display_name))`)
+        .order('round').order('id'),
+      supabase.from('fantasy_standings').select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
+      supabase.from('teams').select('id, name, users(display_name)'),
+    ]);
+    setKnockoutMatches(km ?? []);
+    setKnockoutStandingsData(sd ?? []);
+    setKnockoutTeams(teams ?? []);
+    setKnockoutLoading(false);
+  }, []);
+
+  useEffect(() => { fetchKnockoutData(); }, [fetchKnockoutData]);
 
   async function handleCreateMatchday(e) {
     e.preventDefault();
@@ -292,6 +314,17 @@ export default function Admin() {
   const [calcRunning, setCalcRunning] = useState(false);
   const [calcResult, setCalcResult] = useState(null);
 
+  // ── Knockout Bracket ──────────────────────────────────────────────────────
+  const [knockoutMatches, setKnockoutMatches] = useState([]);
+  const [knockoutTeams, setKnockoutTeams] = useState([]);
+  const [knockoutStandingsData, setKnockoutStandingsData] = useState([]);
+  const [knockoutLoading, setKnockoutLoading] = useState(true);
+  const [bracketSeeding, setBracketSeeding] = useState(false);
+  const [bracketSeedResult, setBracketSeedResult] = useState(null);
+  const [knockoutCalcMatchdayId, setKnockoutCalcMatchdayId] = useState('');
+  const [knockoutCalcRunning, setKnockoutCalcRunning] = useState(false);
+  const [knockoutCalcResult, setKnockoutCalcResult] = useState(null);
+
   async function handleCalculateStandings(e) {
     e.preventDefault();
     setCalcResult(null);
@@ -421,6 +454,205 @@ export default function Admin() {
 
     setCalcResult({ teamsScored, errors });
     setCalcRunning(false);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── Knockout helpers ──────────────────────────────────────────────────────
+
+  function computeKnockoutStandings() {
+    const byTeam = {};
+    for (const t of knockoutTeams) {
+      byTeam[t.id] = {
+        team_id: t.id,
+        display_name: t.users?.display_name ?? t.name ?? 'Unknown',
+        total_points: 0,
+        goals_scored: 0,
+      };
+    }
+    for (const row of knockoutStandingsData) {
+      if (!byTeam[row.team_id]) continue;
+      byTeam[row.team_id].goals_scored += row.goals_scored ?? 0;
+      if (row.total_points > byTeam[row.team_id].total_points) {
+        byTeam[row.team_id].total_points = row.total_points;
+      }
+    }
+    return Object.values(byTeam).sort((a, b) =>
+      b.total_points !== a.total_points ? b.total_points - a.total_points : b.goals_scored - a.goals_scored
+    );
+  }
+
+  async function handleSeedBracket() {
+    setBracketSeeding(true);
+    setBracketSeedResult(null);
+    const standings = computeKnockoutStandings();
+    const champSeed = generateChampionshipBracket(standings);
+    const rows = champSeed.map(s => ({
+      round: 1, bracket: 'championship', match_label: s.label,
+      team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
+    }));
+    if (standings.length >= 12) {
+      const relSeed = generateRelegationBracket(standings);
+      relSeed.forEach(s => rows.push({
+        round: 1, bracket: 'relegation', match_label: s.label,
+        team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
+      }));
+    }
+    const { error } = await supabase.from('knockout_matches').insert(rows);
+    setBracketSeedResult(error ? { error: error.message } : { ok: true, count: rows.length });
+    if (!error) await fetchKnockoutData();
+    setBracketSeeding(false);
+  }
+
+  function buildNextRoundRows(round, results, existingKoMatches) {
+    const exists = (bracket, r, label) =>
+      existingKoMatches.some(m => m.bracket === bracket && m.round === r && m.match_label === label);
+    const rows = [];
+
+    if (round === 1) {
+      const add = (bracket, label, aId, bId) => {
+        if (aId && bId && !exists(bracket, 2, label))
+          rows.push({ round: 2, bracket, match_label: label, team_a_id: aId, team_b_id: bId });
+      };
+      add('championship', 'Semi A',    results['Match A']?.w, results['Match B']?.w);
+      add('championship', 'Semi B',    results['Match C']?.w, results['Match D']?.w);
+      add('losers',       '5/6 Match', results['Match A']?.l, results['Match B']?.l);
+      add('losers',       '7/8 Match', results['Match C']?.l, results['Match D']?.l);
+      add('relegation',   '9th Place',  results['Match X']?.w, results['Match Y']?.w);
+      add('relegation',   '11th Place', results['Match X']?.l, results['Match Y']?.l);
+    }
+
+    if (round === 2) {
+      const wSA = results['Semi A']?.w, lSA = results['Semi A']?.l;
+      const wSB = results['Semi B']?.w, lSB = results['Semi B']?.l;
+      const w56 = results['5/6 Match']?.w, l56 = results['5/6 Match']?.l;
+      const w78 = results['7/8 Match']?.w, l78 = results['7/8 Match']?.l;
+      if (wSA && wSB && !exists('championship', 3, 'Final'))
+        rows.push({ round: 3, bracket: 'championship', match_label: 'Final',     team_a_id: wSA, team_b_id: wSB });
+      if (lSA && lSB && !exists('championship', 3, '3rd Place'))
+        rows.push({ round: 3, bracket: 'championship', match_label: '3rd Place', team_a_id: lSA, team_b_id: lSB });
+      if (w56 && l56 && !exists('losers', 3, '5th Place'))
+        rows.push({ round: 3, bracket: 'losers', match_label: '5th Place', team_a_id: w56, team_b_id: l56, winner_id: w56, placement: '5th Place' });
+      if (w78 && l78 && !exists('losers', 3, '7th Place'))
+        rows.push({ round: 3, bracket: 'losers', match_label: '7th Place', team_a_id: w78, team_b_id: l78, winner_id: w78, placement: '7th Place' });
+    }
+
+    return rows;
+  }
+
+  async function handleCalculateKnockoutRound(round) {
+    if (!knockoutCalcMatchdayId) {
+      setKnockoutCalcResult({ errors: ['Select a matchday first.'] });
+      return;
+    }
+    setKnockoutCalcRunning(true);
+    setKnockoutCalcResult(null);
+    const errors = [];
+    const matchdayIdInt = parseInt(knockoutCalcMatchdayId, 10);
+
+    const toResolve = knockoutMatches.filter(m => {
+      if (m.winner_id) return false;
+      if (m.round !== round) return false;
+      if (round === 3 && m.bracket === 'losers') return false; // pre-set placement rows
+      return true;
+    });
+
+    if (toResolve.length === 0) {
+      setKnockoutCalcResult({ errors: ['No unresolved matches for this round.'] });
+      setKnockoutCalcRunning(false);
+      return;
+    }
+
+    const allTeamIds = [...new Set(toResolve.flatMap(m => [m.team_a_id, m.team_b_id]).filter(Boolean))];
+
+    const { data: standingsRows } = await supabase
+      .from('fantasy_standings')
+      .select('team_id, matchday_points, goals_scored')
+      .eq('matchday_id', matchdayIdInt)
+      .in('team_id', allTeamIds);
+    const mdStandings = Object.fromEntries((standingsRows ?? []).map(s => [s.team_id, s]));
+
+    const [{ data: mdCaptains }, { data: nullCaptains }] = await Promise.all([
+      supabase.from('lineups').select('team_id, player_id').eq('matchday_id', matchdayIdInt).eq('is_captain', true).in('team_id', allTeamIds),
+      supabase.from('lineups').select('team_id, player_id').is('matchday_id', null).eq('is_captain', true).in('team_id', allTeamIds),
+    ]);
+    const captainMap = {};
+    for (const r of nullCaptains ?? []) captainMap[r.team_id] = r.player_id;
+    for (const r of mdCaptains ?? []) captainMap[r.team_id] = r.player_id;
+
+    const captainPlayerIds = [...new Set(Object.values(captainMap))].filter(Boolean);
+    const captainStatsMap = {};
+    if (captainPlayerIds.length > 0) {
+      const { data: cStats } = await supabase
+        .from('player_stats')
+        .select('player_id, total_points')
+        .eq('matchday_id', matchdayIdInt)
+        .in('player_id', captainPlayerIds);
+      for (const s of cStats ?? []) captainStatsMap[s.player_id] = s.total_points ?? 0;
+    }
+    const getCaptainPts = (teamId) => {
+      const pid = captainMap[teamId];
+      return pid ? (captainStatsMap[pid] ?? 0) * 2 : 0;
+    };
+
+    const overallStandings = computeKnockoutStandings();
+    const getRank = (teamId) => {
+      const idx = overallStandings.findIndex(s => s.team_id === teamId);
+      return idx >= 0 ? idx + 1 : 999;
+    };
+
+    const matchResults = {};
+    const updates = [];
+
+    for (const match of toResolve) {
+      const aId = match.team_a_id;
+      const bId = match.team_b_id;
+
+      const aPoints  = mdStandings[aId]?.matchday_points ?? 0;
+      const bPoints  = mdStandings[bId]?.matchday_points ?? 0;
+      const aGoals   = mdStandings[aId]?.goals_scored ?? 0;
+      const bGoals   = mdStandings[bId]?.goals_scored ?? 0;
+      const aCaptain = getCaptainPts(aId);
+      const bCaptain = getCaptainPts(bId);
+
+      const winnerObj = resolveH2H({
+        teamA: { team_id: aId, matchday_points: aPoints, captain_points: aCaptain, goals_scored: aGoals, league_rank: getRank(aId) },
+        teamB: { team_id: bId, matchday_points: bPoints, captain_points: bCaptain, goals_scored: bGoals, league_rank: getRank(bId) },
+      });
+      const winnerId = winnerObj.team_id;
+      const loserId  = winnerId === aId ? bId : aId;
+      matchResults[match.match_label] = { w: winnerId, l: loserId };
+
+      let placement;
+      if (match.bracket === 'relegation') placement = match.match_label;
+      else if (round === 3 && match.bracket === 'championship') {
+        placement = match.match_label === 'Final' ? '1st Place' : '3rd Place';
+      }
+
+      updates.push({
+        id: match.id,
+        team_a_points: aPoints,  team_b_points: bPoints,
+        team_a_captain_points: aCaptain, team_b_captain_points: bCaptain,
+        team_a_goals: aGoals,    team_b_goals: bGoals,
+        winner_id: winnerId,
+        matchday_id: matchdayIdInt,
+        ...(placement ? { placement } : {}),
+      });
+    }
+
+    for (const { id, ...data } of updates) {
+      const { error } = await supabase.from('knockout_matches').update(data).eq('id', id);
+      if (error) errors.push(`Match update error: ${error.message}`);
+    }
+
+    const nextRows = buildNextRoundRows(round, matchResults, knockoutMatches);
+    if (nextRows.length > 0) {
+      const { error } = await supabase.from('knockout_matches').insert(nextRows);
+      if (error) errors.push(`Next round creation error: ${error.message}`);
+    }
+
+    setKnockoutCalcResult({ resolved: updates.length, errors });
+    await fetchKnockoutData();
+    setKnockoutCalcRunning(false);
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -1058,6 +1290,191 @@ export default function Admin() {
           </div>
         )}
       </section>
+
+      {/* ── Knockout Bracket ─────────────────────────────────────────────── */}
+      {isCompleted && (
+        <section className="bg-gray-900 rounded-xl p-6 space-y-5">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Knockout Bracket</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Seed after league stage (4 matchdays) is complete. Then calculate each round using that round's matchday.
+            </p>
+          </div>
+
+          {knockoutLoading ? (
+            <p className="text-gray-500 text-sm">Loading…</p>
+          ) : knockoutMatches.length === 0 ? (
+            // ── Not seeded ──
+            (() => {
+              const standings = computeKnockoutStandings();
+              const champSeed = standings.length >= 8 ? generateChampionshipBracket(standings) : [];
+              const relSeed   = standings.length >= 12 ? generateRelegationBracket(standings) : [];
+              return (
+                <div className="space-y-4">
+                  {standings.length < 8 ? (
+                    <p className="text-yellow-400 text-sm">
+                      Need standings for at least 8 teams. Run Calculate Standings first.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Championship (Top 8)</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {champSeed.map(m => (
+                            <div key={m.label} className="bg-gray-800 rounded-lg px-3 py-2 text-xs">
+                              <span className="text-gray-500">{m.label}: </span>
+                              <span className="text-white">{m.teamA.display_name}</span>
+                              <span className="text-gray-500"> vs </span>
+                              <span className="text-white">{m.teamB.display_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {relSeed.length > 0 && (
+                        <div>
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Relegation (Bottom 4)</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {relSeed.map(m => (
+                              <div key={m.label} className="bg-gray-800 rounded-lg px-3 py-2 text-xs">
+                                <span className="text-gray-500">{m.label}: </span>
+                                <span className="text-white">{m.teamA.display_name}</span>
+                                <span className="text-gray-500"> vs </span>
+                                <span className="text-white">{m.teamB.display_name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {bracketSeedResult && (
+                    <div className={`rounded-lg px-3 py-2 text-sm ${bracketSeedResult.error ? 'bg-red-900/40 text-red-400' : 'bg-emerald-900/40 text-emerald-400'}`}>
+                      {bracketSeedResult.error ?? `✓ Bracket seeded — ${bracketSeedResult.count} matches created.`}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleSeedBracket}
+                    disabled={bracketSeeding || standings.length < 8}
+                    className="px-5 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+                  >
+                    {bracketSeeding ? 'Seeding…' : 'Seed Bracket'}
+                  </button>
+                </div>
+              );
+            })()
+          ) : (
+            // ── Bracket exists ──
+            (() => {
+              const champR1 = knockoutMatches.filter(m => m.bracket === 'championship' && m.round === 1);
+              const champR2 = knockoutMatches.filter(m => m.bracket === 'championship' && m.round === 2);
+              const champR3 = knockoutMatches.filter(m => m.bracket === 'championship' && m.round === 3);
+              const r1Done  = champR1.length > 0 && champR1.every(m => m.winner_id);
+              const r2Done  = champR2.length > 0 && champR2.every(m => m.winner_id);
+              const r3Done  = champR3.length > 0 && champR3.every(m => m.winner_id);
+              const activeRound = !r1Done ? 1 : !r2Done ? 2 : !r3Done ? 3 : null;
+
+              return (
+                <div className="space-y-4">
+                  {/* Round status pills */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3].map(r => {
+                      const champMatches = knockoutMatches.filter(m => m.bracket === 'championship' && m.round === r);
+                      const done = champMatches.length > 0 && champMatches.every(m => m.winner_id);
+                      const pending = champMatches.length > 0 && !done;
+                      return (
+                        <div key={r} className={`rounded-lg px-3 py-2 text-center ${done ? 'bg-emerald-900/40 border border-emerald-700/40' : pending ? 'bg-yellow-900/20 border border-yellow-700/30' : 'bg-gray-800 border border-gray-700'}`}>
+                          <p className={`text-xs font-semibold ${done ? 'text-emerald-400' : pending ? 'text-yellow-400' : 'text-gray-500'}`}>
+                            Round {r}
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">
+                            {done ? 'Complete' : pending ? 'Pending' : 'Not started'}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Unresolved matches for the active round */}
+                  {activeRound && (() => {
+                    const pending = knockoutMatches.filter(m => m.round === activeRound && !m.winner_id && !(m.round === 3 && m.bracket === 'losers'));
+                    return (
+                      <div className="space-y-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left text-gray-500 border-b border-gray-800">
+                                <th className="pb-2 pr-4 font-medium text-xs">Match</th>
+                                <th className="pb-2 pr-4 font-medium text-xs">Team A</th>
+                                <th className="pb-2 pr-4 font-medium text-xs">Team B</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                              {pending.map(m => (
+                                <tr key={m.id} className="text-gray-300">
+                                  <td className="py-2 pr-4">
+                                    <span className="text-[10px] text-gray-500 capitalize">{m.bracket}</span>
+                                    <span className="ml-1.5 text-white text-xs font-medium">{m.match_label}</span>
+                                  </td>
+                                  <td className="py-2 pr-4 text-xs">{m.team_a?.users?.display_name ?? m.team_a?.name ?? 'TBD'}</td>
+                                  <td className="py-2 text-xs">{m.team_b?.users?.display_name ?? m.team_b?.name ?? 'TBD'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="flex items-end gap-4 flex-wrap pt-1">
+                          <div className="flex-1 min-w-48">
+                            <label className="block text-xs text-gray-500 mb-1">Matchday for Round {activeRound}</label>
+                            <select
+                              value={knockoutCalcMatchdayId}
+                              onChange={e => { setKnockoutCalcMatchdayId(e.target.value); setKnockoutCalcResult(null); }}
+                              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                            >
+                              <option value="">Select matchday…</option>
+                              {matchdays.map(md => (
+                                <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <button
+                            onClick={() => handleCalculateKnockoutRound(activeRound)}
+                            disabled={knockoutCalcRunning || !knockoutCalcMatchdayId}
+                            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+                          >
+                            {knockoutCalcRunning ? 'Calculating…' : `Calculate Round ${activeRound}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {activeRound === null && (
+                    <p className="text-emerald-400 text-sm font-semibold">
+                      ✓ All rounds complete. View final standings on the Bracket page.
+                    </p>
+                  )}
+
+                  {knockoutCalcResult && (
+                    <div className={`rounded-lg p-4 space-y-1 ${knockoutCalcResult.errors?.length && !knockoutCalcResult.resolved ? 'bg-red-900/40 border border-red-800/50' : 'bg-gray-800'}`}>
+                      {knockoutCalcResult.resolved > 0 && (
+                        <p className="text-emerald-400 text-sm font-semibold">
+                          ✓ {knockoutCalcResult.resolved} match{knockoutCalcResult.resolved !== 1 ? 'es' : ''} resolved.
+                        </p>
+                      )}
+                      {knockoutCalcResult.errors?.map((err, i) => (
+                        <p key={i} className="text-yellow-400 text-xs">{err}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()
+          )}
+        </section>
+      )}
 
       {/* ── Player Pool ──────────────────────────────────────────────────── */}
       <section className="bg-gray-900 rounded-xl p-6 space-y-4">
