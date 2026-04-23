@@ -7,9 +7,9 @@
 
 ## Current status
 
-**Last updated:** 2026-04-22
+**Last updated:** 2026-04-23
 **Branch:** `Fantasy`
-**Phase:** 4 bugs fixed + Phase 4 polish — ready for Phase 5 after DB reset + re-test
+**Phase:** Phase 4 re-test in progress — DB reset done, migration 011 applied, Sergio + Benja re-registering
 
 ---
 
@@ -28,7 +28,7 @@
 
 ---
 
-## Migrations applied (all 8)
+## Migrations applied (all 11)
 
 | File | Purpose | Status |
 |------|---------|--------|
@@ -42,7 +42,7 @@
 | 008_team_players_admin_policy.sql | Admin INSERT/UPDATE/DELETE on team_players | ✅ |
 | 009_lineups_admin_read.sql | Admin SELECT on all lineups (required for Calculate Standings) | ✅ |
 | 010_fantasy_standings_admin_write.sql | Admin INSERT/UPDATE/DELETE on fantasy_standings | ✅ |
-| 011_lineups_admin_write.sql | Admin INSERT/UPDATE/DELETE on lineups (required for lineup stamps) | ⚠️ Needs applying |
+| 011_lineups_admin_write.sql | Admin INSERT/UPDATE/DELETE on lineups (required for lineup stamps) | ✅ |
 
 ---
 

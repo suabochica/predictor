@@ -16,24 +16,24 @@ DELETE FROM lineups;
 -- 3. Matchdays
 DELETE FROM matchdays;
 
--- 4. Squad assignments and transfer history
+-- 4. Knockout bracket
+DELETE FROM knockout_matches;
+
+-- 5. Squad assignments and transfer history
 DELETE FROM transfers;
 DELETE FROM team_players;
 
--- 5. Market listings (if any)
-DELETE FROM market_listings;
-
--- 6. Auction data
-DELETE FROM bids;
+-- 5. Auction data
+DELETE FROM auction_bids;
 UPDATE auction_state SET
   status        = 'pending',
   current_round = 1,
   round_started_at = NULL;
 
--- 7. Teams and users (all non-admin users)
+-- 6. Teams and users (all non-admin users)
 --    Safe: keeps your admin account; removes everyone else.
 DELETE FROM teams;
-DELETE FROM users WHERE role != 'admin';
+DELETE FROM users WHERE is_admin = false;
 
 -- ============================================================
 -- Fresh-start steps (run in this order after this script):
