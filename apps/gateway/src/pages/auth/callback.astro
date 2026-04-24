@@ -1,0 +1,33 @@
+---
+// OAuth callback handler — exchange code for session then redirect to dashboard
+import { createServerClient } from '@supabase/ssr';
+
+const supabase = createServerClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  {
+    cookies: {
+      getAll: () =>
+        Astro.request.headers
+          .get('cookie')
+          ?.split(';')
+          .map((c) => {
+            const [name, ...rest] = c.trim().split('=');
+            return { name, value: rest.join('=') };
+          }) ?? [],
+      setAll: (cookiesToSet) => {
+        cookiesToSet.forEach(({ name, value, options }) =>
+          Astro.cookies.set(name, value, options as Parameters<typeof Astro.cookies.set>[2])
+        );
+      },
+    },
+  }
+);
+
+const code = Astro.url.searchParams.get('code');
+if (code) {
+  await supabase.auth.exchangeCodeForSession(code);
+}
+
+return Astro.redirect('/');
+---

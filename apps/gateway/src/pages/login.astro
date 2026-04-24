@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LoginForm from '../components/LoginForm';
+
+// Redirect if already logged in
+if (Astro.locals.user) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="Login">
+  <main class="flex min-h-screen items-center justify-center p-6">
+    <div class="w-full max-w-md">
+      <div class="mb-8 text-center">
+        <span class="text-5xl">⚽</span>
+        <h1 class="mt-4 text-2xl font-semibold text-[var(--color-text-heading)]">Predictor 2026</h1>
+        <p class="mt-1 text-[var(--color-text)]">Sign in to make your predictions</p>
+      </div>
+      <LoginForm client:load />
+      <p class="mt-6 text-center text-sm text-[var(--color-text)]">
+        No account? <a href="/register" class="text-[var(--color-accent)] hover:underline">Register</a>
+      </p>
+    </div>
+  </main>
+</Layout>

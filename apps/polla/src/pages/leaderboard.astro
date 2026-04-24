@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LeaderboardTable from '../components/LeaderboardTable';
+---
+
+<Layout title="Leaderboard">
+  <main class="max-w-4xl mx-auto p-6">
+    <header class="text-center mb-8">
+      <h1 class="text-3xl font-bold">📊 Leaderboard</h1>
+      <p class="mt-2 text-gray-400">See how you stack up against the competition</p>
+    </header>
+
+    <LeaderboardTable client:load currentUser={1} />
+
+    <nav class="mt-8 flex justify-center gap-8">
+      <a href="/polla/" class="text-emerald-400 hover:underline">← Back to Home</a>
+      <a href="/polla/predictions" class="text-emerald-400 hover:underline">Make Predictions →</a>
+    </nav>
+  </main>
+</Layout>
