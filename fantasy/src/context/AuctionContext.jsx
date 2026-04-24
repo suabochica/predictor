@@ -191,9 +191,9 @@ export function AuctionProvider({ children }) {
         {
           team_id: team.id,
           player_id: playerId,
-          is_locked: false,
+          is_locked: true,
           acquisition_price: winner.bid_amount,
-          slot_type: 'free',
+          slot_type: 'locked',
         },
         { onConflict: 'team_id,player_id', ignoreDuplicates: true }
       );
