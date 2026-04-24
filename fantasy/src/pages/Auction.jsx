@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLeague } from '../context/LeagueContext';
 import { useAuction } from '../context/AuctionContext';
@@ -43,13 +43,19 @@ const POSITION_GRADIENT = {
 export default function Auction() {
   const { user } = useAuth();
   const { team } = useLeague();
-  const { auctionState, bids, loading, getHighestBid, placeBid } = useAuction();
+  const { auctionState, bids, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
 
   const [posFilter, setPosFilter]   = useState('All');
   const [bidAmounts, setBidAmounts] = useState({});
   const [submitting, setSubmitting] = useState(new Set());
   const [errors, setErrors]         = useState({});
+  const [roundExpired, setRoundExpired] = useState(false);
+
+  const handleRoundExpire = useCallback(() => setRoundExpired(true), []);
+
+  // Reset expired flag whenever a new round starts
+  useEffect(() => { setRoundExpired(false); }, [auctionState?.current_round, auctionState?.round_started_at]);
 
   if (loading || !auctionState) {
     return <div className="text-gray-400 p-6">Loading auction…</div>;
@@ -68,6 +74,8 @@ export default function Auction() {
     posFilter === 'All' ? players : players.filter((p) => p.position === posFilter);
 
   function minBidFor(player) {
+    const floor = getContestFloor(player.id);
+    if (floor !== null) return +(floor + MIN_BID_INCREMENT).toFixed(1);
     const high = getHighestBid(player.id);
     if (!high) return player.price;
     return +(high.bid_amount + MIN_BID_INCREMENT).toFixed(1);
@@ -124,6 +132,7 @@ export default function Auction() {
             <AuctionTimer
               roundStartedAt={round_started_at}
               roundDurationSeconds={round_duration_seconds}
+              onExpire={handleRoundExpire}
             />
             <div className="text-right">
               <p className="text-2xl font-bold text-white tabular-nums">
@@ -142,6 +151,13 @@ export default function Auction() {
       {STATUS_BANNER[status] && (
         <div className={`rounded-xl px-5 py-4 text-sm font-medium ${STATUS_BANNER[status].cls}`}>
           {STATUS_BANNER[status].text}
+        </div>
+      )}
+
+      {/* ── Round expired banner ──────────────────────────────────────── */}
+      {isActive && roundExpired && (
+        <div className="rounded-xl px-5 py-4 text-sm font-medium bg-yellow-900/50 text-yellow-300 border border-yellow-800/50">
+          Round {current_round} has ended — bidding locked. Waiting for admin to advance.
         </div>
       )}
 
@@ -238,9 +254,11 @@ export default function Auction() {
           {filteredPlayers.map((player) => {
             const isWon         = wonPlayerIds.has(player.id);
             const highBid       = getHighestBid(player.id);
+            const contestFloor  = getContestFloor(player.id);
+            const isContested   = contestFloor !== null && !isWon;
             const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
             const isLeading     = myBidOnPlayer && highBid?.user_id === user?.id;
-            const canBid        = isActive && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
+            const canBid        = isActive && !roundExpired && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
             const minBid        = minBidFor(player);
             const isSubmitting  = submitting.has(player.id);
 
@@ -292,6 +310,13 @@ export default function Auction() {
                     {isWon && (
                       <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-purple-900/50 text-purple-300 border border-purple-800/50">
                         ✓ Won — player is on a squad
+                      </div>
+                    )}
+
+                    {/* Contested carry-over badge */}
+                    {isContested && (
+                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-yellow-900/40 text-yellow-300 border border-yellow-800/50">
+                        ⚡ Contested — min bid £{(contestFloor + MIN_BID_INCREMENT).toFixed(1)} to win
                       </div>
                     )}
 

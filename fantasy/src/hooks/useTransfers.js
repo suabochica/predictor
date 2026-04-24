@@ -15,7 +15,7 @@ export function useTransfers() {
   async function fetchTransfers() {
     const { data } = await supabase
       .from('transfers')
-      .select('*, players!player_out_id(name), players!player_in_id(name)')
+      .select('*, player_out:players!transfers_player_out_id_fkey(name), player_in:players!transfers_player_in_id_fkey(name)')
       .eq('team_id', team.id)
       .order('created_at', { ascending: false });
     setTransfers(data ?? []);

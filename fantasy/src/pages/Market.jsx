@@ -31,6 +31,9 @@ export default function Market() {
   const squadFull = squadSize >= MAX_SQUAD_SIZE;
   const budget = team?.budget_remaining ?? 0;
   const freeSlots = MAX_SQUAD_SIZE - squadSize;
+  const hasGkInSquad = squadRows.some((tp) => tp.players?.position === 'GK');
+  // Last remaining slot must be filled by a GK if the squad has none yet.
+  const mustBuyGk = freeSlots === 1 && !hasGkInSquad;
 
   // Market open when auction is completed (or no auction state yet — dev mode)
   const marketOpen =
@@ -56,6 +59,11 @@ export default function Market() {
   // ── Purchase flow ─────────────────────────────────────────────────────────
   async function confirmBuy() {
     if (!confirmPlayer || !team) return;
+    // Final guard: if this is the last slot and no GK in squad, only a GK is allowed.
+    if (mustBuyGk && confirmPlayer.position !== 'GK') {
+      setBuyError('Your squad has no GK — you must fill this last slot with a GK.');
+      return;
+    }
     setBuying(true);
     setBuyError(null);
 
@@ -170,6 +178,20 @@ export default function Market() {
         </div>
       )}
 
+      {/* ── GK required — last slot ── */}
+      {mustBuyGk && (
+        <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-3 text-sm text-red-300">
+          <strong>GK required:</strong> This is your last squad slot and you have no goalkeeper — you must buy a GK.
+        </div>
+      )}
+
+      {/* ── GK warning — running low on slots ── */}
+      {!hasGkInSquad && !mustBuyGk && freeSlots <= 3 && freeSlots > 0 && (
+        <div className="bg-orange-900/30 border border-orange-700/50 rounded-xl p-3 text-sm text-orange-300">
+          No GK in squad yet — you have {freeSlots} slot{freeSlots !== 1 ? 's' : ''} left. Remember to pick one.
+        </div>
+      )}
+
       {/* ── Recent purchase toast ── */}
       {recentBuy && (
         <div className="bg-emerald-900/40 border border-emerald-700/50 rounded-xl p-3 text-sm text-emerald-300 flex items-center gap-2">
@@ -202,6 +224,7 @@ export default function Market() {
               owned={ownedIds.has(player.id)}
               canAfford={player.price <= budget}
               squadFull={squadFull && !ownedIds.has(player.id)}
+              mustBuyGk={mustBuyGk && player.position !== 'GK'}
               onBuy={setConfirmPlayer}
             />
           ))}

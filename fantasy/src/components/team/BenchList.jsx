@@ -1,17 +1,27 @@
 import PlayerSlot from './PlayerSlot';
 
-function EmptyBenchSlot({ order }) {
+function EmptyBenchSlot({ order, onClick, isTargetable }) {
   return (
     <div className="flex flex-col items-center gap-1">
       <span className="text-[10px] font-bold text-gray-600">{order}</span>
-      <div className="w-[68px] min-h-[68px] border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center">
-        <span className="text-[10px] text-gray-600">Empty</span>
-      </div>
+      <button
+        onClick={onClick}
+        disabled={!isTargetable}
+        className={`w-[68px] min-h-[68px] border-2 border-dashed rounded-lg flex items-center justify-center transition-colors ${
+          isTargetable
+            ? 'border-blue-400/60 bg-blue-900/20 hover:bg-blue-900/40 cursor-pointer'
+            : 'border-gray-700 cursor-default'
+        }`}
+      >
+        <span className={`text-[10px] ${isTargetable ? 'text-blue-400 font-semibold' : 'text-gray-600'}`}>
+          {isTargetable ? '+ here' : 'Empty'}
+        </span>
+      </button>
     </div>
   );
 }
 
-export default function BenchList({ bench, selectedId, onPlayerClick, onReorder }) {
+export default function BenchList({ bench, selectedId, onPlayerClick, onReorder, onEmptyBenchSlotClick, hasSelected }) {
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -50,7 +60,12 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder 
 
         {/* Empty bench slots */}
         {Array.from({ length: Math.max(0, 4 - bench.length) }).map((_, i) => (
-          <EmptyBenchSlot key={`empty-${i}`} order={bench.length + i + 1} />
+          <EmptyBenchSlot
+            key={`empty-${i}`}
+            order={bench.length + i + 1}
+            onClick={onEmptyBenchSlotClick}
+            isTargetable={hasSelected}
+          />
         ))}
       </div>
       <p className="text-[10px] text-gray-600 mt-3">

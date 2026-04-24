@@ -6,8 +6,8 @@ import { generateChampionshipBracket, generateRelegationBracket } from '../lib/b
 
 function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, placement, seed }) {
   const hasResult = pointsA != null && pointsB != null;
-  const aWon = hasResult && winnerId && teamA && winnerId === teamA.id;
-  const bWon = hasResult && winnerId && teamB && winnerId === teamB.id;
+  const aWon = winnerId && teamA && winnerId === teamA.id;
+  const bWon = winnerId && teamB && winnerId === teamB.id;
 
   function teamName(team) {
     if (!team) return 'TBD';

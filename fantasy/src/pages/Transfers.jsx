@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTransfers } from '../hooks/useTransfers';
 import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
@@ -104,19 +104,76 @@ function AvailablePlayerRow({ player, selected, canAfford, alreadyOwned, lockedS
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function Transfers() {
-  const { activeTransferWindow, team, refreshTeam } = useLeague();
+  const { activeTransferWindow, team, activeMatchday, refreshTeam } = useLeague();
   const { players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { transfers, transfersUsedThisWindow, transfersRemaining, refresh: refreshTransfers } =
     useTransfers();
   const { players: allPlayers, loading: playersLoading } = usePlayers();
 
-  const [playerOut, setPlayerOut] = useState(null); // squad player to remove
-  const [playerIn, setPlayerIn] = useState(null);   // available player to add
+  const [playerOut, setPlayerOut] = useState(null);
+  const [playerIn, setPlayerIn] = useState(null);
   const [posFilter, setPosFilter] = useState('');
   const [searchIn, setSearchIn] = useState('');
   const [transferring, setTransferring] = useState(false);
   const [transferError, setTransferError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+
+  // Priority queue: standings in inverse order (12th → 1st)
+  const [priorityQueue, setPriorityQueue] = useState([]);
+  const [queueLoading, setQueueLoading] = useState(false);
+  const [allTeamTransfers, setAllTeamTransfers] = useState([]);
+
+  useEffect(() => {
+    if (!activeTransferWindow) return;
+    fetchPriorityQueue();
+  }, [activeTransferWindow]);
+
+  async function fetchPriorityQueue() {
+    setQueueLoading(true);
+    const [teamsRes, standingsRes, transfersRes] = await Promise.all([
+      supabase.from('teams').select('id, name, users(display_name)'),
+      supabase.from('fantasy_standings').select('team_id, total_points, goals_scored'),
+      supabase
+        .from('transfers')
+        .select('team_id')
+        .eq('window_number', activeTransferWindow.window_number),
+    ]);
+
+    const teams = teamsRes.data ?? [];
+    const standingsData = standingsRes.data ?? [];
+    const windowTransfers = transfersRes.data ?? [];
+
+    // Aggregate standings per team (take highest total_points row)
+    const standingsMap = {};
+    for (const row of standingsData) {
+      if (!standingsMap[row.team_id] || row.total_points > standingsMap[row.team_id].total_points) {
+        standingsMap[row.team_id] = row;
+      }
+    }
+
+    // Count transfers used this window per team
+    const usedMap = {};
+    for (const t of windowTransfers) {
+      usedMap[t.team_id] = (usedMap[t.team_id] ?? 0) + 1;
+    }
+
+    // Sort teams worst-to-best (inverse rank = 12th first)
+    const sorted = [...teams]
+      .map((t) => ({
+        ...t,
+        total_points: standingsMap[t.team_id]?.total_points ?? 0,
+        goals_scored: standingsMap[t.team_id]?.goals_scored ?? 0,
+        transfers_used: usedMap[t.id] ?? 0,
+      }))
+      .sort((a, b) => {
+        if (a.total_points !== b.total_points) return a.total_points - b.total_points;
+        return a.goals_scored - b.goals_scored;
+      });
+
+    setPriorityQueue(sorted);
+    setAllTeamTransfers(windowTransfers);
+    setQueueLoading(false);
+  }
 
   const budget = team?.budget_remaining ?? 0;
 
@@ -253,8 +310,25 @@ export default function Transfers() {
       price_difference: priceDiff,
     });
 
-    // 5. Refresh everything
-    await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers()]);
+    // 5. Remove transferred-out player from active matchday lineup (if any)
+    if (activeMatchday?.id) {
+      await supabase
+        .from('lineups')
+        .delete()
+        .eq('team_id', team.id)
+        .eq('player_id', playerOut.id)
+        .eq('matchday_id', activeMatchday.id);
+    }
+    // Also remove from null-matchday lineup (pre-tournament)
+    await supabase
+      .from('lineups')
+      .delete()
+      .eq('team_id', team.id)
+      .eq('player_id', playerOut.id)
+      .is('matchday_id', null);
+
+    // 6. Refresh everything
+    await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers(), fetchPriorityQueue()]);
 
     setSuccessMsg(`${playerOut.name} → ${playerIn.name} transfer complete!`);
     setPlayerOut(null);
@@ -342,6 +416,56 @@ export default function Transfers() {
             incoming player must be ≤{LOCK_PRICE_THRESHOLD}M. Budget difference is applied.
             <span className="text-gray-300 font-semibold"> Free slot swaps: </span>
             any player allowed.
+          </div>
+
+          {/* Transfer priority queue */}
+          <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-300">Transfer Priority Order</h3>
+              <span className="text-xs text-gray-500">Lowest rank picks first</span>
+            </div>
+            {queueLoading ? (
+              <p className="text-gray-500 text-sm text-center py-4">Loading…</p>
+            ) : (
+              <div className="divide-y divide-gray-800">
+                {priorityQueue.map((entry, idx) => {
+                  const isMe = entry.id === team?.id;
+                  const remaining = activeTransferWindow.max_transfers - entry.transfers_used;
+                  return (
+                    <div
+                      key={entry.id}
+                      className={`flex items-center gap-3 px-4 py-2.5 text-sm ${
+                        isMe ? 'bg-blue-900/20' : ''
+                      }`}
+                    >
+                      <span className="w-5 text-center text-xs font-bold text-gray-500">
+                        {idx + 1}
+                      </span>
+                      <span className={`flex-1 font-medium ${isMe ? 'text-blue-300' : 'text-gray-300'}`}>
+                        {entry.users?.display_name ?? entry.name}
+                        {isMe && <span className="ml-1.5 text-[10px] text-blue-400">(you)</span>}
+                      </span>
+                      <span className="text-xs text-gray-500">{entry.total_points} pts</span>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: activeTransferWindow.max_transfers }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={`w-2.5 h-2.5 rounded-full ${
+                              i < entry.transfers_used ? 'bg-emerald-500' : 'bg-gray-700'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className={`text-xs font-semibold w-16 text-right ${
+                        remaining > 0 ? 'text-emerald-400' : 'text-gray-600'
+                      }`}>
+                        {remaining > 0 ? `${remaining} left` : 'Done'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Success / Error messages */}
@@ -517,11 +641,11 @@ export default function Transfers() {
                   W{t.window_number}
                 </span>
                 <span className="text-red-300">
-                  {t['players!player_out_id']?.name ?? `Player #${t.player_out_id}`}
+                  {t.player_out?.name ?? `Player #${t.player_out_id}`}
                 </span>
                 <span className="text-gray-600">→</span>
                 <span className="text-emerald-300">
-                  {t['players!player_in_id']?.name ?? `Player #${t.player_in_id}`}
+                  {t.player_in?.name ?? `Player #${t.player_in_id}`}
                 </span>
                 {t.price_difference != null && (
                   <span

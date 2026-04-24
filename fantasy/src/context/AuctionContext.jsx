@@ -75,6 +75,19 @@ export function AuctionProvider({ children }) {
     )[0];
   }
 
+  // Returns the highest bid placed on a player in any PREVIOUS round where
+  // they were not awarded (i.e., contested carry-over floor). Returns null if
+  // no carry-over floor exists for this player.
+  function getContestFloor(playerId) {
+    const isWon = bids.some((b) => b.player_id === playerId && b.is_winning);
+    if (isWon) return null;
+    const previousBids = bids.filter(
+      (b) => b.player_id === playerId && b.round_number < (auctionState?.current_round ?? 1)
+    );
+    if (!previousBids.length) return null;
+    return Math.max(...previousBids.map((b) => b.bid_amount));
+  }
+
   // ── Admin controls ──────────────────────────────────────────────────────────
 
   async function updateAuctionState(updates) {
@@ -117,18 +130,35 @@ export function AuctionProvider({ children }) {
 
   // Resolves the current round: marks winning bids, assigns players to teams,
   // and deducts acquisition cost from each winner's budget.
-  // Returns { resolved: [...], errors: [...] }
+  // A player is only awarded if exactly ONE user bid on them this round.
+  // Players with multiple bidders are contested and carry over to the next round.
+  // Returns { resolved: [...], contested: [...], errors: [...] }
   async function resolveRound() {
     const round = auctionState.current_round;
     const roundBids = bids.filter((b) => b.round_number === round);
     const playerIds = [...new Set(roundBids.map((b) => b.player_id))];
 
-    const resolved = [];
-    const errors   = [];
+    const resolved  = [];
+    const contested = [];
+    const errors    = [];
 
     for (const playerId of playerIds) {
       // Skip players already resolved in a previous resolveRound() call (prevents double budget deduction).
       if (roundBids.some((b) => b.player_id === playerId && b.is_winning)) continue;
+
+      const playerBids    = roundBids.filter((b) => b.player_id === playerId);
+      const uniqueBidders = new Set(playerBids.map((b) => b.user_id));
+
+      // Multiple bidders → contested, carry over to next round.
+      if (uniqueBidders.size > 1) {
+        const topBid = getHighestBid(playerId);
+        contested.push({
+          playerId,
+          playerName: topBid?.players?.name ?? `Player #${playerId}`,
+          amount: topBid?.bid_amount ?? 0,
+        });
+        continue;
+      }
 
       const winner = getHighestBid(playerId);
       if (!winner) continue;
@@ -161,9 +191,9 @@ export function AuctionProvider({ children }) {
         {
           team_id: team.id,
           player_id: playerId,
-          is_locked: false,
+          is_locked: true,
           acquisition_price: winner.bid_amount,
-          slot_type: 'free',
+          slot_type: 'locked',
         },
         { onConflict: 'team_id,player_id', ignoreDuplicates: true }
       );
@@ -189,12 +219,13 @@ export function AuctionProvider({ children }) {
       });
     }
 
-    return { resolved, errors };
+    return { resolved, contested, errors };
   }
 
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
-  // Place a bid. Enforces max 10 active bids per user per round and one bid per player per round.
+  // Place a bid. Enforces max 10 active bids per user per round, one bid per
+  // player per round, and the carry-over floor for contested players.
   async function placeBid(playerId, amount, userId) {
     const activeBids = bids.filter(
       (b) => b.user_id === userId && b.round_number === auctionState?.current_round
@@ -204,6 +235,11 @@ export function AuctionProvider({ children }) {
     }
     if (activeBids.some((b) => b.player_id === playerId)) {
       return { error: 'You already have a bid on this player this round.' };
+    }
+    // Enforce carry-over floor: bid must strictly exceed the highest bid from previous rounds.
+    const floor = getContestFloor(playerId);
+    if (floor !== null && amount <= floor) {
+      return { error: `This player carries over — minimum bid is £${(floor + 0.1).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
     }
     const { data, error } = await supabase.from('auction_bids').insert({
       user_id: userId,
@@ -219,6 +255,7 @@ export function AuctionProvider({ children }) {
     bids,
     loading,
     getHighestBid,
+    getContestFloor,
     placeBid,
     startAuction,
     pauseAuction,
