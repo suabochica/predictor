@@ -11,8 +11,8 @@ Reference plan: `unified_plan.md`
 | 3 | Migrate Fantasy App | ✅ Done |
 | 4 | Migrate Polla App | ✅ Done |
 | 5 | Supabase Schema Extension | ✅ Done |
-| 6 | Netlify Deployment Config | ❌ Not started |
-| 7 | Testing & Cleanup | ❌ Not started |
+| 6 | Netlify Deployment Config | ✅ Done |
+| 7 | Testing & Cleanup | ✅ Done |
 
 ---
 

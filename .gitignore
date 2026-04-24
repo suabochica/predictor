@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Environment (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+.astro/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+*.egg-info/
+
+# Misc
+.DS_Store
+*.log

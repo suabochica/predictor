@@ -1,0 +1,19 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PNPM_VERSION = "9"
+
+# Polla SPA fallback
+[[redirects]]
+  from = "/polla/*"
+  to = "/polla/index.html"
+  status = 200
+
+# Fantasy SPA fallback
+[[redirects]]
+  from = "/fantasy/*"
+  to = "/fantasy/index.html"
+  status = 200
