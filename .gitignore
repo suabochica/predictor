@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+apps/gateway/node_modules
+apps/fantasy/node_modules
+apps/polla/node_modules
 
 # Environment (contains secrets)
 .env
