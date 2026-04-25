@@ -19,7 +19,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
             ?.split(';')
             .map((c) => {
               const [name, ...rest] = c.trim().split('=');
-              return { name, value: rest.join('=') };
+              return { name: name.trim(), value: rest.join('=') };
             }) ?? [],
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -30,7 +30,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
   context.locals.user = user;
 
   if (!user) {

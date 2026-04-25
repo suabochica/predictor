@@ -20,6 +20,7 @@ export default function LoginForm() {
       return;
     }
 
+    await supabase.auth.getSession();
     window.location.href = '/';
   }
 
