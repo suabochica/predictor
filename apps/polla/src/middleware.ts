@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createServerClient } from '@supabase/ssr';
 
-const PUBLIC_PATHS = ['/polla/login', '/polla/register'];
+const PUBLIC_PATHS = ['/polla/login', '/polla/register', '/polla/auth'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   if (PUBLIC_PATHS.some((p) => context.url.pathname.startsWith(p))) {
@@ -34,7 +34,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = user;
 
   if (!user) {
-    return context.redirect('/');
+    return context.redirect('/polla/login');
   }
 
   return next();
