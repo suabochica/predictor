@@ -4,9 +4,6 @@ import { LeagueProvider } from './context/LeagueContext';
 import { AuctionProvider } from './context/AuctionContext';
 import Layout from './components/layout/Layout';
 
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import MyTeam from './pages/MyTeam';
 import Market from './pages/Market';
@@ -18,6 +15,11 @@ import History from './pages/History';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 
+function redirectToGateway() {
+  window.location.replace('/');
+  return null;
+}
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
@@ -27,25 +29,30 @@ function ProtectedRoute({ children }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return redirectToGateway();
   return children;
 }
 
 function AdminRoute({ children }) {
   const { user, isAdmin, loading } = useAuth();
   if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return redirectToGateway();
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return children;
+}
+
+function HomeRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return redirectToGateway();
 }
 
 function AppRoutes() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<HomeRedirect />} />
 
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />

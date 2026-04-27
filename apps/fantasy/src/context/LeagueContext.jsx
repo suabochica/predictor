@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@predictor/supabase';
 
 const LeagueContext = createContext(null);
 

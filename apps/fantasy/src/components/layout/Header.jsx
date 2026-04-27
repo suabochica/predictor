@@ -1,13 +1,15 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
 
 export default function Header() {
-  const { user, profile, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { user, profile } = useAuth();
 
-  async function handleSignOut() {
-    await signOut();
-    navigate('/login');
+  function handleSignOut() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/auth/signout';
+    document.body.appendChild(form);
+    form.submit();
   }
 
   return (
