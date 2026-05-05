@@ -1,0 +1,31 @@
+---
+import { createServerClient } from '@supabase/ssr';
+
+if (Astro.request.method === 'POST') {
+  const supabase = createServerClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll: () =>
+          Astro.request.headers
+            .get('cookie')
+            ?.split(';')
+            .map((c) => {
+              const [name, ...rest] = c.trim().split('=');
+              return { name, value: rest.join('=') };
+            }) ?? [],
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            Astro.cookies.set(name, value, options as Parameters<typeof Astro.cookies.set>[2])
+          );
+        },
+      },
+    }
+  );
+  await supabase.auth.signOut();
+  return Astro.redirect('/login');
+}
+
+return Astro.redirect('/');
+---

@@ -1,0 +1,27 @@
+{
+  "minutes": {
+    "1-59": 1,
+    "60+": 2
+  },
+  "goals": {
+    "GK": 6,
+    "DEF": 6,
+    "MID": 5,
+    "FWD": 4
+  },
+  "assists": 3,
+  "clean_sheet": {
+    "GK": 4,
+    "DEF": 4,
+    "MID": 1,
+    "FWD": 0
+  },
+  "saves_per_3": 1,
+  "penalty_save": 5,
+  "penalty_miss": -2,
+  "yellow_card": -1,
+  "red_card": -3,
+  "own_goal": -2,
+  "goals_conceded_per_2": -1,
+  "captain_multiplier": 2
+}

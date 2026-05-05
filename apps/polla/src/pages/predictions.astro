@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PredictionForm from '../components/PredictionForm';
+---
+
+<Layout title="Predictions">
+  <main class="max-w-4xl mx-auto p-6">
+    <header class="text-center mb-8">
+      <h1 class="text-3xl font-bold">⚽ Match Predictions</h1>
+      <p class="mt-2 text-gray-400">Enter your predicted scores. Scores must be between 0 and 9.</p>
+    </header>
+
+    <PredictionForm client:load />
+
+    <nav class="mt-8 text-center">
+      <a href="/polla/" class="text-emerald-400 hover:underline">← Back to Home</a>
+    </nav>
+  </main>
+</Layout>

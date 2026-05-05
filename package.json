@@ -1,0 +1,11 @@
+{
+  "name": "predictor",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter '@predictor/*' --parallel dev",
+    "build": "pnpm -r build",
+    "dev:gateway": "pnpm --filter @predictor/gateway dev",
+    "dev:polla": "pnpm --filter @predictor/polla dev",
+    "dev:fantasy": "pnpm --filter @predictor/fantasy dev"
+  }
+}

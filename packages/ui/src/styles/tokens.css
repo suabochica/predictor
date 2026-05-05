@@ -1,0 +1,19 @@
+:root {
+  --color-bg: #ffffff;
+  --color-text: #6b6375;
+  --color-text-heading: #08060d;
+  --color-border: #e5e4e7;
+  --color-accent: #aa3bff;
+  --color-accent-bg: rgba(170, 59, 255, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #16171d;
+    --color-text: #9ca3af;
+    --color-text-heading: #f3f4f6;
+    --color-border: #2e303a;
+    --color-accent: #10b981;
+    --color-accent-bg: rgba(16, 185, 129, 0.15);
+  }
+}

@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LoginForm from '../components/LoginForm';
+
+// Redirect if already authenticated
+if (Astro.locals.user) {
+  return Astro.redirect('/polla/');
+}
+---
+
+<Layout title="Login">
+  <main class="flex min-h-screen items-center justify-center bg-gray-950 p-6">
+    <div class="w-full max-w-md">
+      <div class="mb-8 text-center text-white">
+        <span class="text-5xl">⚽</span>
+        <h1 class="mt-4 text-2xl font-bold">World Cup 2026</h1>
+        <p class="mt-1 text-gray-400">Sign in to make your predictions</p>
+      </div>
+      <div class="rounded-xl border border-white/10 bg-white/5 p-6 text-white">
+        <LoginForm client:load />
+      </div>
+      <p class="mt-4 text-center text-sm text-gray-500">
+        Back to <a href="/" class="text-emerald-400 hover:underline">main site</a>
+      </p>
+    </div>
+  </main>
+</Layout>

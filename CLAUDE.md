@@ -4,195 +4,128 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FIFA World Cup 2026 Score Predictor - A web application where users predict match scores and earn points based on accuracy.
+FIFA World Cup 2026 Score Predictor — pnpm monorepo containing three apps:
+
+- **gateway** — Astro SSR app, authentication entry point (login/register/dashboard)
+- **polla** — Astro SSR app, score prediction & leaderboard (`/polla/` base path)
+- **fantasy** — Vite + React SPA, fantasy league management (`/fantasy/` base path)
 
 ### Tech Stack
 
-- **Frontend**: AstroJS (meta-framework) + TypeScript, JavaScript
-- **Backend**: Python + FastAPI
-- **Package Manager**: pnpm
-- **Testing**: Jest (frontend unit tests)
+- **Apps**: AstroJS (gateway, polla) + Vite/React (fantasy), TypeScript/JavaScript
+- **Auth & DB**: Supabase (SSR session via `@supabase/ssr`, browser client via `@supabase/supabase-js`)
+- **Shared packages**: `@predictor/supabase`, `@predictor/types`, `@predictor/ui`
+- **Package Manager**: pnpm (workspace)
+- **Testing**: Jest (polla unit tests)
 
 ## Project Structure
 
 ```
 /
-├── frontend/          # AstroJS + TypeScript application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Astro pages (file-based routing)
-│   │   ├── layouts/        # Page layouts
-│   │   ├── styles/         # CSS/SCSS files
-│   │   └── types/          # TypeScript type definitions
-│   ├── tests/              # Jest unit tests
-│   ├── astro.config.mjs
-│   ├── tsconfig.json
-│   └── package.json
-├── backend/           # Python FastAPI application
-│   ├── app/
-│   │   ├── main.py         # FastAPI entry point
-│   │   ├── routers/        # API route modules
-│   │   ├── models/         # Pydantic models
-│   │   ├── services/       # Business logic
-│   │   └── data/           # Mock data (15 users)
-│   ├── requirements.txt
-│   └── pyproject.toml
-└── CLAUDE.md
+├── pnpm-workspace.yaml
+├── package.json               # Root scripts: dev, build, dev:gateway, dev:polla, dev:fantasy
+├── netlify.toml
+├── supabase/
+│   ├── config.toml
+│   ├── seed.sql
+│   └── migrations/            # 001–015 (013–015 are polla tables/RLS/leaderboard view)
+├── packages/
+│   ├── supabase/src/          # Shared Supabase client, AuthContext, server-client factory
+│   ├── types/src/             # Shared TS types (User, Match, Prediction, ScoringRule, etc.)
+│   └── ui/src/                # Shared Tailwind components + design tokens
+└── apps/
+    ├── gateway/               # Astro SSR — port 4321, no base path
+    │   ├── src/middleware.ts  # Session guard
+    │   ├── src/pages/         # index, login, register, auth/callback, auth/signout
+    │   └── src/components/    # AppCard, LoginForm, RegisterForm
+    ├── polla/                 # Astro SSR — port 4322, base /polla/
+    │   ├── src/middleware.ts  # Session guard → redirect to /
+    │   ├── src/pages/         # index, predictions, leaderboard, rules, auth/signout
+    │   └── src/components/    # LoginForm, MatchCard, LeaderboardTable, etc.
+    └── fantasy/               # Vite + React — port 4323, base /fantasy/
+        └── src/               # React components, hooks, pages
 ```
 
-## Frontend Commands (pnpm)
+## Commands
 
-All frontend commands should be run from the `frontend/` directory.
+All commands run from the **project root** unless noted.
 
 ```bash
-# Install dependencies
-cd frontend && pnpm install
+# Install all workspace dependencies
+pnpm install
 
-# Start development server
-cd frontend && pnpm run dev
+# Start all apps in parallel
+pnpm dev
 
-# Build for production
-cd frontend && pnpm run build
+# Start individual apps
+pnpm dev:gateway    # http://localhost:4321
+pnpm dev:polla      # http://localhost:4322/polla/
+pnpm dev:fantasy    # http://localhost:4323/fantasy/
 
-# Preview production build
-cd frontend && pnpm run preview
+# Build all apps
+pnpm build
 
-# Run Jest unit tests
-cd frontend && pnpm test
+# Run polla unit tests (from apps/polla/)
+cd apps/polla && pnpm test
 
 # Run tests in watch mode
-cd frontend && pnpm test -- --watch
-
-# Run a single test file
-cd frontend && pnpm test -- path/to/test.spec.ts
+cd apps/polla && pnpm test -- --watch
 ```
-
-## Backend Commands (Python)
-
-All backend commands should be run from the `backend/` directory.
-
-```bash
-# Create virtual environment
-cd backend && python -m venv venv
-
-# Activate virtual environment
-source backend/venv/bin/activate  # Linux/Mac
-# or: backend\venv\Scripts\activate  # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run FastAPI development server
-uvicorn app.main:app --reload
-
-# Run with specific host/port
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-## Development Workflow
-
-1. **Start Backend**: `cd backend && source venv/bin/activate && uvicorn app.main:app --reload`
-2. **Start Frontend**: `cd frontend && pnpm run dev` (separate terminal)
-3. **Frontend runs on**: http://localhost:4321 (Astro default)
-4. **Backend runs on**: http://localhost:8000
-5. **API docs**: http://localhost:8000/docs (FastAPI Swagger UI)
-
-## Application Features
-
-### 1. Score Entry Form
-- Users enter predicted scores for upcoming matches
-- Validation for valid score ranges
-- Submit predictions before match kickoff
-
-### 2. Rules Section
-- Display scoring rules (exact match, correct winner, etc.)
-- Points calculation logic:
-  - Exact score prediction: maximum points
-  - Correct winner/draw: partial points
-  - Wrong prediction: zero points
-
-### 3. Leaderboard
-- Display all 15 users ranked by total points
-- Show individual match predictions vs actual results
-- Mock user data stored in backend
-
-## API Architecture (FastAPI)
-
-### Key Endpoints
-
-```
-GET  /api/matches              # List all World Cup 2026 matches
-GET  /api/matches/upcoming     # Get upcoming matches for prediction
-POST /api/predictions         # Submit a prediction
-GET  /api/predictions/{user}  # Get user's predictions
-GET  /api/leaderboard         # Get ranked leaderboard
-GET  /api/rules               # Get scoring rules
-```
-
-### Models
-
-- `Match`: match_id, team_a, team_b, match_date, actual_score_a, actual_score_b, status
-- `Prediction`: prediction_id, user_id, match_id, predicted_score_a, predicted_score_b, points_earned
-- `User`: user_id, name, avatar, total_points
-- `ScoringRule`: rule_type, points, description
-
-## Frontend Architecture (Astro)
-
-### Pages
-
-- `/` - Landing page with upcoming matches
-- `/predictions` - Score entry form
-- `/leaderboard` - Rankings and scores
-- `/rules` - How points are calculated
-
-### Components
-
-- `MatchCard`: Display match info with score input
-- `PredictionForm`: Form for entering scores
-- `LeaderboardTable`: Sorted user rankings
-- `RulesSection`: Scoring explanation
-- `UserAvatar`: User display with avatar
-
-### State Management
-
-- Use Astro's built-in state for server-rendered data
-- Use React/Vue/Svelte islands for interactive components (score forms)
-- Fetch API calls to backend endpoints
-
-## Mock Data
-
-15 users are mocked in `backend/app/data/users.py` with:
-- Unique user IDs (1-15)
-- Names and avatars
-- Initial total_points = 0
 
 ## Environment Variables
 
-### Frontend (.env)
-```
-PUBLIC_API_URL=http://localhost:8000
-```
+Each app needs a `.env` file. All three share the same Supabase project.
 
-### Backend (.env)
+### `apps/gateway/.env` and `apps/polla/.env` (Astro — PUBLIC_ prefix)
 ```
-CORS_ORIGINS=http://localhost:4321
+PUBLIC_SUPABASE_URL=...
+PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-## Testing
+### `apps/fantasy/.env` (Vite — VITE_ prefix)
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
 
-- Frontend: Jest for unit testing components
-- Backend: pytest (optional, FastAPI has TestClient)
+The shared `packages/supabase/src/client.ts` supports both prefixes automatically.
 
-## Dependencies
+## Auth Flow
 
-### Frontend (package.json)
-- `astro`
-- `@astrojs/react` (or vue/svelte for islands)
-- `typescript`
-- `jest`, `@testing-library/*`
+1. User visits `/` (gateway) — middleware checks Supabase session
+2. Unauthenticated → redirect to `/login`
+3. After login, gateway dashboard shows links to `/polla/` and `/fantasy/`
+4. Each sub-app has its own middleware that redirects unauthenticated users back to `/`
 
-### Backend (requirements.txt)
-- `fastapi`
-- `uvicorn`
-- `pydantic`
-- `python-multipart`
+## Shared Packages
+
+### `@predictor/supabase`
+- `supabase` — browser Supabase client
+- `AuthContext`, `useAuth` — React auth state
+- `createServerSupabaseClient(cookies)` — SSR client factory for Astro middleware
+
+### `@predictor/types`
+- `User`, `Match`, `Prediction`, `ScoringRule`, `LeaderboardEntry`
+
+### `@predictor/ui`
+- `Button`, `Input`, `Card`, `Badge`, `Table` — Tailwind components
+- `@predictor/ui/styles` — design tokens CSS (import in layouts)
+
+## Database (Supabase)
+
+Migrations live in `supabase/migrations/`:
+- `001–012` — Fantasy league tables (teams, players, auctions, transfers, etc.)
+- `013_polla_tables.sql` — matches, predictions, scoring_rules
+- `014_polla_rls.sql` — RLS policies for polla tables
+- `015_leaderboard_view.sql` — leaderboard aggregation view
+
+Apply migrations: `supabase db push` (requires Supabase CLI linked to project).
+
+## Netlify Deployment
+
+`netlify.toml` at project root configures a single-site deploy:
+- Build command: `pnpm build`
+- Gateway (Astro SSR) is the primary app
+- `/polla/*` and `/fantasy/*` redirects handle sub-app routing
+
+> **Note**: SSR apps (gateway, polla) require `@astrojs/netlify` adapter for production Netlify deploys.
