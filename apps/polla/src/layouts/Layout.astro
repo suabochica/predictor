@@ -15,7 +15,17 @@ const { title } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} | World Cup 2026 Predictor</title>
   </head>
-  <body class="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+  <body class="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] flex flex-col">
     <slot />
+    <footer class="mt-auto py-6 text-center text-sm text-gray-500 border-t border-white/10">
+      <div class="flex items-center justify-center gap-4">
+        <a href="/" class="hover:text-emerald-400 transition-colors">Dashboard</a>
+        <span class="text-gray-600">•</span>
+        <a href="/polla/" class="hover:text-emerald-400 transition-colors">Polla</a>
+        <span class="text-gray-600">•</span>
+        <a href="/fantasy/" class="hover:text-emerald-400 transition-colors">Fantasy</a>
+      </div>
+      <p class="mt-2">World Cup 2026 • June 11 – July 19, 2026</p>
+    </footer>
   </body>
 </html>

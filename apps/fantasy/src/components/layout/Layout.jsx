@@ -16,6 +16,15 @@ export default function Layout({ children }) {
         </main>
       </div>
       <MobileNav />
+      <footer className="py-4 text-center text-sm text-gray-500 border-t border-white/10">
+        <div className="flex items-center justify-center gap-4">
+          <a href="/" className="hover:text-emerald-400 transition-colors">Dashboard</a>
+          <span className="text-gray-600">•</span>
+          <a href="/polla/" className="hover:text-emerald-400 transition-colors">Polla</a>
+          <span className="text-gray-600">•</span>
+          <a href="/fantasy/" className="hover:text-emerald-400 transition-colors">Fantasy</a>
+        </div>
+      </footer>
     </div>
   );
 }
