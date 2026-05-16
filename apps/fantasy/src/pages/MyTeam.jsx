@@ -761,7 +761,7 @@ export default function MyTeam() {
               const liveCapPts = mdStats
                 ? (p.id === captainId ? mdStats.total_points * 2 : mdStats.total_points)
                 : null;
-              const isLockable = p.price <= LOCK_PRICE_THRESHOLD;
+              const isLockable = p.price >= LOCK_PRICE_THRESHOLD;
               return (
                 <div
                   key={p.id}
