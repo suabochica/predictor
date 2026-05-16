@@ -44,7 +44,7 @@ export default function Auction() {
   const { user } = useAuth();
   const { team } = useLeague();
   const { auctionState, bids, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
-  const { players, loading: playersLoading } = usePlayers();
+  const { players, loading: playersLoading } = usePlayers({ lockable: true });
 
   const [posFilter, setPosFilter]   = useState('All');
   const [bidAmounts, setBidAmounts] = useState({});

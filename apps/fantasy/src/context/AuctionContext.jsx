@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
+import { MAX_LOCKED_PLAYERS } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
@@ -203,7 +204,13 @@ export function AuctionProvider({ children }) {
         continue;
       }
 
-      // 4. Deduct from team budget
+      // 4. Persist winning bid as current_price (price never reverts after auction)
+      await supabase
+        .from('players')
+        .update({ current_price: winner.bid_amount })
+        .eq('id', playerId);
+
+      // 5. Deduct from team budget
       await supabase
         .from('teams')
         .update({
@@ -235,6 +242,22 @@ export function AuctionProvider({ children }) {
     }
     if (activeBids.some((b) => b.player_id === playerId)) {
       return { error: 'You already have a bid on this player this round.' };
+    }
+    // Gate: prevent bidding once the team already holds MAX_LOCKED_PLAYERS locked acquisitions.
+    const { data: bidderTeam } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+    if (bidderTeam) {
+      const { count } = await supabase
+        .from('team_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('team_id', bidderTeam.id)
+        .eq('slot_type', 'locked');
+      if (count >= MAX_LOCKED_PLAYERS) {
+        return { error: `Your squad already has ${MAX_LOCKED_PLAYERS} locked players — the maximum allowed.` };
+      }
     }
     // Enforce carry-over floor: bid must strictly exceed the highest bid from previous rounds.
     const floor = getContestFloor(playerId);
