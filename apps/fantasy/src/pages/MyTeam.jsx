@@ -986,6 +986,11 @@ export default function MyTeam() {
               <p className="text-xs text-red-400">{lockToast.message}</p>
             )}
 
+            {/* Gate message — explains why Lock button is disabled */}
+            {atMaxLocked && !swapTarget && (
+              <p className="text-xs text-amber-400">At max locks — pick one to unlock first.</p>
+            )}
+
             <div className="flex gap-3">
               <button
                 onClick={() => { setLockModalPlayer(null); setSwapTarget(null); }}
