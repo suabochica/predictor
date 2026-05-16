@@ -8,13 +8,13 @@ Branch: `feat/player-lock-system`
 
 | # | Title | Area | Status |
 |---|-------|------|--------|
-| 1 | `usePlayers.js` hardcodes `8.5` instead of constant | Hook | 🔴 Open |
-| 2 | `MAX_LOCKED_PLAYERS` / `MIN_LOCKED_PLAYERS` never enforced | Business logic | 🔴 Open |
-| 3 | Auction doesn't restrict to lockable players (≤8.5M) | Acquisition lock | 🔴 Open |
+| 1 | `usePlayers.js` hardcodes `8.5` instead of constant | Hook | 🟢 Fixed |
+| 2 | `MAX_LOCKED_PLAYERS` / `MIN_LOCKED_PLAYERS` never enforced | Business logic | 🟢 Fixed |
+| 3 | Auction doesn't restrict to lockable players (≤8.5M) | Acquisition lock | 🟢 Fixed |
 | 4 | `budgetValid` in Transfers is miscalculated and inconsistently used | Transfers | 🔴 Open |
 | 5 | `isGameLocked` doesn't auto-refresh when a match starts | Game lock | 🔴 Open |
 | 6 | No position validation on transfers | Transfers | 🔴 Open |
-| 7 | DB VIEW threshold (`8.5`) hardcoded separately from `constants.js` | DB / Constants | 🔴 Open |
+| 7 | DB VIEW threshold (`8.5`) hardcoded separately from `constants.js` | DB / Constants | 🟢 Fixed |
 
 ---
 
@@ -25,7 +25,7 @@ Branch: `feat/player-lock-system`
 - **Code**: `if (filters.lockable) query = query.lte('price', 8.5);`
 - **Problem**: `LOCK_PRICE_THRESHOLD` is imported nowhere in this file. The value is duplicated manually. If the threshold changes in `constants.js`, this filter stays wrong silently.
 - **Fix**: Import `LOCK_PRICE_THRESHOLD` from `constants.js` and use it here.
-- **Status**: 🔴 Open
+- **Status**: 🟢 Fixed — `usePlayers.js` now uses `LOCK_PRICE_THRESHOLD`
 
 ---
 
@@ -34,7 +34,7 @@ Branch: `feat/player-lock-system`
 - **Constants**: `MAX_LOCKED_PLAYERS = 10`, `MIN_LOCKED_PLAYERS = 8`
 - **Problem**: These constraints are not checked anywhere — not in auction resolution (`AuctionContext.jsx`), not in market purchases (`Market.jsx`), not in transfers (`Transfers.jsx`). A team could end up with more than 10 locked players (e.g., all 15 won at auction).
 - **Fix**: Add enforcement at acquisition points (auction + market) and optionally in transfer validation.
-- **Status**: 🔴 Open
+- **Status**: 🟢 Fixed — `lock_player` RPC enforces MAX server-side; Market.jsx + MyTeam.jsx gate the UI; `MIN_LOCKED_PLAYERS` constant removed (replaced by soft nudge banner)
 
 ---
 
@@ -47,8 +47,8 @@ Branch: `feat/player-lock-system`
   ```
 - **Problem**: Every auction-won player gets a locked slot regardless of their price. The design intent (lockable_players VIEW + LOCK_PRICE_THRESHOLD) implies locked slots are for ≤8.5M players. An expensive player won at auction incorrectly occupies a locked slot, then their transfer replacement is unfairly restricted to ≤8.5M.
 - **Note**: The `lockable_players` DB VIEW and `filters.lockable` hook exist but are never used to restrict the auction player pool.
-- **Fix**: To be defined — user will explain intended acquisition lock behavior.
-- **Status**: 🔴 Open — **Tackling first**
+- **Fix**: Auction now filters to lockable players only via `usePlayers({ lockable: true })`; all auction winners correctly receive `slot_type: 'locked'` since only ≤8.5M players appear in the pool.
+- **Status**: 🟢 Fixed
 
 ---
 
@@ -93,8 +93,8 @@ Branch: `feat/player-lock-system`
 - **File**: `supabase/migrations/001_initial_schema.sql:28`
 - **Code**: `SELECT *, (price <= 8.5) AS is_lockable FROM players;`
 - **Problem**: The `8.5` in the VIEW is separate from `LOCK_PRICE_THRESHOLD = 8.5` in `constants.js`. They match today, but a future change to one won't automatically update the other, causing silent divergence between what the DB considers lockable and what the frontend enforces.
-- **Fix**: Document this coupling explicitly; consider a DB constant/config table or a migration convention note. This can only be kept in sync manually.
-- **Status**: 🔴 Open
+- **Fix**: The `lockable_players` VIEW was dropped entirely in migration `016_lock_system.sql`. Lockability is now enforced purely in `usePlayers.js` via `LOCK_PRICE_THRESHOLD` — single source of truth.
+- **Status**: 🟢 Fixed
 
 ---
 
