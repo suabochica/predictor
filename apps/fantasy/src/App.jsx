@@ -16,7 +16,7 @@ import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 
 function redirectToGateway() {
-  window.location.replace('/');
+  window.location.replace(import.meta.env.VITE_GATEWAY_URL ?? '/');
   return null;
 }
 
