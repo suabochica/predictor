@@ -1,6 +1,5 @@
 export const MAX_SQUAD_SIZE = 15;
 export const MAX_LOCKED_PLAYERS = 10;
-export const MIN_LOCKED_PLAYERS = 8;
 export const LOCK_PRICE_THRESHOLD = 8.5;
 export const TOTAL_BUDGET = 105.0;
 export const AUCTION_CUSHION = 5.0;
