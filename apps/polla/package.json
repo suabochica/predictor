@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "import-matches": "node scripts/import-matches.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.0.0",

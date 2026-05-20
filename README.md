@@ -1,8 +1,8 @@
-# Predictor
+# 🔮 Predictor
 
- Project to manage tournaments predictions with score rules and a leaderboards. 
+ Project to manage tournaments and teams predictions with score rules and a leaderboards.
 
- ## Prompt
+ ## ✍ Prompt
 
  The initial prompt on claude was:
 
@@ -10,27 +10,80 @@
 Claude in this repository we want to create a tournament score predictor whose use case will be the FIFA world cup 2026. In the frontend we will use JavaScript with TypeScript under the AstroJS meta framework, use pnpm as package manager and jest for unit testing. On the backend we will use Python with the FastAPI framework. We will enable a form to enter the scores, a section with the rules of how  the user get points and a leader board with the scores of the user. The app will be initially for 15 user so we can mock their information.
  ```
 
- ## AI Use
+## 🛂 Authentication Flow
 
- For the use of free open models we use:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         USER FLOW                               │
+└─────────────────────────────────────────────────────────────────┘
 
- - [Ollama](https://ollama.com/)
+     ┌──────────────┐
+     │ domain.com   │
+     │   (root)     │
+     └──────┬───────┘
+            │
+            ▼
+     ┌──────────────┐     No session      ┌──────────────┐
+     │   Gateway    │ ──────────────────► │    Login     │
+     │   App        │                     │    Page     │
+     └──────┬───────┘                     └──────┬───────┘
+            │                                    │
+            │ Has session                        │ Auth success
+            ▼                                    │
+     ┌──────────────┐◄───────────────────────────┘
+     │  Dashboard   │
+     │ (App Select) │
+     └──────┬───────┘
+            │
+            │ User chooses app
+            │
+    ┌───────┴───────┐
+    │               │
+    ▼               ▼
+┌────────┐     ┌──────────┐
+│ /polla │     │ /fantasy │
+│  App   │     │   App    │
+└────────┘     └──────────┘
+    │               │
+    │ Shared Supabase Session
+    │               │
+    └───────┬───────┘
+            │
+            ▼
+     ┌──────────────┐
+     │   Supabase   │
+     │   (Auth + DB)│
+     └──────────────┘
+```
 
- The recommended open models to use are:
+ ## 🧞 Commands
 
- - [kimi-k2.5](https://ollama.com/library/kimi-k2.5)
- - [qwen3.5](https://ollama.com/library/qwen3.5)
+```bash
+# Install dependencies
+pnpm install
 
- However ollama offer [several models](https://ollama.com/search) that we can try
+# Run all apps
+pnpm dev
 
- The agent code is:
+# Or individually
+pnpm dev:gateway  # http://localhost:4321
+pnpm dev:polla    # http://localhost:4322
+pnpm dev:fantasy  # http://localhost:4323
+```
+
+ ## 🤖 AI Use
+
+ The agent code that we are using:
 
  - [Code Claude](https://claude.ai)
+ - [Opencode](https://opencode.ai/docs/)
 
- We use the Code Claude as an [integration](https://docs.ollama.com/integrations/claude-code) of Ollama
+The list of LLM used:
+
+- cloude-sonnet
+- DeepSeek V4 Pro (Go subscription required)
 
  The recommended IDE & Editor is: 
  
  - [VS Code](https://code.visualstudio.com/)
 
- We use the VS Code as an [integration](https://docs.ollama.com/integrations/vscode) of Ollama
