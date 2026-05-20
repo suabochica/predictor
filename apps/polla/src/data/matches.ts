@@ -1,63 +1,60 @@
 import type { Match } from '../types';
 
-// Country data with emoji flags for World Cup 2026
+/**
+ * Country data with emoji flags for all 48 FIFA World Cup 2026 qualified teams.
+ * Codes are FIFA trigrammes.
+ */
 export const countries: Record<string, { name: string; flag: string }> = {
+  ALG: { name: 'Algeria', flag: '🇩🇿' },
   ARG: { name: 'Argentina', flag: '🇦🇷' },
   AUS: { name: 'Australia', flag: '🇦🇺' },
+  AUT: { name: 'Austria', flag: '🇦🇹' },
   BEL: { name: 'Belgium', flag: '🇧🇪' },
+  BIH: { name: 'Bosnia & Herz.', flag: '🇧🇦' },
   BRA: { name: 'Brazil', flag: '🇧🇷' },
   CAN: { name: 'Canada', flag: '🇨🇦' },
-  CMR: { name: 'Cameroon', flag: '🇨🇲' },
-  CHI: { name: 'Chile', flag: '🇨🇱' },
+  CIV: { name: 'Ivory Coast', flag: '🇨🇮' },
+  COD: { name: 'DR Congo', flag: '🇨🇩' },
   COL: { name: 'Colombia', flag: '🇨🇴' },
-  CRC: { name: 'Costa Rica', flag: '🇨🇷' },
+  CPV: { name: 'Cape Verde', flag: '🇨🇻' },
   CRO: { name: 'Croatia', flag: '🇭🇷' },
-  DEN: { name: 'Denmark', flag: '🇩🇰' },
+  CUW: { name: 'Curaçao', flag: '🇨🇼' },
+  CZE: { name: 'Czech Republic', flag: '🇨🇿' },
   ECU: { name: 'Ecuador', flag: '🇪🇨' },
+  EGY: { name: 'Egypt', flag: '🇪🇬' },
   ENG: { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  ESP: { name: 'Spain', flag: '🇪🇸' },
   FRA: { name: 'France', flag: '🇫🇷' },
   GER: { name: 'Germany', flag: '🇩🇪' },
   GHA: { name: 'Ghana', flag: '🇬🇭' },
+  HAI: { name: 'Haiti', flag: '🇭🇹' },
   IRN: { name: 'Iran', flag: '🇮🇷' },
+  IRQ: { name: 'Iraq', flag: '🇮🇶' },
+  JOR: { name: 'Jordan', flag: '🇯🇴' },
   JPN: { name: 'Japan', flag: '🇯🇵' },
   KOR: { name: 'South Korea', flag: '🇰🇷' },
-  MEX: { name: 'Mexico', flag: '🇲🇽' },
+  KSA: { name: 'Saudi Arabia', flag: '🇸🇦' },
   MAR: { name: 'Morocco', flag: '🇲🇦' },
+  MEX: { name: 'Mexico', flag: '🇲🇽' },
   NED: { name: 'Netherlands', flag: '🇳🇱' },
+  NOR: { name: 'Norway', flag: '🇳🇴' },
   NZL: { name: 'New Zealand', flag: '🇳🇿' },
-  NGA: { name: 'Nigeria', flag: '🇳🇬' },
-  POL: { name: 'Poland', flag: '🇵🇱' },
+  PAN: { name: 'Panama', flag: '🇵🇦' },
+  PAR: { name: 'Paraguay', flag: '🇵🇾' },
   POR: { name: 'Portugal', flag: '🇵🇹' },
   QAT: { name: 'Qatar', flag: '🇶🇦' },
-  SAU: { name: 'Saudi Arabia', flag: '🇸🇦' },
+  RSA: { name: 'South Africa', flag: '🇿🇦' },
+  SCO: { name: 'Scotland', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
   SEN: { name: 'Senegal', flag: '🇸🇳' },
-  SRB: { name: 'Serbia', flag: '🇷🇸' },
-  ESP: { name: 'Spain', flag: '🇪🇸' },
   SUI: { name: 'Switzerland', flag: '🇨🇭' },
+  SWE: { name: 'Sweden', flag: '🇸🇪' },
+  TUN: { name: 'Tunisia', flag: '🇹🇳' },
+  TUR: { name: 'Turkey', flag: '🇹🇷' },
   URU: { name: 'Uruguay', flag: '🇺🇾' },
   USA: { name: 'USA', flag: '🇺🇸' },
-  WAL: { name: 'Wales', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+  UZB: { name: 'Uzbekistan', flag: '🇺🇿' },
 };
 
-// Sample World Cup 2026 matches (group stage)
-export const matches: Match[] = [
-  // Group Stage - Matchday 1 (June 11, 2026)
-  { match_id: 'M01', team_a: 'MEX', team_b: 'CAN', match_date: '2026-06-11', group: 'A', status: 'upcoming' },
-  { match_id: 'M02', team_a: 'USA', team_b: 'MEX', match_date: '2026-06-11', group: 'B', status: 'upcoming' },
-
-  // Matchday 2 (June 12, 2026)
-  { match_id: 'M03', team_a: 'ARG', team_b: 'BRA', match_date: '2026-06-12', group: 'C', status: 'upcoming' },
-  { match_id: 'M04', team_a: 'ENG', team_b: 'FRA', match_date: '2026-06-12', group: 'D', status: 'upcoming' },
-
-  // Matchday 3 (June 13, 2026)
-  { match_id: 'M05', team_a: 'GER', team_b: 'ESP', match_date: '2026-06-13', group: 'E', status: 'upcoming' },
-  { match_id: 'M06', team_a: 'POR', team_b: 'NED', match_date: '2026-06-13', group: 'F', status: 'upcoming' },
-
-  // Matchday 4 (June 14, 2026)
-  { match_id: 'M07', team_a: 'BEL', team_b: 'CRO', match_date: '2026-06-14', group: 'G', status: 'upcoming' },
-  { match_id: 'M08', team_a: 'URU', team_b: 'COL', match_date: '2026-06-14', group: 'H', status: 'upcoming' },
-
-  // Matchday 5 (June 15, 2026)
-  { match_id: 'M09', team_a: 'JPN', team_b: 'KOR', match_date: '2026-06-15', group: 'A', status: 'upcoming' },
-  { match_id: 'M10', team_a: 'MAR', team_b: 'SEN', match_date: '2026-06-15', group: 'B', status: 'upcoming' },
-];
+// Matches are now stored in Supabase (matches table).
+// This array is kept as a fallback for offline development.
+export const matches: Match[] = [];

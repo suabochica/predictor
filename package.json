@@ -6,6 +6,7 @@
     "build": "pnpm -r build",
     "dev:gateway": "pnpm --filter @predictor/gateway dev",
     "dev:polla": "pnpm --filter @predictor/polla dev",
-    "dev:fantasy": "pnpm --filter @predictor/fantasy dev"
+    "dev:fantasy": "pnpm --filter @predictor/fantasy dev",
+    "import-matches": "pnpm --filter @predictor/polla import-matches"
   }
 }

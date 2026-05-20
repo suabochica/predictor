@@ -6,14 +6,27 @@ export interface Match {
   team_b: string;
   match_date: string;
   group?: string;
+  stadium?: string;
   actual_score_a?: number;
   actual_score_b?: number;
   status: 'upcoming' | 'live' | 'finished';
 }
 
+/** Raw row shape from the Supabase matches table. */
+export interface DbMatch {
+  id: string;
+  match_code: string;
+  team_a: string;
+  team_b: string;
+  match_date: string;
+  group_name: string | null;
+  stadium: string | null;
+  status: string;
+}
+
 export interface Prediction {
   prediction_id: string;
-  user_id: number;
+  user_id: string;
   match_id: string;
   predicted_score_a: number;
   predicted_score_b: number;
@@ -22,18 +35,24 @@ export interface Prediction {
 }
 
 export interface User {
-  user_id: number;
-  name: string;
-  avatar: string;
+  user_id: string;
+  display_name: string;
   total_points: number;
+}
+
+export interface LeaderboardRow {
+  user_id: string;
+  display_name: string;
+  total_points: number;
+  predictions_count: number;
 }
 
 export interface LeaderboardEntry {
   rank: number;
-  user: User;
+  user_id: string;
+  display_name: string;
   total_points: number;
-  correct_scores: number;
-  correct_outcomes: number;
+  predictions_count: number;
 }
 
 export interface ScoringRule {
