@@ -37,5 +37,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/polla/login');
   }
 
+  // Fetch display name
+  const { data: profile } = await supabase
+    .from('users')
+    .select('display_name')
+    .eq('id', user.id)
+    .single();
+  context.locals.displayName = profile?.display_name ?? null;
+
+  // Fetch leaderboard rank
+  const { data: leaderboard } = await supabase.rpc('get_leaderboard');
+  const userEntry = (leaderboard as any[])?.find((row) => row.user_id === user.id);
+  context.locals.leaderboardRank = userEntry ? (leaderboard as any[]).indexOf(userEntry) + 1 : null;
+  context.locals.totalPoints = userEntry?.total_points ?? null;
+
   return next();
 });

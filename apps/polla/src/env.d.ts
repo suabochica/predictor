@@ -6,5 +6,8 @@ import type { User } from '@supabase/supabase-js';
 declare namespace App {
   interface Locals {
     user: User | null;
+    displayName: string | null;
+    leaderboardRank: number | null;
+    totalPoints: number | null;
   }
 }
