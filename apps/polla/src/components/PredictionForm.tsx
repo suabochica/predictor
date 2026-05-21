@@ -66,13 +66,17 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
   }, []);
 
   async function loadData() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
       // ── Fetch matches ──────────────────────────────────────
       const { data: dbMatches, error: matchErr } = await supabase
         .from('matches')
         .select('id, match_code, team_a, team_b, match_date, group_name, stadium, status')
         .eq('stage', 'group')
-        .order('match_code');
+        .order('match_code')
+        .abortSignal(controller.signal);
 
       if (matchErr) throw matchErr;
 
@@ -88,7 +92,8 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
           const { data: dbPreds, error: predErr } = await supabase
             .from('predictions')
             .select('match_id, predicted_score_a, predicted_score_b')
-            .eq('user_id', currentUser);
+            .eq('user_id', currentUser)
+            .abortSignal(controller.signal);
 
           if (!predErr && dbPreds) {
             const codeByUuid: Record<string, string> = {};
@@ -107,10 +112,11 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       }
 
       setUsingFallback(false);
-      setLoading(false);
-      return;
-    } catch {
+    } catch (err: any) {
+      console.error('PredictionForm loadData error:', err?.message ?? err);
       setUsingFallback(true);
+    } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }
