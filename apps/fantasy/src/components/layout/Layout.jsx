@@ -1,6 +1,7 @@
 import Header from './Header';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
+import { Footer } from '@predictor/ui';
 import { useAuth } from '@predictor/supabase';
 
 export default function Layout({ children }) {
@@ -16,15 +17,7 @@ export default function Layout({ children }) {
         </main>
       </div>
       <MobileNav />
-      <footer className="py-4 text-center text-sm text-muted border-t border-border">
-        <div className="flex items-center justify-center gap-4">
-          <a href="/" className="hover:text-tertiary transition-colors">Dashboard</a>
-          <span className="text-muted">•</span>
-          <a href="/polla/" className="hover:text-tertiary transition-colors">Polla</a>
-          <span className="text-muted">•</span>
-          <a href="/fantasy/" className="hover:text-tertiary transition-colors">Fantasy</a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
