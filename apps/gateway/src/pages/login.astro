@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import LoginForm from '../components/LoginForm';
+import { LoginForm } from '@predictor/ui';
 
 // Redirect if already logged in
 if (Astro.locals.user) {
@@ -12,13 +12,14 @@ if (Astro.locals.user) {
   <main class="flex min-h-screen items-center justify-center p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
-        <span class="text-5xl">⚽</span>
-        <h1 class="mt-4 text-2xl font-semibold text-[var(--color-text-heading)]">Predictor 2026</h1>
-        <p class="mt-1 text-[var(--color-text)]">Sign in to make your predictions</p>
+        <h1 class="mt-4 font-atomic text-h2 text-primary">Predictor</h1>
+        <p class="mt-1 text-secondary text-body-sm">Sign in to make your predictions</p>
       </div>
-      <LoginForm client:load />
-      <p class="mt-6 text-center text-sm text-[var(--color-text)]">
-        No account? <a href="/register" class="text-[var(--color-accent)] hover:underline">Register</a>
+      <div class="rounded-md border border-border bg-surface p-5">
+        <LoginForm client:load />
+      </div>
+      <p class="mt-6 text-center text-body-sm text-muted">
+        No account? <a href="/register" class="text-tertiary hover:underline">Register</a>
       </p>
     </div>
   </main>

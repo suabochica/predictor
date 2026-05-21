@@ -5,10 +5,10 @@ import { calculatePlayerPoints } from '../lib/scoring';
 import { applyAutoSubs } from '../lib/matchday';
 
 const POSITION_COLOR = {
-  GK:  'bg-yellow-900 text-yellow-300',
-  DEF: 'bg-blue-900 text-blue-300',
-  MID: 'bg-emerald-900 text-emerald-300',
-  FWD: 'bg-red-900 text-red-300',
+  GK:  'bg-warning/15 text-warning',
+  DEF: 'bg-info/15 text-info',
+  MID: 'bg-tertiary/15 text-tertiary',
+  FWD: 'bg-error/10 text-error',
 };
 
 export default function History() {
@@ -139,7 +139,7 @@ export default function History() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="text-gray-400 p-6">Loading…</div>;
+    return <div className="text-secondary p-6">Loading…</div>;
   }
 
   // Build a lookup: matchday_id → team_id → standing row
@@ -156,10 +156,10 @@ export default function History() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <h1 className="text-2xl font-bold text-white">Matchday History</h1>
+      <h1 className="text-2xl font-bold text-primary">Matchday History</h1>
 
       {completedMatchdays.length === 0 ? (
-        <div className="bg-gray-900 rounded-xl p-6 text-center text-gray-400">
+        <div className="bg-surface rounded-xl p-6 text-center text-secondary">
           No completed matchdays yet.
         </div>
       ) : (
@@ -169,31 +169,31 @@ export default function History() {
             const hasScores = Object.keys(mdStandings).length > 0;
 
             return (
-              <section key={md.id} className="bg-gray-900 rounded-xl p-6 space-y-4">
+              <section key={md.id} className="bg-surface rounded-xl p-6 space-y-4">
                 <div className="flex items-baseline gap-3 flex-wrap">
-                  <h2 className="text-lg font-semibold text-white">{md.name}</h2>
-                  <span className="text-xs text-gray-500">{md.wc_stage}</span>
+                  <h2 className="text-lg font-semibold text-primary">{md.name}</h2>
+                  <span className="text-xs text-muted">{md.wc_stage}</span>
                   {md.is_active && !md.is_completed && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-400 border border-emerald-700/40">
+                        <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-tertiary/15 text-tertiary border border-tertiary/40">
                       Live
                     </span>
                   )}
                 </div>
 
                 {!hasScores ? (
-                  <p className="text-gray-500 text-sm">Standings not yet calculated for this matchday.</p>
+                  <p className="text-muted text-sm">Standings not yet calculated for this matchday.</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-500 border-b border-gray-800">
+                        <tr className="text-left text-muted border-b border-border">
                           <th className="pb-3 pr-4 font-medium">Team</th>
                           <th className="pb-3 pr-4 font-medium text-right">Matchday Pts</th>
                           <th className="pb-3 pr-4 font-medium text-right">Total Pts</th>
                           <th className="pb-3 font-medium text-right">Goals</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-800">
+                      <tbody className="divide-y divide-border">
                         {teamsInStandings
                           .filter(([tid]) => mdStandings[tid])
                           .sort((a, b) => (mdStandings[b[0]]?.matchday_points ?? 0) - (mdStandings[a[0]]?.matchday_points ?? 0))
@@ -203,23 +203,23 @@ export default function History() {
                             return (
                               <tr
                                 key={teamId}
-                                className={`hover:bg-gray-800/40 ${isMyTeam ? 'bg-emerald-950/30' : ''}`}
+                                className={`hover:bg-surface-hover/40 ${isMyTeam ? 'bg-tertiary/5/30' : ''}`}
                               >
-                                <td className={`py-2.5 pr-4 font-medium ${isMyTeam ? 'text-emerald-400' : 'text-white'}`}>
+                                <td className={`py-2.5 pr-4 font-medium ${isMyTeam ? 'text-tertiary' : 'text-primary'}`}>
                                   {teamName}{isMyTeam && ' (you)'}
                                 </td>
                                 <td className="py-2.5 pr-4 text-right">
                                   <button
                                     onClick={() => openBreakdown(md, teamId, teamName)}
-                                    className="text-emerald-400 font-bold hover:underline"
+                                    className="text-tertiary font-bold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                                   >
                                     {s.matchday_points ?? 0}
                                   </button>
                                 </td>
-                                <td className="py-2.5 pr-4 text-right text-white font-semibold">
+                                <td className="py-2.5 pr-4 text-right text-primary font-semibold">
                                   {s.total_points ?? 0}
                                 </td>
-                                <td className="py-2.5 text-right text-gray-400">
+                                <td className="py-2.5 text-right text-secondary">
                                   {s.goals_scored ?? 0}
                                 </td>
                               </tr>
@@ -238,16 +238,17 @@ export default function History() {
       {/* ── Points Breakdown Modal ──────────────────────────────────────── */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+          <div className="bg-surface rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
             {/* Header */}
-            <div className="flex items-baseline justify-between p-6 border-b border-gray-800">
+            <div className="flex items-baseline justify-between p-6 border-b border-border">
               <div>
-                <h3 className="text-lg font-semibold text-white">{modal.teamName}</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{modal.matchday.name} — {modal.matchday.wc_stage}</p>
+                <h3 className="text-lg font-semibold text-primary">{modal.teamName}</h3>
+                <p className="text-xs text-secondary mt-0.5">{modal.matchday.name} — {modal.matchday.wc_stage}</p>
               </div>
               <button
                 onClick={() => setModal(null)}
-                className="text-gray-500 hover:text-white text-xl transition-colors ml-4"
+                className="text-muted hover:text-primary text-xl transition-colors ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                aria-label="Close"
               >
                 ✕
               </button>
@@ -256,22 +257,22 @@ export default function History() {
             {/* Body */}
             <div className="overflow-y-auto p-6 space-y-3">
               {breakdownLoading ? (
-                <p className="text-gray-400 text-sm">Loading breakdown…</p>
+                <p className="text-secondary text-sm">Loading breakdown…</p>
               ) : breakdown?.error ? (
-                <p className="text-red-400 text-sm">{breakdown.error}</p>
+                <p className="text-error text-sm" role="alert">{breakdown.error}</p>
               ) : breakdown ? (
                 <>
                   {breakdown.rows.map((row, i) => (
                     <BreakdownRow key={i} row={row} captainId={breakdown.captainId} />
                   ))}
 
-                  <div className="border-t border-gray-700 pt-3 flex items-center justify-between">
-                    <span className="text-gray-400 text-sm font-medium">Total</span>
-                    <span className="text-emerald-400 text-xl font-bold">{breakdown.total} pts</span>
+                  <div className="border-t border-border pt-3 flex items-center justify-between">
+                    <span className="text-secondary text-sm font-medium">Total</span>
+                    <span className="text-tertiary text-xl font-bold">{breakdown.total} pts</span>
                   </div>
 
                   {breakdown.subsApplied.length > 0 && (
-                    <div className="bg-blue-950/40 border border-blue-800/40 rounded-lg px-4 py-3 text-xs text-blue-300 space-y-1">
+                    <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info space-y-1">
                       <p className="font-semibold">Auto-substitutions</p>
                       {breakdown.subsApplied.map((s, i) => (
                         <p key={i}>
@@ -298,10 +299,10 @@ function BreakdownRow({ row }) {
   if (onBench) {
     return (
       <div className="flex items-center gap-3 py-2 opacity-40">
-        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-gray-800 text-gray-400'}`}>{pos}</span>
-        <span className="flex-1 text-gray-400 text-sm">{name}</span>
-        <span className="text-xs text-gray-600">Bench (unused)</span>
-        <span className="w-10 text-right text-gray-600 text-sm">—</span>
+        <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
+        <span className="flex-1 text-secondary text-sm">{name}</span>
+        <span className="text-xs text-muted">Bench (unused)</span>
+        <span className="w-10 text-right text-muted text-sm">—</span>
       </div>
     );
   }
@@ -309,32 +310,32 @@ function BreakdownRow({ row }) {
   if (subbedOut) {
     return (
       <div className="flex items-center gap-3 py-2 opacity-50">
-        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-gray-800 text-gray-400'}`}>{pos}</span>
-        <span className="flex-1 text-gray-400 text-sm line-through">{name}</span>
-        <span className="text-xs text-gray-500 italic">Subbed out (0 min)</span>
-        <span className="w-10 text-right text-gray-500 text-sm font-bold">0</span>
+        <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
+        <span className="flex-1 text-secondary text-sm line-through">{name}</span>
+        <span className="text-xs text-muted italic">Subbed out (0 min)</span>
+        <span className="w-10 text-right text-muted text-sm font-bold">0</span>
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${POSITION_COLOR[pos] ?? 'bg-gray-800 text-gray-400'}`}>{pos}</span>
+      <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-white text-sm truncate">{name}</span>
-          {isCap && <span className="text-[10px] bg-yellow-500 text-gray-900 font-bold px-1.5 py-0.5 rounded">C</span>}
-          {subbedIn && <span className="text-[10px] bg-blue-700 text-blue-100 px-1.5 py-0.5 rounded">Sub</span>}
+          <span className="text-primary text-sm truncate">{name}</span>
+          {isCap && <span className="text-label-caps bg-tertiary text-primary font-bold px-1.5 py-0.5 rounded">C</span>}
+          {subbedIn && <span className="text-label-caps bg-info text-info px-1.5 py-0.5 rounded">Sub</span>}
         </div>
         <StatLine stats={stats} />
       </div>
 
       <div className="text-right flex-shrink-0 w-16">
         {isCap && base !== final && (
-          <span className="text-xs text-gray-500 block">{base}×2</span>
+          <span className="text-xs text-muted block">{base}×2</span>
         )}
-        <span className={`text-sm font-bold ${final > 0 ? 'text-emerald-400' : final < 0 ? 'text-red-400' : 'text-gray-500'}`}>
+        <span className={`text-sm font-bold ${final > 0 ? 'text-tertiary' : final < 0 ? 'text-error' : 'text-muted'}`}>
           {final > 0 ? '+' : ''}{final}
         </span>
       </div>
@@ -344,7 +345,7 @@ function BreakdownRow({ row }) {
 
 function StatLine({ stats }) {
   if (!stats || Object.keys(stats).length === 0) {
-    return <span className="text-[11px] text-gray-600">No stats</span>;
+    return <span className="text-body-sm text-muted">No stats</span>;
   }
   const parts = [];
   if (stats.minutes_played != null) parts.push(`${stats.minutes_played}'`);
@@ -356,6 +357,6 @@ function StatLine({ stats }) {
   if (stats.red_cards)      parts.push('RC');
   if (stats.own_goals)      parts.push(`${stats.own_goals} OG`);
   return (
-    <span className="text-[11px] text-gray-500">{parts.join(' · ') || '—'}</span>
+    <span className="text-body-sm text-muted">{parts.join(' · ') || '—'}</span>
   );
 }

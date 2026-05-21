@@ -15,13 +15,13 @@ function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, placement,
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-3 min-w-[180px]">
+    <div className="bg-surface border border-border rounded-xl p-3 min-w-[180px]">
       {/* Match label */}
       {(label || placement) && (
         <div className="flex items-center justify-between mb-2">
-          {label && <span className="text-[10px] text-gray-500">{label}</span>}
+          {label && <span className="text-label-caps text-muted">{label}</span>}
           {placement && (
-            <span className="text-[10px] font-bold text-yellow-400">{placement}</span>
+            <span className="text-label-caps font-bold text-tertiary">{placement}</span>
           )}
         </div>
       )}
@@ -29,40 +29,40 @@ function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, placement,
       {/* Team A */}
       <div
         className={`flex items-center justify-between py-1 gap-2 ${
-          aWon ? 'text-white' : hasResult ? 'text-gray-500' : 'text-gray-300'
+          aWon ? 'text-primary' : hasResult ? 'text-muted' : 'text-secondary'
         }`}
       >
         <div className="flex items-center gap-1.5 min-w-0">
           {seed?.a != null && (
-            <span className="text-[9px] text-gray-600 flex-shrink-0">({seed.a})</span>
+            <span className="text-label-caps text-muted flex-shrink-0">({seed.a})</span>
           )}
-          {aWon && <span className="text-[9px] text-emerald-400 flex-shrink-0">W</span>}
+          {aWon && <span className="text-label-caps text-tertiary flex-shrink-0">W</span>}
           <span className="text-xs truncate">{teamName(teamA)}</span>
         </div>
         {hasResult && (
-          <span className={`text-sm font-bold flex-shrink-0 ${aWon ? 'text-emerald-400' : ''}`}>
+          <span className={`text-sm font-bold flex-shrink-0 ${aWon ? 'text-tertiary' : ''}`}>
             {pointsA}
           </span>
         )}
       </div>
 
-      <div className="border-t border-gray-800 my-0.5" />
+      <div className="border-t border-border my-0.5" />
 
       {/* Team B */}
       <div
         className={`flex items-center justify-between py-1 gap-2 ${
-          bWon ? 'text-white' : hasResult ? 'text-gray-500' : 'text-gray-300'
+          bWon ? 'text-primary' : hasResult ? 'text-muted' : 'text-secondary'
         }`}
       >
         <div className="flex items-center gap-1.5 min-w-0">
           {seed?.b != null && (
-            <span className="text-[9px] text-gray-600 flex-shrink-0">({seed.b})</span>
+            <span className="text-label-caps text-muted flex-shrink-0">({seed.b})</span>
           )}
-          {bWon && <span className="text-[9px] text-emerald-400 flex-shrink-0">W</span>}
+          {bWon && <span className="text-label-caps text-tertiary flex-shrink-0">W</span>}
           <span className="text-xs truncate">{teamName(teamB)}</span>
         </div>
         {hasResult && (
-          <span className={`text-sm font-bold flex-shrink-0 ${bWon ? 'text-emerald-400' : ''}`}>
+          <span className={`text-sm font-bold flex-shrink-0 ${bWon ? 'text-tertiary' : ''}`}>
             {pointsB}
           </span>
         )}
@@ -75,18 +75,18 @@ function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, placement,
 
 function PreviewMatchCard({ label, teamA, teamB, seedA, seedB }) {
   return (
-    <div className="bg-gray-900 border border-dashed border-gray-700 rounded-xl p-3 min-w-[180px] opacity-80">
-      <span className="text-[10px] text-gray-500 block mb-2">{label}</span>
+    <div className="bg-surface border border-dashed border-border rounded-xl p-3 min-w-[180px] opacity-80">
+      <span className="text-label-caps text-muted block mb-2">{label}</span>
       <div className="flex items-center gap-1.5 py-1">
-        <span className="text-[9px] text-gray-600">({seedA})</span>
-        <span className="text-xs text-gray-300 truncate">
+        <span className="text-label-caps text-muted">({seedA})</span>
+        <span className="text-xs text-secondary truncate">
           {teamA?.display_name ?? 'TBD'}
         </span>
       </div>
-      <div className="border-t border-gray-800 my-0.5" />
+      <div className="border-t border-border my-0.5" />
       <div className="flex items-center gap-1.5 py-1">
-        <span className="text-[9px] text-gray-600">({seedB})</span>
-        <span className="text-xs text-gray-300 truncate">
+        <span className="text-label-caps text-muted">({seedB})</span>
+        <span className="text-xs text-secondary truncate">
           {teamB?.display_name ?? 'TBD'}
         </span>
       </div>
@@ -99,7 +99,7 @@ function PreviewMatchCard({ label, teamA, teamB, seedA, seedB }) {
 function RoundColumn({ title, children }) {
   return (
     <div className="flex flex-col gap-3 min-w-[196px]">
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest text-center">
+      <p className="text-label-caps font-semibold text-secondary uppercase tracking-widest text-center">
         {title}
       </p>
       <div className="flex flex-col gap-3">{children}</div>
@@ -109,7 +109,7 @@ function RoundColumn({ title, children }) {
 
 function Connector() {
   return (
-    <div className="flex items-center self-center text-gray-700 text-lg px-1 flex-shrink-0">
+    <div className="flex items-center self-center text-secondary text-lg px-1 flex-shrink-0" aria-label="Connector">
       →
     </div>
   );
@@ -123,7 +123,7 @@ export default function Bracket() {
 
   if (matchesLoading || standingsLoading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400">
+      <div className="flex items-center justify-center py-20 text-secondary">
         Loading bracket…
       </div>
     );
@@ -156,15 +156,15 @@ export default function Bracket() {
     <div className="space-y-8 max-w-5xl">
       {/* ── Header ── */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Bracket</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Knockout tournament — H2H matchday points</p>
+        <h1 className="text-2xl font-bold text-primary">Bracket</h1>
+        <p className="text-secondary text-sm mt-0.5">Knockout tournament — H2H matchday points</p>
       </div>
 
       {/* ── Not seeded yet ── */}
       {!hasMatches && !hasEnoughStandings && (
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 text-center">
-          <p className="text-gray-300 font-semibold">Bracket not seeded yet</p>
-          <p className="text-gray-500 text-sm mt-1">
+        <div className="bg-surface border border-border rounded-xl p-6 text-center">
+          <p className="text-secondary font-semibold">Bracket not seeded yet</p>
+          <p className="text-muted text-sm mt-1">
             The knockout bracket is set once the league stage (4 matchdays) is complete.
           </p>
         </div>
@@ -173,15 +173,15 @@ export default function Bracket() {
       {/* ── Seeded preview (standings exist but no DB matches yet) ── */}
       {!hasMatches && hasEnoughStandings && (
         <>
-          <div className="bg-yellow-900/20 border border-yellow-700/40 rounded-xl p-3 text-sm text-yellow-400">
+          <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 text-sm text-tertiary">
             Preview based on current standings — bracket locks when league stage is finalised.
           </div>
 
           {/* Championship preview */}
           <section>
-            <h2 className="text-base font-bold text-white mb-4">
+            <h2 className="text-base font-bold text-primary mb-4">
               Championship Bracket
-              <span className="ml-2 text-sm text-gray-500 font-normal">(Top 8)</span>
+              <span className="ml-2 text-sm text-muted font-normal">(Top 8)</span>
             </h2>
             {(() => {
               const champMatches = generateChampionshipBracket(standings);
@@ -221,9 +221,9 @@ export default function Bracket() {
           {/* Relegation preview */}
           {standings.length >= 12 && (
             <section>
-              <h2 className="text-base font-bold text-white mb-4">
+              <h2 className="text-base font-bold text-primary mb-4">
                 Relegation Bracket
-                <span className="ml-2 text-sm text-gray-500 font-normal">(Bottom 4)</span>
+                <span className="ml-2 text-sm text-muted font-normal">(Bottom 4)</span>
               </h2>
               {(() => {
                 const relMatches = generateRelegationBracket(standings);
@@ -259,9 +259,9 @@ export default function Bracket() {
         <>
           {/* Championship */}
           <section>
-            <h2 className="text-base font-bold text-white mb-4">
+            <h2 className="text-base font-bold text-primary mb-4">
               Championship Bracket
-              <span className="ml-2 text-sm text-gray-500 font-normal">(Top 8)</span>
+              <span className="ml-2 text-sm text-muted font-normal">(Top 8)</span>
             </h2>
             <div className="flex items-start gap-2 overflow-x-auto pb-3">
               {/* Round 1 */}
@@ -315,9 +315,9 @@ export default function Bracket() {
           {/* Relegation */}
           {matches.some((m) => m.bracket === 'relegation') && (
             <section>
-              <h2 className="text-base font-bold text-white mb-4">
+              <h2 className="text-base font-bold text-primary mb-4">
                 Relegation Bracket
-                <span className="ml-2 text-sm text-gray-500 font-normal">(Bottom 4)</span>
+                <span className="ml-2 text-sm text-muted font-normal">(Bottom 4)</span>
               </h2>
               <div className="flex items-start gap-2 overflow-x-auto pb-3">
                 <RoundColumn title="Round 1">
@@ -345,7 +345,7 @@ export default function Bracket() {
           {/* Final placements summary */}
           {matches.some((m) => m.placement) && (
             <section>
-              <h2 className="text-base font-bold text-white mb-4">Final Standings</h2>
+              <h2 className="text-base font-bold text-primary mb-4">Final Standings</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {matches
                   .filter((m) => m.placement && m.winner_id)
@@ -360,22 +360,22 @@ export default function Bracket() {
                     return (
                       <div
                         key={m.id}
-                        className="bg-gray-900 border border-gray-700 rounded-xl p-3 flex items-center gap-3"
+                        className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3"
                       >
                         <span
                           className={`text-lg font-black flex-shrink-0 ${
                             rank === '1'
-                              ? 'text-yellow-400'
+                              ? 'text-tertiary'
                               : rank === '2'
-                              ? 'text-gray-300'
+                              ? 'text-secondary'
                               : rank === '3'
-                              ? 'text-orange-400'
-                              : 'text-gray-500'
+                              ? 'text-warning'
+                              : 'text-muted'
                           }`}
                         >
                           {rank === '1' ? '🏆' : `${rank}.`}
                         </span>
-                        <span className="text-sm font-medium text-white truncate">
+                        <span className="text-sm font-medium text-primary truncate">
                           {winnerName}
                         </span>
                       </div>
@@ -388,8 +388,8 @@ export default function Bracket() {
       )}
 
       {/* ── H2H scoring rules ── */}
-      <div className="bg-gray-900/50 border border-gray-700/50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
-        <p className="font-semibold text-gray-400">H2H Scoring Rules</p>
+      <div className="bg-surface/50 border border-border/50 rounded-xl p-4 text-xs text-muted space-y-1">
+        <p className="font-semibold text-secondary">H2H Scoring Rules</p>
         <p>Winner = higher matchday points. Tiebreaker: captain points → goals scored → league seed.</p>
         <p>Only current-round matchday points count — not cumulative season total.</p>
       </div>

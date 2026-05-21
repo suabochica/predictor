@@ -192,7 +192,7 @@ export default function Market() {
   // ── Render ─────────────────────────────────────────────────────────────────
   if (teamLoading || playersLoading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400">
+      <div className="flex items-center justify-center py-20 text-secondary">
         Loading market…
       </div>
     );
@@ -201,8 +201,8 @@ export default function Market() {
   if (!team) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-white">Player Market</h1>
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 text-center text-gray-400">
+        <h1 className="text-2xl font-bold text-primary">Player Market</h1>
+        <div className="bg-surface border border-border rounded-xl p-6 text-center text-secondary">
           You're not enrolled in the league yet. Ask an admin to add you.
         </div>
       </div>
@@ -212,10 +212,10 @@ export default function Market() {
   if (!marketOpen) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-white">Player Market</h1>
-        <div className="bg-gray-900 border border-yellow-700/50 rounded-xl p-6 text-center">
-          <p className="text-yellow-300 font-semibold">Market is closed</p>
-          <p className="text-gray-400 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-primary">Player Market</h1>
+        <div className="bg-surface border border-warning/30 rounded-xl p-6 text-center">
+          <p className="text-warning font-semibold">Market is closed</p>
+          <p className="text-secondary text-sm mt-1">
             The free market opens once the auction is complete.
           </p>
         </div>
@@ -228,27 +228,27 @@ export default function Market() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-white">Player Market</h1>
-          <p className="text-gray-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-primary">Player Market</h1>
+          <p className="text-secondary text-sm mt-0.5">
             Free slot shopping — multiple managers can own the same player
           </p>
         </div>
         <div className="flex gap-3">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-center">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Budget</p>
-            <p className="text-base font-bold text-emerald-400">{formatPrice(budget)}</p>
+          <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
+            <p className="text-label-caps text-muted uppercase tracking-wider">Budget</p>
+            <p className="text-base font-bold text-tertiary">{formatPrice(budget)}</p>
           </div>
-          <div className="bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-center">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Free Slots</p>
-            <p className={`text-base font-bold ${freeSlots === 0 ? 'text-red-400' : 'text-white'}`}>
+          <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
+            <p className="text-label-caps text-muted uppercase tracking-wider">Free Slots</p>
+            <p className={`text-base font-bold ${freeSlots === 0 ? 'text-error' : 'text-primary'}`}>
               {freeSlots}
             </p>
           </div>
-          <div className="bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-center">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Squad</p>
-            <p className="text-base font-bold text-white">
+          <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
+            <p className="text-label-caps text-muted uppercase tracking-wider">Squad</p>
+            <p className="text-base font-bold text-primary">
               {squadSize}
-              <span className="text-gray-500 font-normal text-sm">/{MAX_SQUAD_SIZE}</span>
+              <span className="text-muted font-normal text-sm">/{MAX_SQUAD_SIZE}</span>
             </p>
           </div>
         </div>
@@ -256,21 +256,21 @@ export default function Market() {
 
       {/* ── Squad full warning ── */}
       {squadFull && (
-        <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 text-sm text-yellow-300">
+        <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
           Your squad is full (15/15). Remove a player to make room.
         </div>
       )}
 
       {/* ── GK required — last slot ── */}
       {mustBuyGk && (
-        <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-3 text-sm text-red-300">
+          <div className="bg-error/10/40 border border-error/30/50 rounded-xl p-3 text-sm text-error" role="alert">
           <strong>GK required:</strong> This is your last squad slot and you have no goalkeeper — you must buy a GK.
         </div>
       )}
 
       {/* ── GK warning — running low on slots ── */}
       {!hasGkInSquad && !mustBuyGk && freeSlots <= 3 && freeSlots > 0 && (
-        <div className="bg-orange-900/30 border border-orange-700/50 rounded-xl p-3 text-sm text-orange-300">
+        <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
           No GK in squad yet — you have {freeSlots} slot{freeSlots !== 1 ? 's' : ''} left. Remember to pick one.
         </div>
       )}
@@ -280,8 +280,8 @@ export default function Market() {
         <div
           className={`rounded-xl p-3 text-sm flex items-center gap-2 border ${
             lockToast.type === 'success'
-              ? 'bg-blue-900/40 border-blue-700/50 text-blue-300'
-              : 'bg-gray-800/60 border-gray-600/50 text-gray-300'
+              ? 'bg-info/10 border-info/30 text-info'
+              : 'bg-surface-hover/60 border-border-strong/50 text-secondary'
           }`}
         >
           <span>{lockToast.type === 'success' ? '[Locked]' : '[Info]'}</span>
@@ -291,7 +291,7 @@ export default function Market() {
 
       {/* ── Recent purchase toast ── */}
       {recentBuy && (
-        <div className="bg-emerald-900/40 border border-emerald-700/50 rounded-xl p-3 text-sm text-emerald-300 flex items-center gap-2">
+        <div className="bg-tertiary/10 border border-tertiary/40/50 rounded-xl p-3 text-sm text-tertiary flex items-center gap-2" role="status">
           <span>✓</span>
           <span>
             <strong>{recentBuy.name}</strong> added to your squad for{' '}
@@ -309,7 +309,7 @@ export default function Market() {
 
       {/* ── Player grid ── */}
       {filteredPlayers.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted">
           No players match your filters.
         </div>
       ) : (
@@ -334,46 +334,46 @@ export default function Market() {
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && setConfirmPlayer(null)}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-white">Confirm Purchase</h2>
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h2 className="text-lg font-bold text-primary">Confirm Purchase</h2>
 
             {/* Player info */}
-            <div className="bg-gray-800 rounded-xl p-4 flex items-center gap-3">
+            <div className="bg-surface-hover rounded-xl p-4 flex items-center gap-3">
               <span
                 className={`text-xs font-bold px-2 py-1 rounded flex-shrink-0 ${getPositionColor(confirmPlayer.position)}`}
               >
                 {confirmPlayer.position}
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{confirmPlayer.name}</p>
-                <p className="text-xs text-gray-400">{confirmPlayer.country}</p>
+                <p className="text-sm font-semibold text-primary truncate">{confirmPlayer.name}</p>
+                <p className="text-xs text-secondary">{confirmPlayer.country}</p>
               </div>
-              <span className="text-base font-bold text-emerald-400 ml-auto flex-shrink-0">
+              <span className="text-base font-bold text-tertiary ml-auto flex-shrink-0">
                 {formatPrice(confirmPlayer.current_price ?? confirmPlayer.price)}
               </span>
             </div>
 
             {/* Budget impact */}
             <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>Budget before</span>
-                <span className="text-white">{formatPrice(budget)}</span>
+                <span className="text-primary">{formatPrice(budget)}</span>
               </div>
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>Cost</span>
-                <span className="text-red-400">
+                <span className="text-error">
                   −{formatPrice(confirmPlayer.current_price ?? confirmPlayer.price)}
                 </span>
               </div>
-              <div className="flex justify-between font-semibold border-t border-gray-700 pt-1.5">
-                <span className="text-gray-300">Budget after</span>
-                <span className="text-emerald-400">
+              <div className="flex justify-between font-semibold border-t border-border pt-1.5">
+                <span className="text-secondary">Budget after</span>
+                <span className="text-tertiary">
                   {formatPrice(budget - (confirmPlayer.current_price ?? confirmPlayer.price))}
                 </span>
               </div>
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>Squad size</span>
-                <span className="text-white">
+                <span className="text-primary">
                   {squadSize} → {squadSize + 1} / {MAX_SQUAD_SIZE}
                 </span>
               </div>
@@ -381,7 +381,7 @@ export default function Market() {
 
             {/* Error */}
             {buyError && (
-              <p className="text-xs text-red-400">{buyError}</p>
+              <p className="text-xs text-error" role="alert">{buyError}</p>
             )}
 
             {/* Actions */}
@@ -392,16 +392,9 @@ export default function Market() {
                   setBuyError(null);
                 }}
                 disabled={buying}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Cancel
-              </button>
-              <button
-                onClick={confirmBuy}
-                disabled={buying}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors disabled:opacity-50"
-              >
-                {buying ? 'Buying…' : 'Confirm'}
               </button>
             </div>
           </div>
@@ -414,11 +407,11 @@ export default function Market() {
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && handleSkipLock()}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
             <div>
-              <h2 className="text-lg font-bold text-white">Lock this player?</h2>
-              <p className="text-sm text-gray-400 mt-1">
-                Locking <strong className="text-white">{lockPromptPlayer.name}</strong> claims
+              <h2 className="text-lg font-bold text-primary">Lock this player?</h2>
+              <p className="text-sm text-secondary mt-1">
+                Locking <strong className="text-primary">{lockPromptPlayer.name}</strong> claims
                 them exclusively — other teams holding them as free will be refunded and lose
                 access. You can unlock at any time.
               </p>
@@ -427,7 +420,7 @@ export default function Market() {
             {/* Swap picker — only shown when at MAX_LOCKED */}
             {atMaxLocked && (
               <div className="space-y-2">
-                <p className="text-xs text-yellow-400 font-medium">
+                <p className="text-xs text-tertiary font-medium">
                   You have {MAX_LOCKED_PLAYERS} locked players (max). Choose one to unlock:
                 </p>
                 <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
@@ -441,8 +434,8 @@ export default function Market() {
                       }
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                         swapTarget?.player_id === tp.player_id
-                          ? 'bg-orange-900/50 border border-orange-600/60 text-white'
-                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          ? 'bg-warning/15 border border-warning/40 text-primary'
+                          : 'bg-surface-hover text-secondary hover:bg-border'
                       }`}
                     >
                       <span
@@ -451,7 +444,7 @@ export default function Market() {
                         {tp.players?.position}
                       </span>
                       {tp.players?.name}
-                      <span className="text-gray-500 ml-1.5 text-xs">
+                      <span className="text-muted ml-1.5 text-xs">
                         {formatPrice(tp.players?.current_price ?? tp.players?.price)}
                       </span>
                     </button>
@@ -462,26 +455,26 @@ export default function Market() {
 
             {/* Inline error (stays modal open — e.g. max_locked_no_unlock) */}
             {lockToast?.type === 'error' && (
-              <p className="text-xs text-red-400">{lockToast.message}</p>
+              <p className="text-xs text-error" role="alert">{lockToast.message}</p>
             )}
 
             {/* Gate message — explains why Lock button is disabled */}
             {atMaxLocked && !swapTarget && (
-              <p className="text-xs text-amber-400">At max locks — pick one to unlock first.</p>
+              <p className="text-xs text-warning">At max locks — pick one to unlock first.</p>
             )}
 
             <div className="flex gap-3">
               <button
                 onClick={handleSkipLock}
                 disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Keep as Free
               </button>
               <button
                 onClick={handleLockConfirm}
                 disabled={locking || (atMaxLocked && !swapTarget)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-info hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 {locking ? 'Locking…' : atMaxLocked ? 'Lock (swap)' : 'Lock'}
               </button>

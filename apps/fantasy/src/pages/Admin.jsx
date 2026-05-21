@@ -20,17 +20,17 @@ const WC_STAGES = [
 ];
 
 const STATUS_BADGE = {
-  pending:   'bg-gray-700 text-gray-300',
-  active:    'bg-emerald-700 text-emerald-100',
-  paused:    'bg-yellow-600 text-yellow-100',
-  completed: 'bg-blue-700 text-blue-200',
+  pending:   'bg-border text-secondary',
+  active:    'bg-tertiary text-tertiary',
+  paused:    'bg-warning text-warning',
+  completed: 'bg-info text-info',
 };
 
 const POSITION_BADGE = {
-  GK:  'bg-yellow-900 text-yellow-300',
-  DEF: 'bg-blue-900 text-blue-300',
-  MID: 'bg-emerald-900 text-emerald-300',
-  FWD: 'bg-red-900 text-red-300',
+  GK:  'bg-warning/15 text-warning',
+  DEF: 'bg-info/15 text-info',
+  MID: 'bg-tertiary/15 text-tertiary',
+  FWD: 'bg-error/10 text-error',
 };
 
 export default function Admin() {
@@ -737,11 +737,11 @@ export default function Admin() {
   // ──────────────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="text-gray-400 p-6">Loading auction state…</div>;
+    return <div className="text-secondary p-6">Loading auction state…</div>;
   }
   if (!auctionState) {
     return (
-      <div className="text-red-400 p-6">
+      <div className="text-error p-6">
         No auction state found. Run the seed SQL in Supabase.
       </div>
     );
@@ -796,38 +796,38 @@ export default function Admin() {
     <div className="space-y-6 max-w-5xl">
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
+        <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
         <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_BADGE[status]}`}>
           {status}
         </span>
       </div>
 
       {/* ── League Participants ──────────────────────────────────────────── */}
-      <section className="bg-gray-900 rounded-xl p-6 space-y-4">
+      <section className="bg-surface rounded-xl p-6 space-y-4">
         <div className="flex items-baseline gap-3">
-          <h2 className="text-lg font-semibold text-white">League Participants</h2>
+          <h2 className="text-lg font-semibold text-primary">League Participants</h2>
           {!participantsLoading && (
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted">
               {participants.filter((u) => u.teams).length} of {participants.length} users enrolled
             </span>
           )}
         </div>
 
         {isCompleted && (
-          <p className="text-xs text-gray-500 bg-gray-800 rounded-lg px-3 py-2">
+          <p className="text-xs text-muted bg-surface-hover rounded-lg px-3 py-2">
             Auction complete. New enrollments will access unwon players via the free market.
           </p>
         )}
 
         {participantsLoading ? (
-          <p className="text-gray-500 text-sm">Loading users…</p>
+          <p className="text-muted text-sm">Loading users…</p>
         ) : participants.length === 0 ? (
-          <p className="text-gray-500 text-sm">No registered users found.</p>
+          <p className="text-muted text-sm">No registered users found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-800">
+                <tr className="text-left text-muted border-b border-border">
                   <th className="pb-3 pr-4 font-medium">User</th>
                   <th className="pb-3 pr-4 font-medium">Email</th>
                   <th className="pb-3 pr-4 font-medium">Status</th>
@@ -835,30 +835,30 @@ export default function Admin() {
                   <th className="pb-3 font-medium">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {participants.map((u) => (
-                  <tr key={u.id} className="text-gray-300 hover:bg-gray-800/40">
-                    <td className="py-2.5 pr-4 text-white font-medium">{u.display_name}</td>
-                    <td className="py-2.5 pr-4 text-gray-400 text-xs">{u.email}</td>
+                  <tr key={u.id} className="text-secondary hover:bg-surface-hover/40">
+                    <td className="py-2.5 pr-4 text-primary font-medium">{u.display_name}</td>
+                    <td className="py-2.5 pr-4 text-secondary text-xs">{u.email}</td>
                     <td className="py-2.5 pr-4">
                       {u.teams ? (
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-900 text-emerald-300">
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-tertiary/15 text-tertiary">
                           Enrolled
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-gray-700 text-gray-400">
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-border text-secondary">
                           No team
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 pr-4 text-gray-400">
+                    <td className="py-2.5 pr-4 text-secondary">
                       {u.teams ? `£${Number(u.teams.budget_remaining).toFixed(1)}` : '—'}
                     </td>
                     <td className="py-2.5">
                       {u.teams ? (
                         <button
                           onClick={() => handleRemoveFromLeague(u.id)}
-                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                          className="text-xs text-error hover:text-error transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                         >
                           Remove
                         </button>
@@ -866,7 +866,7 @@ export default function Admin() {
                         <button
                           onClick={() => handleAddToLeague(u)}
                           disabled={addingTeamFor === u.id}
-                          className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-semibold transition-colors"
+                          className="px-3 py-1 rounded bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                         >
                           {addingTeamFor === u.id ? 'Adding…' : 'Add to League'}
                         </button>
@@ -881,21 +881,21 @@ export default function Admin() {
       </section>
 
       {/* ── Auction Controls ─────────────────────────────────────────────── */}
-      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white">Auction Controls</h2>
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-primary">Auction Controls</h2>
 
         <div className="grid grid-cols-3 gap-6 text-sm">
           <div>
-            <p className="text-gray-500 mb-1">Round</p>
-            <p className="text-white text-2xl font-bold">{current_round || '—'}</p>
+            <p className="text-muted mb-1">Round</p>
+            <p className="text-primary text-2xl font-bold">{current_round || '—'}</p>
           </div>
           <div>
-            <p className="text-gray-500 mb-1">Round Duration</p>
-            <p className="text-white text-2xl font-bold">{round_duration_seconds}s</p>
+            <p className="text-muted mb-1">Round Duration</p>
+            <p className="text-primary text-2xl font-bold">{round_duration_seconds}s</p>
           </div>
           <div>
-            <p className="text-gray-500 mb-1">Round Started</p>
-            <p className="text-white font-medium">
+            <p className="text-muted mb-1">Round Started</p>
+            <p className="text-primary font-medium">
               {round_started_at
                 ? new Date(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                 : '—'}
@@ -907,7 +907,7 @@ export default function Admin() {
           {isPending && (
             <button
               onClick={startAuction}
-              className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+              className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
               Start Auction
             </button>
@@ -917,20 +917,20 @@ export default function Admin() {
             <>
               <button
                 onClick={pauseAuction}
-                className="px-5 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition-colors"
+                className="px-5 py-2 rounded-lg bg-warning hover:bg-tertiary text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Pause
               </button>
               <button
                 onClick={() => { setConfirming(true); setResolveErrors([]); }}
                 disabled={confirming}
-                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold transition-colors"
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Resolve & Next Round →
               </button>
               <button
                 onClick={handleCompleteAuction}
-                className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold transition-colors"
+                className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Complete Auction
               </button>
@@ -941,13 +941,13 @@ export default function Admin() {
             <>
               <button
                 onClick={resumeAuction}
-                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Resume
               </button>
               <button
                 onClick={handleCompleteAuction}
-                className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold transition-colors"
+                className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Complete Auction
               </button>
@@ -955,29 +955,29 @@ export default function Admin() {
           )}
 
           {isCompleted && (
-            <p className="text-gray-500 text-sm italic">Auction is complete. No further actions available.</p>
+            <p className="text-muted text-sm italic">Auction is complete. No further actions available.</p>
           )}
         </div>
       </section>
 
       {/* ── Round Resolution Confirmation ───────────────────────────────── */}
       {confirming && (
-        <section className="bg-gray-900 rounded-xl p-6 space-y-4 border border-emerald-800/50">
+        <section className="bg-surface rounded-xl p-6 space-y-4 border border-tertiary/40/50">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-primary">
               Resolve Round {current_round} &amp; Advance
             </h2>
             <button
               onClick={() => { setConfirming(false); setResolveErrors([]); }}
               disabled={resolving}
-              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-sm text-muted hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
               Cancel
             </button>
           </div>
 
           {winnersPreview.length === 0 && contestedPreview.length === 0 ? (
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted text-sm">
               No bids were placed this round. Advancing will skip resolution.
             </p>
           ) : (
@@ -985,30 +985,30 @@ export default function Admin() {
               {/* Awarded — single bidder */}
               {winnersPreview.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
                     Awarded ({winnersPreview.length}) — only one bidder
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-500 border-b border-gray-800">
+                        <tr className="text-left text-muted border-b border-border">
                           <th className="pb-2 pr-4 font-medium">Player</th>
                           <th className="pb-2 pr-4 font-medium">Pos</th>
                           <th className="pb-2 pr-4 font-medium">Bid</th>
                           <th className="pb-2 font-medium">Winner</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-800">
+                      <tbody className="divide-y divide-border">
                         {winnersPreview.map((row) => (
-                          <tr key={row.playerId} className="text-gray-300">
-                            <td className="py-2 pr-4 text-white font-medium">{row.playerName}</td>
+                          <tr key={row.playerId} className="text-secondary">
+                            <td className="py-2 pr-4 text-primary font-medium">{row.playerName}</td>
                             <td className="py-2 pr-4">
-                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-gray-800 text-gray-400'}`}>
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-surface-hover text-secondary'}`}>
                                 {row.position}
                               </span>
                             </td>
-                            <td className="py-2 pr-4 font-bold text-emerald-400">£{row.amount.toFixed(1)}</td>
-                            <td className="py-2 text-white">{row.winnerName}</td>
+                            <td className="py-2 pr-4 font-bold text-tertiary">£{row.amount.toFixed(1)}</td>
+                            <td className="py-2 text-primary">{row.winnerName}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1020,36 +1020,36 @@ export default function Admin() {
               {/* Contested — multiple bidders, carry over */}
               {contestedPreview.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
                     Contested ({contestedPreview.length}) — multiple bidders, carry to next round
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-500 border-b border-gray-800">
+                        <tr className="text-left text-muted border-b border-border">
                           <th className="pb-2 pr-4 font-medium">Player</th>
                           <th className="pb-2 pr-4 font-medium">Pos</th>
                           <th className="pb-2 pr-4 font-medium">High Bid (floor)</th>
                           <th className="pb-2 font-medium">Leading</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-800">
+                      <tbody className="divide-y divide-border">
                         {contestedPreview.map((row) => (
-                          <tr key={row.playerId} className="text-gray-300">
-                            <td className="py-2 pr-4 text-white font-medium">{row.playerName}</td>
+                          <tr key={row.playerId} className="text-secondary">
+                            <td className="py-2 pr-4 text-primary font-medium">{row.playerName}</td>
                             <td className="py-2 pr-4">
-                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-gray-800 text-gray-400'}`}>
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[row.position] ?? 'bg-surface-hover text-secondary'}`}>
                                 {row.position}
                               </span>
                             </td>
-                            <td className="py-2 pr-4 font-bold text-yellow-400">£{row.amount.toFixed(1)}</td>
-                            <td className="py-2 text-gray-400 text-xs">{row.winnerName} (outbid to win)</td>
+                            <td className="py-2 pr-4 font-bold text-tertiary">£{row.amount.toFixed(1)}</td>
+                            <td className="py-2 text-secondary text-xs">{row.winnerName} (outbid to win)</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     These players are NOT awarded yet. Next round opens with a bid floor above £{Math.max(...contestedPreview.map(r => r.amount)).toFixed(1)}.
                   </p>
                 </div>
@@ -1058,10 +1058,10 @@ export default function Admin() {
           )}
 
           {resolveErrors.length > 0 && (
-            <div className="bg-red-900/40 border border-red-800/50 rounded-lg p-4 space-y-1">
-              <p className="text-red-300 text-sm font-semibold">Resolution errors — round not advanced:</p>
+                <div className="bg-error/10/40 border border-error/30/50 rounded-lg p-4 space-y-1" role="alert">
+              <p className="text-error text-sm font-semibold">Resolution errors — round not advanced:</p>
               {resolveErrors.map((e, i) => (
-                <p key={i} className="text-red-400 text-xs">
+                <p key={i} className="text-error text-xs">
                   Player #{e.playerId}: {e.reason}
                 </p>
               ))}
@@ -1072,14 +1072,14 @@ export default function Admin() {
             <button
               onClick={handleResolveAndAdvance}
               disabled={resolving}
-              className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-semibold transition-colors"
+              className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
               {resolving ? 'Resolving…' : `Confirm & Advance to Round ${current_round + 1}`}
             </button>
             <button
               onClick={() => { setConfirming(false); setResolveErrors([]); }}
               disabled={resolving}
-              className="px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 font-semibold transition-colors"
+              className="px-5 py-2 rounded-lg bg-surface-hover hover:bg-border disabled:opacity-50 text-secondary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
               Cancel
             </button>
@@ -1089,23 +1089,23 @@ export default function Admin() {
 
       {/* ── Live Bids ────────────────────────────────────────────────────── */}
       {(isActive || isPaused) && (
-        <section className="bg-gray-900 rounded-xl p-6 space-y-4">
+        <section className="bg-surface rounded-xl p-6 space-y-4">
           <div className="flex items-baseline gap-3">
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-primary">
               Round {current_round} — Live Bids
             </h2>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted">
               {currentRoundBids.length} bid{currentRoundBids.length !== 1 ? 's' : ''} across {biddedPlayerIds.length} player{biddedPlayerIds.length !== 1 ? 's' : ''}
             </span>
           </div>
 
           {biddedPlayerIds.length === 0 ? (
-            <p className="text-gray-500 text-sm">No bids placed yet this round.</p>
+            <p className="text-muted text-sm">No bids placed yet this round.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <tr className="text-left text-muted border-b border-border">
                     <th className="pb-3 pr-4 font-medium">Player</th>
                     <th className="pb-3 pr-4 font-medium">Pos</th>
                     <th className="pb-3 pr-4 font-medium">Listed</th>
@@ -1114,7 +1114,7 @@ export default function Admin() {
                     <th className="pb-3 font-medium">Bids</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-border">
                   {biddedPlayerIds.map((playerId) => {
                     const highBid    = getHighestBid(playerId);
                     const player     = highBid?.players;
@@ -1122,25 +1122,25 @@ export default function Admin() {
                     const playerBids = currentRoundBids.filter((b) => b.player_id === playerId);
 
                     return (
-                      <tr key={playerId} className="text-gray-300 hover:bg-gray-800/40">
-                        <td className="py-3 pr-4 font-medium text-white">
+                      <tr key={playerId} className="text-secondary hover:bg-surface-hover/40">
+                        <td className="py-3 pr-4 font-medium text-primary">
                           {player?.name ?? `Player #${playerId}`}
                         </td>
                         <td className="py-3 pr-4">
-                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[position] ?? 'bg-gray-800 text-gray-400'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[position] ?? 'bg-surface-hover text-secondary'}`}>
                             {position}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-gray-400">
+                        <td className="py-3 pr-4 text-secondary">
                           £{player?.price?.toFixed(1) ?? '—'}
                         </td>
-                        <td className="py-3 pr-4 font-bold text-emerald-400">
+                        <td className="py-3 pr-4 font-bold text-tertiary">
                           £{highBid?.bid_amount?.toFixed(1)}
                         </td>
-                        <td className="py-3 pr-4 text-white">
+                        <td className="py-3 pr-4 text-primary">
                           {highBid?.users?.display_name ?? '—'}
                         </td>
-                        <td className="py-3 text-gray-500">{playerBids.length}</td>
+                        <td className="py-3 text-muted">{playerBids.length}</td>
                       </tr>
                     );
                   })}
@@ -1152,57 +1152,57 @@ export default function Admin() {
       )}
 
       {/* ── Matchday Management ─────────────────────────────────────────── */}
-      <section className="bg-gray-900 rounded-xl p-6 space-y-6">
-        <h2 className="text-lg font-semibold text-white">Matchday Management</h2>
+      <section className="bg-surface rounded-xl p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-primary">Matchday Management</h2>
 
         {/* Create form */}
         <form onSubmit={handleCreateMatchday} className="space-y-4">
-          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Create Matchday</h3>
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wide">Create Matchday</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Name</label>
+              <label className="block text-xs text-muted mb-1">Name</label>
               <input
                 type="text"
                 value={mdForm.name}
                 onChange={e => setMdForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. Matchday 1"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">WC Stage</label>
+              <label className="block text-xs text-muted mb-1">WC Stage</label>
               <select
                 value={mdForm.wc_stage}
                 onChange={e => setMdForm(f => ({ ...f, wc_stage: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               >
                 {WC_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Start Date (optional)</label>
+              <label className="block text-xs text-muted mb-1">Start Date (optional)</label>
               <input
                 type="date"
                 value={mdForm.start_date}
                 onChange={e => setMdForm(f => ({ ...f, start_date: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Lineup Deadline</label>
+              <label className="block text-xs text-muted mb-1">Lineup Deadline</label>
               <input
                 type="datetime-local"
                 value={mdForm.deadline}
                 onChange={e => setMdForm(f => ({ ...f, deadline: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               />
             </div>
           </div>
-          {mdError && <p className="text-red-400 text-sm">{mdError}</p>}
+          {mdError && <p className="text-error text-sm">{mdError}</p>}
           <button
             type="submit"
             disabled={mdSaving}
-            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {mdSaving ? 'Creating…' : 'Create Matchday'}
           </button>
@@ -1210,16 +1210,16 @@ export default function Admin() {
 
         {/* Matchday list */}
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">All Matchdays</h3>
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wide">All Matchdays</h3>
           {matchdaysLoading ? (
-            <p className="text-gray-500 text-sm">Loading…</p>
+            <p className="text-muted text-sm">Loading…</p>
           ) : matchdays.length === 0 ? (
-            <p className="text-gray-500 text-sm">No matchdays yet.</p>
+            <p className="text-muted text-sm">No matchdays yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <tr className="text-left text-muted border-b border-border">
                     <th className="pb-3 pr-4 font-medium">Name</th>
                     <th className="pb-3 pr-4 font-medium">Stage</th>
                     <th className="pb-3 pr-4 font-medium">Deadline</th>
@@ -1227,12 +1227,12 @@ export default function Admin() {
                     <th className="pb-3 font-medium">Completed</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-border">
                   {matchdays.map(md => (
-                    <tr key={md.id} className="text-gray-300 hover:bg-gray-800/40">
-                      <td className="py-2.5 pr-4 text-white font-medium">{md.name}</td>
-                      <td className="py-2.5 pr-4 text-gray-400 text-xs">{md.wc_stage}</td>
-                      <td className="py-2.5 pr-4 text-gray-400 text-xs">
+                    <tr key={md.id} className="text-secondary hover:bg-surface-hover/40">
+                      <td className="py-2.5 pr-4 text-primary font-medium">{md.name}</td>
+                      <td className="py-2.5 pr-4 text-secondary text-xs">{md.wc_stage}</td>
+                      <td className="py-2.5 pr-4 text-secondary text-xs">
                         {md.deadline ? new Date(md.deadline).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                       </td>
                       <td className="py-2.5 pr-4">
@@ -1241,8 +1241,8 @@ export default function Admin() {
                           disabled={md.is_completed}
                           className={`px-3 py-1 rounded text-xs font-semibold transition-colors disabled:opacity-40 ${
                             md.is_active
-                              ? 'bg-emerald-700 text-emerald-100 hover:bg-emerald-600'
-                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                              ? 'bg-tertiary text-tertiary hover:bg-tertiary'
+                              : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
                         >
                           {md.is_active ? 'Active' : 'Inactive'}
@@ -1253,8 +1253,8 @@ export default function Admin() {
                           onClick={() => handleToggleCompleted(md)}
                           className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
                             md.is_completed
-                              ? 'bg-blue-700 text-blue-100 hover:bg-blue-600'
-                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                              ? 'bg-info text-info hover:brightness-90'
+                              : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
                         >
                           {md.is_completed ? 'Completed' : 'Mark Complete'}
@@ -1270,20 +1270,20 @@ export default function Admin() {
       </section>
 
       {/* ── Stats CSV Upload ─────────────────────────────────────────────── */}
-      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white">Stats CSV Upload</h2>
-        <p className="text-xs text-gray-500">
-          CSV columns: <code className="text-gray-300">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-primary">Stats CSV Upload</h2>
+        <p className="text-xs text-muted">
+          CSV columns: <code className="text-secondary">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
         </p>
 
         <form onSubmit={handleStatsUpload} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Matchday</label>
+              <label className="block text-xs text-muted mb-1">Matchday</label>
               <select
                 value={statsMatchdayId}
                 onChange={e => setStatsMatchdayId(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               >
                 <option value="">Select matchday…</option>
                 {matchdays.map(md => (
@@ -1292,12 +1292,12 @@ export default function Admin() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">CSV File</label>
+              <label className="block text-xs text-muted mb-1">CSV File</label>
               <input
                 type="file"
                 accept=".csv,text/csv"
                 onChange={e => setStatsFile(e.target.files?.[0] ?? null)}
-                className="w-full text-sm text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-gray-300 hover:file:bg-gray-600"
+                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
               />
             </div>
           </div>
@@ -1305,42 +1305,42 @@ export default function Admin() {
           <button
             type="submit"
             disabled={statsUploading}
-            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {statsUploading ? 'Uploading…' : 'Upload Stats'}
           </button>
         </form>
 
         {statsResult && (
-          <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-red-900/40 border border-red-800/50' : 'bg-gray-800'}`}>
+          <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
             {statsResult.inserted > 0 && (
-              <p className="text-emerald-400 text-sm font-semibold">
+              <p className="text-tertiary text-sm font-semibold">
                 ✓ {statsResult.inserted} player stat row{statsResult.inserted !== 1 ? 's' : ''} saved.
               </p>
             )}
             {statsResult.errors?.map((err, i) => (
-              <p key={i} className="text-red-400 text-xs">{err}</p>
+              <p key={i} className="text-error text-xs">{err}</p>
             ))}
           </div>
         )}
       </section>
 
       {/* ── Standings Calculation ───────────────────────────────────────── */}
-      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
+      <section className="bg-surface rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-white">Calculate Standings</h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <h2 className="text-lg font-semibold text-primary">Calculate Standings</h2>
+          <p className="text-xs text-muted mt-1">
             Run after uploading stats. Scores all teams for the matchday (with auto-subs) and writes to fantasy_standings.
           </p>
         </div>
 
         <form onSubmit={handleCalculateStandings} className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-48">
-            <label className="block text-xs text-gray-500 mb-1">Matchday</label>
+            <label className="block text-xs text-muted mb-1">Matchday</label>
             <select
               value={calcMatchdayId}
               onChange={e => setCalcMatchdayId(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+              className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
             >
               <option value="">Select matchday…</option>
               {matchdays.map(md => (
@@ -1351,21 +1351,21 @@ export default function Admin() {
           <button
             type="submit"
             disabled={calcRunning}
-            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {calcRunning ? 'Calculating…' : 'Calculate Standings'}
           </button>
         </form>
 
         {calcResult && (
-          <div className={`rounded-lg p-4 space-y-1 ${calcResult.errors?.length && !calcResult.teamsScored ? 'bg-red-900/40 border border-red-800/50' : 'bg-gray-800'}`}>
+          <div className={`rounded-lg p-4 space-y-1 ${calcResult.errors?.length && !calcResult.teamsScored ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
             {calcResult.teamsScored > 0 && (
-              <p className="text-emerald-400 text-sm font-semibold">
+              <p className="text-tertiary text-sm font-semibold">
                 ✓ Standings calculated for {calcResult.teamsScored} team{calcResult.teamsScored !== 1 ? 's' : ''}.
               </p>
             )}
             {calcResult.errors?.map((err, i) => (
-              <p key={i} className="text-yellow-400 text-xs">{err}</p>
+              <p key={i} className="text-tertiary text-xs">{err}</p>
             ))}
           </div>
         )}
@@ -1373,16 +1373,16 @@ export default function Admin() {
 
       {/* ── Knockout Bracket ─────────────────────────────────────────────── */}
       {isCompleted && (
-        <section className="bg-gray-900 rounded-xl p-6 space-y-5">
+        <section className="bg-surface rounded-xl p-6 space-y-5">
           <div>
-            <h2 className="text-lg font-semibold text-white">Knockout Bracket</h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <h2 className="text-lg font-semibold text-primary">Knockout Bracket</h2>
+            <p className="text-xs text-muted mt-1">
               Seed after league stage (4 matchdays) is complete. Then calculate each round using that round's matchday.
             </p>
           </div>
 
           {knockoutLoading ? (
-            <p className="text-gray-500 text-sm">Loading…</p>
+            <p className="text-muted text-sm">Loading…</p>
           ) : knockoutMatches.length === 0 ? (
             // ── Not seeded ──
             (() => {
@@ -1392,34 +1392,34 @@ export default function Admin() {
               return (
                 <div className="space-y-4">
                   {standings.length < 8 ? (
-                    <p className="text-yellow-400 text-sm">
+                    <p className="text-tertiary text-sm">
                       Need standings for at least 8 teams. Run Calculate Standings first.
                     </p>
                   ) : (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Championship (Top 8)</p>
+                        <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Championship (Top 8)</p>
                         <div className="grid grid-cols-2 gap-2">
                           {champSeed.map(m => (
-                            <div key={m.label} className="bg-gray-800 rounded-lg px-3 py-2 text-xs">
-                              <span className="text-gray-500">{m.label}: </span>
-                              <span className="text-white">{m.teamA.display_name}</span>
-                              <span className="text-gray-500"> vs </span>
-                              <span className="text-white">{m.teamB.display_name}</span>
+                            <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
+                              <span className="text-muted">{m.label}: </span>
+                              <span className="text-primary">{m.teamA.display_name}</span>
+                              <span className="text-muted"> vs </span>
+                              <span className="text-primary">{m.teamB.display_name}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                       {relSeed.length > 0 && (
                         <div>
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Relegation (Bottom 4)</p>
+                          <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Relegation (Bottom 4)</p>
                           <div className="grid grid-cols-2 gap-2">
                             {relSeed.map(m => (
-                              <div key={m.label} className="bg-gray-800 rounded-lg px-3 py-2 text-xs">
-                                <span className="text-gray-500">{m.label}: </span>
-                                <span className="text-white">{m.teamA.display_name}</span>
-                                <span className="text-gray-500"> vs </span>
-                                <span className="text-white">{m.teamB.display_name}</span>
+                              <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
+                                <span className="text-muted">{m.label}: </span>
+                                <span className="text-primary">{m.teamA.display_name}</span>
+                                <span className="text-muted"> vs </span>
+                                <span className="text-primary">{m.teamB.display_name}</span>
                               </div>
                             ))}
                           </div>
@@ -1429,7 +1429,7 @@ export default function Admin() {
                   )}
 
                   {bracketSeedResult && (
-                    <div className={`rounded-lg px-3 py-2 text-sm ${bracketSeedResult.error ? 'bg-red-900/40 text-red-400' : 'bg-emerald-900/40 text-emerald-400'}`}>
+                    <div className={`rounded-lg px-3 py-2 text-sm ${bracketSeedResult.error ? 'bg-error/10/40 text-error' : 'bg-tertiary/10 text-tertiary'}`}>
                       {bracketSeedResult.error ?? `✓ Bracket seeded — ${bracketSeedResult.count} matches created.`}
                     </div>
                   )}
@@ -1437,7 +1437,7 @@ export default function Admin() {
                   <button
                     onClick={handleSeedBracket}
                     disabled={bracketSeeding || standings.length < 8}
-                    className="px-5 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+                    className="px-5 py-2 rounded-lg bg-info hover:brightness-90 disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                   >
                     {bracketSeeding ? 'Seeding…' : 'Seed Bracket'}
                   </button>
@@ -1464,11 +1464,11 @@ export default function Admin() {
                       const done = champMatches.length > 0 && champMatches.every(m => m.winner_id);
                       const pending = champMatches.length > 0 && !done;
                       return (
-                        <div key={r} className={`rounded-lg px-3 py-2 text-center ${done ? 'bg-emerald-900/40 border border-emerald-700/40' : pending ? 'bg-yellow-900/20 border border-yellow-700/30' : 'bg-gray-800 border border-gray-700'}`}>
-                          <p className={`text-xs font-semibold ${done ? 'text-emerald-400' : pending ? 'text-yellow-400' : 'text-gray-500'}`}>
+                        <div key={r} className={`rounded-lg px-3 py-2 text-center ${done ? 'bg-tertiary/10 border border-tertiary/40' : pending ? 'bg-warning/5 border border-warning/30' : 'bg-surface-hover border border-border'}`}>
+                          <p className={`text-xs font-semibold ${done ? 'text-tertiary' : pending ? 'text-tertiary' : 'text-muted'}`}>
                             Round {r}
                           </p>
-                          <p className="text-[10px] text-gray-500 mt-0.5">
+                          <p className="text-label-caps text-muted mt-0.5">
                             {done ? 'Complete' : pending ? 'Pending' : 'Not started'}
                           </p>
                         </div>
@@ -1484,18 +1484,18 @@ export default function Admin() {
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="text-left text-gray-500 border-b border-gray-800">
+                              <tr className="text-left text-muted border-b border-border">
                                 <th className="pb-2 pr-4 font-medium text-xs">Match</th>
                                 <th className="pb-2 pr-4 font-medium text-xs">Team A</th>
                                 <th className="pb-2 pr-4 font-medium text-xs">Team B</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-border">
                               {pending.map(m => (
-                                <tr key={m.id} className="text-gray-300">
+                                <tr key={m.id} className="text-secondary">
                                   <td className="py-2 pr-4">
-                                    <span className="text-[10px] text-gray-500 capitalize">{m.bracket}</span>
-                                    <span className="ml-1.5 text-white text-xs font-medium">{m.match_label}</span>
+                                    <span className="text-label-caps text-muted capitalize">{m.bracket}</span>
+                                    <span className="ml-1.5 text-primary text-xs font-medium">{m.match_label}</span>
                                   </td>
                                   <td className="py-2 pr-4 text-xs">{m.team_a?.users?.display_name ?? m.team_a?.name ?? 'TBD'}</td>
                                   <td className="py-2 text-xs">{m.team_b?.users?.display_name ?? m.team_b?.name ?? 'TBD'}</td>
@@ -1507,11 +1507,11 @@ export default function Admin() {
 
                         <div className="flex items-end gap-4 flex-wrap pt-1">
                           <div className="flex-1 min-w-48">
-                            <label className="block text-xs text-gray-500 mb-1">Matchday for Round {activeRound}</label>
+                            <label className="block text-xs text-muted mb-1">Matchday for Round {activeRound}</label>
                             <select
                               value={knockoutCalcMatchdayId}
                               onChange={e => { setKnockoutCalcMatchdayId(e.target.value); setKnockoutCalcResult(null); }}
-                              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-600"
+                              className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
                             >
                               <option value="">Select matchday…</option>
                               {matchdays.map(md => (
@@ -1522,7 +1522,7 @@ export default function Admin() {
                           <button
                             onClick={() => handleCalculateKnockoutRound(activeRound)}
                             disabled={knockoutCalcRunning || !knockoutCalcMatchdayId}
-                            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+                            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                           >
                             {knockoutCalcRunning ? 'Calculating…' : `Calculate Round ${activeRound}`}
                           </button>
@@ -1532,20 +1532,20 @@ export default function Admin() {
                   })()}
 
                   {activeRound === null && (
-                    <p className="text-emerald-400 text-sm font-semibold">
+                    <p className="text-tertiary text-sm font-semibold">
                       ✓ All rounds complete. View final standings on the Bracket page.
                     </p>
                   )}
 
                   {knockoutCalcResult && (
-                    <div className={`rounded-lg p-4 space-y-1 ${knockoutCalcResult.errors?.length && !knockoutCalcResult.resolved ? 'bg-red-900/40 border border-red-800/50' : 'bg-gray-800'}`}>
+                    <div className={`rounded-lg p-4 space-y-1 ${knockoutCalcResult.errors?.length && !knockoutCalcResult.resolved ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
                       {knockoutCalcResult.resolved > 0 && (
-                        <p className="text-emerald-400 text-sm font-semibold">
+                        <p className="text-tertiary text-sm font-semibold">
                           ✓ {knockoutCalcResult.resolved} match{knockoutCalcResult.resolved !== 1 ? 'es' : ''} resolved.
                         </p>
                       )}
                       {knockoutCalcResult.errors?.map((err, i) => (
-                        <p key={i} className="text-yellow-400 text-xs">{err}</p>
+                        <p key={i} className="text-tertiary text-xs">{err}</p>
                       ))}
                     </div>
                   )}
@@ -1558,12 +1558,12 @@ export default function Admin() {
 
       {/* ── Player Pool ──────────────────────────────────────────────────── */}
       {/* ── Transfer Windows ─────────────────────────────────────────────── */}
-      <section className="bg-gray-900 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white">Transfer Windows</h2>
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-primary">Transfer Windows</h2>
 
         {/* Quick-create preset buttons */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">
             Quick Create
           </p>
           <div className="flex flex-wrap gap-2">
@@ -1572,7 +1572,7 @@ export default function Admin() {
                 key={preset.window_number}
                 onClick={() => handleCreateTransferWindow(preset)}
                 disabled={twSaving}
-                className="px-3 py-1.5 rounded-lg text-sm bg-blue-800 hover:bg-blue-700 text-blue-100 transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-sm bg-info hover:brightness-90 text-info transition-colors disabled:opacity-50"
               >
                 + {preset.label}
               </button>
@@ -1582,16 +1582,16 @@ export default function Admin() {
 
         {/* Custom create form */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">
             Custom Window
           </p>
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Window #</label>
+              <label className="text-xs text-muted block mb-1">Window #</label>
               <select
                 value={twForm.window_number}
                 onChange={(e) => setTwForm((f) => ({ ...f, window_number: e.target.value }))}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+                className="bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary focus:outline-none focus:border-info"
               >
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -1599,54 +1599,54 @@ export default function Admin() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Max Transfers</label>
+              <label className="text-xs text-muted block mb-1">Max Transfers</label>
               <input
                 type="number"
                 min="1"
                 value={twForm.max_transfers}
                 onChange={(e) => setTwForm((f) => ({ ...f, max_transfers: e.target.value }))}
-                className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+                className="w-20 bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary focus:outline-none focus:border-info"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Opens At (optional)</label>
+              <label className="text-xs text-muted block mb-1">Opens At (optional)</label>
               <input
                 type="datetime-local"
                 value={twForm.opens_at}
                 onChange={(e) => setTwForm((f) => ({ ...f, opens_at: e.target.value }))}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+                className="bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary focus:outline-none focus:border-info"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Closes At (optional)</label>
+              <label className="text-xs text-muted block mb-1">Closes At (optional)</label>
               <input
                 type="datetime-local"
                 value={twForm.closes_at}
                 onChange={(e) => setTwForm((f) => ({ ...f, closes_at: e.target.value }))}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-600"
+                className="bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary focus:outline-none focus:border-info"
               />
             </div>
             <button
               onClick={() => handleCreateTransferWindow(null)}
               disabled={twSaving}
-              className="px-4 py-1.5 rounded-lg text-sm bg-blue-700 hover:bg-blue-600 text-white transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 rounded-lg text-sm bg-info hover:brightness-90 text-primary transition-colors disabled:opacity-50"
             >
               {twSaving ? 'Creating…' : 'Create'}
             </button>
           </div>
-          {twError && <p className="text-red-400 text-sm mt-2">{twError}</p>}
+          {twError && <p className="text-error text-sm mt-2">{twError}</p>}
         </div>
 
         {/* Windows list */}
         {twLoading ? (
-          <p className="text-gray-500 text-sm">Loading windows…</p>
+          <p className="text-muted text-sm">Loading windows…</p>
         ) : transferWindows.length === 0 ? (
-          <p className="text-gray-500 text-sm">No transfer windows created yet.</p>
+          <p className="text-muted text-sm">No transfer windows created yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-800">
+                <tr className="text-left text-muted border-b border-border">
                   <th className="pb-2 pr-4 font-medium">Window</th>
                   <th className="pb-2 pr-4 font-medium">Max</th>
                   <th className="pb-2 pr-4 font-medium">Opens</th>
@@ -1655,22 +1655,22 @@ export default function Admin() {
                   <th className="pb-2 font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {transferWindows.map((tw) => (
-                  <tr key={tw.id} className="text-gray-300">
-                    <td className="py-2.5 pr-4 font-semibold text-white">Window {tw.window_number}</td>
+                  <tr key={tw.id} className="text-secondary">
+                    <td className="py-2.5 pr-4 font-semibold text-primary">Window {tw.window_number}</td>
                     <td className="py-2.5 pr-4">{tw.max_transfers} transfers</td>
-                    <td className="py-2.5 pr-4 text-gray-500 text-xs">
+                    <td className="py-2.5 pr-4 text-muted text-xs">
                       {tw.opens_at ? new Date(tw.opens_at).toLocaleString() : '—'}
                     </td>
-                    <td className="py-2.5 pr-4 text-gray-500 text-xs">
+                    <td className="py-2.5 pr-4 text-muted text-xs">
                       {tw.closes_at ? new Date(tw.closes_at).toLocaleString() : '—'}
                     </td>
                     <td className="py-2.5 pr-4">
                       <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
                         tw.is_active
-                          ? 'bg-emerald-800 text-emerald-200'
-                          : 'bg-gray-700 text-gray-400'
+                          ? 'bg-tertiary/15 text-tertiary'
+                          : 'bg-border text-secondary'
                       }`}>
                         {tw.is_active ? 'Open' : 'Closed'}
                       </span>
@@ -1681,8 +1681,8 @@ export default function Admin() {
                           onClick={() => handleToggleTransferWindow(tw)}
                           className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
                             tw.is_active
-                              ? 'bg-red-800 hover:bg-red-700 text-red-200'
-                              : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200'
+                              ? 'bg-error hover:brightness-90 text-error'
+                              : 'bg-tertiary/15 hover:brightness-90 text-tertiary'
                           }`}
                         >
                           {tw.is_active ? 'Close' : 'Open'}
@@ -1691,14 +1691,14 @@ export default function Admin() {
                           <button
                             onClick={() => fetchWindowActivity(tw.window_number)}
                             disabled={activityLoading}
-                            className="px-3 py-1 rounded text-xs font-semibold bg-blue-800 hover:bg-blue-700 text-blue-200 transition-colors"
+                            className="px-3 py-1 rounded text-xs font-semibold bg-info hover:brightness-90 text-info transition-colors"
                           >
                             {activityLoading ? 'Loading…' : 'View Activity'}
                           </button>
                         )}
                         <button
                           onClick={() => handleDeleteTransferWindow(tw)}
-                          className="px-3 py-1 rounded text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                          className="px-3 py-1 rounded text-xs font-semibold bg-border hover:bg-border-strong text-secondary transition-colors"
                         >
                           Delete
                         </button>
@@ -1714,13 +1714,13 @@ export default function Admin() {
         {/* Transfer activity for active window */}
         {windowActivity.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">
               Transfer Activity — Window {windowActivity[0]?.window_number}
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <tr className="text-left text-muted border-b border-border">
                     <th className="pb-2 pr-4 font-medium">Manager</th>
                     <th className="pb-2 pr-4 font-medium">Out</th>
                     <th className="pb-2 pr-4 font-medium">In</th>
@@ -1729,45 +1729,45 @@ export default function Admin() {
                     <th className="pb-2 font-medium">Time</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-border">
                   {windowActivity.map((t) => (
-                    <tr key={t.id} className="text-gray-300">
-                      <td className="py-2 pr-4 font-medium text-white">
+                    <tr key={t.id} className="text-secondary">
+                      <td className="py-2 pr-4 font-medium text-primary">
                         {t.team?.users?.display_name ?? t.team?.name ?? '—'}
                       </td>
-                      <td className="py-2 pr-4 text-red-300">
+                      <td className="py-2 pr-4 text-error">
                         {t.player_out?.name ?? '—'}
                         {t.player_out?.position && (
-                          <span className={`ml-1.5 text-[9px] px-1 py-0.5 rounded font-semibold ${POSITION_BADGE[t.player_out.position]}`}>
+                          <span className={`ml-1.5 text-label-caps px-1 py-0.5 rounded font-semibold ${POSITION_BADGE[t.player_out.position]}`}>
                             {t.player_out.position}
                           </span>
                         )}
                       </td>
-                      <td className="py-2 pr-4 text-emerald-300">
+                      <td className="py-2 pr-4 text-tertiary">
                         {t.player_in?.name ?? '—'}
                         {t.player_in?.position && (
-                          <span className={`ml-1.5 text-[9px] px-1 py-0.5 rounded font-semibold ${POSITION_BADGE[t.player_in.position]}`}>
+                          <span className={`ml-1.5 text-label-caps px-1 py-0.5 rounded font-semibold ${POSITION_BADGE[t.player_in.position]}`}>
                             {t.player_in.position}
                           </span>
                         )}
                       </td>
                       <td className="py-2 pr-4">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                        <span className={`text-label-caps px-1.5 py-0.5 rounded font-semibold ${
                           t.transfer_type === 'locked_swap'
-                            ? 'bg-purple-800/60 text-purple-300'
-                            : 'bg-blue-800/60 text-blue-300'
+                            ? 'bg-info/15 text-info'
+                            : 'bg-info/15 text-info'
                         }`}>
                           {t.transfer_type === 'locked_swap' ? 'Locked' : 'Free'}
                         </span>
                       </td>
                       <td className={`py-2 pr-4 text-xs font-semibold ${
-                        (t.price_difference ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'
+                        (t.price_difference ?? 0) >= 0 ? 'text-tertiary' : 'text-error'
                       }`}>
                         {t.price_difference != null
                           ? `${(t.price_difference >= 0 ? '+' : '')}${Number(t.price_difference).toFixed(1)}M`
                           : '—'}
                       </td>
-                      <td className="py-2 text-gray-500 text-xs">
+                      <td className="py-2 text-muted text-xs">
                         {new Date(t.created_at).toLocaleString()}
                       </td>
                     </tr>
@@ -1779,40 +1779,40 @@ export default function Admin() {
         )}
       </section>
 
-      <section className="bg-gray-900 rounded-xl p-6 space-y-4">
+      <section className="bg-surface rounded-xl p-6 space-y-4">
         <div className="flex items-baseline gap-3">
-          <h2 className="text-lg font-semibold text-white">Player Pool</h2>
+          <h2 className="text-lg font-semibold text-primary">Player Pool</h2>
           {!playersLoading && (
-            <span className="text-sm text-gray-500">{players.length} players</span>
+            <span className="text-sm text-muted">{players.length} players</span>
           )}
         </div>
 
         {playersLoading ? (
-          <p className="text-gray-500 text-sm">Loading players…</p>
+          <p className="text-muted text-sm">Loading players…</p>
         ) : players.length === 0 ? (
-          <p className="text-gray-500 text-sm">No players found. Run the seed SQL.</p>
+          <p className="text-muted text-sm">No players found. Run the seed SQL.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-800">
+                <tr className="text-left text-muted border-b border-border">
                   <th className="pb-3 pr-4 font-medium">Name</th>
                   <th className="pb-3 pr-4 font-medium">Pos</th>
                   <th className="pb-3 pr-4 font-medium">Country</th>
                   <th className="pb-3 font-medium">Price</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {players.map((p) => (
-                  <tr key={p.id} className="text-gray-300 hover:bg-gray-800/40">
-                    <td className="py-2 pr-4 text-white font-medium">{p.name}</td>
+                  <tr key={p.id} className="text-secondary hover:bg-surface-hover/40">
+                    <td className="py-2 pr-4 text-primary font-medium">{p.name}</td>
                     <td className="py-2 pr-4">
-                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[p.position] ?? 'bg-gray-800 text-gray-400'}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${POSITION_BADGE[p.position] ?? 'bg-surface-hover text-secondary'}`}>
                         {p.position}
                       </span>
                     </td>
-                    <td className="py-2 pr-4 text-gray-400">{p.country ?? '—'}</td>
-                    <td className="py-2 font-semibold text-white">£{p.price?.toFixed(1)}</td>
+                    <td className="py-2 pr-4 text-secondary">{p.country ?? '—'}</td>
+                    <td className="py-2 font-semibold text-primary">£{p.price?.toFixed(1)}</td>
                   </tr>
                 ))}
               </tbody>

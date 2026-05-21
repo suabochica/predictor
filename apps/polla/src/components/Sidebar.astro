@@ -1,0 +1,59 @@
+---
+import homeIcon from '@predictor/ui/icons/home.svg';
+import predictionsIcon from '@predictor/ui/icons/predictions.svg';
+import standingsIcon from '@predictor/ui/icons/standings.svg';
+import rulesIcon from '@predictor/ui/icons/rules.svg';
+
+const base = '/polla';
+const currentPath = Astro.url.pathname;
+
+const displayName = Astro.locals.displayName;
+const rank = Astro.locals.leaderboardRank;
+const points = Astro.locals.totalPoints;
+
+const navItems = [
+  { href: `${base}/`, icon: homeIcon, label: 'Home' },
+  { href: `${base}/predictions`, icon: predictionsIcon, label: 'Predictions' },
+  { href: `${base}/leaderboard`, icon: standingsIcon, label: 'Leaderboard' },
+  { href: `${base}/rules`, icon: rulesIcon, label: 'Rules' },
+];
+
+function rankBadge(r: number): string {
+  if (r === 1) return '🥇';
+  if (r === 2) return '🥈';
+  if (r === 3) return '🥉';
+  return `#${r}`;
+}
+---
+
+<aside class="hidden md:flex flex-col w-56 bg-surface border-r border-border min-h-screen pt-4 pb-8">
+  {displayName && (
+    <div class="px-4 mb-6">
+      <p class="text-xs text-muted uppercase tracking-wider mb-1">Player</p>
+      <p class="font-semibold text-primary text-sm truncate">{displayName}</p>
+      {rank != null && (
+        <p class="text-tertiary text-sm font-medium">
+          {rankBadge(rank)} · {points ?? 0} pts
+        </p>
+      )}
+    </div>
+  )}
+
+  <nav class="flex-1 px-2 space-y-1">
+    {
+      navItems.map(({ href, icon, label }) => (
+        <a
+          href={href}
+          class={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            currentPath === href
+              ? 'bg-tertiary text-primary'
+              : 'text-secondary hover:bg-surface-hover hover:text-primary'
+          }`}
+        >
+          <img src={icon.src} class="w-5 h-5" alt="" />
+          <span>{label}</span>
+        </a>
+      ))
+    }
+  </nav>
+</aside>

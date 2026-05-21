@@ -5,10 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./styles": "./src/styles/tokens.css"
+    "./styles": "./src/styles/theme.css",
+    "./icons/*": "./src/icons/*",
+    "./public/*": "./src/public/*"
   },
   "main": "./src/index.ts",
   "peerDependencies": {
+    "@predictor/supabase": "workspace:*",
     "react": ">=18",
     "react-dom": ">=18"
   }

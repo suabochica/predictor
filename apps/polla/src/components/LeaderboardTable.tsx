@@ -68,16 +68,16 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
   };
 
   const getRankStyles = (rank: number) => {
-    if (rank === 1) return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600';
-    if (rank === 2) return 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600';
-    if (rank === 3) return 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700';
+    if (rank === 1) return 'bg-tertiary/15 border-tertiary/40';
+    if (rank === 2) return 'bg-surface-hover border-border-strong';
+    if (rank === 3) return 'bg-warning/15 border-warning/40';
     return 'border-transparent';
   };
 
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-tertiary border-t-transparent" />
       </div>
     );
   }
@@ -85,33 +85,33 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
   return (
     <div>
       {usingFallback && (
-        <div className="mb-4 rounded-lg border border-amber-400/30 bg-amber-50/50 px-4 py-2 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+        <div className="mb-4 rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
           Using offline data — live leaderboard unavailable.
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+      <div className="overflow-hidden rounded-sm border border-border">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-neutral">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-left font-label text-label-caps text-muted uppercase tracking-wider">
                 Rank
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-left font-label text-label-caps text-muted uppercase tracking-wider">
                 Player
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                 Points
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                 Predictions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+          <tbody className="divide-y divide-border bg-surface">
             {entries.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-muted">
                   No players yet. Be the first to submit predictions!
                 </td>
               </tr>
@@ -122,7 +122,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
               return (
                 <tr
                   key={entry.user_id}
-                  className={`${rankStyles} ${isCurrentUser ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
+                  className={`${rankStyles} ${isCurrentUser ? 'bg-success/10' : ''}`}
                 >
                   <td className="whitespace-nowrap px-4 py-3">
                     <span className="text-lg">{getRankBadge(entry.rank)}</span>
@@ -130,20 +130,20 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
                   <td className="whitespace-nowrap px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{avatarForName(entry.display_name)}</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-primary">
                         {entry.display_name}
                       </span>
                       {isCurrentUser && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                        <span className="rounded-sm bg-success/15 px-2 py-0.5 font-label text-label-caps text-success">
                           You
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-center text-lg font-bold text-gray-900 dark:text-gray-100">
+                  <td className="whitespace-nowrap px-4 py-3 text-center text-lg font-bold text-primary">
                     {entry.total_points}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td className="whitespace-nowrap px-4 py-3 text-center text-body-sm text-muted">
                     {entry.predictions_count}
                   </td>
                 </tr>

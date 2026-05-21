@@ -38,5 +38,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/login');
   }
 
+  const { data: profile } = await supabase
+    .from('users')
+    .select('display_name')
+    .eq('id', user.id)
+    .single();
+  context.locals.displayName = profile?.display_name ?? null;
+
   return next();
 });

@@ -5,13 +5,13 @@ function EmptySlot({ onClick, isTargetable }) {
     <button
       onClick={onClick}
       disabled={!isTargetable}
-      className={`w-[68px] min-h-[68px] border-2 border-dashed rounded-lg flex items-center justify-center transition-colors ${
+      className={`w-[68px] min-h-[68px] border-2 border-dashed rounded-lg flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
         isTargetable
-          ? 'border-emerald-400/60 bg-emerald-900/20 hover:bg-emerald-900/40 cursor-pointer'
-          : 'border-emerald-700/40 cursor-default'
+          ? 'border-tertiary bg-tertiary/5 hover:bg-tertiary/10 cursor-pointer'
+          : 'border-tertiary/40 cursor-default'
       }`}
     >
-      <span className={`text-[10px] font-semibold ${isTargetable ? 'text-emerald-400' : 'text-emerald-700'}`}>
+      <span className={`text-label-caps font-semibold ${isTargetable ? 'text-tertiary' : 'text-tertiary'}`}>
         {isTargetable ? '+ here' : 'Add to XI'}
       </span>
     </button>
@@ -44,7 +44,7 @@ export default function LineupGrid({ starters, captainId, selectedId, onPlayerCl
   const showEmptySlot = starters.length < 11;
 
   return (
-    <div className="relative bg-emerald-950/40 border border-emerald-800/40 rounded-xl overflow-hidden">
+    <div className="relative bg-tertiary/5 border border-tertiary/40 rounded-xl overflow-hidden">
       {/* Pitch lines */}
       <div className="absolute inset-x-6 top-1/2 h-px bg-white/8 pointer-events-none" />
       <div className="absolute inset-x-[30%] top-[5%] h-px bg-white/8 pointer-events-none" />

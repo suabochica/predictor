@@ -28,33 +28,33 @@ export default function PlayerCard({ player, owned, canAfford, squadFull, mustBu
 
   return (
     <div
-      className={`bg-gray-900 border rounded-xl p-4 flex flex-col gap-3 transition-colors ${
+      className={`bg-surface border rounded-xl p-4 flex flex-col gap-3 transition-colors ${
         owned
-          ? 'border-emerald-800/60 opacity-70'
-          : 'border-gray-700 hover:border-gray-600'
+          ? 'border-tertiary/40 opacity-70'
+          : 'border-border hover:border-border-strong'
       }`}
     >
       {/* Top row: position + price + market-only badge */}
       <div className="flex items-center justify-between gap-2">
         <span
-          className={`text-[10px] font-bold px-2 py-0.5 rounded ${getPositionColor(player.position)}`}
+          className={`text-label-caps font-bold px-2 py-0.5 rounded ${getPositionColor(player.position)}`}
         >
           {player.position}
         </span>
         <div className="flex items-center gap-1.5">
           {isMarketOnly && (
-            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-purple-800/60 text-purple-300 border border-purple-700/40">
+            <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-info/15 text-info border border-info/30">
               Market only
             </span>
           )}
-          <span className="text-sm font-bold text-emerald-400">{formatPrice(player.price)}</span>
+          <span className="text-sm font-bold text-tertiary">{formatPrice(player.price)}</span>
         </div>
       </div>
 
       {/* Player info */}
       <div className="flex-1">
-        <p className="text-sm font-semibold text-white leading-tight">{player.name}</p>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-sm font-semibold text-primary leading-tight">{player.name}</p>
+        <p className="text-xs text-secondary mt-0.5">
           {player.country}
           {player.country_code ? ` · ${player.country_code}` : ''}
         </p>
@@ -65,12 +65,12 @@ export default function PlayerCard({ player, owned, canAfford, squadFull, mustBu
         onClick={() => !disabled && onBuy(player)}
         disabled={disabled}
         title={disabledReason}
-        className={`w-full py-2 rounded-lg text-xs font-semibold transition-colors ${
+        className={`w-full py-2 rounded-lg text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
           owned
-            ? 'bg-emerald-900/40 text-emerald-400 cursor-default border border-emerald-800/50'
+            ? 'bg-tertiary/10 text-tertiary cursor-default border border-tertiary/40'
             : disabled
-            ? 'bg-gray-800 text-gray-600 cursor-not-allowed border border-gray-700'
-            : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
+            ? 'bg-surface-hover text-muted cursor-not-allowed border border-border'
+            : 'bg-tertiary hover:brightness-90 text-primary cursor-pointer'
         }`}
       >
         {owned ? '✓ In Squad' : buyLabel}

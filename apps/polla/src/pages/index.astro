@@ -1,47 +1,56 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { supabase } from '@predictor/supabase';
+import predictionsIcon from "@predictor/ui/icons/predictions.svg";
+import standingsIcon from "@predictor/ui/icons/standings.svg";
+import rulesIcon from "@predictor/ui/icons/rules.svg";
+
+import Layout from "../layouts/Layout.astro";
 
 // Server-side session check (middleware also guards this route)
 const user = Astro.locals.user;
+const displayName = Astro.locals.displayName;
 ---
 
 <Layout title="Home">
-  <main class="min-h-screen bg-gray-950 text-white p-6">
-    <section class="text-center py-12">
-      <span class="text-6xl">🏆</span>
-      <h1 class="mt-4 text-4xl font-bold">FIFA World Cup 2026</h1>
-      <p class="mt-3 text-gray-400 text-lg max-w-xl mx-auto">
-        Predict match scores and compete with friends. Earn points based on accuracy!
-      </p>
-    </section>
+  <div class="max-w-4xl">
+    {
+      user && (
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-primary">
+            Welcome back, {displayName}!
+          </h1>
+          <p class="text-secondary mt-1">FIFA World Cup 2026 Polla</p>
+          <p class="mt-1 text-secondary text-body-sm">
+            Predict match scores and compete with friends. Earn points based on
+            accuracy!
+          </p>
+        </div>
+      )
+    }
 
-    {user && (
-      <div class="flex items-center justify-center gap-4 mb-8">
-        <span class="text-gray-300">Welcome, <strong class="text-cyan-400">{user.email}</strong>!</span>
-        <form method="POST" action="/polla/auth/signout">
-          <button type="submit" class="px-3 py-1.5 text-sm rounded-lg border border-white/20 text-gray-300 hover:bg-white/10 transition-colors">
-            Sign out
-          </button>
-        </form>
-      </div>
-    )}
-
-    <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-      <a href="/polla/predictions" class="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-6 hover:border-emerald-500 transition-colors">
-        <span class="text-3xl">⚽</span>
-        <span class="font-medium">Make Predictions</span>
+    <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+      <a
+        href="/polla/predictions"
+        class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
+      >
+        <img src={predictionsIcon.src} class="w-8 h-8" alt="" />
+        <span class="font-label text-label-md font-medium"
+          >Make Predictions</span
+        >
       </a>
-      <a href="/polla/leaderboard" class="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-6 hover:border-emerald-500 transition-colors">
-        <span class="text-3xl">📊</span>
-        <span class="font-medium">Leaderboard</span>
+      <a
+        href="/polla/leaderboard"
+        class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
+      >
+        <img src={standingsIcon.src} class="w-8 h-8" alt="" />
+        <span class="font-label text-label-md font-medium">Leaderboard</span>
       </a>
-      <a href="/polla/rules" class="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-6 hover:border-emerald-500 transition-colors">
-        <span class="text-3xl">📋</span>
-        <span class="font-medium">Scoring Rules</span>
+      <a
+        href="/polla/rules"
+        class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
+      >
+        <img src={rulesIcon.src} class="w-8 h-8" alt="" />
+        <span class="font-label text-label-md font-medium">Scoring Rules</span>
       </a>
     </nav>
-
-    
-  </main>
+  </div>
 </Layout>

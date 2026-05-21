@@ -493,7 +493,7 @@ export default function MyTeam() {
   // ── Render ───────────────────────────────────────────────────────────────
   if (teamLoading || lineupLoading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400">
+      <div className="flex items-center justify-center py-20 text-secondary">
         Loading squad…
       </div>
     );
@@ -502,9 +502,9 @@ export default function MyTeam() {
   if (!team) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-white">My Team</h1>
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 text-center">
-          <p className="text-gray-400">
+        <h1 className="text-2xl font-bold text-primary">My Team</h1>
+        <div className="bg-surface border border-border rounded-xl p-6 text-center">
+          <p className="text-secondary">
             You're not enrolled in the league yet. Ask an admin to add you.
           </p>
         </div>
@@ -515,10 +515,10 @@ export default function MyTeam() {
   if (squad.length === 0) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-white">My Team</h1>
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 text-center">
-          <p className="text-gray-300 font-medium mb-1">No players yet</p>
-          <p className="text-gray-500 text-sm">
+        <h1 className="text-2xl font-bold text-primary">My Team</h1>
+        <div className="bg-surface border border-border rounded-xl p-6 text-center">
+          <p className="text-secondary font-medium mb-1">No players yet</p>
+          <p className="text-muted text-sm">
             Win players at the auction or shop on the free market to build your squad.
           </p>
         </div>
@@ -531,27 +531,27 @@ export default function MyTeam() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-white">My Team</h1>
-          <p className="text-gray-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-primary">My Team</h1>
+          <p className="text-secondary text-sm mt-0.5">
             {activeMatchday ? `Lineup for: ${activeMatchday.name}` : 'Pre-tournament lineup'}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Budget Remaining</p>
-          <p className="text-lg font-bold text-emerald-400">{formatPrice(team.budget_remaining)}</p>
-          <p className="text-xs text-gray-500">{squad.length} / 15 players</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Budget Remaining</p>
+          <p className="text-lg font-bold text-tertiary">{formatPrice(team.budget_remaining)}</p>
+          <p className="text-xs text-muted">{squad.length} / 15 players</p>
         </div>
       </div>
 
       {/* ── Formation label ── */}
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-4">
+      <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Formation</p>
-          <p className="text-lg font-bold text-emerald-400 mt-0.5">
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wider">Formation</p>
+          <p className="text-lg font-bold text-tertiary mt-0.5">
             {starters.length > 0 ? derivedFormation : '—'}
           </p>
         </div>
-        <p className="text-xs text-gray-500 ml-auto">{starters.length} / 11 starters</p>
+        <p className="text-xs text-muted ml-auto">{starters.length} / 11 starters</p>
       </div>
 
       {/* ── Live matchday stats panel ── */}
@@ -563,22 +563,22 @@ export default function MyTeam() {
         const played    = starters.filter(p => (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0);
         const notPlayed = starters.filter(p => !playerMatchdayStats[p.id] || playerMatchdayStats[p.id].minutes_played === 0);
         return (
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-6 flex-wrap">
+          <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-6 flex-wrap">
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider">Live Pts</p>
-              <p className="text-xl font-bold text-emerald-400">{livePts}</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">Live Pts</p>
+              <p className="text-xl font-bold text-tertiary">{livePts}</p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider">Played</p>
-              <p className="text-sm font-semibold text-white">{played.length} / {starters.length}</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">Played</p>
+              <p className="text-sm font-semibold text-primary">{played.length} / {starters.length}</p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider">Yet to Play</p>
-              <p className={`text-sm font-semibold ${notPlayed.length > 0 ? 'text-yellow-400' : 'text-gray-500'}`}>
+              <p className="text-label-caps text-muted uppercase tracking-wider">Yet to Play</p>
+              <p className={`text-sm font-semibold ${notPlayed.length > 0 ? 'text-tertiary' : 'text-muted'}`}>
                 {notPlayed.length}
               </p>
             </div>
-            <p className="text-[10px] text-gray-500 ml-auto hidden sm:block">
+            <p className="text-label-caps text-muted ml-auto hidden sm:block">
               C ×2 applied · auto-subs at end
             </p>
           </div>
@@ -587,27 +587,27 @@ export default function MyTeam() {
 
       {/* ── Captain warning ── */}
       {captainGameLocked && (
-        <div className="bg-orange-900/30 border border-orange-700/50 rounded-xl p-3 text-sm text-orange-300">
+        <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
           Your captain's game has already kicked off. If they don't play, you'll score 0 × 2 = 0 pts — captains are not auto-subbed.
         </div>
       )}
 
       {/* ── Rolling lockout notice ── */}
       {activeMatchday && Object.keys(playerGameTimes).length > 0 && (
-        <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-3 text-xs text-gray-400">
+        <div className="bg-surface-hover/60 border border-border rounded-xl p-3 text-xs text-secondary" role="alert">
           Rolling lockout active — players whose game has kicked off cannot be moved.
         </div>
       )}
 
       {/* ── Soft nudge: fewer than 8 locked players ── */}
       {showNudge && (
-        <div className="bg-blue-900/30 border border-blue-700/50 rounded-xl p-3 text-sm text-blue-300 flex items-center justify-between gap-3">
+        <div className="bg-info/10 border border-info/30 rounded-xl p-3 text-sm text-info flex items-center justify-between gap-3">
           <span>
             You have <strong>{lockedCount}</strong> locked player{lockedCount !== 1 ? 's' : ''} — consider locking more to protect them from being claimed by other teams.
           </span>
           <button
             onClick={() => setNudgeDismissed(true)}
-            className="flex-shrink-0 text-blue-400 hover:text-white text-xs px-2 py-1 rounded hover:bg-blue-800/50 transition-colors"
+            className="flex-shrink-0 text-info hover:text-primary text-xs px-2 py-1 rounded hover:bg-info/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             Dismiss
           </button>
@@ -619,10 +619,10 @@ export default function MyTeam() {
         <div
           className={`rounded-xl p-3 text-sm flex items-center gap-2 border ${
             lockToast.type === 'success'
-              ? 'bg-blue-900/40 border-blue-700/50 text-blue-300'
+              ? 'bg-info/10 border-info/30 text-info'
               : lockToast.type === 'info'
-              ? 'bg-gray-800/60 border-gray-600/50 text-gray-300'
-              : 'bg-red-900/40 border-red-700/50 text-red-300'
+              ? 'bg-surface-hover/60 border-border-strong/50 text-secondary'
+              : 'bg-error/10/40 border-error/30/50 text-error'
           }`}
         >
           <span>{lockToast.message}</span>
@@ -631,7 +631,7 @@ export default function MyTeam() {
 
       {/* ── Swap error ── */}
       {swapError && (
-        <div className="bg-red-900/30 border border-red-700/50 rounded-xl p-3 text-sm text-red-300">
+        <div className="bg-error/10/30 border border-error/30/50 rounded-xl p-3 text-sm text-error" role="alert">
           {swapError}
         </div>
       )}
@@ -658,24 +658,24 @@ export default function MyTeam() {
 
       {/* ── Action panel (shown when a player is selected) ── */}
       {selectedPlayer && (
-        <div className="bg-gray-900 border border-emerald-700 rounded-xl p-4 flex items-center gap-4 flex-wrap">
+        <div className="bg-surface border border-tertiary/40 rounded-xl p-4 flex items-center gap-4 flex-wrap">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{selectedPlayer.name}</p>
+            <p className="text-sm font-semibold text-primary truncate">{selectedPlayer.name}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span
-                className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${getPositionColor(selectedPlayer.position)}`}
+                className={`text-label-caps font-bold px-1.5 py-0.5 rounded ${getPositionColor(selectedPlayer.position)}`}
               >
                 {selectedPlayer.position}
               </span>
-              <span className="text-xs text-gray-400">{selectedPlayer.country}</span>
-              <span className="text-xs text-emerald-400 font-medium">
+              <span className="text-xs text-secondary">{selectedPlayer.country}</span>
+              <span className="text-xs text-tertiary font-medium">
                 {formatPrice(selectedPlayer.acquisition_price)}
               </span>
               {selectedIsStarter && (
-                <span className="text-[10px] text-gray-500">Starting</span>
+                <span className="text-label-caps text-muted">Starting</span>
               )}
               {!selectedIsStarter && (
-                <span className="text-[10px] text-gray-500">On bench</span>
+                <span className="text-label-caps text-muted">On bench</span>
               )}
             </div>
           </div>
@@ -685,10 +685,10 @@ export default function MyTeam() {
             {selectedIsStarter && (
               <button
                 onClick={() => handleSetCaptain(selectedPlayer)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
                   selectedIsCaptain
-                    ? 'bg-yellow-500 text-gray-900'
-                    : 'bg-gray-700 text-yellow-400 hover:bg-yellow-900/50 border border-yellow-700/50'
+                    ? 'bg-tertiary text-primary'
+                    : 'bg-border text-tertiary hover:bg-warning/15 border border-warning/30'
                 }`}
               >
                 {selectedIsCaptain ? 'Captain ✓' : 'Make Captain'}
@@ -696,14 +696,15 @@ export default function MyTeam() {
             )}
 
             {/* Swap hint */}
-            <span className="text-xs text-gray-500 italic">
+            <span className="text-xs text-muted italic">
               Click another player to swap
             </span>
 
             {/* Deselect */}
             <button
               onClick={() => setSelectedPlayer(null)}
-              className="px-2 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="px-2 py-1.5 rounded-lg text-xs text-secondary hover:text-primary hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              aria-label="Deselect player"
             >
               ✕
             </button>
@@ -713,8 +714,8 @@ export default function MyTeam() {
 
       {/* ── Unassigned players (squad overflow) ── */}
       {unassigned.length > 0 && (
-        <div className="bg-gray-900 border border-orange-700/50 rounded-xl p-4">
-          <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-2">
+        <div className="bg-surface border border-warning/30 rounded-xl p-4">
+          <p className="text-xs font-semibold text-warning uppercase tracking-wider mb-2">
             Not in lineup ({unassigned.length})
           </p>
           <div className="flex flex-wrap gap-2">
@@ -722,14 +723,14 @@ export default function MyTeam() {
               <button
                 key={p.id}
                 onClick={() => handlePlayerClick(p)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
                   selectedPlayer?.id === p.id
-                    ? 'border-emerald-500 bg-emerald-900/40 text-white'
-                    : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500'
+                    ? 'border-tertiary bg-tertiary/10 text-primary'
+                    : 'border-border bg-surface-hover text-secondary hover:border-border-strong'
                 }`}
               >
                 <span
-                  className={`text-[9px] font-bold px-1 py-0.5 rounded ${getPositionColor(p.position)}`}
+                  className={`text-label-caps font-bold px-1 py-0.5 rounded ${getPositionColor(p.position)}`}
                 >
                   {p.position}
                 </span>
@@ -737,19 +738,19 @@ export default function MyTeam() {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-gray-500 mt-2">
+          <p className="text-body-sm text-muted mt-2">
             Select one of these, then click a bench/starter to swap them in.
           </p>
         </div>
       )}
 
       {/* ── Squad overview table ── */}
-      <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-300">Full Squad</h3>
-          <span className="text-xs text-gray-500">{lockedCount} / {MAX_LOCKED_PLAYERS} locked</span>
+      <div className="bg-surface border border-border rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-secondary">Full Squad</h3>
+          <span className="text-xs text-muted">{lockedCount} / {MAX_LOCKED_PLAYERS} locked</span>
         </div>
-        <div className="divide-y divide-gray-800">
+        <div className="divide-y divide-border">
           {['GK', 'DEF', 'MID', 'FWD'].map((pos) => {
             const posPlayers = squad.filter((p) => p.position === pos);
             if (posPlayers.length === 0) return null;
@@ -765,28 +766,28 @@ export default function MyTeam() {
               return (
                 <div
                   key={p.id}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-800 cursor-pointer ${
-                    selectedPlayer?.id === p.id ? 'bg-emerald-900/20' : ''
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-hover cursor-pointer ${
+                    selectedPlayer?.id === p.id ? 'bg-tertiary/5' : ''
                   }`}
                   onClick={() => handlePlayerClick(p)}
                 >
                   <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${getPositionColor(pos)}`}
+                    className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${getPositionColor(pos)}`}
                   >
                     {pos}
                   </span>
-                  <span className="text-sm text-white flex-1 min-w-0 truncate">{p.name}</span>
-                  <span className="text-xs text-gray-500 flex-shrink-0">{p.country_code}</span>
-                  <span className="text-xs text-gray-400 flex-shrink-0 w-12 text-right">
+                  <span className="text-sm text-primary flex-1 min-w-0 truncate">{p.name}</span>
+                  <span className="text-xs text-muted flex-shrink-0">{p.country_code}</span>
+                  <span className="text-xs text-secondary flex-shrink-0 w-12 text-right">
                     {formatPrice(p.price)}
                   </span>
                   {activeMatchday && (
                     <span className={`text-xs flex-shrink-0 w-12 text-right font-semibold ${
                       liveCapPts === null
-                        ? 'text-gray-700'
+                        ? 'text-secondary'
                         : mdStats.minutes_played > 0
-                        ? 'text-emerald-400'
-                        : 'text-gray-500'
+                        ? 'text-tertiary'
+                        : 'text-muted'
                     }`}>
                       {liveCapPts === null
                         ? '—'
@@ -795,18 +796,18 @@ export default function MyTeam() {
                         : '0 pts'}
                     </span>
                   )}
-                  <span className="text-[10px] flex-shrink-0 w-16 text-right flex items-center justify-end gap-1">
+                  <span className="text-label-caps flex-shrink-0 w-16 text-right flex items-center justify-end gap-1">
                     {activeMatchday && (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0 && (
                       <span title="Has played — locked">🔒</span>
                     )}
                     {isCaptain ? (
-                      <span className="text-yellow-400 font-semibold">Captain</span>
+                      <span className="text-tertiary font-semibold">Captain</span>
                     ) : isStarter ? (
-                      <span className="text-emerald-400">Starting</span>
+                      <span className="text-tertiary">Starting</span>
                     ) : benchIdx >= 0 ? (
-                      <span className="text-blue-400">Bench {benchIdx + 1}</span>
+                      <span className="text-info">Bench {benchIdx + 1}</span>
                     ) : (
-                      <span className="text-orange-400">—</span>
+                      <span className="text-warning">—</span>
                     )}
                   </span>
                   {/* Lock / Unlock button */}
@@ -814,14 +815,14 @@ export default function MyTeam() {
                     {p.slot_type === 'locked' ? (
                       <button
                         onClick={() => setUnlockConfirmPlayer(p)}
-                        className="text-[10px] px-2 py-1 rounded bg-blue-900/50 border border-blue-700/50 text-blue-300 hover:bg-blue-800/70 transition-colors"
+                        className="text-label-caps px-2 py-1 rounded bg-info/10 border border-info/30 text-info hover:bg-info/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                       >
                         Unlock
                       </button>
                     ) : isLockable ? (
                       <button
                         onClick={() => setLockModalPlayer(p)}
-                        className="text-[10px] px-2 py-1 rounded bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 transition-colors"
+                        className="text-label-caps px-2 py-1 rounded bg-border border border-border-strong text-secondary hover:bg-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                       >
                         Lock
                       </button>
@@ -836,38 +837,38 @@ export default function MyTeam() {
 
       {/* ── Per-matchday player history ── */}
       {completedMatchdays.length > 0 && (
-        <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-300">Player History</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Points scored per matchday by your squad players</p>
+        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <h3 className="text-sm font-semibold text-secondary">Player History</h3>
+            <p className="text-xs text-muted mt-0.5">Points scored per matchday by your squad players</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left border-b border-gray-800">
-                  <th className="px-4 py-2.5 text-xs font-medium text-gray-500 min-w-[140px]">Player</th>
+                <tr className="text-left border-b border-border">
+                  <th className="px-4 py-2.5 text-xs font-medium text-muted min-w-[140px]">Player</th>
                   {completedMatchdays.map(md => (
-                    <th key={md.id} className="px-3 py-2.5 text-xs font-medium text-gray-500 text-center whitespace-nowrap">
+                    <th key={md.id} className="px-3 py-2.5 text-xs font-medium text-muted text-center whitespace-nowrap">
                       {md.name.replace(/matchday\s*/i, 'MD').replace(/group stage /i, '')}
                     </th>
                   ))}
-                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 text-center">Total</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-muted text-center">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {['GK', 'DEF', 'MID', 'FWD'].flatMap(pos =>
                   squad
                     .filter(p => p.position === pos)
                     .map(p => {
                       let total = 0;
                       return (
-                        <tr key={p.id} className="hover:bg-gray-800/40">
+                        <tr key={p.id} className="hover:bg-surface-hover/40">
                           <td className="px-4 py-2.5">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getPositionColor(pos)}`}>
+                              <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getPositionColor(pos)}`}>
                                 {pos}
                               </span>
-                              <span className="text-white text-xs truncate">{p.name}</span>
+                              <span className="text-primary text-xs truncate">{p.name}</span>
                             </div>
                           </td>
                           {completedMatchdays.map(md => {
@@ -877,11 +878,11 @@ export default function MyTeam() {
                             return (
                               <td key={md.id} className="px-3 py-2.5 text-center">
                                 {pts === null ? (
-                                  <span className="text-gray-700">—</span>
+                                  <span className="text-secondary">—</span>
                                 ) : s.minutes_played === 0 ? (
-                                  <span className="text-gray-600 text-xs" title="Did not play">0</span>
+                                  <span className="text-muted text-xs" title="Did not play">0</span>
                                 ) : (
-                                  <span className={`font-semibold text-xs ${pts > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  <span className={`font-semibold text-xs ${pts > 0 ? 'text-tertiary' : 'text-error'}`}>
                                     {pts}
                                   </span>
                                 )}
@@ -889,7 +890,7 @@ export default function MyTeam() {
                             );
                           })}
                           <td className="px-3 py-2.5 text-center">
-                            <span className={`font-bold text-xs ${total > 0 ? 'text-white' : 'text-gray-600'}`}>
+                            <span className={`font-bold text-xs ${total > 0 ? 'text-primary' : 'text-muted'}`}>
                               {total > 0 ? total : '—'}
                             </span>
                           </td>
@@ -900,7 +901,7 @@ export default function MyTeam() {
               </tbody>
             </table>
           </div>
-          <p className="px-4 py-2 text-[10px] text-gray-600 border-t border-gray-800">
+          <p className="px-4 py-2 text-label-caps text-muted border-t border-border">
             Points shown are base player points — captain ×2 is applied at team level during scoring.
             "—" means no stats uploaded for that matchday for this player.
           </p>
@@ -912,24 +913,24 @@ export default function MyTeam() {
         <button
           onClick={saveLineup}
           disabled={saving || !canSave}
-          className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-tertiary hover:bg-tertiary text-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
         >
           {saving ? 'Saving…' : 'Save Lineup'}
         </button>
 
         {!canSave && !saving && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted">
             {gkCount !== 1 && 'Need exactly 1 GK in starting XI. '}
             {!captainIsStarter && 'Select a captain from your starters. '}
           </p>
         )}
 
         {saveError && (
-          <p className="text-xs text-red-400">{saveError}</p>
+          <p className="text-xs text-error" role="alert">{saveError}</p>
         )}
 
         {saveSuccess && (
-          <p className="text-xs text-emerald-400 font-medium">Lineup saved!</p>
+          <p className="text-xs text-tertiary font-medium" role="status">Lineup saved!</p>
         )}
       </div>
 
@@ -939,11 +940,11 @@ export default function MyTeam() {
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && (setLockModalPlayer(null), setSwapTarget(null))}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
             <div>
-              <h2 className="text-lg font-bold text-white">Lock this player?</h2>
-              <p className="text-sm text-gray-400 mt-1">
-                Locking <strong className="text-white">{lockModalPlayer.name}</strong> claims
+              <h2 className="text-lg font-bold text-primary">Lock this player?</h2>
+              <p className="text-sm text-secondary mt-1">
+                Locking <strong className="text-primary">{lockModalPlayer.name}</strong> claims
                 them exclusively — other teams holding them as free will be refunded and lose
                 access. You can unlock at any time.
               </p>
@@ -951,7 +952,7 @@ export default function MyTeam() {
 
             {atMaxLocked && (
               <div className="space-y-2">
-                <p className="text-xs text-yellow-400 font-medium">
+                <p className="text-xs text-tertiary font-medium">
                   You have {MAX_LOCKED_PLAYERS} locked players (max). Choose one to unlock:
                 </p>
                 <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
@@ -963,8 +964,8 @@ export default function MyTeam() {
                       }
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                         swapTarget?.player_id === tp.player_id
-                          ? 'bg-orange-900/50 border border-orange-600/60 text-white'
-                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          ? 'bg-warning/15 border border-warning/40 text-primary'
+                          : 'bg-surface-hover text-secondary hover:bg-border'
                       }`}
                     >
                       <span
@@ -973,7 +974,7 @@ export default function MyTeam() {
                         {tp.players?.position}
                       </span>
                       {tp.players?.name}
-                      <span className="text-gray-500 ml-1.5 text-xs">
+                      <span className="text-muted ml-1.5 text-xs">
                         {formatPrice(tp.players?.current_price ?? tp.players?.price)}
                       </span>
                     </button>
@@ -983,26 +984,26 @@ export default function MyTeam() {
             )}
 
             {lockToast?.type === 'error' && (
-              <p className="text-xs text-red-400">{lockToast.message}</p>
+              <p className="text-xs text-error" role="alert">{lockToast.message}</p>
             )}
 
             {/* Gate message — explains why Lock button is disabled */}
             {atMaxLocked && !swapTarget && (
-              <p className="text-xs text-amber-400">At max locks — pick one to unlock first.</p>
+              <p className="text-xs text-warning">At max locks — pick one to unlock first.</p>
             )}
 
             <div className="flex gap-3">
               <button
                 onClick={() => { setLockModalPlayer(null); setSwapTarget(null); }}
                 disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLockConfirm}
                 disabled={locking || (atMaxLocked && !swapTarget)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-info hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 {locking ? 'Locking…' : atMaxLocked ? 'Lock (swap)' : 'Lock'}
               </button>
@@ -1017,11 +1018,11 @@ export default function MyTeam() {
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && setUnlockConfirmPlayer(null)}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
             <div>
-              <h2 className="text-lg font-bold text-white">Unlock this player?</h2>
-              <p className="text-sm text-gray-400 mt-1">
-                <strong className="text-white">{unlockConfirmPlayer.name}</strong> will stay in
+              <h2 className="text-lg font-bold text-primary">Unlock this player?</h2>
+              <p className="text-sm text-secondary mt-1">
+                <strong className="text-primary">{unlockConfirmPlayer.name}</strong> will stay in
                 your squad as a free player and become available for others to lock.
               </p>
             </div>
@@ -1029,14 +1030,14 @@ export default function MyTeam() {
               <button
                 onClick={() => setUnlockConfirmPlayer(null)}
                 disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUnlockConfirm}
                 disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-orange-600 hover:bg-orange-500 text-white transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-warning hover:bg-warning text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 {locking ? 'Unlocking…' : 'Unlock'}
               </button>

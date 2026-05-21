@@ -38,21 +38,21 @@ export default function AuctionTimer({ roundStartedAt, roundDurationSeconds, onE
   const pct = roundDurationSeconds > 0 ? remaining / roundDurationSeconds : 0;
 
   const colorClass =
-    remaining > 30 ? 'text-emerald-400' :
-    remaining > 10 ? 'text-yellow-400' :
-                     'text-red-400';
+    remaining > 30 ? 'text-tertiary' :
+    remaining > 10 ? 'text-tertiary' :
+                     'text-error';
 
   const barColor =
-    remaining > 30 ? 'bg-emerald-500' :
-    remaining > 10 ? 'bg-yellow-500' :
-                     'bg-red-500';
+    remaining > 30 ? 'bg-tertiary' :
+    remaining > 10 ? 'bg-tertiary' :
+                      'bg-error';
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-1.5" aria-live="polite">
       <span className={`text-4xl font-mono font-bold tabular-nums leading-none ${colorClass}`}>
         {display}
       </span>
-      <div className="w-32 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+      <div className="w-32 h-1.5 bg-surface-hover rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-[width] duration-1000 ${barColor}`}
           style={{ width: `${pct * 100}%` }}
