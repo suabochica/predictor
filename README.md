@@ -71,6 +71,21 @@ pnpm dev:polla    # http://localhost:4322
 pnpm dev:fantasy  # http://localhost:4323
 ```
 
+## 📁 Supabase directories
+```
+supabase/                  ← Supabase platform directory (CLI-managed)
+├── config.toml            → local Supabase project config
+├── migrations/            → SQL migration files (001–015)
+├── seed.sql               → seed data for local dev
+└── test-data/             → test data scripts
+packages/supabase/         ← Shared TS library (@predictor/supabase)
+├── client.ts              → browser Supabase client
+├── server-client.ts       → SSR client factory (Astro middleware)
+├── auth-context.tsx       → React AuthContext + useAuth() hook
+└── index.ts               → barrel export
+```
+`packages/supabase/` wraps `@supabase/supabase-js` and `@supabase/ssr` with reusable code for all apps. `supabase/` defines the actual database schema, migrations, and RLS policies.
+
  ## 🤖 AI Use
 
  The agent code that we are using:
