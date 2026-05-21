@@ -9,6 +9,7 @@
   },
   "main": "./src/index.ts",
   "peerDependencies": {
+    "@predictor/supabase": "workspace:*",
     "react": ">=18",
     "react-dom": ">=18"
   }

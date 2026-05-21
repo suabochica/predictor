@@ -1,26 +1,26 @@
 ---
 version: alpha
-name: Predicto
+name: Predictor
 description: Design file for the predictor app.
 colors:
-  primary: "#201D13"
-  secondary: "#7B745B"
-  tertiary: "#F5C211"
-  neutral: "#F8F8F7"
-  surface: "#FFFFFF"
-  on-tertiary: "#0A0A0A"
-  border: "#E8E7E3"
-  surface-hover: "#F3F1EC"
-  border-strong: "#D5D1C8"
-  muted: "#949C8B"
-  success: "#3A5A3C"
-  on-success: "#FFFFFF"
-  error: "#B91C1C"
-  on-error: "#FFFFFF"
-  warning: "#B45309"
-  on-warning: "#FFFFFF"
-  info: "#475569"
-  on-info: "#FFFFFF"
+  primary: "#282828"
+  secondary: "#928374"
+  tertiary: "#fabd2f
+  neutral: "#fbf1c7"
+  surface: "#ebdbb2"
+  on-tertiary: "#3c3836"
+  border: "#a89984"
+  surface-hover: "#bdae93"
+  border-strong: "#d5e4a1"
+  muted: "#a89984"
+  success: "#b8bb26"
+  on-success: "#98971a"
+  error: "#fb4934"
+  on-error: "#cc241d"
+  warning: "#fe9018"
+  on-warning: "#d65d0e"
+  info: "#83a598"
+  on-info: "#458588"
 typography:
   h1:
     fontFamily: Public Sans
