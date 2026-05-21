@@ -23,13 +23,13 @@ export default function Sidebar() {
   const { team, activeMatchday, activeTransferWindow } = useLeague();
 
   return (
-    <aside className="hidden md:flex flex-col w-56 bg-gray-900 border-r border-gray-700 min-h-screen pt-4 pb-8">
+    <aside className="hidden md:flex flex-col w-56 bg-surface border-r border-border min-h-screen pt-4 pb-8">
       {/* Team info */}
       {team && (
         <div className="px-4 mb-6">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Your Team</p>
-          <p className="font-semibold text-white text-sm truncate">{team.name}</p>
-          <p className="text-emerald-400 text-sm font-medium">
+          <p className="text-xs text-muted uppercase tracking-wider mb-1">Your Team</p>
+          <p className="font-semibold text-primary text-sm truncate">{team.name}</p>
+          <p className="text-tertiary text-sm font-medium">
             {Number(team.budget_remaining).toFixed(1)}M remaining
           </p>
         </div>
@@ -38,14 +38,14 @@ export default function Sidebar() {
       {/* Status badges */}
       <div className="px-4 mb-4 space-y-2">
         {activeMatchday && (
-          <div className="bg-emerald-900/50 border border-emerald-700 rounded-lg px-3 py-2">
-            <p className="text-xs text-emerald-400 font-medium">🟢 Active Matchday</p>
-            <p className="text-xs text-gray-300 truncate">{activeMatchday.name}</p>
+          <div className="bg-tertiary/10 border border-tertiary/40 rounded-lg px-3 py-2">
+            <p className="text-xs text-tertiary font-medium">🟢 Active Matchday</p>
+            <p className="text-xs text-secondary truncate">{activeMatchday.name}</p>
           </div>
         )}
         {activeTransferWindow && (
-          <div className="bg-blue-900/50 border border-blue-700 rounded-lg px-3 py-2">
-            <p className="text-xs text-blue-400 font-medium">🔄 Transfer Window {activeTransferWindow.window_number}</p>
+          <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2">
+            <p className="text-xs text-info font-medium">🔄 Transfer Window {activeTransferWindow.window_number}</p>
           </div>
         )}
       </div>
@@ -60,8 +60,8 @@ export default function Sidebar() {
               classNames(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-tertiary text-primary'
+                  : 'text-secondary hover:bg-surface-hover hover:text-primary'
               )
             }
           >
@@ -72,7 +72,7 @@ export default function Sidebar() {
 
         {isAdmin && (
           <>
-            <div className="border-t border-gray-700 my-2" />
+            <div className="border-t border-border my-2" />
             {adminItems.map(({ to, icon, label }) => (
               <NavLink
                 key={to}
@@ -81,8 +81,8 @@ export default function Sidebar() {
                   classNames(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-amber-600 text-white'
-                      : 'text-amber-400 hover:bg-gray-800 hover:text-amber-300'
+                      ? 'bg-warning text-primary'
+                      : 'text-warning hover:bg-surface-hover hover:text-warning'
                   )
                 }
               >

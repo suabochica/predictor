@@ -14,30 +14,30 @@ import {
 const STATUS_BANNER = {
   pending: {
     text: "The auction hasn't started yet. Check back soon.",
-    cls: 'bg-gray-800 text-gray-400',
+    cls: 'bg-surface-hover text-secondary',
   },
   paused: {
     text: 'Auction is paused. Bidding is temporarily suspended.',
-    cls: 'bg-yellow-900/50 text-yellow-300 border border-yellow-800/50',
+    cls: 'bg-warning/10 text-warning border border-warning/30',
   },
   completed: {
     text: 'The auction is complete. All squads have been finalised.',
-    cls: 'bg-blue-900/50 text-blue-300 border border-blue-800/50',
+    cls: 'bg-info/10 text-info border border-info/30',
   },
 };
 
 const POSITION_BADGE = {
-  GK:  'bg-yellow-900 text-yellow-300',
-  DEF: 'bg-blue-900 text-blue-300',
-  MID: 'bg-emerald-900 text-emerald-300',
-  FWD: 'bg-red-900 text-red-300',
+  GK:  'bg-warning/15 text-warning',
+  DEF: 'bg-info/15 text-info',
+  MID: 'bg-tertiary/15 text-tertiary',
+  FWD: 'bg-error/10 text-error',
 };
 
 const POSITION_GRADIENT = {
-  GK:  'from-yellow-900/30',
-  DEF: 'from-blue-900/30',
-  MID: 'from-emerald-900/30',
-  FWD: 'from-red-900/30',
+  GK:  'from-warning/10',
+  DEF: 'from-info/10',
+  MID: 'from-tertiary/10',
+  FWD: 'from-error/10',
 };
 
 export default function Auction() {
@@ -58,7 +58,7 @@ export default function Auction() {
   useEffect(() => { setRoundExpired(false); }, [auctionState?.current_round, auctionState?.round_started_at]);
 
   if (loading || !auctionState) {
-    return <div className="text-gray-400 p-6">Loading auction…</div>;
+    return <div className="text-secondary p-6">Loading auction…</div>;
   }
 
   const { status, current_round, round_duration_seconds, round_started_at } = auctionState;
@@ -121,9 +121,9 @@ export default function Auction() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Auction Room</h1>
+          <h1 className="text-2xl font-bold text-primary">Auction Room</h1>
           {isActive && (
-            <p className="text-gray-500 text-sm mt-1">Round {current_round}</p>
+            <p className="text-muted text-sm mt-1">Round {current_round}</p>
           )}
         </div>
 
@@ -135,13 +135,13 @@ export default function Auction() {
               onExpire={handleRoundExpire}
             />
             <div className="text-right">
-              <p className="text-2xl font-bold text-white tabular-nums">
+              <p className="text-2xl font-bold text-primary tabular-nums">
                 {myBidCount}
-                <span className="text-gray-500 text-base font-normal">
+                <span className="text-muted text-base font-normal">
                   /{MAX_SIMULTANEOUS_BIDS}
                 </span>
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">bids this round</p>
+              <p className="text-xs text-muted mt-0.5">bids this round</p>
             </div>
           </div>
         )}
@@ -156,26 +156,26 @@ export default function Auction() {
 
       {/* ── Round expired banner ──────────────────────────────────────── */}
       {isActive && roundExpired && (
-        <div className="rounded-xl px-5 py-4 text-sm font-medium bg-yellow-900/50 text-yellow-300 border border-yellow-800/50">
+        <div className="rounded-xl px-5 py-4 text-sm font-medium bg-warning/10 text-warning border border-warning/30">
           Round {current_round} has ended — bidding locked. Waiting for admin to advance.
         </div>
       )}
 
       {/* ── My Bids ──────────────────────────────────────────────────── */}
       {myBidCount > 0 && (
-        <section className="bg-gray-900 rounded-xl p-5 space-y-3">
+        <section className="bg-surface rounded-xl p-5 space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="text-base font-semibold text-white">
+            <h2 className="text-base font-semibold text-primary">
               My Bids — Round {current_round}
             </h2>
             <div className="flex gap-4 text-xs font-medium">
-              <span className="text-emerald-400">
+              <span className="text-tertiary">
                 {myBids.filter((b) => getHighestBid(b.player_id)?.user_id === user?.id).length} leading
               </span>
-              <span className="text-red-400">
+              <span className="text-error">
                 {myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length} outbid
               </span>
-              <span className="text-gray-500">{myBidCount}/{MAX_SIMULTANEOUS_BIDS} slots</span>
+              <span className="text-muted">{myBidCount}/{MAX_SIMULTANEOUS_BIDS} slots</span>
             </div>
           </div>
 
@@ -190,34 +190,34 @@ export default function Auction() {
                   key={bid.id}
                   className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
                     isLeading
-                      ? 'bg-emerald-900/30 border border-emerald-800/40'
-                      : 'bg-red-900/20 border border-red-800/30'
+                      ? 'bg-tertiary/10 border border-tertiary/40'
+                      : 'bg-error/5 border border-error/30/30'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className={`px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${
-                        POSITION_BADGE[player?.position] ?? 'bg-gray-700 text-gray-300'
+                        POSITION_BADGE[player?.position] ?? 'bg-border text-secondary'
                       }`}
                     >
                       {player?.position ?? '—'}
                     </span>
-                    <span className="text-white font-medium truncate">
+                    <span className="text-primary font-medium truncate">
                       {player?.name ?? `Player #${bid.player_id}`}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-4 shrink-0 ml-3">
-                    <span className="text-gray-400 text-xs">
+                    <span className="text-secondary text-xs">
                       Your bid:{' '}
-                      <span className="text-white font-semibold">£{bid.bid_amount.toFixed(1)}</span>
+                      <span className="text-primary font-semibold">£{bid.bid_amount.toFixed(1)}</span>
                     </span>
                     {isLeading ? (
-                      <span className="text-emerald-400 text-xs font-semibold w-20 text-right">
+                      <span className="text-tertiary text-xs font-semibold w-20 text-right">
                         Leading
                       </span>
                     ) : (
-                      <span className="text-red-400 text-xs font-semibold w-20 text-right">
+                      <span className="text-error text-xs font-semibold w-20 text-right">
                         Outbid £{highBid?.bid_amount.toFixed(1)}
                       </span>
                     )}
@@ -235,10 +235,10 @@ export default function Auction() {
           <button
             key={pos}
             onClick={() => setPosFilter(pos)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
               posFilter === pos
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                ? 'bg-tertiary text-primary'
+                : 'bg-surface-hover text-secondary hover:bg-border'
             }`}
           >
             {pos}
@@ -248,7 +248,7 @@ export default function Auction() {
 
       {/* ── Player grid ──────────────────────────────────────────────── */}
       {playersLoading ? (
-        <p className="text-gray-500 text-sm">Loading players…</p>
+        <p className="text-muted text-sm">Loading players…</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPlayers.map((player) => {
@@ -265,15 +265,15 @@ export default function Auction() {
             return (
               <div
                 key={player.id}
-                className="bg-gray-900 rounded-xl overflow-hidden border border-gray-800 flex flex-col"
+                className="bg-surface rounded-xl overflow-hidden border border-border flex flex-col"
               >
                 {/* Card header */}
                 <div
-                  className={`bg-gradient-to-r ${POSITION_GRADIENT[player.position] ?? 'from-gray-800/30'} to-transparent px-4 py-3 flex items-center justify-between gap-2`}
+                  className={`bg-gradient-to-r ${POSITION_GRADIENT[player.position] ?? 'from-border/30'} to-transparent px-4 py-3 flex items-center justify-between gap-2`}
                 >
-                  <span className="text-white font-semibold truncate">{player.name}</span>
+                  <span className="text-primary font-semibold truncate">{player.name}</span>
                   <span
-                    className={`px-2 py-0.5 rounded text-xs font-bold shrink-0 ${POSITION_BADGE[player.position] ?? 'bg-gray-700 text-gray-300'}`}
+                    className={`px-2 py-0.5 rounded text-xs font-bold shrink-0 ${POSITION_BADGE[player.position] ?? 'bg-border text-secondary'}`}
                   >
                     {player.position}
                   </span>
@@ -284,38 +284,38 @@ export default function Auction() {
                   <div className="space-y-2.5">
                     {/* Country + listed price */}
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">{player.country}</span>
-                      <span className="text-gray-400">
+                      <span className="text-muted">{player.country}</span>
+                      <span className="text-secondary">
                         Listed{' '}
-                        <span className="text-white font-semibold">£{player.price.toFixed(1)}</span>
+                        <span className="text-primary font-semibold">£{player.price.toFixed(1)}</span>
                       </span>
                     </div>
 
                     {/* Highest bid */}
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Top bid</span>
+                      <span className="text-muted">Top bid</span>
                       {highBid ? (
-                        <span className="text-emerald-400 font-bold">
+                        <span className="text-tertiary font-bold">
                           £{highBid.bid_amount.toFixed(1)}
-                          <span className="text-gray-500 font-normal ml-1.5">
+                          <span className="text-muted font-normal ml-1.5">
                             — {highBid.users?.display_name ?? '?'}
                           </span>
                         </span>
                       ) : (
-                        <span className="text-gray-600 italic text-xs">No bids yet</span>
+                        <span className="text-muted italic text-xs">No bids yet</span>
                       )}
                     </div>
 
                     {/* Won badge */}
                     {isWon && (
-                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-purple-900/50 text-purple-300 border border-purple-800/50">
+                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-info/15 text-info border border-info/30">
                         ✓ Won — player is on a squad
                       </div>
                     )}
 
                     {/* Contested carry-over badge */}
                     {isContested && (
-                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-yellow-900/40 text-yellow-300 border border-yellow-800/50">
+                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-warning/15 text-warning border border-warning/30">
                         ⚡ Contested — min bid £{(contestFloor + MIN_BID_INCREMENT).toFixed(1)} to win
                       </div>
                     )}
@@ -325,8 +325,8 @@ export default function Auction() {
                       <div
                         className={`text-xs font-medium rounded-lg px-3 py-1.5 ${
                           isLeading
-                            ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-800/50'
-                            : 'bg-red-900/50 text-red-300 border border-red-800/50'
+                            ? 'bg-tertiary/10 text-tertiary border border-tertiary/40/50'
+                            : 'bg-error/10/50 text-error border border-error/30/50'
                         }`}
                       >
                         {isLeading ? '✓ Leading' : '✗ Outbid'} — Your bid:{' '}
@@ -348,32 +348,32 @@ export default function Auction() {
                           onChange={(e) =>
                             setBidAmounts((prev) => ({ ...prev, [player.id]: e.target.value }))
                           }
-                          className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-500"
+                          className="flex-1 min-w-0 bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-primary text-sm placeholder-muted focus:outline-none focus:border-tertiary"
                         />
                         <button
                           onClick={() => handleBid(player.id)}
                           disabled={isSubmitting}
-                          className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors shrink-0"
+                          className="px-4 py-1.5 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary text-sm font-semibold transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                         >
                           {isSubmitting ? '…' : 'Bid'}
                         </button>
                       </div>
                       {errors[player.id] && (
-                        <p className="text-red-400 text-xs">{errors[player.id]}</p>
+                        <p className="text-error text-xs" role="alert">{errors[player.id]}</p>
                       )}
                     </div>
                   )}
 
                   {/* Max bids reached */}
                   {isActive && !myBidOnPlayer && myBidCount >= MAX_SIMULTANEOUS_BIDS && (
-                    <p className="text-xs text-gray-600 italic pt-1">
+                    <p className="text-xs text-muted italic pt-1">
                       Max bids reached for this round.
                     </p>
                   )}
 
                   {/* Auction not active */}
                   {!isActive && !myBidOnPlayer && (
-                    <p className="text-xs text-gray-700 italic pt-1">
+                    <p className="text-xs text-secondary italic pt-1">
                       Bidding {status === 'pending' ? 'not started' : status}.
                     </p>
                   )}

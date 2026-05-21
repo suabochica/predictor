@@ -12,12 +12,12 @@ export function classNames(...classes) {
 
 export function getPositionColor(position) {
   const colors = {
-    GK: 'bg-yellow-400 text-yellow-900',
-    DEF: 'bg-green-500 text-white',
-    MID: 'bg-blue-500 text-white',
-    FWD: 'bg-red-500 text-white',
+    GK: 'bg-tertiary text-warning',
+    DEF: 'bg-success text-primary',
+    MID: 'bg-info text-primary',
+    FWD: 'bg-error text-primary',
   };
-  return colors[position] ?? 'bg-gray-400 text-white';
+  return colors[position] ?? 'bg-border-strong text-primary';
 }
 
 export function sortByTotalPoints(teams) {

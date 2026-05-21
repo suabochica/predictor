@@ -16,7 +16,7 @@ export default function MobileNav() {
   if (!user) return null;
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-700">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border">
       <div className="flex justify-around">
         {mobileNavItems.map(({ to, icon, label }) => (
           <NavLink
@@ -25,7 +25,7 @@ export default function MobileNav() {
             className={({ isActive }) =>
               classNames(
                 'flex flex-col items-center justify-center py-2 px-3 min-w-[44px] min-h-[56px] text-xs font-medium transition-colors',
-                isActive ? 'text-emerald-400' : 'text-gray-500 hover:text-gray-300'
+                isActive ? 'text-tertiary' : 'text-muted hover:text-secondary'
               )
             }
           >

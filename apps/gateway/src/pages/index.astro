@@ -8,10 +8,10 @@ const user = Astro.locals.user;
 <Layout title="Dashboard">
   <main class="flex min-h-screen flex-col items-center justify-center gap-10 p-6">
     <div class="text-center">
-      <h1 class="text-3xl font-semibold text-[var(--color-text-heading)]">
+      <h1 class="font-heading text-h2 font-semibold text-primary">
         Welcome back{user?.email ? `, ${user.email}` : ''}
       </h1>
-      <p class="mt-2 text-[var(--color-text)]">Choose an app to continue</p>
+      <p class="mt-2 text-secondary text-body-sm">Choose an app to continue</p>
     </div>
 
     <div class="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
@@ -20,7 +20,7 @@ const user = Astro.locals.user;
     </div>
 
     <form method="POST" action="/auth/signout">
-      <button type="submit" class="text-sm text-[var(--color-text)] hover:text-[var(--color-text-heading)] underline">
+      <button type="submit" class="text-body-sm text-muted hover:text-primary underline">
         Sign out
       </button>
     </form>

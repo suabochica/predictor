@@ -11,14 +11,14 @@ export default function AppCard({ name, description, href, icon }: AppCardProps)
   return (
     <a
       href={href}
-      className="group flex flex-col gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-6 transition-all hover:border-[var(--color-accent)] hover:shadow-lg"
+      className="group flex flex-col gap-3 rounded-md border border-border bg-surface p-5 transition-all hover:border-tertiary hover:shadow-lg"
     >
       <span className="text-4xl">{icon}</span>
       <div>
-        <h2 className="text-lg font-semibold text-[var(--color-text-heading)] group-hover:text-[var(--color-accent)]">
+        <h2 className="font-heading text-h2 font-semibold text-primary group-hover:text-tertiary">
           {name}
         </h2>
-        <p className="mt-1 text-sm text-[var(--color-text)]">{description}</p>
+        <p className="mt-1 text-body-sm text-secondary">{description}</p>
       </div>
     </a>
   );

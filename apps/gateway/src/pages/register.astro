@@ -12,12 +12,12 @@ if (Astro.locals.user) {
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
         <span class="text-5xl">⚽</span>
-        <h1 class="mt-4 text-2xl font-semibold text-[var(--color-text-heading)]">Create account</h1>
-        <p class="mt-1 text-[var(--color-text)]">Join the 2026 World Cup prediction league</p>
+        <h1 class="mt-4 font-heading text-h2 font-semibold text-primary">Create account</h1>
+        <p class="mt-1 text-secondary text-body-sm">Join the 2026 World Cup prediction league</p>
       </div>
       <RegisterForm client:load />
-      <p class="mt-6 text-center text-sm text-[var(--color-text)]">
-        Already have an account? <a href="/login" class="text-[var(--color-accent)] hover:underline">Sign in</a>
+      <p class="mt-6 text-center text-body-sm text-muted">
+        Already have an account? <a href="/login" class="text-tertiary hover:underline">Sign in</a>
       </p>
     </div>
   </main>
