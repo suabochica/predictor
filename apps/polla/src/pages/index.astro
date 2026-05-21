@@ -1,7 +1,7 @@
 ---
-import predictionsIcon from '@predictor/ui/icons/predictions.svg';
-import standingsIcon from '@predictor/ui/icons/standings.svg';
-import rulesIcon from '@predictor/ui/icons/rules.svg';
+import predictionsIcon from "@predictor/ui/icons/predictions.svg";
+import standingsIcon from "@predictor/ui/icons/standings.svg";
+import rulesIcon from "@predictor/ui/icons/rules.svg";
 
 import Layout from "../layouts/Layout.astro";
 
@@ -15,11 +15,13 @@ const displayName = Astro.locals.displayName;
     {
       user && (
         <div class="mb-8">
-          <h1 class="font-heading text-xl font-semibold text-primary">
+          <h1 class="text-2xl font-bold text-primary">
             Welcome back, {displayName}!
           </h1>
+          <p class="text-secondary mt-1">FIFA World Cup 2026 Polla</p>
           <p class="mt-1 text-secondary text-body-sm">
-            Predict match scores and compete with friends. Earn points based on accuracy!
+            Predict match scores and compete with friends. Earn points based on
+            accuracy!
           </p>
         </div>
       )

@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Atomic';
+  src: url('../fonts/atomic.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Colors — surface/background */
   --color-neutral: #F8F8F7;
@@ -29,6 +37,7 @@
   --font-heading: 'Public Sans', sans-serif;
   --font-body: 'Public Sans', sans-serif;
   --font-label: 'Space Grotesk', sans-serif;
+  --font-atomic: 'Atomic', 'Space Grotesk', sans-serif;
 
   /* Radius */
   --radius-sm: 4px;

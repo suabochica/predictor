@@ -18,7 +18,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-surface border-b border-border text-primary">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg text-tertiary hover:text-tertiary">
+        <Link to="/" className="flex items-center gap-2 font-atomic font-bold text-lg text-tertiary hover:text-tertiary">
           <img src={fantasyIcon} className="w-6 h-6" alt="" />
           <span className="hidden sm:inline">Fantasy</span>
         </Link>

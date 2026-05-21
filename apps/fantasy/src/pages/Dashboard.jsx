@@ -19,7 +19,7 @@ export default function Dashboard() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-primary">
-          Welcome back, {profile?.display_name ?? 'Manager'}
+          Welcome back, {profile?.display_name ?? 'Manager'}!
         </h1>
         <p className="text-secondary mt-1">FIFA World Cup 2026 Fantasy League</p>
       </div>
