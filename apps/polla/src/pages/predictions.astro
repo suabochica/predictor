@@ -13,9 +13,5 @@ const userId = Astro.locals.user?.id as string | undefined;
     </header>
 
     <PredictionForm client:load currentUser={userId} />
-
-    <nav class="mt-8 text-center">
-      <a href="/polla/" class="text-tertiary hover:underline text-body-sm">← Back to Home</a>
-    </nav>
   </main>
 </Layout>
