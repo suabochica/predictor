@@ -6,19 +6,28 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({ label, error, id, className = '', ...props }: InputProps) {
+  const inputId = id || props.name;
+  const errorId = inputId ? `${inputId}-error` : undefined;
+
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-[var(--color-text-heading)]">
+        <label htmlFor={inputId} className="font-label text-label-caps text-primary uppercase tracking-wide">
           {label}
         </label>
       )}
       <input
-        id={id}
-        className={`w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-heading)] placeholder:text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${className}`}
+        id={inputId}
+        aria-describedby={error ? errorId : undefined}
+        aria-invalid={error ? true : undefined}
+        className={`w-full rounded-sm border border-border bg-surface px-3.5 py-2.5 text-body-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-transparent ${className}`}
         {...props}
       />
-      {error && <span className="text-xs text-red-400">{error}</span>}
+      {error && (
+        <span id={errorId} role="alert" className="text-label-caps text-error">
+          {error}
+        </span>
+      )}
     </div>
   );
 }
