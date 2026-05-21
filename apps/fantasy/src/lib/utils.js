@@ -12,10 +12,10 @@ export function classNames(...classes) {
 
 export function getPositionColor(position) {
   const colors = {
-    GK: 'bg-tertiary text-warning',
-    DEF: 'bg-success text-primary',
-    MID: 'bg-info text-primary',
-    FWD: 'bg-error text-primary',
+    GK: 'bg-tertiary text-on-tertiary',
+    DEF: 'bg-success text-on-success',
+    MID: 'bg-info text-on-info',
+    FWD: 'bg-error text-on-error',
   };
   return colors[position] ?? 'bg-border-strong text-primary';
 }
