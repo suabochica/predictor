@@ -1,13 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
 import { classNames } from '../../lib/utils';
+import homeIcon from '@predictor/ui/icons/home.svg';
+import teamIcon from '@predictor/ui/icons/team.svg';
+import auctionIcon from '@predictor/ui/icons/auction.svg';
+import standingsIcon from '@predictor/ui/icons/standings.svg';
+import marketIcon from '@predictor/ui/icons/market.svg';
 
 const mobileNavItems = [
-  { to: '/dashboard', icon: '🏠', label: 'Home' },
-  { to: '/my-team', icon: '⚽', label: 'Team' },
-  { to: '/auction', icon: '🔨', label: 'Auction' },
-  { to: '/standings', icon: '📊', label: 'Standings' },
-  { to: '/market', icon: '🛒', label: 'Market' },
+  { to: '/dashboard', icon: homeIcon, label: 'Home' },
+  { to: '/my-team', icon: teamIcon, label: 'Team' },
+  { to: '/auction', icon: auctionIcon, label: 'Auction' },
+  { to: '/standings', icon: standingsIcon, label: 'Standings' },
+  { to: '/market', icon: marketIcon, label: 'Market' },
 ];
 
 export default function MobileNav() {
@@ -29,7 +34,7 @@ export default function MobileNav() {
               )
             }
           >
-            <span className="text-xl leading-none mb-0.5">{icon}</span>
+            <img src={icon} className="w-5 h-5 mb-0.5" alt="" />
             <span>{label}</span>
           </NavLink>
         ))}

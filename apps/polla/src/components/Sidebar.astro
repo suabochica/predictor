@@ -1,4 +1,9 @@
 ---
+import homeIcon from '@predictor/ui/icons/home.svg';
+import predictionsIcon from '@predictor/ui/icons/predictions.svg';
+import standingsIcon from '@predictor/ui/icons/standings.svg';
+import rulesIcon from '@predictor/ui/icons/rules.svg';
+
 const base = '/polla';
 const currentPath = Astro.url.pathname;
 
@@ -7,10 +12,10 @@ const rank = Astro.locals.leaderboardRank;
 const points = Astro.locals.totalPoints;
 
 const navItems = [
-  { href: `${base}/`, icon: '🏠', label: 'Home' },
-  { href: `${base}/predictions`, icon: '⚽', label: 'Predictions' },
-  { href: `${base}/leaderboard`, icon: '🏆', label: 'Leaderboard' },
-  { href: `${base}/rules`, icon: '📋', label: 'Rules' },
+  { href: `${base}/`, icon: homeIcon, label: 'Home' },
+  { href: `${base}/predictions`, icon: predictionsIcon, label: 'Predictions' },
+  { href: `${base}/leaderboard`, icon: standingsIcon, label: 'Leaderboard' },
+  { href: `${base}/rules`, icon: rulesIcon, label: 'Rules' },
 ];
 
 function rankBadge(r: number): string {
@@ -45,7 +50,7 @@ function rankBadge(r: number): string {
               : 'text-secondary hover:bg-surface-hover hover:text-primary'
           }`}
         >
-          <span>{icon}</span>
+          <img src={icon.src} class="w-5 h-5" alt="" />
           <span>{label}</span>
         </a>
       ))

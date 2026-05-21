@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
+import fantasyIcon from '@predictor/ui/icons/fantasy.svg';
 
 export default function Header() {
   const { user, profile } = useAuth();
@@ -17,7 +18,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-bold text-lg text-tertiary hover:text-tertiary">
-          <span className="text-2xl">🏆</span>
+          <img src={fantasyIcon} className="w-6 h-6" alt="" />
           <span className="hidden sm:inline">WC2026 Fantasy</span>
         </Link>
 

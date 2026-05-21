@@ -2,20 +2,29 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../../context/LeagueContext';
 import { classNames } from '../../lib/utils';
+import homeIcon from '@predictor/ui/icons/home.svg';
+import teamIcon from '@predictor/ui/icons/team.svg';
+import marketIcon from '@predictor/ui/icons/market.svg';
+import auctionIcon from '@predictor/ui/icons/auction.svg';
+import transfersIcon from '@predictor/ui/icons/transfers.svg';
+import standingsIcon from '@predictor/ui/icons/standings.svg';
+import bracketsIcon from '@predictor/ui/icons/brackets.svg';
+import historyIcon from '@predictor/ui/icons/history.svg';
+import adminIcon from '@predictor/ui/icons/admin.svg';
 
 const navItems = [
-  { to: '/dashboard', icon: '🏠', label: 'Dashboard' },
-  { to: '/my-team', icon: '⚽', label: 'My Team' },
-  { to: '/market', icon: '🛒', label: 'Player Market' },
-  { to: '/auction', icon: '🔨', label: 'Auction' },
-  { to: '/transfers', icon: '🔄', label: 'Transfers' },
-  { to: '/standings', icon: '📊', label: 'Standings' },
-  { to: '/bracket', icon: '🏅', label: 'Bracket' },
-  { to: '/history', icon: '📜', label: 'History' },
+  { to: '/dashboard', icon: homeIcon, label: 'Dashboard' },
+  { to: '/my-team', icon: teamIcon, label: 'My Team' },
+  { to: '/market', icon: marketIcon, label: 'Player Market' },
+  { to: '/auction', icon: auctionIcon, label: 'Auction' },
+  { to: '/transfers', icon: transfersIcon, label: 'Transfers' },
+  { to: '/standings', icon: standingsIcon, label: 'Standings' },
+  { to: '/bracket', icon: bracketsIcon, label: 'Bracket' },
+  { to: '/history', icon: historyIcon, label: 'History' },
 ];
 
 const adminItems = [
-  { to: '/admin', icon: '⚙️', label: 'Admin Panel' },
+  { to: '/admin', icon: adminIcon, label: 'Admin Panel' },
 ];
 
 export default function Sidebar() {
@@ -39,13 +48,13 @@ export default function Sidebar() {
       <div className="px-4 mb-4 space-y-2">
         {activeMatchday && (
           <div className="bg-tertiary/10 border border-tertiary/40 rounded-lg px-3 py-2">
-            <p className="text-xs text-tertiary font-medium">🟢 Active Matchday</p>
+            <p className="text-xs text-tertiary font-medium">Active Matchday</p>
             <p className="text-xs text-secondary truncate">{activeMatchday.name}</p>
           </div>
         )}
         {activeTransferWindow && (
           <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2">
-            <p className="text-xs text-info font-medium">🔄 Transfer Window {activeTransferWindow.window_number}</p>
+            <p className="text-xs text-info font-medium">Transfer Window {activeTransferWindow.window_number}</p>
           </div>
         )}
       </div>
@@ -65,7 +74,7 @@ export default function Sidebar() {
               )
             }
           >
-            <span>{icon}</span>
+            <img src={icon} className="w-5 h-5" alt="" />
             <span>{label}</span>
           </NavLink>
         ))}
@@ -86,7 +95,7 @@ export default function Sidebar() {
                   )
                 }
               >
-                <span>{icon}</span>
+                <img src={icon} className="w-5 h-5" alt="" />
                 <span>{label}</span>
               </NavLink>
             ))}
