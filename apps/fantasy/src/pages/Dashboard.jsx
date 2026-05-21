@@ -1,5 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
+import transfersIcon from '@predictor/ui/icons/transfers.svg';
+import teamIcon from '@predictor/ui/icons/team.svg';
+import auctionIcon from '@predictor/ui/icons/auction.svg';
+import standingsIcon from '@predictor/ui/icons/standings.svg';
+import marketIcon from '@predictor/ui/icons/market.svg';
+
 import { useLeague } from '../context/LeagueContext';
 import { useTeam } from '../hooks/useTeam';
 import { formatPrice } from '../lib/utils';
@@ -13,7 +19,7 @@ export default function Dashboard() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-primary">
-          Welcome back, {profile?.display_name ?? 'Manager'} 👋
+          Welcome back, {profile?.display_name ?? 'Manager'}
         </h1>
         <p className="text-secondary mt-1">FIFA World Cup 2026 Fantasy League</p>
       </div>
@@ -50,7 +56,7 @@ export default function Dashboard() {
       {/* Transfer window notice */}
       {activeTransferWindow && (
         <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-2xl">🔄</span>
+          <img src={transfersIcon} className="w-6 h-6 mt-0.5" alt="" />
           <div>
             <p className="font-semibold text-info">
               Transfer Window {activeTransferWindow.window_number} is Open
@@ -72,21 +78,34 @@ export default function Dashboard() {
       <div>
         <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { to: '/my-team', icon: '⚽', label: 'Set Lineup' },
-            { to: '/auction', icon: '🔨', label: 'Auction Room' },
-            { to: '/standings', icon: '📊', label: 'Standings' },
-            { to: '/market', icon: '🛒', label: 'Player Market' },
-          ].map(({ to, icon, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
-            >
-              <span className="text-2xl">{icon}</span>
-              <span className="text-xs font-medium text-secondary group-hover:text-primary">{label}</span>
-            </Link>
-          ))}
+          <Link
+            to="/my-team"
+            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
+          >
+            <img src={teamIcon} className="w-6 h-6" alt="" />
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Set Lineup</span>
+          </Link>
+          <Link
+            to="/auction"
+            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
+          >
+            <img src={auctionIcon} className="w-6 h-6" alt="" />
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Auction Room</span>
+          </Link>
+          <Link
+            to="/standings"
+            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
+          >
+            <img src={standingsIcon} className="w-6 h-6" alt="" />
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Standings</span>
+          </Link>
+          <Link
+            to="/market"
+            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
+          >
+            <img src={marketIcon} className="w-6 h-6" alt="" />
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Player Market</span>
+          </Link>
         </div>
       </div>
     </div>
