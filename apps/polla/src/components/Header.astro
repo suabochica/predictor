@@ -1,5 +1,6 @@
 ---
 import pollaIcon from '@predictor/ui/icons/polla.svg';
+import { BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
 
 const base = '/polla';
 ---
@@ -8,16 +9,18 @@ const base = '/polla';
   <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
     <a href={base} class="flex items-center gap-2 font-bold text-lg text-tertiary hover:text-tertiary">
       <img src={pollaIcon.src} class="w-6 h-6" alt="" />
-      <span class="hidden sm:inline">WC2026 Polla</span>
+      <span class="hidden sm:inline">Polla</span>
     </a>
 
-    <nav class="flex items-center gap-6 text-sm font-medium">
-      <a href="/" class="hover:text-tertiary transition-colors">Dashboard</a>
-      <a href={`${base}/predictions`} class="hover:text-tertiary transition-colors">Predictions</a>
-      <a href={`${base}/leaderboard`} class="hover:text-tertiary transition-colors">Leaderboard</a>
-      <a href={`${base}/rules`} class="hover:text-tertiary transition-colors">Rules</a>
-    </nav>
-
-    <a href="/auth/signout" class="text-sm text-secondary hover:text-primary transition-colors">Sign out</a>
+    <div class="flex items-center gap-3">
+      {Astro.locals.isAdmin && (
+        <span
+          class="text-xs bg-warning text-primary font-bold px-2 py-1 rounded"
+        >
+          Admin
+        </span>
+      )}
+      <a href="/auth/signout" class={BUTTON_PRIMARY_CLASSES}>Sign out</a>
+    </div>
   </div>
 </header>

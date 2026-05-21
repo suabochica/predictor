@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@predictor/supabase';
+import { Button, BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
+
 import type { Match, DbMatch } from '../types';
 import { countries } from '../data/matches';
 
@@ -310,14 +312,15 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       ))}
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="button"
+          variant="primary"
+          class={BUTTON_PRIMARY_CLASSES}
           onClick={handleSave}
           disabled={saving || !currentUser}
-          className="rounded-sm bg-tertiary px-5 py-3 font-label text-label-md font-medium text-on-tertiary hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Predictions'}
-        </button>
+        </Button>
       </div>
     </div>
   );

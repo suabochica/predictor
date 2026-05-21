@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import AppCard from '../components/AppCard';
+import { BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
 
 const user = Astro.locals.user;
 ---
@@ -20,7 +21,7 @@ const user = Astro.locals.user;
     </div>
 
     <form method="POST" action="/auth/signout">
-      <button type="submit" class="text-body-sm text-muted hover:text-primary underline">
+      <button type="submit" class={BUTTON_PRIMARY_CLASSES}>
         Sign out
       </button>
     </form>

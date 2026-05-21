@@ -6,12 +6,10 @@ const userId = Astro.locals.user?.id as string | undefined;
 ---
 
 <Layout title="Predictions">
-  <main class="max-w-4xl mx-auto p-6">
-    <header class="text-center mb-8">
-      <h1 class="font-heading text-h2 font-semibold text-primary">Match Predictions</h1>
-      <p class="mt-2 text-secondary text-body-sm">Enter your predicted scores (0–9). Save before leaving.</p>
-    </header>
+  <div class="max-w-4xl">
+    <h1 class="font-heading text-xl font-semibold text-primary">Predictions</h1>
+    <p class="text-secondary text-body-sm mt-1 mb-6">Enter your predicted scores (0–9). Save before leaving.</p>
 
     <PredictionForm client:load currentUser={userId} />
-  </main>
+  </div>
 </Layout>

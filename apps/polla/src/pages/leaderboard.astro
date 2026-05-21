@@ -6,12 +6,9 @@ const userId = Astro.locals.user?.id as string | undefined;
 ---
 
 <Layout title="Leaderboard">
-  <main class="max-w-4xl mx-auto p-6">
-    <header class="text-center mb-8">
-      <h1 class="font-heading text-h2 font-semibold text-primary">Leaderboard</h1>
-      <p class="mt-2 text-secondary text-body-sm">See how you stack up against the competition</p>
-    </header>
+  <div class="space-y-6 max-w-4xl">
+    <h1 class="font-heading text-xl font-semibold text-primary">Leaderboard</h1>
 
     <LeaderboardTable client:load currentUser={userId} />
-  </main>
+  </div>
 </Layout>

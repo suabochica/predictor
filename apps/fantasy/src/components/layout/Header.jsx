@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
+import { Button } from '@predictor/ui';
 import fantasyIcon from '@predictor/ui/icons/fantasy.svg';
 
 export default function Header() {
@@ -19,27 +20,13 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-bold text-lg text-tertiary hover:text-tertiary">
           <img src={fantasyIcon} className="w-6 h-6" alt="" />
-          <span className="hidden sm:inline">WC2026 Fantasy</span>
+          <span className="hidden sm:inline">Fantasy</span>
         </Link>
-
-        {/* Desktop Nav */}
-        {user && (
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link to="/dashboard" className="hover:text-tertiary transition-colors">Dashboard</Link>
-            <Link to="/my-team" className="hover:text-tertiary transition-colors">My Team</Link>
-            <Link to="/auction" className="hover:text-tertiary transition-colors">Auction</Link>
-            <Link to="/standings" className="hover:text-tertiary transition-colors">Standings</Link>
-            <Link to="/bracket" className="hover:text-tertiary transition-colors">Bracket</Link>
-          </nav>
-        )}
 
         {/* User Menu */}
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-sm text-secondary hidden sm:inline">
-                {profile?.display_name ?? user.email}
-              </span>
               {profile?.is_admin && (
                 <Link
                   to="/admin"
@@ -48,18 +35,12 @@ export default function Header() {
                   Admin
                 </Link>
               )}
-              <button
-                onClick={handleSignOut}
-                className="text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              >
+              <Button variant="primary" onClick={handleSignOut}>
                 Sign out
-              </button>
+              </Button>
             </>
           ) : (
-            <Link
-              to="/login"
-              className="text-sm bg-tertiary hover:brightness-90 text-primary px-4 py-2 rounded-lg font-medium transition-colors"
-            >
+            <Link to="/login" className="inline-flex items-center justify-center font-medium rounded-sm bg-tertiary text-on-tertiary hover:brightness-95 px-5 py-3 transition-colors">
               Sign in
             </Link>
           )}

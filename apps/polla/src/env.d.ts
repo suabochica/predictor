@@ -7,6 +7,7 @@ declare namespace App {
   interface Locals {
     user: User | null;
     displayName: string | null;
+    isAdmin: boolean;
     leaderboardRank: number | null;
     totalPoints: number | null;
   }

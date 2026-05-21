@@ -3,89 +3,81 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Scoring Rules">
-  <main class="max-w-3xl mx-auto p-6">
-    <header class="text-center mb-8">
-      <h1 class="font-heading text-h2 font-semibold text-primary">📋 Scoring Rules</h1>
-      <p class="mt-2 text-secondary text-body-sm">
-        Understand how points are calculated for your predictions
+  <div class="space-y-8 max-w-3xl">
+    <h1 class="font-heading text-xl font-semibold text-primary">Scoring Rules</h1>
+
+    <section>
+      <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
+        Tournament Structure
+      </h2>
+      <p class="text-secondary text-body-md">
+        Football tournaments are structured with an initial group stage or
+        round-robin phase, followed by knockout rounds. For all matches, users
+        can predict the result.
       </p>
-    </header>
+    </section>
 
-    <div class="space-y-8">
-      <section>
-        <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
-          Tournament Structure
-        </h2>
-        <p class="text-secondary text-body-md">
-          Football tournaments are structured with an initial group stage or
-          round-robin phase, followed by knockout rounds. For all matches, users
-          can predict the result.
-        </p>
-      </section>
+    <section>
+      <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
+        Prediction Rules
+      </h2>
+      <ul class="list-disc list-inside space-y-2 text-secondary text-body-md">
+        <li>
+          You can change your prediction up to <strong class="text-primary font-label font-semibold"
+            >10 minutes before</strong
+          > the match starts.
+        </li>
+        <li>
+          Predictions cover <strong class="text-primary font-label font-semibold">90 minutes</strong> of
+          regular time + stoppage time only (excludes extra time and penalties).
+        </li>
+      </ul>
+    </section>
 
-      <section>
-        <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
-          Prediction Rules
-        </h2>
-        <ul class="list-disc list-inside space-y-2 text-secondary text-body-md">
-          <li>
-            You can change your prediction up to <strong class="text-primary font-label font-semibold"
-              >10 minutes before</strong
-            > the match starts.
-          </li>
-          <li>
-            Predictions cover <strong class="text-primary font-label font-semibold">90 minutes</strong> of
-            regular time + stoppage time only (excludes extra time and penalties).
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
-          Scoring Summary
-        </h2>
-        <div class="overflow-x-auto rounded-md border border-border">
-          <table class="w-full text-body-sm">
-            <thead class="bg-neutral">
-              <tr>
-                <th class="px-4 py-3 text-left font-label text-label-caps text-secondary uppercase tracking-wider">Category</th>
-                <th class="px-4 py-3 text-center font-label text-label-caps text-secondary uppercase tracking-wider">First Round</th>
-                <th class="px-4 py-3 text-center font-label text-label-caps text-secondary uppercase tracking-wider">Knockout</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-border">
-              <tr
-                ><td class="px-4 py-3">Correct result (winner/draw)</td><td
-                  class="px-4 py-3 text-center font-semibold">5</td
-                ><td class="px-4 py-3 text-center font-semibold">10</td></tr
-              >
-              <tr
-                ><td class="px-4 py-3">Correct home team goals</td><td
-                  class="px-4 py-3 text-center font-semibold">2</td
-                ><td class="px-4 py-3 text-center font-semibold">4</td></tr
-              >
-              <tr
-                ><td class="px-4 py-3">Correct away team goals</td><td
-                  class="px-4 py-3 text-center font-semibold">2</td
-                ><td class="px-4 py-3 text-center font-semibold">4</td></tr
-              >
-              <tr
-                ><td class="px-4 py-3">Correct goal difference</td><td
-                  class="px-4 py-3 text-center font-semibold">1</td
-                ><td class="px-4 py-3 text-center font-semibold">2</td></tr
-              >
-              <tr class="bg-neutral"
-                ><td class="px-4 py-3 font-bold text-primary">MAX TOTAL</td><td
-                  class="px-4 py-3 text-center font-bold text-primary">10</td
-                ><td class="px-4 py-3 text-center font-bold text-primary"
-                  >20</td
-                ></tr
-              >
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-
-  </main>
+    <section>
+      <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
+        Scoring Summary
+      </h2>
+      <div class="overflow-x-auto rounded-md border border-border">
+        <table class="w-full text-body-sm">
+          <thead class="bg-neutral">
+            <tr>
+              <th class="px-4 py-3 text-left font-label text-label-caps text-secondary uppercase tracking-wider">Category</th>
+              <th class="px-4 py-3 text-center font-label text-label-caps text-secondary uppercase tracking-wider">First Round</th>
+              <th class="px-4 py-3 text-center font-label text-label-caps text-secondary uppercase tracking-wider">Knockout</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <tr
+              ><td class="px-4 py-3">Correct result (winner/draw)</td><td
+                class="px-4 py-3 text-center font-semibold">5</td
+              ><td class="px-4 py-3 text-center font-semibold">10</td></tr
+            >
+            <tr
+              ><td class="px-4 py-3">Correct home team goals</td><td
+                class="px-4 py-3 text-center font-semibold">2</td
+              ><td class="px-4 py-3 text-center font-semibold">4</td></tr
+            >
+            <tr
+              ><td class="px-4 py-3">Correct away team goals</td><td
+                class="px-4 py-3 text-center font-semibold">2</td
+              ><td class="px-4 py-3 text-center font-semibold">4</td></tr
+            >
+            <tr
+              ><td class="px-4 py-3">Correct goal difference</td><td
+                class="px-4 py-3 text-center font-semibold">1</td
+              ><td class="px-4 py-3 text-center font-semibold">2</td></tr
+            >
+            <tr class="bg-neutral"
+              ><td class="px-4 py-3 font-bold text-primary">MAX TOTAL</td><td
+                class="px-4 py-3 text-center font-bold text-primary">10</td
+              ><td class="px-4 py-3 text-center font-bold text-primary"
+                >20</td
+              ></tr
+            >
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </Layout>

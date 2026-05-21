@@ -37,13 +37,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/polla/login');
   }
 
-  // Fetch display name
+  // Fetch display name & admin status
   const { data: profile } = await supabase
     .from('users')
-    .select('display_name')
+    .select('display_name, is_admin')
     .eq('id', user.id)
     .single();
   context.locals.displayName = profile?.display_name ?? null;
+  context.locals.isAdmin = profile?.is_admin ?? false;
 
   // Fetch leaderboard rank
   const { data: leaderboard } = await supabase.rpc('get_leaderboard');
