@@ -1,23 +1,26 @@
 ---
+import { BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
+import pollaIcon from '@predictor/ui/icons/polla.svg';
+import fantasyIcon from '@predictor/ui/icons/fantasy.svg';
+
 import Layout from '../layouts/Layout.astro';
 import AppCard from '../components/AppCard';
-import { BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
 
-const user = Astro.locals.user;
+const displayName = Astro.locals.displayName;
 ---
 
 <Layout title="Dashboard">
   <main class="flex min-h-screen flex-col items-center justify-center gap-10 p-6">
     <div class="text-center">
       <h1 class="font-heading text-h2 font-semibold text-primary">
-        Welcome back{user?.email ? `, ${user.email}` : ''}
+        Welcome back{displayName ? `, ${displayName}` : ''}
       </h1>
       <p class="mt-2 text-secondary text-body-sm">Choose an app to continue</p>
     </div>
 
     <div class="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
-      <AppCard name="Polla" description="Predict World Cup match scores and climb the leaderboard" href="/polla/" icon="⚽" />
-      <AppCard name="Fantasy" description="Draft players, manage your squad, and dominate the standings" href="/fantasy/" icon="🏆" />
+      <AppCard name="Polla" description="Predict World Cup match scores and climb the leaderboard" href="/polla/" icon={pollaIcon.src} />
+      <AppCard name="Fantasy" description="Draft players, manage your squad, and dominate the standings" href="/fantasy/" icon={fantasyIcon.src} />
     </div>
 
     <form method="POST" action="/auth/signout">
