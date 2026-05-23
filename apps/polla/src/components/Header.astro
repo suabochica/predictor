@@ -2,7 +2,7 @@
 import pollaIcon from '@predictor/ui/icons/polla.svg';
 import { BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
 
-const base = '/polla';
+const base = '/polla/';
 ---
 
 <header class="sticky top-0 z-50 bg-surface border-b border-border text-primary">
@@ -20,7 +20,9 @@ const base = '/polla';
           Admin
         </span>
       )}
-      <a href="/auth/signout" class={BUTTON_PRIMARY_CLASSES}>Sign out</a>
+      <form method="POST" action="/polla/auth/signout">
+        <button type="submit" class={BUTTON_PRIMARY_CLASSES}>Sign out</button>
+      </form>
     </div>
   </div>
 </header>
