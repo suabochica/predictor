@@ -4,18 +4,6 @@ Bugs identified but not yet fixed. Each entry has enough context for a new Claud
 
 ---
 
-## Bug 4 — `budgetValid` never enforced in Transfers
-
-**File:** `apps/fantasy/src/pages/Transfers.jsx` (~line 186)
-
-**Problem:** `budgetValid` is computed — it checks both that `budgetAfter >= 0` AND that the squad's total player value stays within the 105M `TOTAL_BUDGET` cap. But it is never read again. The only guard that actually runs in `executeTransfer()` is `budgetAfter < 0`, which only catches the simpler "budget goes negative" case.
-
-**Impact:** A team can execute a transfer that pushes their total squad value over 105M with no error or warning.
-
-**Fix needed:** Use `budgetValid` (or its equivalent logic) to gate the Confirm button's `disabled` prop and block the transfer in `executeTransfer()` if the total budget cap would be exceeded.
-
----
-
 ## Bug 5 — `isGameLocked` doesn't auto-refresh when a match starts
 
 **File:** `apps/fantasy/src/pages/MyTeam.jsx`

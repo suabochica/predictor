@@ -11,7 +11,7 @@ Branch: `feat/player-lock-system`
 | 1 | `usePlayers.js` hardcodes `8.5` instead of constant | Hook | 🟢 Fixed |
 | 2 | `MAX_LOCKED_PLAYERS` / `MIN_LOCKED_PLAYERS` never enforced | Business logic | 🟢 Fixed |
 | 3 | Auction doesn't restrict to lockable players (≤8.5M) | Acquisition lock | 🟢 Fixed |
-| 4 | `budgetValid` in Transfers is miscalculated and inconsistently used | Transfers | 🔴 Open |
+| 4 | `budgetValid` in Transfers is miscalculated and inconsistently used | Transfers | 🟢 Fixed |
 | 5 | `isGameLocked` doesn't auto-refresh when a match starts | Game lock | 🔴 Open |
 | 6 | No position validation on transfers | Transfers | 🔴 Open |
 | 7 | DB VIEW threshold (`8.5`) hardcoded separately from `constants.js` | DB / Constants | 🟢 Fixed |
@@ -60,8 +60,8 @@ Branch: `feat/player-lock-system`
     budgetAfter + Number((squad.reduce((s, p) => s + p.price, 0) - playerOut?.price + playerIn?.price || 0).toFixed(1)) <= TOTAL_BUDGET;
   ```
 - **Problem**: The formula adds `budgetAfter` (remaining cash) to the squad's total value post-transfer and compares it against `TOTAL_BUDGET`. This double-counts because `budget_remaining` already reflects money spent. The actual block in `executeTransfer()` (line 257) only checks `budgetAfter < 0`, making `budgetValid` effectively unused as a hard gate — it only affects a UI button.
-- **Fix**: Simplify `budgetValid` to `budgetAfter !== null && budgetAfter >= 0`, removing the incorrect total-value check.
-- **Status**: 🔴 Open
+- **Fix**: Deleted `budgetValid` entirely — it was dead code. The `budgetAfter < 0` checks on the Confirm button and in `executeTransfer()` are the correct and complete enforcement. `TOTAL_BUDGET` import also removed (was only used in the dead formula).
+- **Status**: 🟢 Fixed
 
 ---
 

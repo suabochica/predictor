@@ -5,7 +5,7 @@ import { useLeague } from '../context/LeagueContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
-import { TOTAL_BUDGET, POSITIONS } from '../config/constants';
+import { POSITIONS } from '../config/constants';
 
 // ── Small reusable components ─────────────────────────────────────────────
 
@@ -183,8 +183,6 @@ export default function Transfers() {
     ? Number((playerOut.acquisition_price - playerIn.price).toFixed(1))
     : null;
   const budgetAfter = priceDiff !== null ? Number((budget + priceDiff).toFixed(1)) : null;
-  const budgetValid = budgetAfter !== null && budgetAfter >= 0 && budgetAfter + Number((squad.reduce((s, p) => s + p.price, 0) - playerOut?.price + playerIn?.price || 0).toFixed(1)) <= TOTAL_BUDGET;
-
   // Filter available players (globally unowned via usePlayers({ available: true }))
   const availablePlayers = useMemo(() => {
     return allPlayers.filter((p) => {
