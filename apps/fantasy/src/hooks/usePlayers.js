@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
-import { LOCK_PRICE_THRESHOLD } from '../config/constants';
 
 export function usePlayers(filters = {}) {
   const [players, setPlayers] = useState([]);
@@ -14,8 +13,14 @@ export function usePlayers(filters = {}) {
     let query = supabase.from('players').select('*').order('price', { ascending: false });
     if (filters.position) query = query.eq('position', filters.position);
     if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
-    if (filters.lockable) query = query.gte('current_price', LOCK_PRICE_THRESHOLD);
     if (filters.search) query = query.ilike('name', `%${filters.search}%`);
+    if (filters.available) {
+      const { data: owned } = await supabase.from('team_players').select('player_id');
+      const ownedIds = (owned ?? []).map((tp) => tp.player_id);
+      if (ownedIds.length > 0) {
+        query = query.not('id', 'in', `(${ownedIds.join(',')})`);
+      }
+    }
 
     const { data } = await query;
     setPlayers(data ?? []);

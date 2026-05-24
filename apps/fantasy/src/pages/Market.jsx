@@ -5,8 +5,7 @@ import { useAuction } from '../hooks/useAuction';
 import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { formatPrice, getPositionColor } from '../lib/utils';
-import { MAX_SQUAD_SIZE, MAX_LOCKED_PLAYERS, LOCK_PRICE_THRESHOLD } from '../config/constants';
-import { lockPlayer } from '../lib/lockActions';
+import { MAX_SQUAD_SIZE } from '../config/constants';
 import FilterBar from '../components/market/FilterBar';
 import PlayerCard from '../components/market/PlayerCard';
 
@@ -14,32 +13,19 @@ export default function Market() {
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { refreshTeam } = useLeague();
   const { auctionState } = useAuction();
-  const { players: allPlayers, loading: playersLoading } = usePlayers();
+  const { players: allPlayers, loading: playersLoading } = usePlayers({ available: true });
 
   const [filters, setFilters] = useState({ hideOwned: true });
   const [confirmPlayer, setConfirmPlayer] = useState(null); // player pending purchase
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState(null);
-  const [recentBuy, setRecentBuy] = useState(null); // last successful purchase (free/skipped-lock)
-
-  // Lock flow state
-  const [lockPromptPlayer, setLockPromptPlayer] = useState(null); // player awaiting lock decision
-  const [swapTarget, setSwapTarget] = useState(null); // locked player to swap out (when at MAX)
-  const [locking, setLocking] = useState(false);
-  const [lockToast, setLockToast] = useState(null); // { type: 'success'|'info'|'error', message }
+  const [recentBuy, setRecentBuy] = useState(null); // last successful purchase
 
   // Set of player IDs the user already owns
   const ownedIds = useMemo(
     () => new Set(squadRows.map((tp) => tp.player_id)),
     [squadRows]
   );
-
-  // Locked squad rows used for swap picker and MAX check
-  const lockedSquadRows = useMemo(
-    () => squadRows.filter((tp) => tp.slot_type === 'locked'),
-    [squadRows]
-  );
-  const atMaxLocked = lockedSquadRows.length >= MAX_LOCKED_PLAYERS;
 
   const squadSize = squadRows.length;
   const squadFull = squadSize >= MAX_SQUAD_SIZE;
@@ -70,14 +56,7 @@ export default function Market() {
     });
   }, [allPlayers, filters, ownedIds, budget]);
 
-  // Auto-clear lock toast after 5s
-  useEffect(() => {
-    if (!lockToast) return;
-    const id = setTimeout(() => setLockToast(null), 5000);
-    return () => clearTimeout(id);
-  }, [lockToast]);
-
-  // Realtime: track team_players changes (locks by others, refunds from other teams locking)
+  // Realtime: refresh available players when any team_players row changes
   useEffect(() => {
     if (!team) return;
     const channel = supabase
@@ -104,13 +83,11 @@ export default function Market() {
     // Use current_price (ratcheted post-auction) if available, fall back to base price.
     const price = confirmPlayer.current_price ?? confirmPlayer.price;
 
-    // 1. Insert team_player row
+    // 1. Insert team_player row (exclusively owned — DB unique constraint enforces one team per player)
     const { error: insertError } = await supabase.from('team_players').insert({
       team_id: team.id,
       player_id: confirmPlayer.id,
-      is_locked: false,
       acquisition_price: price,
-      slot_type: 'free',
     });
 
     if (insertError) {
@@ -140,52 +117,7 @@ export default function Market() {
     setConfirmPlayer(null);
     setBuying(false);
 
-    // 4. For lockable players, show the lock decision prompt instead of the purchase toast.
-    if (boughtPlayer.price <= LOCK_PRICE_THRESHOLD) {
-      setLockPromptPlayer(boughtPlayer);
-    } else {
-      setRecentBuy(boughtPlayer);
-      setTimeout(() => setRecentBuy(null), 4000);
-    }
-  }
-
-  // ── Lock flow ─────────────────────────────────────────────────────────────
-  async function handleLockConfirm() {
-    if (!lockPromptPlayer || !team) return;
-    setLocking(true);
-    try {
-      const result = await lockPlayer(
-        team.id,
-        lockPromptPlayer.id,
-        swapTarget?.player_id ?? null
-      );
-      if (result.success) {
-        await refreshSquad();
-        await refreshTeam();
-        setLockToast({ type: 'success', message: `${lockPromptPlayer.name} locked successfully.` });
-        setLockPromptPlayer(null);
-        setSwapTarget(null);
-      } else if (result.reason === 'already_locked') {
-        setLockToast({
-          type: 'info',
-          message: `Another team locked ${lockPromptPlayer.name} first — you still hold them as free.`,
-        });
-        setLockPromptPlayer(null);
-        setSwapTarget(null);
-      } else if (result.reason === 'max_locked_no_unlock') {
-        setLockToast({ type: 'error', message: 'Pick a player to unlock first.' });
-      }
-    } catch (err) {
-      setLockToast({ type: 'error', message: err.message });
-    }
-    setLocking(false);
-  }
-
-  function handleSkipLock() {
-    const player = lockPromptPlayer;
-    setLockPromptPlayer(null);
-    setSwapTarget(null);
-    setRecentBuy(player);
+    setRecentBuy(boughtPlayer);
     setTimeout(() => setRecentBuy(null), 4000);
   }
 
@@ -230,7 +162,7 @@ export default function Market() {
         <div>
           <h1 className="text-2xl font-bold text-primary">Player Market</h1>
           <p className="text-secondary text-sm mt-0.5">
-            Free slot shopping — multiple managers can own the same player
+            Buy players — exclusively owned once purchased
           </p>
         </div>
         <div className="flex gap-3">
@@ -272,20 +204,6 @@ export default function Market() {
       {!hasGkInSquad && !mustBuyGk && freeSlots <= 3 && freeSlots > 0 && (
         <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
           No GK in squad yet — you have {freeSlots} slot{freeSlots !== 1 ? 's' : ''} left. Remember to pick one.
-        </div>
-      )}
-
-      {/* ── Lock result toast (success / info — shown after lock modal closes) ── */}
-      {lockToast && !lockPromptPlayer && (
-        <div
-          className={`rounded-xl p-3 text-sm flex items-center gap-2 border ${
-            lockToast.type === 'success'
-              ? 'bg-info/10 border-info/30 text-info'
-              : 'bg-surface-hover/60 border-border-strong/50 text-secondary'
-          }`}
-        >
-          <span>{lockToast.type === 'success' ? '[Locked]' : '[Info]'}</span>
-          <span>{lockToast.message}</span>
         </div>
       )}
 
@@ -396,87 +314,12 @@ export default function Market() {
               >
                 Cancel
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Lock decision modal ── */}
-      {lockPromptPlayer && (
-        <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-          onClick={(e) => e.target === e.currentTarget && handleSkipLock()}
-        >
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <div>
-              <h2 className="text-lg font-bold text-primary">Lock this player?</h2>
-              <p className="text-sm text-secondary mt-1">
-                Locking <strong className="text-primary">{lockPromptPlayer.name}</strong> claims
-                them exclusively — other teams holding them as free will be refunded and lose
-                access. You can unlock at any time.
-              </p>
-            </div>
-
-            {/* Swap picker — only shown when at MAX_LOCKED */}
-            {atMaxLocked && (
-              <div className="space-y-2">
-                <p className="text-xs text-tertiary font-medium">
-                  You have {MAX_LOCKED_PLAYERS} locked players (max). Choose one to unlock:
-                </p>
-                <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
-                  {lockedSquadRows.map((tp) => (
-                    <button
-                      key={tp.player_id}
-                      onClick={() =>
-                        setSwapTarget(
-                          swapTarget?.player_id === tp.player_id ? null : tp
-                        )
-                      }
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        swapTarget?.player_id === tp.player_id
-                          ? 'bg-warning/15 border border-warning/40 text-primary'
-                          : 'bg-surface-hover text-secondary hover:bg-border'
-                      }`}
-                    >
-                      <span
-                        className={`text-xs font-bold mr-2 px-1.5 py-0.5 rounded ${getPositionColor(tp.players?.position)}`}
-                      >
-                        {tp.players?.position}
-                      </span>
-                      {tp.players?.name}
-                      <span className="text-muted ml-1.5 text-xs">
-                        {formatPrice(tp.players?.current_price ?? tp.players?.price)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Inline error (stays modal open — e.g. max_locked_no_unlock) */}
-            {lockToast?.type === 'error' && (
-              <p className="text-xs text-error" role="alert">{lockToast.message}</p>
-            )}
-
-            {/* Gate message — explains why Lock button is disabled */}
-            {atMaxLocked && !swapTarget && (
-              <p className="text-xs text-warning">At max locks — pick one to unlock first.</p>
-            )}
-
-            <div className="flex gap-3">
               <button
-                onClick={handleSkipLock}
-                disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                onClick={confirmBuy}
+                disabled={buying}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Keep as Free
-              </button>
-              <button
-                onClick={handleLockConfirm}
-                disabled={locking || (atMaxLocked && !swapTarget)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-info hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              >
-                {locking ? 'Locking…' : atMaxLocked ? 'Lock (swap)' : 'Lock'}
+                {buying ? 'Buying…' : 'Confirm'}
               </button>
             </div>
           </div>

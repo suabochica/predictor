@@ -3,8 +3,6 @@ import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
-import { MAX_LOCKED_PLAYERS, LOCK_PRICE_THRESHOLD } from '../config/constants';
-import { lockPlayer, unlockPlayer } from '../lib/lockActions';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 
@@ -18,8 +16,6 @@ function normalizeSquad(teamPlayers) {
     country_code: tp.players?.country_code ?? null,
     position: tp.players?.position ?? 'FWD',
     price: tp.players?.price ?? 0,
-    is_locked: tp.is_locked,
-    slot_type: tp.slot_type,
     acquisition_price: tp.acquisition_price,
   }));
 }
@@ -64,14 +60,6 @@ export default function MyTeam() {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Lock/Unlock flow state
-  const [lockModalPlayer, setLockModalPlayer] = useState(null); // free/lockable player awaiting lock decision
-  const [unlockConfirmPlayer, setUnlockConfirmPlayer] = useState(null); // locked player awaiting unlock confirm
-  const [swapTarget, setSwapTarget] = useState(null); // locked row to swap out when at MAX
-  const [locking, setLocking] = useState(false);
-  const [lockToast, setLockToast] = useState(null); // { type: 'success'|'info'|'error', message }
-  const [nudgeDismissed, setNudgeDismissed] = useState(false);
-
   // player_id → game_started_at (ISO string) for active matchday
   const [playerGameTimes, setPlayerGameTimes] = useState({});
   // player_id → { total_points, minutes_played } for active matchday
@@ -82,15 +70,6 @@ export default function MyTeam() {
   const [historicalStats, setHistoricalStats] = useState({});
 
   const squad = normalizeSquad(players);
-
-  // Lock-related derived values (uses raw team_players rows for the swap picker)
-  const lockedSquadRows = useMemo(
-    () => players.filter((tp) => tp.slot_type === 'locked'),
-    [players]
-  );
-  const lockedCount = lockedSquadRows.length;
-  const atMaxLocked = lockedCount >= MAX_LOCKED_PLAYERS;
-  const showNudge = !nudgeDismissed && squad.length > 0 && lockedCount < 8;
 
   // A player is rolling-locked if their game_started_at is in the past
   const now = Date.now();
@@ -154,14 +133,7 @@ export default function MyTeam() {
       });
   }, [squad.length]); // eslint-disable-line
 
-  // ── Lock toast auto-clear ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!lockToast) return;
-    const id = setTimeout(() => setLockToast(null), 5000);
-    return () => clearTimeout(id);
-  }, [lockToast]);
-
-  // ── Realtime: refresh squad when team_players changes (others locking free players) ──
+  // ── Realtime: refresh squad when team_players changes ───────────────────
   useEffect(() => {
     if (!team) return;
     const channel = supabase
@@ -233,53 +205,6 @@ export default function MyTeam() {
   useEffect(() => {
     loadLineup();
   }, [loadLineup]);
-
-  // ── Lock / Unlock handlers ────────────────────────────────────────────────
-  async function handleLockConfirm() {
-    if (!lockModalPlayer || !team) return;
-    setLocking(true);
-    try {
-      const result = await lockPlayer(
-        team.id,
-        lockModalPlayer.id,
-        swapTarget?.player_id ?? null
-      );
-      if (result.success) {
-        await refreshSquad();
-        await refreshTeam();
-        setLockToast({ type: 'success', message: `${lockModalPlayer.name} locked.` });
-        setLockModalPlayer(null);
-        setSwapTarget(null);
-      } else if (result.reason === 'already_locked') {
-        setLockToast({
-          type: 'info',
-          message: `Another team locked ${lockModalPlayer.name} first — you still hold them as free.`,
-        });
-        setLockModalPlayer(null);
-        setSwapTarget(null);
-      } else if (result.reason === 'max_locked_no_unlock') {
-        setLockToast({ type: 'error', message: 'Pick a player to unlock first.' });
-      }
-    } catch (err) {
-      setLockToast({ type: 'error', message: err.message });
-    }
-    setLocking(false);
-  }
-
-  async function handleUnlockConfirm() {
-    if (!unlockConfirmPlayer || !team) return;
-    setLocking(true);
-    try {
-      await unlockPlayer(team.id, unlockConfirmPlayer.id);
-      await refreshSquad();
-      await refreshTeam();
-      setLockToast({ type: 'success', message: `${unlockConfirmPlayer.name} unlocked — now free.` });
-    } catch (err) {
-      setLockToast({ type: 'error', message: err.message });
-    }
-    setUnlockConfirmPlayer(null);
-    setLocking(false);
-  }
 
   // ── Player selection & swapping ──────────────────────────────────────────
   function handlePlayerClick(player) {
@@ -599,36 +524,6 @@ export default function MyTeam() {
         </div>
       )}
 
-      {/* ── Soft nudge: fewer than 8 locked players ── */}
-      {showNudge && (
-        <div className="bg-info/10 border border-info/30 rounded-xl p-3 text-sm text-info flex items-center justify-between gap-3">
-          <span>
-            You have <strong>{lockedCount}</strong> locked player{lockedCount !== 1 ? 's' : ''} — consider locking more to protect them from being claimed by other teams.
-          </span>
-          <button
-            onClick={() => setNudgeDismissed(true)}
-            className="flex-shrink-0 text-info hover:text-primary text-xs px-2 py-1 rounded hover:bg-info/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {/* ── Lock result toast ── */}
-      {lockToast && !lockModalPlayer && !unlockConfirmPlayer && (
-        <div
-          className={`rounded-xl p-3 text-sm flex items-center gap-2 border ${
-            lockToast.type === 'success'
-              ? 'bg-info/10 border-info/30 text-info'
-              : lockToast.type === 'info'
-              ? 'bg-surface-hover/60 border-border-strong/50 text-secondary'
-              : 'bg-error/10/40 border-error/30/50 text-error'
-          }`}
-        >
-          <span>{lockToast.message}</span>
-        </div>
-      )}
-
       {/* ── Swap error ── */}
       {swapError && (
         <div className="bg-error/10/30 border border-error/30/50 rounded-xl p-3 text-sm text-error" role="alert">
@@ -748,7 +643,7 @@ export default function MyTeam() {
       <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-semibold text-secondary">Full Squad</h3>
-          <span className="text-xs text-muted">{lockedCount} / {MAX_LOCKED_PLAYERS} locked</span>
+          <span className="text-xs text-muted">{squad.length} players</span>
         </div>
         <div className="divide-y divide-border">
           {['GK', 'DEF', 'MID', 'FWD'].map((pos) => {
@@ -762,7 +657,6 @@ export default function MyTeam() {
               const liveCapPts = mdStats
                 ? (p.id === captainId ? mdStats.total_points * 2 : mdStats.total_points)
                 : null;
-              const isLockable = p.price >= LOCK_PRICE_THRESHOLD;
               return (
                 <div
                   key={p.id}
@@ -809,24 +703,6 @@ export default function MyTeam() {
                     ) : (
                       <span className="text-warning">—</span>
                     )}
-                  </span>
-                  {/* Lock / Unlock button */}
-                  <span className="flex-shrink-0 w-16 flex justify-end" onClick={(e) => e.stopPropagation()}>
-                    {p.slot_type === 'locked' ? (
-                      <button
-                        onClick={() => setUnlockConfirmPlayer(p)}
-                        className="text-label-caps px-2 py-1 rounded bg-info/10 border border-info/30 text-info hover:bg-info/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                      >
-                        Unlock
-                      </button>
-                    ) : isLockable ? (
-                      <button
-                        onClick={() => setLockModalPlayer(p)}
-                        className="text-label-caps px-2 py-1 rounded bg-border border border-border-strong text-secondary hover:bg-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                      >
-                        Lock
-                      </button>
-                    ) : null}
                   </span>
                 </div>
               );
@@ -934,117 +810,6 @@ export default function MyTeam() {
         )}
       </div>
 
-      {/* ── Lock decision modal ── */}
-      {lockModalPlayer && (
-        <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-          onClick={(e) => e.target === e.currentTarget && (setLockModalPlayer(null), setSwapTarget(null))}
-        >
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <div>
-              <h2 className="text-lg font-bold text-primary">Lock this player?</h2>
-              <p className="text-sm text-secondary mt-1">
-                Locking <strong className="text-primary">{lockModalPlayer.name}</strong> claims
-                them exclusively — other teams holding them as free will be refunded and lose
-                access. You can unlock at any time.
-              </p>
-            </div>
-
-            {atMaxLocked && (
-              <div className="space-y-2">
-                <p className="text-xs text-tertiary font-medium">
-                  You have {MAX_LOCKED_PLAYERS} locked players (max). Choose one to unlock:
-                </p>
-                <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
-                  {lockedSquadRows.map((tp) => (
-                    <button
-                      key={tp.player_id}
-                      onClick={() =>
-                        setSwapTarget(swapTarget?.player_id === tp.player_id ? null : tp)
-                      }
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        swapTarget?.player_id === tp.player_id
-                          ? 'bg-warning/15 border border-warning/40 text-primary'
-                          : 'bg-surface-hover text-secondary hover:bg-border'
-                      }`}
-                    >
-                      <span
-                        className={`text-xs font-bold mr-2 px-1.5 py-0.5 rounded ${getPositionColor(tp.players?.position)}`}
-                      >
-                        {tp.players?.position}
-                      </span>
-                      {tp.players?.name}
-                      <span className="text-muted ml-1.5 text-xs">
-                        {formatPrice(tp.players?.current_price ?? tp.players?.price)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {lockToast?.type === 'error' && (
-              <p className="text-xs text-error" role="alert">{lockToast.message}</p>
-            )}
-
-            {/* Gate message — explains why Lock button is disabled */}
-            {atMaxLocked && !swapTarget && (
-              <p className="text-xs text-warning">At max locks — pick one to unlock first.</p>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setLockModalPlayer(null); setSwapTarget(null); }}
-                disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLockConfirm}
-                disabled={locking || (atMaxLocked && !swapTarget)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-info hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              >
-                {locking ? 'Locking…' : atMaxLocked ? 'Lock (swap)' : 'Lock'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Unlock confirm modal ── */}
-      {unlockConfirmPlayer && (
-        <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-          onClick={(e) => e.target === e.currentTarget && setUnlockConfirmPlayer(null)}
-        >
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <div>
-              <h2 className="text-lg font-bold text-primary">Unlock this player?</h2>
-              <p className="text-sm text-secondary mt-1">
-                <strong className="text-primary">{unlockConfirmPlayer.name}</strong> will stay in
-                your squad as a free player and become available for others to lock.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setUnlockConfirmPlayer(null)}
-                disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUnlockConfirm}
-                disabled={locking}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-warning hover:bg-warning text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              >
-                {locking ? 'Unlocking…' : 'Unlock'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

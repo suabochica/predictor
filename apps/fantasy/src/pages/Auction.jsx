@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../context/LeagueContext';
 import { useAuction } from '../context/AuctionContext';
@@ -44,9 +44,10 @@ export default function Auction() {
   const { user } = useAuth();
   const { team } = useLeague();
   const { auctionState, bids, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
-  const { players, loading: playersLoading } = usePlayers({ lockable: true });
+  const { players, loading: playersLoading } = usePlayers();
 
-  const [posFilter, setPosFilter]   = useState('All');
+  const [posFilter, setPosFilter]       = useState('All');
+  const [countryFilter, setCountryFilter] = useState('All');
   const [bidAmounts, setBidAmounts] = useState({});
   const [submitting, setSubmitting] = useState(new Set());
   const [errors, setErrors]         = useState({});
@@ -67,11 +68,20 @@ export default function Auction() {
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const myBids           = currentRoundBids.filter((b) => b.user_id === user?.id);
   const myBidCount       = myBids.length;
-  // Players already won in any previous round — show a badge and disable bidding.
-  const wonPlayerIds     = new Set(bids.filter((b) => b.is_winning).map((b) => b.player_id));
+  // Players already won in any previous round — hide from the list.
+  const wonPlayerIds = new Set(bids.filter((b) => b.is_winning).map((b) => b.player_id));
 
-  const filteredPlayers =
-    posFilter === 'All' ? players : players.filter((p) => p.position === posFilter);
+  const countries = useMemo(
+    () => ['All', ...[...new Set(players.map((p) => p.country).filter(Boolean))].sort()],
+    [players]
+  );
+
+  const filteredPlayers = players.filter((p) => {
+    if (wonPlayerIds.has(p.id)) return false;
+    if (posFilter !== 'All' && p.position !== posFilter) return false;
+    if (countryFilter !== 'All' && p.country !== countryFilter) return false;
+    return true;
+  });
 
   function minBidFor(player) {
     const floor = getContestFloor(player.id);
@@ -246,6 +256,25 @@ export default function Auction() {
         ))}
       </div>
 
+      {/* ── Country filter ────────────────────────────────────────────── */}
+      {countries.length > 2 && (
+        <div className="flex gap-2 flex-wrap">
+          {countries.map((country) => (
+            <button
+              key={country}
+              onClick={() => setCountryFilter(country)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
+                countryFilter === country
+                  ? 'bg-info text-primary'
+                  : 'bg-surface-hover text-secondary hover:bg-border'
+              }`}
+            >
+              {country}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── Player grid ──────────────────────────────────────────────── */}
       {playersLoading ? (
         <p className="text-muted text-sm">Loading players…</p>
@@ -305,13 +334,6 @@ export default function Auction() {
                         <span className="text-muted italic text-xs">No bids yet</span>
                       )}
                     </div>
-
-                    {/* Won badge */}
-                    {isWon && (
-                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-info/15 text-info border border-info/30">
-                        ✓ Won — player is on a squad
-                      </div>
-                    )}
 
                     {/* Contested carry-over badge */}
                     {isContested && (

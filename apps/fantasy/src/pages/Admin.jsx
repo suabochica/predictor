@@ -357,7 +357,7 @@ export default function Admin() {
     const { data } = await supabase
       .from('transfers')
       .select(`
-        id, window_number, transfer_type, price_difference, created_at,
+        id, window_number, price_difference, created_at,
         team:teams(name, users(display_name)),
         player_out:players!transfers_player_out_id_fkey(name, position),
         player_in:players!transfers_player_in_id_fkey(name, position)
@@ -1724,7 +1724,6 @@ export default function Admin() {
                     <th className="pb-2 pr-4 font-medium">Manager</th>
                     <th className="pb-2 pr-4 font-medium">Out</th>
                     <th className="pb-2 pr-4 font-medium">In</th>
-                    <th className="pb-2 pr-4 font-medium">Type</th>
                     <th className="pb-2 pr-4 font-medium">Δ Budget</th>
                     <th className="pb-2 font-medium">Time</th>
                   </tr>
@@ -1750,15 +1749,6 @@ export default function Admin() {
                             {t.player_in.position}
                           </span>
                         )}
-                      </td>
-                      <td className="py-2 pr-4">
-                        <span className={`text-label-caps px-1.5 py-0.5 rounded font-semibold ${
-                          t.transfer_type === 'locked_swap'
-                            ? 'bg-info/15 text-info'
-                            : 'bg-info/15 text-info'
-                        }`}>
-                          {t.transfer_type === 'locked_swap' ? 'Locked' : 'Free'}
-                        </span>
                       </td>
                       <td className={`py-2 pr-4 text-xs font-semibold ${
                         (t.price_difference ?? 0) >= 0 ? 'text-tertiary' : 'text-error'

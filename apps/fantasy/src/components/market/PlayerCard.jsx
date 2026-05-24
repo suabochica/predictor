@@ -1,10 +1,6 @@
 import { getPositionColor, formatPrice } from '../../lib/utils';
-import { LOCK_PRICE_THRESHOLD } from '../../config/constants';
 
 export default function PlayerCard({ player, owned, canAfford, squadFull, mustBuyGk, onBuy }) {
-  const isLockable = player.price <= LOCK_PRICE_THRESHOLD;
-  const isMarketOnly = !isLockable; // >8.5M — only obtainable here
-
   let buyLabel = `Buy ${formatPrice(player.price)}`;
   let disabled = false;
   let disabledReason = '';
@@ -42,11 +38,6 @@ export default function PlayerCard({ player, owned, canAfford, squadFull, mustBu
           {player.position}
         </span>
         <div className="flex items-center gap-1.5">
-          {isMarketOnly && (
-            <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-info/15 text-info border border-info/30">
-              Market only
-            </span>
-          )}
           <span className="text-sm font-bold text-tertiary">{formatPrice(player.price)}</span>
         </div>
       </div>
