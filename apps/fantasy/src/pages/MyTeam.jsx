@@ -71,8 +71,13 @@ export default function MyTeam() {
 
   const squad = normalizeSquad(players);
 
-  // A player is rolling-locked if their game_started_at is in the past
-  const now = Date.now();
+  // Ticks every 30s so isGameLocked re-evaluates as matches kick off
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   function isGameLocked(playerId) {
     const gt = playerGameTimes[playerId];
     return gt ? new Date(gt).getTime() <= now : false;

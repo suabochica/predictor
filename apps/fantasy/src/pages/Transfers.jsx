@@ -228,6 +228,15 @@ export default function Transfers() {
       setTransferring(false);
       return;
     }
+    const gksAfter =
+      squad.filter((p) => p.position === 'GK').length -
+      (playerOut.position === 'GK' ? 1 : 0) +
+      (playerIn.position === 'GK' ? 1 : 0);
+    if (gksAfter < 1) {
+      setTransferError('Transfer rejected: your squad must always have at least 1 goalkeeper.');
+      setTransferring(false);
+      return;
+    }
 
     // 1. Remove outgoing player
     const { error: deleteError } = await supabase
@@ -302,6 +311,12 @@ export default function Transfers() {
     setTransferring(false);
     setTimeout(() => setSuccessMsg(null), 5000);
   }
+
+  const positionViolation = playerOut && playerIn && (
+    squad.filter((p) => p.position === 'GK').length -
+      (playerOut.position === 'GK' ? 1 : 0) +
+      (playerIn.position === 'GK' ? 1 : 0)
+  ) < 1;
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -498,7 +513,7 @@ export default function Transfers() {
                 {playerOut && playerIn && (
                   <button
                     onClick={executeTransfer}
-                    disabled={transferring || budgetAfter < 0 || transfersRemaining <= 0}
+                    disabled={transferring || budgetAfter < 0 || transfersRemaining <= 0 || positionViolation}
                     className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:bg-tertiary text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                   >
                     {transferring ? 'Transferring…' : 'Confirm Transfer'}
