@@ -32,8 +32,8 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 | Feature | Standard Fantasy | Our Version |
 |---------|-----------------|-------------|
-| Player Acquisition | Free market | Blind auction for locked players |
-| Squad Ownership | Shared pool | 8-10 exclusive locked players per user |
+| Player Acquisition | Free market | Blind auction + open market, all exclusive |
+| Squad Ownership | Shared pool | Every player exclusively owned by one team |
 | Competition Format | League only | League stage + H2H Knockouts |
 | Transfer System | Anytime | Structured windows with priority order |
 
@@ -71,8 +71,8 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 ### 3.1 Squad Composition
 
 - **Total squad size:** 15 players
-- **Locked players:** 8-10 players (acquired via auction, ≤8.5M each)
-- **Free slots:** 5-7 players (open market, any price)
+- **All players exclusively owned** — once a player is on your squad, no other team can acquire them
+- Players can be acquired via the blind auction or the open market; there is no lock/free distinction
 
 ### 3.2 Formation Requirements
 
@@ -103,8 +103,7 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 | **Total budget** | **105M** |
 
 **Rules:**
-- Locked players must be ≤8.5M base price each
-- Free slots can be any price
+- Any player can be acquired at any price (no price threshold)
 - Team must remain ≤105M at all times
 
 ---
@@ -113,9 +112,9 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 ### 4.1 Eligibility
 
-- Only players priced **≤8.5M** are available for auction/locking
-- Players **>8.5M** can only be acquired via free slots (post-auction)
-- Each locked player is **exclusive** to one user for the entire tournament
+- **All players** are available for auction regardless of price
+- Every player won at auction is **exclusively owned** by the winning team — they disappear from the auction list immediately
+- Players not won at auction remain available on the open market
 
 ### 4.2 Auction Format: Timed Blind Auction
 
@@ -162,14 +161,11 @@ If two users bid the same amount on the same player:
 
 After auction closes:
 
-1. Each user receives their won players (8-10 locked players)
+1. Each user receives their won players (exclusively owned, price locked in)
 2. Remaining budget calculated automatically
-3. Users shop for free slot players from remaining pool
-4. **Free slot acquisition = open shopping** (not draft order)
-5. Multiple users can own the same free-slot player
-6. Deadline: Before first World Cup match kicks off
-
-**Important:** Same player cannot be in both locked AND free slots for the same user.
+3. Users shop the open market for remaining squad spots — only globally unowned players appear
+4. **Market acquisition = open shopping** (not draft order), but each player can only be owned by one team
+5. Deadline: Before first World Cup match kicks off
 
 ---
 
@@ -379,15 +375,16 @@ Once Round of 32 scores are finalized:
 | Format | Free agent pickup |
 | Locked player trades | Allowed |
 
-### 8.4 Locked Player Swap Rules
+### 8.4 Transfer Rules
 
-You CAN trade a locked player, but only for another **lockable player (≤8.5M)**:
+- Any player in your squad can be transferred out for any globally unowned player
+- No price restriction on incoming player — only the 105M total budget cap applies
+- Budget impact is the difference between the outgoing player's acquisition price and the incoming player's current price
 
 | Scenario | Result |
 |----------|--------|
-| Swap 7.0M locked → 6.5M player | +0.5M to free budget |
-| Swap 7.0M locked → 8.0M player | -1.0M from free budget |
-| Swap 7.0M locked → 9.0M player | ❌ Not allowed (>8.5M) |
+| Swap 7.0M player → 6.5M player | +0.5M to budget |
+| Swap 7.0M player → 9.0M player | -2.0M from budget |
 
 **Budget Rule:** Team must remain ≤105M after all transfers complete.
 
@@ -629,14 +626,11 @@ CREATE TABLE players (
   country_code TEXT,
   position TEXT CHECK (position IN ('GK', 'DEF', 'MID', 'FWD')),
   price DECIMAL(4,1) NOT NULL,
+  current_price DECIMAL(4,1),   -- ratcheted auction price; persists after auction
   is_eliminated BOOLEAN DEFAULT false,
   photo_url TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
-
--- Auto-calculated lockable status
-CREATE VIEW lockable_players AS
-SELECT *, (price <= 8.5) AS is_lockable FROM players;
 ```
 
 #### Teams Table
@@ -659,11 +653,10 @@ CREATE TABLE team_players (
   id SERIAL PRIMARY KEY,
   team_id INTEGER REFERENCES teams(id) ON DELETE CASCADE,
   player_id INTEGER REFERENCES players(id),
-  is_locked BOOLEAN NOT NULL,
   acquisition_price DECIMAL(4,1) NOT NULL,
-  slot_type TEXT CHECK (slot_type IN ('locked', 'free')),
   created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(team_id, player_id)
+  UNIQUE(team_id, player_id),
+  UNIQUE(player_id)  -- global exclusivity: one team per player
 );
 ```
 
@@ -804,7 +797,6 @@ CREATE TABLE transfers (
   window_number INTEGER NOT NULL,
   player_out_id INTEGER REFERENCES players(id),
   player_in_id INTEGER REFERENCES players(id),
-  transfer_type TEXT CHECK (transfer_type IN ('locked_swap', 'free_slot')),
   price_difference DECIMAL(4,1),
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -1290,9 +1282,9 @@ vercel
 | Feature | Implementation |
 |---------|----------------|
 | League Size | 12 players max |
-| Squad Size | 15 (8-10 locked + 5-7 free) |
+| Squad Size | 15 (all exclusively owned) |
 | Budget | 105M total |
-| Auction | Timed blind, 0.3M increment, transparent bidding |
+| Auction | Timed blind, 0.3M increment, transparent bidding, all players eligible |
 | Scoring | UEFA-style, admin-editable config |
 | League Stage | 4 matchdays, total points |
 | Knockouts | 3 rounds, H2H matchday points only |
@@ -1307,10 +1299,10 @@ vercel
 
 | Item | Value |
 |------|-------|
-| Version | 1.0 |
+| Version | 1.1 |
 | Created | March 2025 |
-| Last Updated | March 2025 |
-| Status | ✅ Ready for Development |
+| Last Updated | May 2026 |
+| Status | ✅ Active — exclusive ownership model |
 
 ---
 
@@ -1318,14 +1310,14 @@ vercel
 
 ### Auction Rules
 - Budget: 105M
-- Lockable: ≤8.5M players only
+- All players eligible (no price threshold)
 - Bid increment: 0.3M
 - Max simultaneous bids: 10
 - Round duration: 3 minutes
+- Won players disappear from auction immediately (exclusive ownership)
 
 ### Squad Rules
-- 15 players total
-- 8-10 locked + 5-7 free
+- 15 players total, all exclusively owned
 - Formation: 1 GK, 3-5 DEF, 3-5 MID, 1-3 FWD
 - Captain gets 2x points
 
