@@ -15,7 +15,7 @@ export default function Market() {
   const { auctionState } = useAuction();
   const { players: allPlayers, loading: playersLoading } = usePlayers({ available: true });
 
-  const [filters, setFilters] = useState({ hideOwned: true });
+  const [filters, setFilters] = useState({});
   const [confirmPlayer, setConfirmPlayer] = useState(null); // player pending purchase
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState(null);
@@ -51,10 +51,9 @@ export default function Market() {
           return false;
       }
       if (filters.affordableOnly && p.price > budget) return false;
-      if (filters.hideOwned && ownedIds.has(p.id)) return false;
       return true;
     });
-  }, [allPlayers, filters, ownedIds, budget]);
+  }, [allPlayers, filters, budget]);
 
   // Realtime: refresh available players when any team_players row changes
   useEffect(() => {
