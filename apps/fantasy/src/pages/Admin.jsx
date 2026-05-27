@@ -781,82 +781,59 @@ export default function Admin() {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  // ── Bulk Player Import ────────────────────────────────────────────────────
-  const [importFile, setImportFile] = useState(null);
-  const [importDefaultPrice, setImportDefaultPrice] = useState('5.0');
-  const [importRunning, setImportRunning] = useState(false);
-  const [importResult, setImportResult] = useState(null);
+  // ── CSV Player Import ───────────────────────────────────────────
+  const [csvImportFile, setCsvImportFile] = useState(null);
+  const [csvImportRunning, setCsvImportRunning] = useState(false);
+  const [csvImportResult, setCsvImportResult] = useState(null);
 
-  const TEAM_CODE_MAP = {
-    'Serbia': 'SRB',
-    'Switzerland': 'SUI',
-  };
-  const IMPORT_POS_MAP = { MF: 'MID', DF: 'DEF', FW: 'FWD', GK: 'GK' };
-
-  async function handleBulkPlayerImport(e) {
+  async function handleCsvPlayerImport(e) {
     e.preventDefault();
-    setImportResult(null);
-    if (!importFile) { setImportResult({ errors: ['Select a JSON file.'] }); return; }
+    setCsvImportResult(null);
+    if (!csvImportFile) { setCsvImportResult({ errors: ['Select a CSV file.'] }); return; }
 
-    setImportRunning(true);
-    let json;
-    try {
-      const text = await importFile.text();
-      json = JSON.parse(text);
-    } catch {
-      setImportResult({ errors: ['Invalid JSON file.'] });
-      setImportRunning(false);
+    setCsvImportRunning(true);
+    const text = await csvImportFile.text();
+    const rows = parseCsv(text);
+    if (rows.length === 0) {
+      setCsvImportResult({ errors: ['CSV is empty or has no data rows.'] });
+      setCsvImportRunning(false);
       return;
     }
 
-    const jsonPlayers = json.players;
-    if (!Array.isArray(jsonPlayers) || jsonPlayers.length === 0) {
-      setImportResult({ errors: ['JSON has no players array.'] });
-      setImportRunning(false);
-      return;
-    }
-
-    // Fetch all existing players for dedup by normName(name)|normName(country)
+    // Fetch existing players for dedup by normName(name)|normName(country)
     const { data: existing } = await supabase.from('players').select('id, name, country');
     const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const existingSet = new Set(
       (existing ?? []).map(p => `${normName(p.name)}|${normName(p.country)}`)
     );
 
-    const price = parseFloat(importDefaultPrice) || 5.0;
+    const VALID_POSITIONS = new Set(['GK', 'DEF', 'MID', 'FWD']);
     const toInsert = [];
     const skipped = [];
+    const errors = [];
 
-    for (const player of jsonPlayers) {
-      if (player.pos === 'Sub') {
-        skipped.push({ name: player.name, reason: 'Sub — add manually' });
-        continue;
-      }
+    for (const row of rows) {
+      const name         = (row['name'] ?? '').trim();
+      const country      = (row['country'] ?? '').trim();
+      const country_code = (row['country_code'] ?? '').trim() || null;
+      const position     = (row['position'] ?? '').trim().toUpperCase();
+      const photo_url    = (row['photo_url'] ?? '').trim() || null;
+      const priceRaw     = (row['price'] ?? '').trim();
+      const price        = parseFloat(priceRaw);
 
-      const position = IMPORT_POS_MAP[player.pos];
-      if (!position) {
-        skipped.push({ name: player.name, reason: `Unknown position: ${player.pos}` });
-        continue;
-      }
+      if (!name)                          { errors.push(`Row missing name: ${JSON.stringify(row)}`); continue; }
+      if (!country)                       { errors.push(`"${name}": missing country`); continue; }
+      if (!VALID_POSITIONS.has(position)) { errors.push(`"${name}": invalid position "${row['position']}" — must be GK, DEF, MID, or FWD`); continue; }
+      if (isNaN(price) || price <= 0)     { errors.push(`"${name}": invalid price "${priceRaw}"`); continue; }
 
-      const key = `${normName(player.name)}|${normName(player.team)}`;
-      if (existingSet.has(key)) {
-        skipped.push({ name: player.name, reason: 'Already in DB' });
-        continue;
-      }
+      const key = `${normName(name)}|${normName(country)}`;
+      if (existingSet.has(key)) { skipped.push(name); continue; }
 
-      toInsert.push({
-        name: player.name,
-        country: player.team,
-        country_code: TEAM_CODE_MAP[player.team] ?? null,
-        position,
-        price,
-      });
-      // Prevent duplicate inserts if same player appears twice in the JSON
-      existingSet.add(key);
+      // current_price = price at import time (no auction run yet)
+      toInsert.push({ name, country, country_code, position, price, current_price: price, photo_url });
+      existingSet.add(key); // prevent duplicates within the same CSV
     }
 
-    const errors = [];
     let created = 0;
     if (toInsert.length > 0) {
       const { error, data: inserted } = await supabase
@@ -870,11 +847,11 @@ export default function Admin() {
       }
     }
 
-    setImportResult({ created, skipped, errors });
-    setImportFile(null);
-    setImportRunning(false);
+    setCsvImportResult({ created, skipped, errors });
+    setCsvImportFile(null);
+    setCsvImportRunning(false);
   }
-  // ──────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
 
   // ── Opta JSON Stats Upload ────────────────────────────────────────────────
   const [optaMatchdayId, setOptaMatchdayId] = useState('');
@@ -2193,72 +2170,58 @@ export default function Admin() {
         )}
       </section>
 
-      {/* ── Bulk Player Import ───────────────────────────────────────────── */}
+      {/* ── CSV Player Import ───────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-primary">Bulk Player Import</h2>
+          <h2 className="text-lg font-semibold text-primary">CSV Player Import</h2>
           <p className="text-xs text-muted mt-1">
-            Upload an Opta Points JSON file to create players in bulk. Sub-position entries are skipped and must be added manually if needed.
+            Upload a CSV to populate the player pool before the auction. Players are deduplicated by name + country.
+            Required columns: <code className="text-secondary">name, country, position, price</code>.
+            Optional: <code className="text-secondary">country_code, photo_url</code>.
           </p>
         </div>
 
-        <form onSubmit={handleBulkPlayerImport} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-muted mb-1">Default Price (£M)</label>
-              <input
-                type="number"
-                min="0.5"
-                step="0.5"
-                value={importDefaultPrice}
-                onChange={e => setImportDefaultPrice(e.target.value)}
-                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-muted mb-1">Opta Points JSON File</label>
-              <input
-                type="file"
-                accept=".json,application/json"
-                onChange={e => { setImportFile(e.target.files?.[0] ?? null); setImportResult(null); }}
-                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
-              />
-            </div>
+        <form onSubmit={handleCsvPlayerImport} className="space-y-4">
+          <div>
+            <label className="block text-xs text-muted mb-1">CSV File</label>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={e => { setCsvImportFile(e.target.files?.[0] ?? null); setCsvImportResult(null); }}
+              className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+            />
           </div>
 
           <button
             type="submit"
-            disabled={importRunning}
+            disabled={csvImportRunning}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {importRunning ? 'Importing…' : 'Import Players'}
+            {csvImportRunning ? 'Importing…' : 'Import Players'}
           </button>
         </form>
 
-        {importResult && (
-          <div className={`rounded-lg p-4 space-y-2 ${importResult.errors?.length && !importResult.created ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
-            {importResult.created > 0 && (
+        {csvImportResult && (
+          <div className={`rounded-lg p-4 space-y-2 ${csvImportResult.errors?.length && !csvImportResult.created ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+            {csvImportResult.created > 0 && (
               <p className="text-tertiary text-sm font-semibold">
-                ✓ {importResult.created} player{importResult.created !== 1 ? 's' : ''} created.
+                ✓ {csvImportResult.created} player{csvImportResult.created !== 1 ? 's' : ''} created.
               </p>
             )}
-            {importResult.created === 0 && !importResult.errors?.length && (
+            {csvImportResult.created === 0 && !csvImportResult.errors?.length && (
               <p className="text-secondary text-sm">No new players to import (all already in DB or all skipped).</p>
             )}
-            {importResult.errors?.map((err, i) => (
+            {csvImportResult.errors?.map((err, i) => (
               <p key={i} className="text-error text-xs">{err}</p>
             ))}
-            {importResult.skipped?.length > 0 && (
+            {csvImportResult.skipped?.length > 0 && (
               <details className="mt-1">
                 <summary className="text-xs text-muted cursor-pointer hover:text-secondary">
-                  {importResult.skipped.length} skipped — click to expand
+                  {csvImportResult.skipped.length} skipped (already in DB) — click to expand
                 </summary>
                 <ul className="mt-2 space-y-0.5 pl-3">
-                  {importResult.skipped.map((s, i) => (
-                    <li key={i} className="text-xs text-secondary">
-                      <span className="text-primary font-medium">{s.name}</span>
-                      <span className="text-muted ml-1">— {s.reason}</span>
-                    </li>
+                  {csvImportResult.skipped.map((name, i) => (
+                    <li key={i} className="text-xs text-secondary">{name}</li>
                   ))}
                 </ul>
               </details>
