@@ -1,13 +1,14 @@
 -- Price persistence: players have a current_price that ratchets up after auctions
-ALTER TABLE players ADD COLUMN current_price NUMERIC NOT NULL DEFAULT 0;
-UPDATE players SET current_price = price;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS current_price NUMERIC DEFAULT 0;
+UPDATE players SET current_price = price WHERE current_price IS NULL OR current_price = 0;
+ALTER TABLE players ALTER COLUMN current_price SET NOT NULL;
 ALTER TABLE players ALTER COLUMN current_price DROP DEFAULT;
 
 -- Drop the lockable_players VIEW (was hardcoded to 8.5, drifted from constants.js)
 DROP VIEW IF EXISTS lockable_players;
 
 -- Enforce one lock per player across all teams
-CREATE UNIQUE INDEX one_lock_per_player
+CREATE UNIQUE INDEX IF NOT EXISTS one_lock_per_player
   ON team_players(player_id)
   WHERE slot_type = 'locked';
 
