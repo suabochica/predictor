@@ -831,6 +831,143 @@ export default function Admin() {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
+  // ── Opta JSON Stats Upload ────────────────────────────────────────────────
+  const [optaMatchdayId, setOptaMatchdayId] = useState('');
+  const [optaFile, setOptaFile] = useState(null);
+  const [optaUploading, setOptaUploading] = useState(false);
+  const [optaResult, setOptaResult] = useState(null);
+
+  async function handleOptaUpload(e) {
+    e.preventDefault();
+    setOptaResult(null);
+    if (!optaMatchdayId) { setOptaResult({ errors: ['Select a matchday first.'] }); return; }
+    if (!optaFile)        { setOptaResult({ errors: ['Select a JSON file.'] }); return; }
+
+    setOptaUploading(true);
+    let json;
+    try {
+      const text = await optaFile.text();
+      json = JSON.parse(text);
+    } catch {
+      setOptaResult({ errors: ['Invalid JSON file.'] });
+      setOptaUploading(false);
+      return;
+    }
+
+    if (!json.match || !Array.isArray(json.players) || json.players.length === 0) {
+      setOptaResult({ errors: ['JSON missing required "match" or "players" fields.'] });
+      setOptaUploading(false);
+      return;
+    }
+
+    const matchdayId = parseInt(optaMatchdayId, 10);
+    const errors = [];
+
+    // Upsert match_metadata row
+    const { error: metaError } = await supabase
+      .from('match_metadata')
+      .upsert({
+        matchday_id: matchdayId,
+        competition: json.match.competition ?? null,
+        match_date:  json.match.date ?? null,
+        home_team:   json.match.home_team,
+        away_team:   json.match.away_team,
+        score_home:  json.match.score?.home ?? null,
+        score_away:  json.match.score?.away ?? null,
+      }, { onConflict: 'matchday_id,home_team,away_team' });
+
+    if (metaError) errors.push(`match_metadata error: ${metaError.message}`);
+
+    // Fetch all players for name-normalisation lookup
+    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
+    const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
+
+    const toUpsert = [];
+
+    for (const p of json.players) {
+      const player = playerMap[normName(p.name)];
+      if (!player) { errors.push(`Player not found: "${p.name}"`); continue; }
+
+      const minutes_played   = p.MP    ?? 0;
+      const goals            = p.G     ?? 0;
+      const assists          = p.A     ?? 0;
+      const yellow_cards     = p.YC    ?? 0;
+      const red_cards        = p.RC    ?? 0;
+      const own_goals        = p.OG    ?? 0;
+      const goals_conceded   = p.GC    ?? 0;
+      const saves            = p.SAV   ?? 0;
+      const penalty_saves    = p.PSAV  ?? 0;
+      const shots_on_target  = p.SOnT  ?? 0;
+      const shots_off_target = p.SOffT ?? 0;
+      const blocked_shots    = p.BS    ?? 0;
+      const tackles          = p.Tk    ?? 0;
+      const interceptions    = p.INT   ?? 0;
+      const fouls_won        = p.FW    ?? 0;
+      const fouls_conceded   = p.FC    ?? 0;
+      const offsides         = p.O     ?? 0;
+      const passes           = p.P     ?? 0;
+      const crosses          = p.C     ?? 0;
+      const penalties_won    = p.PW    ?? 0;
+      const opta_points      = p.PTS   ?? null;
+      // Opta has no clean-sheet field — derive from GC + minutes
+      const clean_sheet = goals_conceded === 0 && minutes_played >= 60;
+
+      const stats = {
+        minutes_played, goals, assists, clean_sheet, saves,
+        penalty_saves, penalty_misses: 0, yellow_cards, red_cards,
+        own_goals, goals_conceded,
+      };
+      const total_points = calculatePlayerPoints(stats, player.position);
+
+      toUpsert.push({
+        player_id: player.id,
+        matchday_id: matchdayId,
+        minutes_played,
+        goals,
+        assists,
+        clean_sheet,
+        saves,
+        penalty_saves,
+        penalty_misses: 0,
+        yellow_cards,
+        red_cards,
+        own_goals,
+        goals_conceded,
+        shots_on_target,
+        shots_off_target,
+        blocked_shots,
+        tackles,
+        interceptions,
+        fouls_won,
+        fouls_conceded,
+        offsides,
+        passes,
+        crosses,
+        penalties_won,
+        opta_points,
+        total_points,
+      });
+    }
+
+    let inserted = 0;
+    if (toUpsert.length > 0) {
+      const { error } = await supabase
+        .from('player_stats')
+        .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
+      if (error) {
+        errors.push(`DB error: ${error.message}`);
+      } else {
+        inserted = toUpsert.length;
+      }
+    }
+
+    setOptaResult({ inserted, errors });
+    setOptaFile(null);
+    setOptaUploading(false);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   if (loading) {
     return <div className="text-secondary p-6">Loading auction state…</div>;
   }
@@ -1414,6 +1551,64 @@ export default function Admin() {
               </p>
             )}
             {statsResult.errors?.map((err, i) => (
+              <p key={i} className="text-error text-xs">{err}</p>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Opta JSON Stats Upload ───────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">Opta JSON Stats Upload</h2>
+          <p className="text-xs text-muted mt-1">
+            Upload an Opta Points JSON file to store per-player stats (tackles, shots, passes, etc.) and Opta PTS. Idempotent — re-uploading overwrites existing rows for the same matchday.
+          </p>
+        </div>
+
+        <form onSubmit={handleOptaUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Matchday</label>
+              <select
+                value={optaMatchdayId}
+                onChange={e => setOptaMatchdayId(e.target.value)}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              >
+                <option value="">Select matchday…</option>
+                {matchdays.map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Opta Points JSON File</label>
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={e => { setOptaFile(e.target.files?.[0] ?? null); setOptaResult(null); }}
+                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={optaUploading}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {optaUploading ? 'Uploading…' : 'Upload Opta Stats'}
+          </button>
+        </form>
+
+        {optaResult && (
+          <div className={`rounded-lg p-4 space-y-1 ${optaResult.errors?.length > 0 && !optaResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+            {optaResult.inserted > 0 && (
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ {optaResult.inserted} stat row{optaResult.inserted !== 1 ? 's' : ''} saved.
+              </p>
+            )}
+            {optaResult.errors?.map((err, i) => (
               <p key={i} className="text-error text-xs">{err}</p>
             ))}
           </div>
