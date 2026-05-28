@@ -16,7 +16,8 @@ import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 
 function redirectToGateway() {
-  window.location.replace(import.meta.env.VITE_GATEWAY_URL ?? 'https://predictor-gateway.netlify.app/');
+  window.location.replace(import.meta.env.VITE_GATEWAY_URL ?? '/');
+
   return null;
 }
 

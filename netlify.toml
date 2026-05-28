@@ -1,10 +1,19 @@
-# This file is no longer used directly.
-# Each app has its own netlify.toml:
-#   apps/gateway/netlify.toml   — main site
-#   apps/polla/netlify.toml     — /polla/
-#   apps/fantasy/netlify.toml    — /fantasy/
-#
-# Deploy each as a separate Netlify site with:
-#   Base directory: apps/<app>
-#   Build command:  pnpm build
-#   Publish dir:    dist
+[build]
+  command = "pnpm --filter @predictor/fantasy build && pnpm --filter @predictor/gateway build && cp -r apps/fantasy/dist apps/gateway/dist/fantasy"
+  publish = "apps/gateway/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "11"
+
+# Proxy polla SSR requests through gateway
+[[redirects]]
+  from = "/polla/*"
+  to = "https://predictor-polla.netlify.app/polla/:splat"
+  status = 200
+
+# Fantasy SPA fallback — static files copied from apps/fantasy/dist during build
+[[redirects]]
+  from = "/fantasy/*"
+  to = "/fantasy/index.html"
+  status = 200
