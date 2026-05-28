@@ -4,6 +4,7 @@ import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { AUCTION_STATUSES } from '../config/constants';
 import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
+import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, generateRelegationBracket, resolveH2H } from '../lib/brackets';
 
@@ -47,9 +48,49 @@ export default function Admin() {
     resolveRound,
   } = useAuction();
 
-  // Completes the auction and auto-activates the first available matchday.
+  // Completes the auction, auto-creates default lineups for full squads, then activates the first matchday.
   async function handleCompleteAuction() {
     await completeAuction();
+
+    // Auto-create pre-tournament (matchday_id = null) lineups for every full squad.
+    const warnings = [];
+    const [{ data: teams }, { data: existingLineups }] = await Promise.all([
+      supabase
+        .from('teams')
+        .select('id, name, team_players(player_id, acquisition_price, players(id, name, position, price))'),
+      supabase.from('lineups').select('team_id').is('matchday_id', null),
+    ]);
+
+    const teamsWithLineup = new Set((existingLineups ?? []).map(r => r.team_id));
+    const toInsert = [];
+
+    for (const team of teams ?? []) {
+      if (teamsWithLineup.has(team.id)) continue; // idempotent — lineup already exists
+      const squad = (team.team_players ?? []).map(tp => ({
+        id: tp.player_id,
+        position: tp.players?.position ?? 'FWD',
+        price: tp.players?.price ?? 0,
+      }));
+      if (squad.length < 15) {
+        warnings.push(`${team.name}: only ${squad.length}/15 players — no default lineup created.`);
+        continue;
+      }
+      const { starters, bench, captainId } = buildDefaultLineup(squad);
+      for (const p of starters) {
+        toInsert.push({ team_id: team.id, player_id: p.id, matchday_id: null, is_starting: true, is_captain: p.id === captainId, bench_order: null });
+      }
+      bench.forEach((p, i) => {
+        toInsert.push({ team_id: team.id, player_id: p.id, matchday_id: null, is_starting: false, is_captain: false, bench_order: i + 1 });
+      });
+    }
+
+    if (toInsert.length > 0) {
+      const { error } = await supabase.from('lineups').insert(toInsert);
+      if (error) warnings.push(`Lineup insert error: ${error.message}`);
+    }
+
+    setLineupWarnings(warnings);
+
     const { data: fresh } = await supabase
       .from('matchdays')
       .select('*')
@@ -66,6 +107,7 @@ export default function Admin() {
   const [confirming, setConfirming] = useState(false);
   const [resolving, setResolving]   = useState(false);
   const [resolveErrors, setResolveErrors] = useState([]);
+  const [lineupWarnings, setLineupWarnings] = useState([]);
 
   // ── League Participants ────────────────────────────────────────────────────
   const [participants, setParticipants] = useState([]);
@@ -1212,6 +1254,15 @@ export default function Admin() {
             <p className="text-muted text-sm italic">Auction is complete. No further actions available.</p>
           )}
         </div>
+
+        {lineupWarnings.length > 0 && (
+          <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-1">
+            <p className="text-warning text-sm font-semibold">Default lineup warnings:</p>
+            {lineupWarnings.map((w, i) => (
+              <p key={i} className="text-warning text-xs">{w}</p>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Round Resolution Confirmation ───────────────────────────────── */}

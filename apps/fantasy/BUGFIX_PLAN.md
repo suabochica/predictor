@@ -61,7 +61,7 @@ The order matters: foundation pieces (DB constraints, extracted utility) come be
 - [x] **Bug 4 + Bug 5** — Effective budget + slot enforcement + dedup (includes migration 021)
 - [x] **Bug 2** — Auction carry-over between rounds (depends on migration 021's `is_carryover` column)
 - [x] **Bug 3** — Missing auction summary header (depends on Bug 4's effective-budget computation)
-- [ ] **Bug 7** — Default lineup auto-created at auction end
+- [x] **Bug 7** — Default lineup auto-created at auction end
 - [ ] **Bug 6** — Market screen ownership + swap flow
 
 Bugs 4+5 are bundled because they share `placeBid` validation logic and the same migration.
@@ -212,7 +212,7 @@ No new component needed unless it grows past ~80 lines; otherwise extract `compo
 
 ---
 
-## [ ] Bug 7 — Default lineup auto-created at auction end
+## [x] Bug 7 — Default lineup auto-created at auction end
 
 **Files:** new `apps/fantasy/src/lib/defaultLineup.js`, `apps/fantasy/src/pages/MyTeam.jsx`, `apps/fantasy/src/pages/Admin.jsx`
 

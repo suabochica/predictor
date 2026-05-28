@@ -3,6 +3,7 @@ import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
+import { buildDefaultLineup } from '../lib/defaultLineup';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 
@@ -20,29 +21,6 @@ function normalizeSquad(teamPlayers) {
   }));
 }
 
-// Build a default lineup from the squad — most expensive players fill starters first
-// GK exception: 2nd GK goes to bench regardless of price
-function buildDefault(squad) {
-  const sorted = [...squad].sort((a, b) => b.price - a.price);
-  const starters = [];
-  const bench = [];
-  let hasGkInXI = false;
-
-  for (const player of sorted) {
-    if (starters.length >= 11) {
-      bench.push(player);
-      continue;
-    }
-    if (player.position === 'GK') {
-      if (hasGkInXI) { bench.push(player); continue; }
-      hasGkInXI = true;
-    }
-    starters.push(player);
-  }
-
-  const captain = starters[0] ?? null;
-  return { starters, bench, captainId: captain?.id ?? null };
-}
 
 export default function MyTeam() {
   const { team, players, loading: teamLoading, refresh: refreshSquad } = useTeam();
@@ -198,7 +176,7 @@ export default function MyTeam() {
       setBench(savedBench);
       setCaptainId(captainRow?.player_id ?? null);
     } else {
-      const defaults = buildDefault(squad);
+      const defaults = buildDefaultLineup(squad);
       setStarters(defaults.starters);
       setBench(defaults.bench);
       setCaptainId(defaults.captainId);
@@ -354,6 +332,7 @@ export default function MyTeam() {
   }
 
   // ── Save lineup ──────────────────────────────────────────────────────────
+  // TODO Bug 8: redesign lineup editing (drag-and-drop, formation picker, sub rules)
   async function saveLineup() {
     if (!team) return;
     setSaving(true);
