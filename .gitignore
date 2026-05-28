@@ -14,6 +14,9 @@ apps/polla/node_modules
 dist/
 .astro/
 
+# Netlify adapter build artifacts (regenerated on each deploy)
+**/.netlify/
+
 # Misc
 .DS_Store
 *.log
