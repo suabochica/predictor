@@ -8,12 +8,16 @@ export function Table({ children, className = '' }: { children: React.ReactNode;
   );
 }
 
-export function Thead({ children }: { children: React.ReactNode }) {
+export function Thead({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <thead className="border-b border-border bg-neutral">
+    <thead className={`border-b border-border bg-neutral ${className}`}>
       {children}
     </thead>
   );
+}
+
+export function Tr({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <tr className={className}>{children}</tr>;
 }
 
 export function Tbody({ children }: { children: React.ReactNode }) {

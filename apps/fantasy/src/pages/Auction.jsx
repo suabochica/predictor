@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@predictor/supabase';
+import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTeam } from '../hooks/useTeam';
 import AuctionTimer from '../components/auction/AuctionTimer';
+import AuctionPlayerRow from '../components/auction/AuctionPlayerRow';
 import {
   AUCTION_STATUSES,
   MIN_BID_INCREMENT,
@@ -35,12 +37,6 @@ const POSITION_BADGE = {
   FWD: 'bg-error/10 text-error',
 };
 
-const POSITION_GRADIENT = {
-  GK:  'from-warning/10',
-  DEF: 'from-info/10',
-  MID: 'from-tertiary/10',
-  FWD: 'from-error/10',
-};
 
 export default function Auction() {
   const { user } = useAuth();
@@ -383,135 +379,57 @@ export default function Auction() {
         </div>
       )}
 
-      {/* ── Player grid ──────────────────────────────────────────────── */}
+      {/* ── Player table ─────────────────────────────────────────────── */}
       {playersLoading ? (
         <p className="text-muted text-sm">Loading players…</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPlayers.map((player) => {
-            const isWon         = ownedPlayerIds.has(player.id);
-            const highBid       = getHighestBid(player.id);
-            const contestFloor  = getContestFloor(player.id);
-            const isContested   = contestFloor !== null && !isWon;
-            const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
-            const isLeading     = myBidOnPlayer && highBid?.user_id === user?.id;
-            const canBid        = isActive && !roundExpired && !isWon && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
-            const minBid        = minBidFor(player);
-            const isSubmitting  = submitting.has(player.id);
+        <Table>
+          <Thead className="sticky top-0 z-10">
+            <tr>
+              <Th>Pos</Th>
+              <Th>Player</Th>
+              <Th>Country</Th>
+              <Th className="text-right">Listed</Th>
+              <Th className="text-right">Top bid</Th>
+              <Th>Status</Th>
+              <Th>Bid</Th>
+            </tr>
+          </Thead>
+          <Tbody>
+            {filteredPlayers.map((player) => {
+              const highBid       = getHighestBid(player.id);
+              const contestFloor  = getContestFloor(player.id);
+              const isContested   = contestFloor !== null;
+              const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
+              const isLeading     = !!myBidOnPlayer && highBid?.user_id === user?.id;
+              const canBid        = isActive && !roundExpired && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
+              const minBid        = minBidFor(player);
+              const isSubmitting  = submitting.has(player.id);
 
-            return (
-              <div
-                key={player.id}
-                className="bg-surface rounded-xl overflow-hidden border border-border flex flex-col"
-              >
-                {/* Card header */}
-                <div
-                  className={`bg-gradient-to-r ${POSITION_GRADIENT[player.position] ?? 'from-border/30'} to-transparent px-4 py-3 flex items-center justify-between gap-2`}
-                >
-                  <span className="text-primary font-semibold truncate">{player.name}</span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs font-bold shrink-0 ${POSITION_BADGE[player.position] ?? 'bg-border text-secondary'}`}
-                  >
-                    {player.position}
-                  </span>
-                </div>
-
-                {/* Card body */}
-                <div className="px-4 py-3 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2.5">
-                    {/* Country + listed price */}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted">{player.country}</span>
-                      <span className="text-secondary">
-                        Listed{' '}
-                        <span className="text-primary font-semibold">£{player.price.toFixed(1)}</span>
-                      </span>
-                    </div>
-
-                    {/* Highest bid */}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted">Top bid</span>
-                      {highBid ? (
-                        <span className="text-tertiary font-bold">
-                          £{highBid.bid_amount.toFixed(1)}
-                          <span className="text-muted font-normal ml-1.5">
-                            — {highBid.users?.display_name ?? '?'}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-muted italic text-xs">No bids yet</span>
-                      )}
-                    </div>
-
-                    {/* Contested carry-over badge */}
-                    {isContested && (
-                      <div className="text-xs font-medium rounded-lg px-3 py-1.5 bg-warning/15 text-warning border border-warning/30">
-                        ⚡ Contested — min bid £{(contestFloor + MIN_BID_INCREMENT).toFixed(1)} to win
-                      </div>
-                    )}
-
-                    {/* My bid status badge */}
-                    {!isWon && myBidOnPlayer && (
-                      <div
-                        className={`text-xs font-medium rounded-lg px-3 py-1.5 ${
-                          isLeading
-                            ? 'bg-tertiary/10 text-tertiary border border-tertiary/40/50'
-                            : 'bg-error/10/50 text-error border border-error/30/50'
-                        }`}
-                      >
-                        {isLeading ? '✓ Leading' : '✗ Outbid'} — Your bid:{' '}
-                        <span className="font-bold">£{myBidOnPlayer.bid_amount.toFixed(1)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bid input */}
-                  {canBid && (
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          step="0.1"
-                          min={minBid}
-                          placeholder={`£${minBid.toFixed(1)}`}
-                          value={bidAmounts[player.id] ?? ''}
-                          onChange={(e) =>
-                            setBidAmounts((prev) => ({ ...prev, [player.id]: e.target.value }))
-                          }
-                          className="flex-1 min-w-0 bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-primary text-sm placeholder-muted focus:outline-none focus:border-tertiary"
-                        />
-                        <button
-                          onClick={() => handleBid(player.id)}
-                          disabled={isSubmitting}
-                          className="px-4 py-1.5 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary text-sm font-semibold transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                        >
-                          {isSubmitting ? '…' : 'Bid'}
-                        </button>
-                      </div>
-                      {errors[player.id] && (
-                        <p className="text-error text-xs" role="alert">{errors[player.id]}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Max bids reached */}
-                  {isActive && !myBidOnPlayer && myBidCount >= MAX_SIMULTANEOUS_BIDS && (
-                    <p className="text-xs text-muted italic pt-1">
-                      Max bids reached for this round.
-                    </p>
-                  )}
-
-                  {/* Auction not active */}
-                  {!isActive && !myBidOnPlayer && (
-                    <p className="text-xs text-secondary italic pt-1">
-                      Bidding {status === 'pending' ? 'not started' : status}.
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <AuctionPlayerRow
+                  key={player.id}
+                  player={player}
+                  isLeading={isLeading}
+                  contestFloor={contestFloor}
+                  isContested={isContested}
+                  highBid={highBid}
+                  myBidOnPlayer={myBidOnPlayer}
+                  canBid={canBid}
+                  minBid={minBid}
+                  isSubmitting={isSubmitting}
+                  bidValue={bidAmounts[player.id]}
+                  error={errors[player.id]}
+                  onBidChange={(val) => setBidAmounts((prev) => ({ ...prev, [player.id]: val }))}
+                  onBidSubmit={() => handleBid(player.id)}
+                  isActive={isActive}
+                  status={status}
+                  myBidCount={myBidCount}
+                />
+              );
+            })}
+          </Tbody>
+        </Table>
       )}
     </div>
   );

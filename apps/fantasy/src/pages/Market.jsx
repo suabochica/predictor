@@ -6,8 +6,9 @@ import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { formatPrice, getPositionColor } from '../lib/utils';
 import { MAX_SQUAD_SIZE } from '../config/constants';
+import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import FilterBar from '../components/market/FilterBar';
-import PlayerCard from '../components/market/PlayerCard';
+import PlayerRow from '../components/market/PlayerRow';
 
 export default function Market() {
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
@@ -351,31 +352,43 @@ export default function Market() {
         resultCount={filteredPlayers.length}
       />
 
-      {/* ── Player grid ── */}
+      {/* ── Player table ── */}
       {filteredPlayers.length === 0 ? (
         <div className="text-center py-12 text-muted">
           No players match your filters.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filteredPlayers.map((player) => {
-            const isMine = player.owner?.userId === team?.user_id;
-            return (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                isMine={isMine}
-                owner={isMine ? null : player.owner}
-                canAfford={player.price <= budget}
-                squadFull={squadFull}
-                mustBuyGk={mustBuyGk && player.position !== 'GK'}
-                offerOutName={offerOut?.name ?? null}
-                onBuy={setConfirmPlayer}
-                onSwap={setConfirmSwapIn}
-              />
-            );
-          })}
-        </div>
+        <Table>
+          <Thead className="sticky top-0 z-10">
+            <tr>
+              <Th>Pos</Th>
+              <Th>Player</Th>
+              <Th>Country</Th>
+              <Th className="text-right">Price</Th>
+              <Th>Owner</Th>
+              <Th>Action</Th>
+            </tr>
+          </Thead>
+          <Tbody>
+            {filteredPlayers.map((player) => {
+              const isMine = player.owner?.userId === team?.user_id;
+              return (
+                <PlayerRow
+                  key={player.id}
+                  player={player}
+                  isMine={isMine}
+                  owner={isMine ? null : player.owner}
+                  canAfford={player.price <= budget}
+                  squadFull={squadFull}
+                  mustBuyGk={mustBuyGk && player.position !== 'GK'}
+                  offerOutName={offerOut?.name ?? null}
+                  onBuy={setConfirmPlayer}
+                  onSwap={setConfirmSwapIn}
+                />
+              );
+            })}
+          </Tbody>
+        </Table>
       )}
 
       {/* ── Confirm purchase modal ── */}
