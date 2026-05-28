@@ -59,7 +59,7 @@ The order matters: foundation pieces (DB constraints, extracted utility) come be
 
 - [x] **Bug 1** — Won players still show as "Contested"
 - [x] **Bug 4 + Bug 5** — Effective budget + slot enforcement + dedup (includes migration 021)
-- [ ] **Bug 2** — Auction carry-over between rounds (depends on migration 021's `is_carryover` column)
+- [x] **Bug 2** — Auction carry-over between rounds (depends on migration 021's `is_carryover` column)
 - [ ] **Bug 3** — Missing auction summary header (depends on Bug 4's effective-budget computation)
 - [ ] **Bug 7** — Default lineup auto-created at auction end
 - [ ] **Bug 6** — Market screen ownership + swap flow
@@ -148,7 +148,7 @@ Bugs 4+5 are bundled because they share `placeBid` validation logic and the same
 
 ---
 
-## [ ] Bug 2 — Auction carry-over between rounds (auto-insert leader's bid)
+## [x] Bug 2 — Auction carry-over between rounds (auto-insert leader's bid)
 
 **Depends on:** Bug 4+5 (migration 021 adds `is_carryover` column).
 

@@ -171,6 +171,16 @@ export function AuctionProvider({ children }) {
           playerName: topBid?.players?.name ?? `Player #${playerId}`,
           amount: topBid?.bid_amount ?? 0,
         });
+        // Auto-carry the leader's bid into the next round before nextRound() advances current_round.
+        if (topBid) {
+          await supabase.from('auction_bids').insert({
+            user_id: topBid.user_id,
+            player_id: playerId,
+            bid_amount: topBid.bid_amount,
+            round_number: round + 1,
+            is_carryover: true,
+          });
+        }
         continue;
       }
 

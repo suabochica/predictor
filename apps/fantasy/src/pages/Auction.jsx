@@ -216,6 +216,14 @@ export default function Auction() {
                     <span className="text-primary font-medium truncate">
                       {player?.name ?? `Player #${bid.player_id}`}
                     </span>
+                    {bid.is_carryover && (
+                      <span
+                        title={`Carried over from Round ${bid.round_number - 1}`}
+                        className="shrink-0 text-xs font-medium px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30"
+                      >
+                        ↩ R{bid.round_number - 1}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 shrink-0 ml-3">
