@@ -7,6 +7,8 @@ import Layout from '../layouts/Layout.astro';
 import AppCard from '../components/AppCard';
 
 const displayName = Astro.locals.displayName;
+const pollaUrl = import.meta.env.PUBLIC_POLLA_URL ?? '/polla/';
+const fantasyUrl = import.meta.env.PUBLIC_FANTASY_URL ?? '/fantasy/';
 ---
 
 <Layout title="Dashboard">
@@ -19,8 +21,8 @@ const displayName = Astro.locals.displayName;
     </div>
 
     <div class="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
-      <AppCard name="Polla" description="Predict World Cup match scores and climb the leaderboard" href="https://predictor-polla.netlify.app/" icon={pollaIcon.src} />
-      <AppCard name="Fantasy" description="Draft players, manage your squad, and dominate the standings" href="https://predictor-fantasy.netlify.app/" icon={fantasyIcon.src} />
+      <AppCard name="Polla" description="Predict World Cup match scores and climb the leaderboard" href={pollaUrl} icon={pollaIcon.src} />
+      <AppCard name="Fantasy" description="Draft players, manage your squad, and dominate the standings" href={fantasyUrl} icon={fantasyIcon.src} />
     </div>
 
     <form method="POST" action="/auth/signout">
