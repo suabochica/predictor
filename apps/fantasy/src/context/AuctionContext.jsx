@@ -6,13 +6,15 @@ const AuctionContext = createContext(null);
 export function AuctionProvider({ children }) {
   const [auctionState, setAuctionState] = useState(null);
   const [bids, setBids] = useState([]);
+  const [ownedPlayerIds, setOwnedPlayerIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAuctionState();
     fetchBids();
+    fetchOwnedPlayerIds();
 
-    // Realtime: subscribe to new bids
+    // Realtime: subscribe to new bids and team_players assignments
     const channel = supabase
       .channel('auction-bids')
       .on(
@@ -42,6 +44,13 @@ export function AuctionProvider({ children }) {
           setAuctionState(payload.new);
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'team_players' },
+        (payload) => {
+          setOwnedPlayerIds((prev) => new Set(prev).add(payload.new.player_id));
+        }
+      )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
@@ -59,6 +68,11 @@ export function AuctionProvider({ children }) {
       .select('*, players(name, position, price), users(display_name)')
       .order('created_at', { ascending: false });
     setBids(data ?? []);
+  }
+
+  async function fetchOwnedPlayerIds() {
+    const { data } = await supabase.from('team_players').select('player_id');
+    setOwnedPlayerIds(new Set((data ?? []).map((r) => r.player_id)));
   }
 
   // Returns highest bid for a given player in the current round.
@@ -79,8 +93,7 @@ export function AuctionProvider({ children }) {
   // they were not awarded (i.e., contested carry-over floor). Returns null if
   // no carry-over floor exists for this player.
   function getContestFloor(playerId) {
-    const isWon = bids.some((b) => b.player_id === playerId && b.is_winning);
-    if (isWon) return null;
+    if (ownedPlayerIds.has(playerId)) return null;
     const previousBids = bids.filter(
       (b) => b.player_id === playerId && b.round_number < (auctionState?.current_round ?? 1)
     );
@@ -223,6 +236,7 @@ export function AuctionProvider({ children }) {
       });
     }
 
+    fetchBids();
     return { resolved, contested, errors };
   }
 
@@ -257,6 +271,7 @@ export function AuctionProvider({ children }) {
   const value = {
     auctionState,
     bids,
+    ownedPlayerIds,
     loading,
     getHighestBid,
     getContestFloor,

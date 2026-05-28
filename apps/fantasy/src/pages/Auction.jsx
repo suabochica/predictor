@@ -43,7 +43,7 @@ const POSITION_GRADIENT = {
 export default function Auction() {
   const { user } = useAuth();
   const { team } = useLeague();
-  const { auctionState, bids, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
+  const { auctionState, bids, ownedPlayerIds, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
 
   const [posFilter, setPosFilter]       = useState('All');
@@ -68,8 +68,6 @@ export default function Auction() {
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const myBids           = currentRoundBids.filter((b) => b.user_id === user?.id);
   const myBidCount       = myBids.length;
-  // Players already won in any previous round — hide from the list.
-  const wonPlayerIds = new Set(bids.filter((b) => b.is_winning).map((b) => b.player_id));
 
   const countries = useMemo(
     () => ['All', ...[...new Set(players.map((p) => p.country).filter(Boolean))].sort()],
@@ -77,7 +75,7 @@ export default function Auction() {
   );
 
   const filteredPlayers = players.filter((p) => {
-    if (wonPlayerIds.has(p.id)) return false;
+    if (ownedPlayerIds.has(p.id)) return false;
     if (posFilter !== 'All' && p.position !== posFilter) return false;
     if (countryFilter !== 'All' && p.country !== countryFilter) return false;
     return true;
@@ -281,7 +279,7 @@ export default function Auction() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPlayers.map((player) => {
-            const isWon         = wonPlayerIds.has(player.id);
+            const isWon         = ownedPlayerIds.has(player.id);
             const highBid       = getHighestBid(player.id);
             const contestFloor  = getContestFloor(player.id);
             const isContested   = contestFloor !== null && !isWon;
