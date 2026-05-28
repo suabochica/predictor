@@ -1,0 +1,17 @@
+[build]
+  command = "pnpm --filter @predictor/fantasy build && pnpm build && cp -r ../fantasy/dist dist/fantasy"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "11"
+
+[[redirects]]
+  from = "/polla/*"
+  to = "https://predictor-polla.netlify.app/polla/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/fantasy/*"
+  to = "/fantasy/index.html"
+  status = 200

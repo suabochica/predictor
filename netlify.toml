@@ -1,19 +1,5 @@
-[build]
-  command = "pnpm --filter @predictor/fantasy build && pnpm --filter @predictor/gateway build && cp -r apps/fantasy/dist apps/gateway/dist/fantasy && cp -r apps/gateway/.netlify .netlify"
-  publish = "apps/gateway/dist"
-
-[build.environment]
-  NODE_VERSION = "22"
-  PNPM_VERSION = "11"
-
-# Proxy polla SSR requests through gateway
-[[redirects]]
-  from = "/polla/*"
-  to = "https://predictor-polla.netlify.app/polla/:splat"
-  status = 200
-
-# Fantasy SPA fallback — static files copied from apps/fantasy/dist during build
-[[redirects]]
-  from = "/fantasy/*"
-  to = "/fantasy/index.html"
-  status = 200
+# This is a monorepo with multiple Netlify sites.
+# Each app has its own netlify.toml with base directory set in the dashboard:
+#
+#   Gateway (main)     → base: apps/gateway → apps/gateway/netlify.toml
+#   Polla (proxy)      → base: apps/polla   → apps/polla/netlify.toml
