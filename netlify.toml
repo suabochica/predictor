@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm --filter @predictor/fantasy build && pnpm --filter @predictor/gateway build && cp -r apps/fantasy/dist apps/gateway/dist/fantasy"
+  command = "pnpm --filter @predictor/fantasy build && pnpm --filter @predictor/gateway build && cp -r apps/fantasy/dist apps/gateway/dist/fantasy && cp -r apps/gateway/.netlify .netlify"
   publish = "apps/gateway/dist"
 
 [build.environment]
