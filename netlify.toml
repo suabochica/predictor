@@ -1,19 +1,10 @@
-[build]
-  command = "pnpm build"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "20"
-  PNPM_VERSION = "9"
-
-# Polla SPA fallback
-[[redirects]]
-  from = "/polla/*"
-  to = "/polla/index.html"
-  status = 200
-
-# Fantasy SPA fallback
-[[redirects]]
-  from = "/fantasy/*"
-  to = "/fantasy/index.html"
-  status = 200
+# This file is no longer used directly.
+# Each app has its own netlify.toml:
+#   apps/gateway/netlify.toml   — main site
+#   apps/polla/netlify.toml     — /polla/
+#   apps/fantasy/netlify.toml    — /fantasy/
+#
+# Deploy each as a separate Netlify site with:
+#   Base directory: apps/<app>
+#   Build command:  pnpm build
+#   Publish dir:    dist
