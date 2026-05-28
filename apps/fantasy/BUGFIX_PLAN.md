@@ -62,7 +62,7 @@ The order matters: foundation pieces (DB constraints, extracted utility) come be
 - [x] **Bug 2** — Auction carry-over between rounds (depends on migration 021's `is_carryover` column)
 - [x] **Bug 3** — Missing auction summary header (depends on Bug 4's effective-budget computation)
 - [x] **Bug 7** — Default lineup auto-created at auction end
-- [ ] **Bug 6** — Market screen ownership + swap flow
+- [x] **Bug 6** — Market screen ownership + swap flow
 
 Bugs 4+5 are bundled because they share `placeBid` validation logic and the same migration.
 

@@ -10,7 +10,11 @@ export function usePlayers(filters = {}) {
   }, [JSON.stringify(filters)]);
 
   async function fetchPlayers() {
-    let query = supabase.from('players').select('*').order('price', { ascending: false });
+    const selectFields = filters.withOwner
+      ? '*, team_players(team_id, teams(id, name, user_id))'
+      : '*';
+
+    let query = supabase.from('players').select(selectFields).order('price', { ascending: false });
     if (filters.position) query = query.eq('position', filters.position);
     if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
     if (filters.search) query = query.ilike('name', `%${filters.search}%`);
@@ -23,7 +27,21 @@ export function usePlayers(filters = {}) {
     }
 
     const { data } = await query;
-    setPlayers(data ?? []);
+    let result = data ?? [];
+
+    if (filters.withOwner) {
+      result = result.map((p) => {
+        const tp = p.team_players?.[0];
+        return {
+          ...p,
+          owner: tp?.teams
+            ? { teamId: tp.teams.id, teamName: tp.teams.name, userId: tp.teams.user_id }
+            : null,
+        };
+      });
+    }
+
+    setPlayers(result);
     setLoading(false);
   }
 
