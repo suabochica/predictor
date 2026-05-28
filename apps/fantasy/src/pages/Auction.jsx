@@ -8,7 +8,9 @@ import {
   AUCTION_STATUSES,
   MIN_BID_INCREMENT,
   MAX_SIMULTANEOUS_BIDS,
+  MAX_SQUAD_SIZE,
   POSITIONS,
+  SQUAD_REQUIREMENTS,
 } from '../config/constants';
 
 const STATUS_BANNER = {
@@ -68,6 +70,10 @@ export default function Auction() {
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const myBids           = currentRoundBids.filter((b) => b.user_id === user?.id);
   const myBidCount       = myBids.length;
+
+  const squadSize      = teamPlayers?.length ?? 0;
+  const freeSlots      = MAX_SQUAD_SIZE - squadSize;
+  const effectiveBudget = (team?.budget_remaining ?? 0) - myBids.reduce((s, b) => s + b.bid_amount, 0);
 
   const countries = useMemo(
     () => ['All', ...[...new Set(players.map((p) => p.country).filter(Boolean))].sort()],
@@ -170,6 +176,99 @@ export default function Auction() {
         <div className="rounded-xl px-5 py-4 text-sm font-medium bg-warning/10 text-warning border border-warning/30">
           Round {current_round} has ended — bidding locked. Waiting for admin to advance.
         </div>
+      )}
+
+      {/* ── Team Summary ─────────────────────────────────────────────── */}
+      {team && (
+        <section className="bg-surface rounded-xl p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Budget */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">Budget</p>
+              <p className="text-xl font-bold text-primary tabular-nums">
+                £{team.budget_remaining.toFixed(1)}M
+              </p>
+              {isActive && myBids.length > 0 && (
+                <p className="text-xs text-secondary">
+                  Effective:{' '}
+                  <span className={`font-semibold ${effectiveBudget < 0 ? 'text-error' : 'text-tertiary'}`}>
+                    £{effectiveBudget.toFixed(1)}M
+                  </span>{' '}
+                  <span className="text-muted">after active bids</span>
+                </p>
+              )}
+            </div>
+
+            {/* Squad progress */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">Squad</p>
+              <p className="text-xl font-bold text-primary tabular-nums">
+                {squadSize}
+                <span className="text-muted text-base font-normal">/{MAX_SQUAD_SIZE}</span>
+              </p>
+              <p className="text-xs text-secondary">
+                {freeSlots} slot{freeSlots !== 1 ? 's' : ''} remaining
+              </p>
+            </div>
+
+            {/* By position */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">By Position</p>
+              <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                {POSITIONS.map((pos) => {
+                  const acquired = teamPlayers.filter((tp) => tp.players?.position === pos).length;
+                  const required = SQUAD_REQUIREMENTS[pos].squad;
+                  const cannotFulfill = acquired < required && freeSlots < required - acquired;
+                  return (
+                    <div key={pos} className="flex items-center gap-1.5 text-sm">
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${POSITION_BADGE[pos]}`}>
+                        {pos}
+                      </span>
+                      <span className={cannotFulfill ? 'text-error font-semibold' : 'text-primary'}>
+                        {acquired}/{required}
+                      </span>
+                      {cannotFulfill && <span className="text-error text-xs">⚠</span>}
+                      {acquired >= required && <span className="text-tertiary text-xs">✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Acquired player list */}
+          {squadSize > 0 && (
+            <details>
+              <summary className="cursor-pointer text-xs text-muted hover:text-secondary font-medium select-none">
+                Show {squadSize} acquired player{squadSize !== 1 ? 's' : ''}
+              </summary>
+              <div className="mt-3 space-y-1">
+                {[...teamPlayers]
+                  .sort((a, b) => (b.acquisition_price ?? 0) - (a.acquisition_price ?? 0))
+                  .map((tp) => (
+                    <div
+                      key={tp.id}
+                      className="flex items-center justify-between text-sm py-1 border-b border-border/50 last:border-0"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-xs font-bold ${
+                            POSITION_BADGE[tp.players?.position] ?? 'bg-border text-secondary'
+                          }`}
+                        >
+                          {tp.players?.position ?? '—'}
+                        </span>
+                        <span className="text-primary">{tp.players?.name ?? `Player #${tp.player_id}`}</span>
+                      </div>
+                      <span className="text-secondary tabular-nums">
+                        £{(tp.acquisition_price ?? 0).toFixed(1)}M
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </details>
+          )}
+        </section>
       )}
 
       {/* ── My Bids ──────────────────────────────────────────────────── */}
