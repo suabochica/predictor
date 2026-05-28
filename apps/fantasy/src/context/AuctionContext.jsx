@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
+import { MAX_SQUAD_SIZE } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
@@ -199,7 +200,18 @@ export function AuctionProvider({ children }) {
         continue;
       }
 
-      // 3. Assign player to team (ignore if already assigned from a re-run)
+      // 3. Safety net: skip if team already has a full squad (carry-over race).
+      const { count: currentSquadSize } = await supabase
+        .from('team_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('team_id', team.id);
+
+      if ((currentSquadSize ?? 0) >= MAX_SQUAD_SIZE) {
+        errors.push({ playerId, reason: `Squad is full (${MAX_SQUAD_SIZE}/${MAX_SQUAD_SIZE}) — player skipped.` });
+        continue;
+      }
+
+      // 4. Assign player to team (ignore if already assigned from a re-run)
       const { error: tpErr } = await supabase.from('team_players').upsert(
         {
           team_id: team.id,
@@ -214,13 +226,13 @@ export function AuctionProvider({ children }) {
         continue;
       }
 
-      // 4. Persist winning bid as current_price (price never reverts after auction)
+      // 5. Persist winning bid as current_price (price never reverts after auction)
       await supabase
         .from('players')
         .update({ current_price: winner.bid_amount })
         .eq('id', playerId);
 
-      // 5. Deduct from team budget
+      // 6. Deduct from team budget
       await supabase
         .from('teams')
         .update({
@@ -243,8 +255,9 @@ export function AuctionProvider({ children }) {
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
   // Place a bid. Enforces max 10 active bids per user per round, one bid per
-  // player per round, and the carry-over floor for contested players.
-  async function placeBid(playerId, amount, userId) {
+  // player per round, carry-over floor, effective budget, and squad slot limits.
+  // teamSnapshot = { budgetRemaining, squadSize } — pass from the caller.
+  async function placeBid(playerId, amount, userId, teamSnapshot) {
     const activeBids = bids.filter(
       (b) => b.user_id === userId && b.round_number === auctionState?.current_round
     );
@@ -259,12 +272,29 @@ export function AuctionProvider({ children }) {
     if (floor !== null && amount <= floor) {
       return { error: `This player carries over — minimum bid is £${(floor + 0.1).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
     }
+    // Enforce effective budget and squad slot limits.
+    if (teamSnapshot) {
+      const sumOfActive = activeBids.reduce((s, b) => s + b.bid_amount, 0);
+      const effectiveBudget = teamSnapshot.budgetRemaining - sumOfActive;
+      const projectedSquad  = teamSnapshot.squadSize + activeBids.length + 1;
+
+      if (projectedSquad > MAX_SQUAD_SIZE) {
+        return { error: 'No squad slots remain for new bids.' };
+      }
+      if (amount > effectiveBudget) {
+        return { error: `Effective budget left: £${effectiveBudget.toFixed(1)}M.` };
+      }
+    }
     const { data, error } = await supabase.from('auction_bids').insert({
       user_id: userId,
       player_id: playerId,
       bid_amount: amount,
       round_number: auctionState?.current_round,
     });
+    // DB unique constraint violation — concurrent duplicate bid.
+    if (error?.code === '23505') {
+      return { error: 'Bid already placed for this round.' };
+    }
     return { data, error };
   }
 

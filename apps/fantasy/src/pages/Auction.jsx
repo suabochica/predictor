@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@predictor/supabase';
-import { useLeague } from '../context/LeagueContext';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
+import { useTeam } from '../hooks/useTeam';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import {
   AUCTION_STATUSES,
@@ -42,7 +42,7 @@ const POSITION_GRADIENT = {
 
 export default function Auction() {
   const { user } = useAuth();
-  const { team } = useLeague();
+  const { team, players: teamPlayers } = useTeam();
   const { auctionState, bids, ownedPlayerIds, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
 
@@ -108,7 +108,10 @@ export default function Auction() {
     setErrors((prev) => { const n = { ...prev }; delete n[playerId]; return n; });
 
     try {
-      const { error } = await placeBid(playerId, amount, user.id);
+      const { error } = await placeBid(playerId, amount, user.id, {
+        budgetRemaining: team?.budget_remaining ?? 0,
+        squadSize: teamPlayers?.length ?? 0,
+      });
       if (error) {
         setErrors((prev) => ({
           ...prev,

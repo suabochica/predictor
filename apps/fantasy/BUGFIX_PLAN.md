@@ -58,7 +58,7 @@ Note: a hard CHECK on `team_players` row count per team would need a trigger; we
 The order matters: foundation pieces (DB constraints, extracted utility) come before features that use them.
 
 - [x] **Bug 1** — Won players still show as "Contested"
-- [ ] **Bug 4 + Bug 5** — Effective budget + slot enforcement + dedup (includes migration 021)
+- [x] **Bug 4 + Bug 5** — Effective budget + slot enforcement + dedup (includes migration 021)
 - [ ] **Bug 2** — Auction carry-over between rounds (depends on migration 021's `is_carryover` column)
 - [ ] **Bug 3** — Missing auction summary header (depends on Bug 4's effective-budget computation)
 - [ ] **Bug 7** — Default lineup auto-created at auction end
@@ -97,7 +97,7 @@ Bugs 4+5 are bundled because they share `placeBid` validation logic and the same
 
 ---
 
-## [ ] Bug 4 + Bug 5 — Effective budget + slot enforcement + dedup (bundled)
+## [x] Bug 4 + Bug 5 — Effective budget + slot enforcement + dedup (bundled)
 
 **Files:** `apps/fantasy/src/context/AuctionContext.jsx`, `apps/fantasy/src/pages/Auction.jsx`, new `supabase/migrations/021_auction_constraints.sql`
 
