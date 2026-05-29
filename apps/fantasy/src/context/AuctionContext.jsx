@@ -57,6 +57,14 @@ export function AuctionProvider({ children }) {
     return () => supabase.removeChannel(channel);
   }, []);
 
+  // When the round counter advances (realtime auction_state UPDATE), re-fetch bids and
+  // ownership so every client picks up carry-over bids and newly awarded players immediately.
+  useEffect(() => {
+    if (!auctionState?.current_round) return;
+    fetchBids();
+    fetchOwnedPlayerIds();
+  }, [auctionState?.current_round]);
+
   async function fetchAuctionState() {
     const { data } = await supabase.from('auction_state').select('*').order('id').limit(1).single();
     setAuctionState(data);
@@ -259,6 +267,7 @@ export function AuctionProvider({ children }) {
     }
 
     fetchBids();
+    fetchOwnedPlayerIds();
     return { resolved, contested, errors };
   }
 

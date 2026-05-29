@@ -41,8 +41,8 @@ const POSITION_BADGE = {
 export default function Auction() {
   const { user } = useAuth();
   const { team, players: teamPlayers } = useTeam();
-  const { auctionState, bids, ownedPlayerIds, loading, getHighestBid, getContestFloor, placeBid } = useAuction();
-  const { players, loading: playersLoading } = usePlayers();
+  const { auctionState, bids, ownedPlayerIds, loading, getHighestBid, getContestFloor, placeBid, refreshBids } = useAuction();
+  const { players, loading: playersLoading } = usePlayers({ withOwner: true });
 
   const [posFilter, setPosFilter]       = useState('All');
   const [countryFilter, setCountryFilter] = useState('All');
@@ -77,7 +77,6 @@ export default function Auction() {
   );
 
   const filteredPlayers = players.filter((p) => {
-    if (ownedPlayerIds.has(p.id)) return false;
     if (posFilter !== 'All' && p.position !== posFilter) return false;
     if (countryFilter !== 'All' && p.country !== countryFilter) return false;
     return true;
@@ -121,6 +120,7 @@ export default function Auction() {
         }));
       } else {
         setBidAmounts((prev) => { const n = { ...prev }; delete n[playerId]; return n; });
+        refreshBids();
       }
     } catch {
       setErrors((prev) => ({ ...prev, [playerId]: 'Failed to place bid. Please try again.' }));
@@ -397,12 +397,17 @@ export default function Auction() {
           </Thead>
           <Tbody>
             {filteredPlayers.map((player) => {
+              const isOwned       = player.owner !== null;
+              const ownerLabel    = !isOwned ? null
+                : player.owner?.userId === user?.id
+                  ? 'In your squad'
+                  : `Owned: ${player.owner?.teamName}`;
               const highBid       = getHighestBid(player.id);
               const contestFloor  = getContestFloor(player.id);
               const isContested   = contestFloor !== null;
               const myBidOnPlayer = myBids.find((b) => b.player_id === player.id);
               const isLeading     = !!myBidOnPlayer && highBid?.user_id === user?.id;
-              const canBid        = isActive && !roundExpired && !myBidOnPlayer && myBidCount < MAX_SIMULTANEOUS_BIDS;
+              const canBid        = isActive && !roundExpired && !myBidOnPlayer && !isOwned && myBidCount < MAX_SIMULTANEOUS_BIDS;
               const minBid        = minBidFor(player);
               const isSubmitting  = submitting.has(player.id);
 
@@ -410,6 +415,7 @@ export default function Auction() {
                 <AuctionPlayerRow
                   key={player.id}
                   player={player}
+                  ownerLabel={ownerLabel}
                   isLeading={isLeading}
                   contestFloor={contestFloor}
                   isContested={isContested}

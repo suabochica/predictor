@@ -10,6 +10,7 @@ const POSITION_BADGE = {
 
 export default function AuctionPlayerRow({
   player,
+  ownerLabel,
   isLeading,
   isContested,
   contestFloor,
@@ -27,7 +28,18 @@ export default function AuctionPlayerRow({
   myBidCount,
 }) {
   let statusPill = null;
-  if (isContested) {
+  if (ownerLabel) {
+    const isMine = ownerLabel === 'In your squad';
+    statusPill = (
+      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
+        isMine
+          ? 'bg-tertiary/10 text-tertiary border border-tertiary/40'
+          : 'bg-surface-hover text-muted border border-border'
+      }`}>
+        {isMine ? '★ In your squad' : ownerLabel}
+      </span>
+    );
+  } else if (isContested) {
     statusPill = (
       <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
         ⚡ Contested
