@@ -1,0 +1,198 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2022-12-02",
+    "time": "21:00",
+    "venue": "Stadium 974",
+    "attendance": 41378,
+    "referee": "Fernando Andrés Rapallini",
+    "home_team": "Serbia",
+    "away_team": "Switzerland",
+    "score": {
+      "home": 2,
+      "away": 3
+    }
+  },
+  "stats_columns": {
+    "G": "Goals",
+    "A": "Assists",
+    "RC": "Red cards",
+    "YC": "Yellow cards",
+    "Crn": "Corners won",
+    "S": "Shots",
+    "SOnT": "Shots on target",
+    "BS": "Blocked shots",
+    "P": "Passes",
+    "C": "Crosses",
+    "Tk": "Tackles",
+    "O": "Offsides",
+    "FC": "Fouls conceded",
+    "FW": "Fouls won",
+    "SAV": "Saves"
+  },
+  "players": [
+    {
+      "name": "S. Pavlović",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 1, "S": 0, "SOnT": 0, "BS": 0, "P": 82, "C": 0, "Tk": 2, "O": 0, "FC": 3, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "N. Milenković",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 1, "SOnT": 0, "BS": 0, "P": 59, "C": 1, "Tk": 1, "O": 0, "FC": 2, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "V. Milinković-Savić",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 37, "C": 0, "Tk": 0, "O": 0, "FC": 0, "FW": 0, "SAV": 4
+    },
+    {
+      "name": "A. Živković",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 1, "SOnT": 0, "BS": 0, "P": 21, "C": 3, "Tk": 2, "O": 0, "FC": 0, "FW": 1, "SAV": 0
+    },
+    {
+      "name": "S. Lukić",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 59, "C": 1, "Tk": 0, "O": 0, "FC": 4, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "S. Milinković-Savić",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 33, "C": 0, "Tk": 1, "O": 0, "FC": 2, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "F. Kostić",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 32, "C": 9, "Tk": 3, "O": 0, "FC": 2, "FW": 1, "SAV": 0
+    },
+    {
+      "name": "M. Veljković",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 31, "C": 0, "Tk": 1, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "A. Mitrović",
+      "team": "Serbia",
+      "G": 1, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 3, "SOnT": 1, "BS": 1, "P": 23, "C": 0, "Tk": 0, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "D. Tadić",
+      "team": "Serbia",
+      "G": 0, "A": 1, "RC": 0, "YC": 0, "Crn": 1, "S": 1, "SOnT": 0, "BS": 0, "P": 30, "C": 5, "Tk": 0, "O": 0, "FC": 0, "FW": 3, "SAV": 0
+    },
+    {
+      "name": "D. Vlahović",
+      "team": "Serbia",
+      "G": 1, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 3, "SOnT": 3, "BS": 0, "P": 5, "C": 0, "Tk": 1, "O": 0, "FC": 0, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "L. Jović",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 2, "SOnT": 0, "BS": 1, "P": 9, "C": 0, "Tk": 0, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "N. Gudelj",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 21, "C": 0, "Tk": 1, "O": 0, "FC": 2, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "P. Rajković",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 0, "C": 0, "Tk": 0, "O": 0, "FC": 0, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "N. Maksimović",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 18, "C": 1, "Tk": 1, "O": 0, "FC": 0, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "N. Radonjić",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 1, "SOnT": 0, "BS": 0, "P": 3, "C": 2, "Tk": 0, "O": 0, "FC": 0, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "F. Đuričić",
+      "team": "Serbia",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 3, "C": 0, "Tk": 0, "O": 0, "FC": 0, "FW": 1, "SAV": 0
+    },
+    {
+      "name": "B. Embolo",
+      "team": "Switzerland",
+      "G": 1, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 3, "SOnT": 2, "BS": 0, "P": 15, "C": 0, "Tk": 0, "O": 0, "FC": 2, "FW": 5, "SAV": 0
+    },
+    {
+      "name": "R. Freuler",
+      "team": "Switzerland",
+      "G": 1, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 2, "SOnT": 1, "BS": 0, "P": 28, "C": 0, "Tk": 2, "O": 0, "FC": 1, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "S. Widmer",
+      "team": "Switzerland",
+      "G": 0, "A": 1, "RC": 0, "YC": 1, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 53, "C": 1, "Tk": 3, "O": 0, "FC": 1, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "F. Schär",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 1, "SOnT": 0, "BS": 1, "P": 46, "C": 0, "Tk": 1, "O": 0, "FC": 1, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "D. Sow",
+      "team": "Switzerland",
+      "G": 0, "A": 1, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 27, "C": 1, "Tk": 0, "O": 0, "FC": 0, "FW": 2, "SAV": 0
+    },
+    {
+      "name": "G. Xhaka",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 1, "Crn": 0, "S": 3, "SOnT": 2, "BS": 1, "P": 55, "C": 0, "Tk": 1, "O": 0, "FC": 3, "FW": 3, "SAV": 0
+    },
+    {
+      "name": "X. Shaqiri",
+      "team": "Switzerland",
+      "G": 1, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 2, "SOnT": 1, "BS": 0, "P": 24, "C": 1, "Tk": 0, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "M. Akanji",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 1, "SOnT": 0, "BS": 0, "P": 51, "C": 1, "Tk": 0, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "G. Kobel",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 23, "C": 0, "Tk": 0, "O": 0, "FC": 0, "FW": 0, "SAV": 2
+    },
+    {
+      "name": "R. Vargas",
+      "team": "Switzerland",
+      "G": 0, "A": 1, "RC": 0, "YC": 1, "Crn": 0, "S": 1, "SOnT": 0, "BS": 1, "P": 22, "C": 1, "Tk": 0, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "R. Rodríguez",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 37, "C": 3, "Tk": 2, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "E. Fernandes",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 16, "C": 0, "Tk": 1, "O": 0, "FC": 1, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "D. Zakaria",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 8, "C": 0, "Tk": 0, "O": 0, "FC": 0, "FW": 1, "SAV": 0
+    },
+    {
+      "name": "C. Fassnacht",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 1, "SOnT": 1, "BS": 0, "P": 10, "C": 0, "Tk": 0, "O": 0, "FC": 0, "FW": 0, "SAV": 0
+    },
+    {
+      "name": "N. Okafor",
+      "team": "Switzerland",
+      "G": 0, "A": 0, "RC": 0, "YC": 0, "Crn": 0, "S": 0, "SOnT": 0, "BS": 0, "P": 0, "C": 0, "Tk": 0, "O": 1, "FC": 0, "FW": 0, "SAV": 0
+    }
+  ],
+  "totals": {
+    "G": 5, "A": 4, "RC": 0, "YC": 11, "Crn": 2, "S": 26, "SOnT": 11, "BS": 5, "P": 881, "C": 30, "Tk": 23, "O": 0, "FC": 32, "FW": 31, "SAV": 6
+  }
+}
