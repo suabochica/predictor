@@ -2,7 +2,7 @@
 
 Score prediction app for the FIFA World Cup 2026. Users submit match predictions and compete on a leaderboard.
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Category | Library |
 |---|---|
@@ -14,7 +14,7 @@ Score prediction app for the FIFA World Cup 2026. Users submit match predictions
 | Testing | Jest 29 + `@testing-library/react` |
 | Shared | `@predictor/supabase`, `@predictor/types`, `@predictor/ui` |
 
-## Folder Structure
+## 📁 Folder Structure
 
 ```
 src/
@@ -56,7 +56,7 @@ apps/polla/
 └── public/                  # Static assets
 ```
 
-## Commands
+## 🧞 Commands
 
 | Command | Description |
 |---|---|
@@ -67,7 +67,7 @@ apps/polla/
 | `pnpm test:watch` | Run tests in watch mode |
 | `pnpm import-matches` | Seed matches into Supabase |
 
-## Auth
+## 🛂 Auth
 
 Middleware (`src/middleware.ts`) guards all routes except `/polla/register` and `/polla/auth`:
 

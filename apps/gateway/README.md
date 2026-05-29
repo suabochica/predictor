@@ -2,7 +2,7 @@
 
 Auth entry point and dashboard for the Predictor monorepo. Handles login, registration, and routes users to sub-apps.
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Category | Library |
 |---|---|
@@ -13,7 +13,7 @@ Auth entry point and dashboard for the Predictor monorepo. Handles login, regist
 | Auth & DB | `@supabase/ssr` (server), `@supabase/supabase-js` (browser) |
 | Shared | `@predictor/supabase`, `@predictor/types`, `@predictor/ui` |
 
-## Folder Structure
+## 📁 Folder Structure
 
 ```
 src/
@@ -43,7 +43,7 @@ apps/gateway/
 └── .env                     # PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY
 ```
 
-## Commands
+## 🧞 Commands
 
 | Command | Description |
 |---|---|
@@ -51,7 +51,7 @@ apps/gateway/
 | `pnpm build` | Production build (SSR via Netlify adapter) |
 | `pnpm preview` | Preview production build |
 
-## Auth
+## 🛂 Auth
 
 Middleware (`src/middleware.ts`) guards all routes except `/login`, `/register`, and `/auth/callback`:
 

@@ -2,7 +2,7 @@
 
 Fantasy league management for the FIFA World Cup 2026. Players build squads through auctions, manage lineups, and compete on a leaderboard.
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Category | Library |
 |---|---|
@@ -15,7 +15,7 @@ Fantasy league management for the FIFA World Cup 2026. Players build squads thro
 | Shared | `@predictor/supabase`, `@predictor/types`, `@predictor/ui` |
 | Linting | ESLint 9 + `eslint-plugin-react-hooks` |
 
-## Folder Structure
+## 📁 Folder Structure
 
 ```
 src/
@@ -83,7 +83,7 @@ apps/fantasy/
 └── .env                      # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
 
-## Commands
+## 🧞 Commands
 
 | Command | Description |
 |---|---|
@@ -92,7 +92,7 @@ apps/fantasy/
 | `pnpm lint` | Lint all source files |
 | `pnpm preview` | Preview production build |
 
-## Auth
+## 🛂 Auth
 
 Uses `AuthProvider` from `@predictor/supabase` wrapping the entire app in `App.jsx`:
 
@@ -106,6 +106,6 @@ BrowserRouter basename="/fantasy"
 
 All pages and hooks import `supabase` directly from `@predictor/supabase` for REST queries and realtime subscriptions.
 
-## Deploy
+## 🚀 Deploy
 
 No separate Netlify site — the SPA is built and copied into the gateway's `dist/fantasy/` during the gateway build step. The gateway's `netlify.toml` serves it via SPA fallback (`/fantasy/* → /fantasy/index.html`).
