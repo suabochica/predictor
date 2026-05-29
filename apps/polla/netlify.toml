@@ -1,0 +1,14 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "11"
+
+# Astro base: '/polla/' adds this prefix to URLs but files live at dist/_astro/
+# Rewrite to serve static assets from their actual on-disk location
+[[redirects]]
+  from = "/polla/_astro/*"
+  to = "/_astro/:splat"
+  status = 200

@@ -1,19 +1,5 @@
-[build]
-  command = "pnpm build"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "20"
-  PNPM_VERSION = "9"
-
-# Polla SPA fallback
-[[redirects]]
-  from = "/polla/*"
-  to = "/polla/index.html"
-  status = 200
-
-# Fantasy SPA fallback
-[[redirects]]
-  from = "/fantasy/*"
-  to = "/fantasy/index.html"
-  status = 200
+# This is a monorepo with multiple Netlify sites.
+# Each app has its own netlify.toml with base directory set in the dashboard:
+#
+#   Gateway (main)     → base: apps/gateway → apps/gateway/netlify.toml
+#   Polla (proxy)      → base: apps/polla   → apps/polla/netlify.toml
