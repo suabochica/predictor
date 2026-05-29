@@ -34,7 +34,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = user;
 
   if (!user) {
-    return context.redirect('/login');
+    return context.redirect(import.meta.env.PUBLIC_GATEWAY_URL ?? 'https://predictor-gateway.netlify.app/login');
   }
 
   // Fetch display name & admin status
