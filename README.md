@@ -86,7 +86,62 @@ packages/supabase/         ← Shared TS library (@predictor/supabase)
 ```
 `packages/supabase/` wraps `@supabase/supabase-js` and `@supabase/ssr` with reusable code for all apps. `supabase/` defines the actual database schema, migrations, and RLS policies.
 
- ## 🤖 AI Use
+ 
+ 
+ ## 🚀 Deployment
+
+The project is deployed to **Netlify** using a single-site architecture with a proxy backend.
+
+```
+                         predictor-gateway.netlify.app
+                         ┌────────────────────────────┐
+                         │         Gateway SSR        │
+                         │    (base: apps/gateway)    │
+                         │                            │
+                         │  /            → Gateway    │
+                         │  /login       → Login page │
+                         │  /polla/*     → Proxy ────►│ predictor-polla.netlify.app
+                         │  /fantasy/*   → Static ───►│ (SSR backend for /polla)
+                         │              SPA files  ──►│
+                         └────────────────────────────┘
+```
+
+| Component | URL | Base Dir | Type |
+|---|---|---|---|
+| **Gateway** | `predictor-gateway.netlify.app` | `apps/gateway` | Astro SSR + static files |
+| **Polla** | `predictor-polla.netlify.app` | `apps/polla` | Astro SSR (proxy backend) |
+| **Fantasy** | *(served from gateway)* | — | Vite React SPA (built into gateway dist) |
+
+### Build
+
+```bash
+pnpm build  # builds all three apps
+```
+
+| App | Build Command | Output |
+|---|---|---|
+| Gateway | `pnpm --filter @predictor/fantasy build && pnpm build && cp -r ../fantasy/dist dist/fantasy` | `apps/gateway/dist/` (includes `dist/fantasy/`) |
+| Polla | `pnpm build` | `apps/polla/dist/` |
+
+### Environment Variables
+
+| App | Variable | Purpose |
+|---|---|---|
+| Gateway | `PUBLIC_SUPABASE_URL` | Supabase project URL |
+| Gateway | `PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| Polla | `PUBLIC_SUPABASE_URL` | Supabase project URL |
+| Polla | `PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| Polla | `PUBLIC_GATEWAY_URL` | Gateway URL for auth redirects |
+
+### Routing Strategy
+
+| Path | Production | Dev |
+|---|---|---|
+| `/`, `/login`, `/register` | Gateway SSR | `localhost:4321` |
+| `/polla/*` | 200 rewrite → `predictor-polla.netlify.app/polla/:splat` | Vite proxy → `localhost:4322` |
+| `/fantasy/*` | SPA fallback → `dist/fantasy/index.html` | Vite proxy → `localhost:4323` |
+
+## 🤖 AI Use
 
  The agent code that we are using:
 
