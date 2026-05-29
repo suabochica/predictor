@@ -10,8 +10,10 @@
     "./public/*": "./src/public/*"
   },
   "main": "./src/index.ts",
+  "dependencies": {
+    "@predictor/supabase": "workspace:*"
+  },
   "peerDependencies": {
-    "@predictor/supabase": "workspace:*",
     "react": ">=18",
     "react-dom": ">=18"
   }

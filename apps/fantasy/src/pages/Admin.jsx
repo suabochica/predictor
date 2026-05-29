@@ -3,7 +3,8 @@ import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { AUCTION_STATUSES } from '../config/constants';
-import { calculatePlayerPoints } from '../lib/scoring';
+import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
+import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, generateRelegationBracket, resolveH2H } from '../lib/brackets';
 
@@ -47,9 +48,49 @@ export default function Admin() {
     resolveRound,
   } = useAuction();
 
-  // Completes the auction and auto-activates the first available matchday.
+  // Completes the auction, auto-creates default lineups for full squads, then activates the first matchday.
   async function handleCompleteAuction() {
     await completeAuction();
+
+    // Auto-create pre-tournament (matchday_id = null) lineups for every full squad.
+    const warnings = [];
+    const [{ data: teams }, { data: existingLineups }] = await Promise.all([
+      supabase
+        .from('teams')
+        .select('id, name, team_players(player_id, acquisition_price, players(id, name, position, price))'),
+      supabase.from('lineups').select('team_id').is('matchday_id', null),
+    ]);
+
+    const teamsWithLineup = new Set((existingLineups ?? []).map(r => r.team_id));
+    const toInsert = [];
+
+    for (const team of teams ?? []) {
+      if (teamsWithLineup.has(team.id)) continue; // idempotent — lineup already exists
+      const squad = (team.team_players ?? []).map(tp => ({
+        id: tp.player_id,
+        position: tp.players?.position ?? 'FWD',
+        price: tp.players?.price ?? 0,
+      }));
+      if (squad.length < 15) {
+        warnings.push(`${team.name}: only ${squad.length}/15 players — no default lineup created.`);
+        continue;
+      }
+      const { starters, bench, captainId } = buildDefaultLineup(squad);
+      for (const p of starters) {
+        toInsert.push({ team_id: team.id, player_id: p.id, matchday_id: null, is_starting: true, is_captain: p.id === captainId, bench_order: null });
+      }
+      bench.forEach((p, i) => {
+        toInsert.push({ team_id: team.id, player_id: p.id, matchday_id: null, is_starting: false, is_captain: false, bench_order: i + 1 });
+      });
+    }
+
+    if (toInsert.length > 0) {
+      const { error } = await supabase.from('lineups').insert(toInsert);
+      if (error) warnings.push(`Lineup insert error: ${error.message}`);
+    }
+
+    setLineupWarnings(warnings);
+
     const { data: fresh } = await supabase
       .from('matchdays')
       .select('*')
@@ -66,6 +107,7 @@ export default function Admin() {
   const [confirming, setConfirming] = useState(false);
   const [resolving, setResolving]   = useState(false);
   const [resolveErrors, setResolveErrors] = useState([]);
+  const [lineupWarnings, setLineupWarnings] = useState([]);
 
   // ── League Participants ────────────────────────────────────────────────────
   const [participants, setParticipants] = useState([]);
@@ -313,6 +355,10 @@ export default function Admin() {
   const [calcMatchdayId, setCalcMatchdayId] = useState('');
   const [calcRunning, setCalcRunning] = useState(false);
   const [calcResult, setCalcResult] = useState(null);
+  const [savingSystem, setSavingSystem] = useState(false);
+  const [standingsPreview, setStandingsPreview] = useState(null); // { matchdayId, rows, toStamp, errors }
+  const [previewReady, setPreviewReady] = useState(false);
+  const [confirmingSave, setConfirmingSave] = useState(false);
 
   // ── Knockout Bracket ──────────────────────────────────────────────────────
   const [knockoutMatches, setKnockoutMatches] = useState([]);
@@ -357,7 +403,7 @@ export default function Admin() {
     const { data } = await supabase
       .from('transfers')
       .select(`
-        id, window_number, transfer_type, price_difference, created_at,
+        id, window_number, price_difference, created_at,
         team:teams(name, users(display_name)),
         player_out:players!transfers_player_out_id_fkey(name, position),
         player_in:players!transfers_player_in_id_fkey(name, position)
@@ -405,9 +451,22 @@ export default function Admin() {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
+  // ── 5a. Scoring system toggle ─────────────────────────────────────────────
+  async function handleSaveScoringSystem(system) {
+    setSavingSystem(true);
+    await supabase
+      .from('auction_state')
+      .update({ scoring_system: system })
+      .eq('id', auctionState.id);
+    setSavingSystem(false);
+  }
+
+  // ── 5c. Calculate Standings — step 1: preview (no DB write) ──────────────
   async function handleCalculateStandings(e) {
     e.preventDefault();
     setCalcResult(null);
+    setStandingsPreview(null);
+    setPreviewReady(false);
     if (!calcMatchdayId) { setCalcResult({ errors: ['Select a matchday.'] }); return; }
     setCalcRunning(true);
 
@@ -418,10 +477,10 @@ export default function Admin() {
     const { data: teams } = await supabase.from('teams').select('id, name');
     if (!teams?.length) { setCalcResult({ errors: ['No teams found.'] }); setCalcRunning(false); return; }
 
-    // 2. Fetch all player_stats for this matchday
+    // 2. Fetch all player_stats — include all Opta columns so both scorers work
     const { data: allStats } = await supabase
       .from('player_stats')
-      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points')
+      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won, opta_points')
       .eq('matchday_id', matchdayIdInt);
     const statsMap = Object.fromEntries((allStats ?? []).map(s => [s.player_id, s]));
 
@@ -429,7 +488,7 @@ export default function Admin() {
     const { data: allPlayers } = await supabase.from('players').select('id, position');
     const positionMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.position]));
 
-    // 4. Fetch lineups for this matchday, then fall back to pre-tournament (null) lineups
+    // 4. Fetch lineups — prefer matchday-specific, fall back to pre-tournament (null)
     const { data: matchdayLineups } = await supabase
       .from('lineups')
       .select('team_id, player_id, is_starting, is_captain, bench_order')
@@ -440,15 +499,13 @@ export default function Admin() {
       .select('team_id, player_id, is_starting, is_captain, bench_order')
       .is('matchday_id', null);
 
-    // Build a map of team_id → rows, preferring matchday-specific over pre-tournament
     const matchdayTeamIds = new Set((matchdayLineups ?? []).map(r => r.team_id));
     const allLineups = [
       ...(matchdayLineups ?? []),
       ...(nullLineups ?? []).filter(r => !matchdayTeamIds.has(r.team_id)),
     ];
 
-    // 5. Fetch matchday_points from OTHER matchdays so recalculating the same
-    //    matchday is idempotent — we never read the cumulative total_points column.
+    // 5. Fetch matchday_points from OTHER matchdays — idempotent on re-runs
     const { data: otherStandings } = await supabase
       .from('fantasy_standings')
       .select('team_id, matchday_points, goals_scored')
@@ -461,8 +518,12 @@ export default function Admin() {
       prevByTeam[s.team_id].goals += s.goals_scored    ?? 0;
     }
 
-    const upsertRows = [];
-    let teamsScored = 0;
+    // Opta scorer: prefers stored opta_points, falls back to computed
+    const optaScorer = (stats, position) =>
+      stats.opta_points != null ? stats.opta_points : calculateOptaPoints(stats, position);
+
+    // 6. Compute both scoring systems for every team
+    const previewRows = [];
 
     for (const team of teams) {
       const teamLineupRows = (allLineups ?? []).filter(r => r.team_id === team.id);
@@ -481,40 +542,30 @@ export default function Admin() {
       const captainRow = teamLineupRows.find(r => r.is_captain);
       const captainId = captainRow?.player_id ?? null;
 
-      // Infer formation from starters
       const defCount = starters.filter(p => p.position === 'DEF').length;
       const midCount = starters.filter(p => p.position === 'MID').length;
       const fwdCount = starters.filter(p => p.position === 'FWD').length;
       const formation = `${defCount}-${midCount}-${fwdCount}`;
 
-      const { totalPoints, goalsScored } = calculateTeamMatchdayPoints(
-        { starters, bench, captainId, formation },
-        statsMap,
-        positionMap,
-      );
+      const lineupArgs = { starters, bench, captainId, formation };
+
+      const { totalPoints: currentPts, goalsScored } = calculateTeamMatchdayPoints(lineupArgs, statsMap, positionMap, calculatePlayerPoints);
+      const { totalPoints: optaPts } = calculateTeamMatchdayPoints(lineupArgs, statsMap, positionMap, optaScorer);
 
       const prev = prevByTeam[team.id] ?? { pts: 0, goals: 0 };
 
-      upsertRows.push({
-        team_id: team.id,
-        matchday_id: matchdayIdInt,
-        matchday_points: totalPoints,
-        total_points: prev.pts + totalPoints,
-        goals_scored: goalsScored,
+      previewRows.push({
+        teamId: team.id,
+        teamName: team.name,
+        currentPts,     // integer (FPL)
+        optaPts,        // float (Opta, with captain ×2)
+        prevPts: prev.pts,
+        prevGoals: prev.goals,
+        goalsScored,
       });
-      teamsScored++;
     }
 
-    if (upsertRows.length > 0) {
-      const { error } = await supabase
-        .from('fantasy_standings')
-        .upsert(upsertRows, { onConflict: 'team_id,matchday_id' });
-      if (error) errors.push(`DB error: ${error.message}`);
-    }
-
-    // Stamp null-matchday lineups as matchday-specific — creates the permanent
-    // historical record so History and per-matchday breakdowns always find a lineup.
-    // Only runs for teams that used the null fallback; idempotent on re-runs.
+    // Lineup stamp rows — deferred to confirm step
     const toStamp = (nullLineups ?? [])
       .filter(r => !matchdayTeamIds.has(r.team_id))
       .map(r => ({
@@ -525,6 +576,40 @@ export default function Admin() {
         is_captain: r.is_captain,
         bench_order: r.bench_order,
       }));
+
+    setStandingsPreview({ matchdayId: matchdayIdInt, rows: previewRows, toStamp, errors });
+    setPreviewReady(true);
+    setCalcRunning(false);
+  }
+
+  // ── 5c. Calculate Standings — step 2: confirm & write ────────────────────
+  async function handleConfirmStandings() {
+    if (!standingsPreview) return;
+    setConfirmingSave(true);
+
+    const { matchdayId, rows, toStamp, errors: previewErrors } = standingsPreview;
+    const errors = [...previewErrors];
+    const isOpta = (auctionState.scoring_system ?? 'current') === 'opta';
+
+    const upsertRows = rows.map(r => {
+      const rawPts = isOpta ? r.optaPts : r.currentPts;
+      return {
+        team_id: r.teamId,
+        matchday_id: matchdayId,
+        matchday_points: Math.round(rawPts),
+        total_points: Math.round(r.prevPts + rawPts),
+        goals_scored: r.goalsScored,
+      };
+    });
+
+    if (upsertRows.length > 0) {
+      const { error } = await supabase
+        .from('fantasy_standings')
+        .upsert(upsertRows, { onConflict: 'team_id,matchday_id' });
+      if (error) errors.push(`DB error: ${error.message}`);
+    }
+
+    // Stamp null-matchday lineups as matchday-specific — permanent historical record
     if (toStamp.length > 0) {
       const { error: stampErr } = await supabase
         .from('lineups')
@@ -532,8 +617,10 @@ export default function Admin() {
       if (stampErr) errors.push(`Lineup stamp error: ${stampErr.message}`);
     }
 
-    setCalcResult({ teamsScored, errors });
-    setCalcRunning(false);
+    setCalcResult({ teamsScored: upsertRows.length, errors });
+    setPreviewReady(false);
+    setStandingsPreview(null);
+    setConfirmingSave(false);
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -733,6 +820,215 @@ export default function Admin() {
     setKnockoutCalcResult({ resolved: updates.length, errors });
     await fetchKnockoutData();
     setKnockoutCalcRunning(false);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── CSV Player Import ───────────────────────────────────────────
+  const [csvImportFile, setCsvImportFile] = useState(null);
+  const [csvImportRunning, setCsvImportRunning] = useState(false);
+  const [csvImportResult, setCsvImportResult] = useState(null);
+
+  async function handleCsvPlayerImport(e) {
+    e.preventDefault();
+    setCsvImportResult(null);
+    if (!csvImportFile) { setCsvImportResult({ errors: ['Select a CSV file.'] }); return; }
+
+    setCsvImportRunning(true);
+    const text = await csvImportFile.text();
+    const rows = parseCsv(text);
+    if (rows.length === 0) {
+      setCsvImportResult({ errors: ['CSV is empty or has no data rows.'] });
+      setCsvImportRunning(false);
+      return;
+    }
+
+    // Fetch existing players for dedup by normName(name)|normName(country)
+    const { data: existing } = await supabase.from('players').select('id, name, country');
+    const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const existingSet = new Set(
+      (existing ?? []).map(p => `${normName(p.name)}|${normName(p.country)}`)
+    );
+
+    const VALID_POSITIONS = new Set(['GK', 'DEF', 'MID', 'FWD']);
+    const toInsert = [];
+    const skipped = [];
+    const errors = [];
+
+    for (const row of rows) {
+      const name         = (row['name'] ?? '').trim();
+      const country      = (row['country'] ?? '').trim();
+      const country_code = (row['country_code'] ?? '').trim() || null;
+      const position     = (row['position'] ?? '').trim().toUpperCase();
+      const photo_url    = (row['photo_url'] ?? '').trim() || null;
+      const priceRaw     = (row['price'] ?? '').trim();
+      const price        = parseFloat(priceRaw);
+
+      if (!name)                          { errors.push(`Row missing name: ${JSON.stringify(row)}`); continue; }
+      if (!country)                       { errors.push(`"${name}": missing country`); continue; }
+      if (!VALID_POSITIONS.has(position)) { errors.push(`"${name}": invalid position "${row['position']}" — must be GK, DEF, MID, or FWD`); continue; }
+      if (isNaN(price) || price <= 0)     { errors.push(`"${name}": invalid price "${priceRaw}"`); continue; }
+
+      const key = `${normName(name)}|${normName(country)}`;
+      if (existingSet.has(key)) { skipped.push(name); continue; }
+
+      // current_price = price at import time (no auction run yet)
+      toInsert.push({ name, country, country_code, position, price, current_price: price, photo_url });
+      existingSet.add(key); // prevent duplicates within the same CSV
+    }
+
+    let created = 0;
+    if (toInsert.length > 0) {
+      const { error, data: inserted } = await supabase
+        .from('players')
+        .insert(toInsert)
+        .select('id');
+      if (error) {
+        errors.push(`DB error: ${error.message}`);
+      } else {
+        created = inserted?.length ?? toInsert.length;
+      }
+    }
+
+    setCsvImportResult({ created, skipped, errors });
+    setCsvImportFile(null);
+    setCsvImportRunning(false);
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
+  // ── Opta JSON Stats Upload ────────────────────────────────────────────────
+  const [optaMatchdayId, setOptaMatchdayId] = useState('');
+  const [optaFile, setOptaFile] = useState(null);
+  const [optaUploading, setOptaUploading] = useState(false);
+  const [optaResult, setOptaResult] = useState(null);
+
+  async function handleOptaUpload(e) {
+    e.preventDefault();
+    setOptaResult(null);
+    if (!optaMatchdayId) { setOptaResult({ errors: ['Select a matchday first.'] }); return; }
+    if (!optaFile)        { setOptaResult({ errors: ['Select a JSON file.'] }); return; }
+
+    setOptaUploading(true);
+    let json;
+    try {
+      const text = await optaFile.text();
+      json = JSON.parse(text);
+    } catch {
+      setOptaResult({ errors: ['Invalid JSON file.'] });
+      setOptaUploading(false);
+      return;
+    }
+
+    if (!json.match || !Array.isArray(json.players) || json.players.length === 0) {
+      setOptaResult({ errors: ['JSON missing required "match" or "players" fields.'] });
+      setOptaUploading(false);
+      return;
+    }
+
+    const matchdayId = parseInt(optaMatchdayId, 10);
+    const errors = [];
+
+    // Upsert match_metadata row
+    const { error: metaError } = await supabase
+      .from('match_metadata')
+      .upsert({
+        matchday_id: matchdayId,
+        competition: json.match.competition ?? null,
+        match_date:  json.match.date ?? null,
+        home_team:   json.match.home_team,
+        away_team:   json.match.away_team,
+        score_home:  json.match.score?.home ?? null,
+        score_away:  json.match.score?.away ?? null,
+      }, { onConflict: 'matchday_id,home_team,away_team' });
+
+    if (metaError) errors.push(`match_metadata error: ${metaError.message}`);
+
+    // Fetch all players for name-normalisation lookup
+    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
+    const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
+
+    const toUpsert = [];
+
+    for (const p of json.players) {
+      const player = playerMap[normName(p.name)];
+      if (!player) { errors.push(`Player not found: "${p.name}"`); continue; }
+
+      const minutes_played   = p.MP    ?? 0;
+      const goals            = p.G     ?? 0;
+      const assists          = p.A     ?? 0;
+      const yellow_cards     = p.YC    ?? 0;
+      const red_cards        = p.RC    ?? 0;
+      const own_goals        = p.OG    ?? 0;
+      const goals_conceded   = p.GC    ?? 0;
+      const saves            = p.SAV   ?? 0;
+      const penalty_saves    = p.PSAV  ?? 0;
+      const shots_on_target  = p.SOnT  ?? 0;
+      const shots_off_target = p.SOffT ?? 0;
+      const blocked_shots    = p.BS    ?? 0;
+      const tackles          = p.Tk    ?? 0;
+      const interceptions    = p.INT   ?? 0;
+      const fouls_won        = p.FW    ?? 0;
+      const fouls_conceded   = p.FC    ?? 0;
+      const offsides         = p.O     ?? 0;
+      const passes           = p.P     ?? 0;
+      const crosses          = p.C     ?? 0;
+      const penalties_won    = p.PW    ?? 0;
+      const opta_points      = p.PTS   ?? null;
+      // Opta has no clean-sheet field — derive from GC + minutes
+      const clean_sheet = goals_conceded === 0 && minutes_played >= 60;
+
+      const stats = {
+        minutes_played, goals, assists, clean_sheet, saves,
+        penalty_saves, penalty_misses: 0, yellow_cards, red_cards,
+        own_goals, goals_conceded,
+      };
+      const total_points = calculatePlayerPoints(stats, player.position);
+
+      toUpsert.push({
+        player_id: player.id,
+        matchday_id: matchdayId,
+        minutes_played,
+        goals,
+        assists,
+        clean_sheet,
+        saves,
+        penalty_saves,
+        penalty_misses: 0,
+        yellow_cards,
+        red_cards,
+        own_goals,
+        goals_conceded,
+        shots_on_target,
+        shots_off_target,
+        blocked_shots,
+        tackles,
+        interceptions,
+        fouls_won,
+        fouls_conceded,
+        offsides,
+        passes,
+        crosses,
+        penalties_won,
+        opta_points,
+        total_points,
+      });
+    }
+
+    let inserted = 0;
+    if (toUpsert.length > 0) {
+      const { error } = await supabase
+        .from('player_stats')
+        .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
+      if (error) {
+        errors.push(`DB error: ${error.message}`);
+      } else {
+        inserted = toUpsert.length;
+      }
+    }
+
+    setOptaResult({ inserted, errors });
+    setOptaFile(null);
+    setOptaUploading(false);
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -958,6 +1254,15 @@ export default function Admin() {
             <p className="text-muted text-sm italic">Auction is complete. No further actions available.</p>
           )}
         </div>
+
+        {lineupWarnings.length > 0 && (
+          <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-1">
+            <p className="text-warning text-sm font-semibold">Default lineup warnings:</p>
+            {lineupWarnings.map((w, i) => (
+              <p key={i} className="text-warning text-xs">{w}</p>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Round Resolution Confirmation ───────────────────────────────── */}
@@ -1325,6 +1630,64 @@ export default function Admin() {
         )}
       </section>
 
+      {/* ── Opta JSON Stats Upload ───────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">Opta JSON Stats Upload</h2>
+          <p className="text-xs text-muted mt-1">
+            Upload an Opta Points JSON file to store per-player stats (tackles, shots, passes, etc.) and Opta PTS. Idempotent — re-uploading overwrites existing rows for the same matchday.
+          </p>
+        </div>
+
+        <form onSubmit={handleOptaUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Matchday</label>
+              <select
+                value={optaMatchdayId}
+                onChange={e => setOptaMatchdayId(e.target.value)}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              >
+                <option value="">Select matchday…</option>
+                {matchdays.map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Opta Points JSON File</label>
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={e => { setOptaFile(e.target.files?.[0] ?? null); setOptaResult(null); }}
+                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={optaUploading}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {optaUploading ? 'Uploading…' : 'Upload Opta Stats'}
+          </button>
+        </form>
+
+        {optaResult && (
+          <div className={`rounded-lg p-4 space-y-1 ${optaResult.errors?.length > 0 && !optaResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+            {optaResult.inserted > 0 && (
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ {optaResult.inserted} stat row{optaResult.inserted !== 1 ? 's' : ''} saved.
+              </p>
+            )}
+            {optaResult.errors?.map((err, i) => (
+              <p key={i} className="text-error text-xs">{err}</p>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* ── Standings Calculation ───────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <div>
@@ -1334,12 +1697,38 @@ export default function Admin() {
           </p>
         </div>
 
+        {/* ── 5b. Scoring System Selector ─────────────────────────────── */}
+        <div>
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">Scoring System</p>
+          <div className="flex items-center gap-2">
+            {['current', 'opta'].map((system) => {
+              const isActive = (auctionState.scoring_system ?? 'current') === system;
+              const label = system === 'current' ? 'Current (FPL-style)' : 'Opta';
+              return (
+                <button
+                  key={system}
+                  onClick={() => handleSaveScoringSystem(system)}
+                  disabled={savingSystem || isActive}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
+                    isActive
+                      ? 'bg-tertiary text-primary cursor-default'
+                      : 'bg-surface-hover hover:bg-border text-secondary disabled:opacity-50'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+            {savingSystem && <span className="text-xs text-muted">Saving…</span>}
+          </div>
+        </div>
+
         <form onSubmit={handleCalculateStandings} className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-48">
             <label className="block text-xs text-muted mb-1">Matchday</label>
             <select
               value={calcMatchdayId}
-              onChange={e => setCalcMatchdayId(e.target.value)}
+              onChange={e => { setCalcMatchdayId(e.target.value); setStandingsPreview(null); setPreviewReady(false); setCalcResult(null); }}
               className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
             >
               <option value="">Select matchday…</option>
@@ -1350,12 +1739,75 @@ export default function Admin() {
           </div>
           <button
             type="submit"
-            disabled={calcRunning}
+            disabled={calcRunning || previewReady}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {calcRunning ? 'Calculating…' : 'Calculate Standings'}
+            {calcRunning ? 'Calculating…' : 'Preview Standings'}
           </button>
         </form>
+
+        {/* ── Preview table (step 1 result) ────────────────────────────── */}
+        {previewReady && standingsPreview && (
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-secondary uppercase tracking-wide">
+              Preview — Active system:{' '}
+              <span className={(auctionState.scoring_system ?? 'current') === 'opta' ? 'text-tertiary' : 'text-info'}>
+                {(auctionState.scoring_system ?? 'current') === 'opta' ? 'Opta' : 'Current (FPL-style)'}
+              </span>
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted border-b border-border">
+                    <th className="pb-2 pr-4 font-medium">Team</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Current pts</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Opta pts</th>
+                    <th className="pb-2 font-medium text-right">Will save</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {standingsPreview.rows.map(r => {
+                    const isOpta = (auctionState.scoring_system ?? 'current') === 'opta';
+                    const willSave = Math.round(isOpta ? r.optaPts : r.currentPts);
+                    return (
+                      <tr key={r.teamId} className="text-secondary">
+                        <td className="py-2 pr-4 text-primary font-medium">{r.teamName}</td>
+                        <td className="py-2 pr-4 text-right">{r.currentPts}</td>
+                        <td className="py-2 pr-4 text-right">
+                          {typeof r.optaPts === 'number' ? r.optaPts.toFixed(1) : '—'}
+                        </td>
+                        <td className="py-2 text-right font-bold text-tertiary">{willSave}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {standingsPreview.errors?.length > 0 && (
+              <div className="space-y-0.5">
+                {standingsPreview.errors.map((err, i) => (
+                  <p key={i} className="text-secondary text-xs">{err}</p>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={handleConfirmStandings}
+                disabled={confirmingSave}
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              >
+                {confirmingSave ? 'Saving…' : 'Confirm & Save'}
+              </button>
+              <button
+                onClick={() => { setPreviewReady(false); setStandingsPreview(null); }}
+                disabled={confirmingSave}
+                className="px-5 py-2 rounded-lg bg-surface-hover hover:bg-border disabled:opacity-50 text-secondary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {calcResult && (
           <div className={`rounded-lg p-4 space-y-1 ${calcResult.errors?.length && !calcResult.teamsScored ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
@@ -1724,7 +2176,6 @@ export default function Admin() {
                     <th className="pb-2 pr-4 font-medium">Manager</th>
                     <th className="pb-2 pr-4 font-medium">Out</th>
                     <th className="pb-2 pr-4 font-medium">In</th>
-                    <th className="pb-2 pr-4 font-medium">Type</th>
                     <th className="pb-2 pr-4 font-medium">Δ Budget</th>
                     <th className="pb-2 font-medium">Time</th>
                   </tr>
@@ -1751,15 +2202,6 @@ export default function Admin() {
                           </span>
                         )}
                       </td>
-                      <td className="py-2 pr-4">
-                        <span className={`text-label-caps px-1.5 py-0.5 rounded font-semibold ${
-                          t.transfer_type === 'locked_swap'
-                            ? 'bg-info/15 text-info'
-                            : 'bg-info/15 text-info'
-                        }`}>
-                          {t.transfer_type === 'locked_swap' ? 'Locked' : 'Free'}
-                        </span>
-                      </td>
                       <td className={`py-2 pr-4 text-xs font-semibold ${
                         (t.price_difference ?? 0) >= 0 ? 'text-tertiary' : 'text-error'
                       }`}>
@@ -1775,6 +2217,66 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── CSV Player Import ───────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">CSV Player Import</h2>
+          <p className="text-xs text-muted mt-1">
+            Upload a CSV to populate the player pool before the auction. Players are deduplicated by name + country.
+            Required columns: <code className="text-secondary">name, country, position, price</code>.
+            Optional: <code className="text-secondary">country_code, photo_url</code>.
+          </p>
+        </div>
+
+        <form onSubmit={handleCsvPlayerImport} className="space-y-4">
+          <div>
+            <label className="block text-xs text-muted mb-1">CSV File</label>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={e => { setCsvImportFile(e.target.files?.[0] ?? null); setCsvImportResult(null); }}
+              className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={csvImportRunning}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {csvImportRunning ? 'Importing…' : 'Import Players'}
+          </button>
+        </form>
+
+        {csvImportResult && (
+          <div className={`rounded-lg p-4 space-y-2 ${csvImportResult.errors?.length && !csvImportResult.created ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+            {csvImportResult.created > 0 && (
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ {csvImportResult.created} player{csvImportResult.created !== 1 ? 's' : ''} created.
+              </p>
+            )}
+            {csvImportResult.created === 0 && !csvImportResult.errors?.length && (
+              <p className="text-secondary text-sm">No new players to import (all already in DB or all skipped).</p>
+            )}
+            {csvImportResult.errors?.map((err, i) => (
+              <p key={i} className="text-error text-xs">{err}</p>
+            ))}
+            {csvImportResult.skipped?.length > 0 && (
+              <details className="mt-1">
+                <summary className="text-xs text-muted cursor-pointer hover:text-secondary">
+                  {csvImportResult.skipped.length} skipped (already in DB) — click to expand
+                </summary>
+                <ul className="mt-2 space-y-0.5 pl-3">
+                  {csvImportResult.skipped.map((name, i) => (
+                    <li key={i} className="text-xs text-secondary">{name}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </div>
         )}
       </section>

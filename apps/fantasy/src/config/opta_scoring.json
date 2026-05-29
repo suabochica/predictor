@@ -1,0 +1,23 @@
+{
+  "G": 10,
+  "SOnT": 4,
+  "SOffT": 2,
+  "BS": 2,
+  "OG": -5,
+  "A": 6,
+  "P": 0.2,
+  "C": 0.2,
+  "Tk": 2,
+  "INT": 2,
+  "FW": 1,
+  "FC": -1,
+  "O": -1,
+  "YC": -2,
+  "RC": -5,
+  "GC_player": -1,
+  "GC_gk": -6,
+  "PW": 4,
+  "SAV_gk": 5,
+  "PSAV_gk": 5,
+  "captain_multiplier": 2
+}

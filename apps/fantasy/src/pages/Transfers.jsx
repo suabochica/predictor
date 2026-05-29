@@ -5,7 +5,7 @@ import { useLeague } from '../context/LeagueContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
-import { LOCK_PRICE_THRESHOLD, TOTAL_BUDGET, POSITIONS } from '../config/constants';
+import { POSITIONS } from '../config/constants';
 
 // ── Small reusable components ─────────────────────────────────────────────
 
@@ -30,7 +30,6 @@ function PositionFilter({ value, onChange }) {
 }
 
 function SquadPlayerRow({ player, selected, isOut, onSelect }) {
-  const benchIdx = null; // not needed here
   return (
     <button
       onClick={() => onSelect(player)}
@@ -52,22 +51,12 @@ function SquadPlayerRow({ player, selected, isOut, onSelect }) {
       <span className="text-xs text-tertiary flex-shrink-0 w-12 text-right">
         {formatPrice(player.acquisition_price)}
       </span>
-      <span
-        className={`text-label-caps font-semibold flex-shrink-0 px-1.5 py-0.5 rounded ${
-          player.slot_type === 'locked'
-            ? 'bg-info/15 text-info'
-            : 'bg-info/15 text-info'
-        }`}
-      >
-        {player.slot_type === 'locked' ? 'Locked' : 'Free'}
-      </span>
     </button>
   );
 }
 
-function AvailablePlayerRow({ player, selected, canAfford, alreadyOwned, lockedSlot, onSelect }) {
-  const tooExpensive = lockedSlot && player.price > LOCK_PRICE_THRESHOLD;
-  const disabled = tooExpensive || alreadyOwned || !canAfford;
+function AvailablePlayerRow({ player, selected, canAfford, onSelect }) {
+  const disabled = !canAfford;
 
   return (
     <button
@@ -91,12 +80,6 @@ function AvailablePlayerRow({ player, selected, canAfford, alreadyOwned, lockedS
       <span className="text-xs text-tertiary flex-shrink-0 w-12 text-right">
         {formatPrice(player.price)}
       </span>
-      {tooExpensive && (
-        <span className="text-label-caps text-error flex-shrink-0">{'>'}{LOCK_PRICE_THRESHOLD}M</span>
-      )}
-      {alreadyOwned && !tooExpensive && (
-        <span className="text-label-caps text-muted flex-shrink-0">Owned</span>
-      )}
     </button>
   );
 }
@@ -108,7 +91,7 @@ export default function Transfers() {
   const { players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { transfers, transfersUsedThisWindow, transfersRemaining, refresh: refreshTransfers } =
     useTransfers();
-  const { players: allPlayers, loading: playersLoading } = usePlayers();
+  const { players: allPlayers, loading: playersLoading } = usePlayers({ available: true });
 
   const [playerOut, setPlayerOut] = useState(null);
   const [playerIn, setPlayerIn] = useState(null);
@@ -188,8 +171,6 @@ export default function Transfers() {
         country_code: tp.players?.country_code ?? null,
         position: tp.players?.position ?? 'FWD',
         price: tp.players?.price ?? 0,
-        is_locked: tp.is_locked,
-        slot_type: tp.slot_type,
         acquisition_price: tp.acquisition_price,
       })),
     [squadRows]
@@ -197,21 +178,14 @@ export default function Transfers() {
 
   const ownedIds = useMemo(() => new Set(squad.map((p) => p.id)), [squad]);
 
-  // When playerOut is a locked slot, only ≤8.5M players are allowed in
-  const isLockedSwap = playerOut?.slot_type === 'locked';
-
   // Budget impact preview
   const priceDiff = playerOut && playerIn
     ? Number((playerOut.acquisition_price - playerIn.price).toFixed(1))
     : null;
   const budgetAfter = priceDiff !== null ? Number((budget + priceDiff).toFixed(1)) : null;
-  const budgetValid = budgetAfter !== null && budgetAfter >= 0 && budgetAfter + Number((squad.reduce((s, p) => s + p.price, 0) - playerOut?.price + playerIn?.price || 0).toFixed(1)) <= TOTAL_BUDGET;
-
-  // Filter available players
+  // Filter available players (globally unowned via usePlayers({ available: true }))
   const availablePlayers = useMemo(() => {
     return allPlayers.filter((p) => {
-      if (ownedIds.has(p.id)) return false; // already in squad
-      if (isLockedSwap && p.price > LOCK_PRICE_THRESHOLD) return false; // locked swap rule
       if (posFilter && p.position !== posFilter) return false;
       if (searchIn) {
         const q = searchIn.toLowerCase();
@@ -220,7 +194,7 @@ export default function Transfers() {
       }
       return true;
     });
-  }, [allPlayers, ownedIds, isLockedSwap, posFilter, searchIn]);
+  }, [allPlayers, posFilter, searchIn]);
 
   function selectPlayerOut(player) {
     if (playerOut?.id === player.id) {
@@ -249,13 +223,17 @@ export default function Transfers() {
       setTransferring(false);
       return;
     }
-    if (isLockedSwap && playerIn.price > LOCK_PRICE_THRESHOLD) {
-      setTransferError(`Locked slot replacement must be ≤${LOCK_PRICE_THRESHOLD}M.`);
+    if (budgetAfter < 0) {
+      setTransferError('Insufficient budget for this transfer.');
       setTransferring(false);
       return;
     }
-    if (budgetAfter < 0) {
-      setTransferError('Insufficient budget for this transfer.');
+    const gksAfter =
+      squad.filter((p) => p.position === 'GK').length -
+      (playerOut.position === 'GK' ? 1 : 0) +
+      (playerIn.position === 'GK' ? 1 : 0);
+    if (gksAfter < 1) {
+      setTransferError('Transfer rejected: your squad must always have at least 1 goalkeeper.');
       setTransferring(false);
       return;
     }
@@ -277,9 +255,7 @@ export default function Transfers() {
     const { error: insertError } = await supabase.from('team_players').insert({
       team_id: team.id,
       player_id: playerIn.id,
-      is_locked: playerOut.is_locked,
       acquisition_price: playerIn.price,
-      slot_type: playerOut.slot_type,
     });
 
     if (insertError) {
@@ -306,7 +282,6 @@ export default function Transfers() {
       window_number: activeTransferWindow.window_number,
       player_out_id: playerOut.id,
       player_in_id: playerIn.id,
-      transfer_type: isLockedSwap ? 'locked_swap' : 'free_slot',
       price_difference: priceDiff,
     });
 
@@ -336,6 +311,12 @@ export default function Transfers() {
     setTransferring(false);
     setTimeout(() => setSuccessMsg(null), 5000);
   }
+
+  const positionViolation = playerOut && playerIn && (
+    squad.filter((p) => p.position === 'GK').length -
+      (playerOut.position === 'GK' ? 1 : 0) +
+      (playerIn.position === 'GK' ? 1 : 0)
+  ) < 1;
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -408,14 +389,6 @@ export default function Transfers() {
                 <p className="text-label-caps text-muted uppercase tracking-wider">Max</p>
               </div>
             </div>
-          </div>
-
-          {/* Locked swap info */}
-          <div className="bg-surface/50 border border-border/50 rounded-xl p-3 text-xs text-secondary">
-            <span className="text-secondary font-semibold">Locked slot swaps: </span>
-            incoming player must be ≤{LOCK_PRICE_THRESHOLD}M. Budget difference is applied.
-            <span className="text-secondary font-semibold"> Free slot swaps: </span>
-            any player allowed.
           </div>
 
           {/* Transfer priority queue */}
@@ -540,7 +513,7 @@ export default function Transfers() {
                 {playerOut && playerIn && (
                   <button
                     onClick={executeTransfer}
-                    disabled={transferring || budgetAfter < 0 || transfersRemaining <= 0}
+                    disabled={transferring || budgetAfter < 0 || transfersRemaining <= 0 || positionViolation}
                     className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:bg-tertiary text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                   >
                     {transferring ? 'Transferring…' : 'Confirm Transfer'}
@@ -581,11 +554,6 @@ export default function Transfers() {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-secondary">
                     Available Players
-                    {isLockedSwap && (
-                      <span className="ml-2 text-label-caps text-info font-normal">
-                        (≤{LOCK_PRICE_THRESHOLD}M only — locked swap)
-                      </span>
-                    )}
                   </h3>
                   <span className="text-xs text-muted">{availablePlayers.length}</span>
                 </div>
@@ -616,8 +584,6 @@ export default function Transfers() {
                       player={p}
                       selected={playerIn?.id === p.id}
                       canAfford={(budget + (playerOut?.acquisition_price ?? 0) - p.price) >= 0}
-                      alreadyOwned={ownedIds.has(p.id)}
-                      lockedSlot={isLockedSwap}
                       onSelect={selectPlayerIn}
                     />
                   ))

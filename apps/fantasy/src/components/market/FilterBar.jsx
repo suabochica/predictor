@@ -64,15 +64,15 @@ export default function FilterBar({ filters, onChange, resultCount }) {
           <span className="text-xs text-secondary">Affordable only</span>
         </label>
 
-        {/* Hide owned toggle */}
+        {/* Free agents only toggle */}
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input
             type="checkbox"
-            checked={filters.hideOwned ?? true}
-            onChange={(e) => set('hideOwned', e.target.checked)}
+            checked={filters.freeAgentsOnly ?? false}
+            onChange={(e) => set('freeAgentsOnly', e.target.checked)}
             className="accent-tertiary w-3.5 h-3.5"
           />
-          <span className="text-xs text-secondary">Hide owned</span>
+          <span className="text-xs text-secondary">Free agents only</span>
         </label>
 
         <span className="text-xs text-muted ml-auto">{resultCount} players</span>

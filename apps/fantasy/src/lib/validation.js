@@ -1,4 +1,4 @@
-import { LOCK_PRICE_THRESHOLD, TOTAL_BUDGET, MIN_BID_INCREMENT } from '../config/constants';
+import { TOTAL_BUDGET, MIN_BID_INCREMENT } from '../config/constants';
 
 export function validateBid(bidAmount, playerPrice, currentHighBid) {
   if (bidAmount < playerPrice) {
@@ -16,16 +16,6 @@ export function validateBid(bidAmount, playerPrice, currentHighBid) {
 export function validateBudget(currentBudget, cost) {
   if (cost > currentBudget) {
     return { valid: false, error: `Insufficient budget. Available: ${currentBudget.toFixed(1)}M` };
-  }
-  return { valid: true };
-}
-
-export function validateLockedPlayerSwap(playerOut, playerIn) {
-  if (playerIn.price > LOCK_PRICE_THRESHOLD) {
-    return {
-      valid: false,
-      error: `Locked slot replacements must be ≤${LOCK_PRICE_THRESHOLD}M. ${playerIn.name} costs ${playerIn.price}M`,
-    };
   }
   return { valid: true };
 }

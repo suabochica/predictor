@@ -46,7 +46,7 @@ export function applyAutoSubs(lineup, statsMap) {
  *
  * Returns { totalPoints, goalsScored, breakdown: [{ playerId, basePoints, isCaptain, finalPoints, subbed }] }
  */
-export function calculateTeamMatchdayPoints(lineup, statsMap, positionMap) {
+export function calculateTeamMatchdayPoints(lineup, statsMap, positionMap, scorerFn = calculatePlayerPoints) {
   const { starters: rawStarters, bench: rawBench, captainId, formation } = lineup;
 
   // Apply auto-subs first
@@ -67,7 +67,7 @@ export function calculateTeamMatchdayPoints(lineup, statsMap, positionMap) {
     if (!stats) continue;
 
     const position = positionMap[player.id] ?? player.position;
-    const base = calculatePlayerPoints(stats, position);
+    const base = scorerFn(stats, position);
     const isCaptain = player.id === captainId;
     const final = isCaptain ? applyCaptainMultiplier(base) : base;
 

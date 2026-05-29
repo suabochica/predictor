@@ -1,0 +1,48 @@
+0	{ id: 1, name: "Algeria", group: "j", … }
+1	{ id: 2, name: "Argentina", group: "j", … }
+2	{ id: 3, name: "Australia", group: "d", … }
+3	{ id: 4, name: "Austria", group: "j", … }
+4	{ id: 5, name: "Belgium", group: "g", … }
+5	{ id: 6, name: "Bosnia and Herzegovina", group: "b", … }
+6	{ id: 7, name: "Brazil", group: "c", … }
+7	{ id: 8, name: "Cabo Verde", group: "h", … }
+8	{ id: 9, name: "Canada", group: "b", … }
+9	{ id: 10, name: "Colombia", group: "k", … }
+10	{ id: 11, name: "Congo DR", group: "k", … }
+11	{ id: 12, name: "Côte d'Ivoire", group: "e", … }
+12	{ id: 13, name: "Croatia", group: "l", … }
+13	{ id: 14, name: "Curaçao", group: "e", … }
+14	{ id: 15, name: "Czechia", group: "a", … }
+15	{ id: 16, name: "Ecuador", group: "e", … }
+16	{ id: 17, name: "Egypt", group: "g", … }
+17	{ id: 18, name: "England", group: "l", … }
+18	{ id: 19, name: "France", group: "i", … }
+19	{ id: 20, name: "Germany", group: "e", … }
+20	{ id: 21, name: "Ghana", group: "l", … }
+21	{ id: 22, name: "Haiti", group: "c", … }
+22	{ id: 23, name: "IR Iran", group: "g", … }
+23	{ id: 24, name: "Iraq", group: "i", … }
+24	{ id: 25, name: "Japan", group: "f", … }
+25	{ id: 26, name: "Jordan", group: "j", … }
+26	{ id: 27, name: "Korea Republic", group: "a", … }
+27	{ id: 28, name: "Mexico", group: "a", … }
+28	{ id: 29, name: "Morocco", group: "c", … }
+29	{ id: 30, name: "Netherlands", group: "f", … }
+30	{ id: 31, name: "New Zealand", group: "g", … }
+31	{ id: 32, name: "Norway", group: "i", … }
+32	{ id: 33, name: "Panama", group: "l", … }
+33	{ id: 34, name: "Paraguay", group: "d", … }
+34	{ id: 35, name: "Portugal", group: "k", … }
+35	{ id: 36, name: "Qatar", group: "b", … }
+36	{ id: 37, name: "Saudi Arabia", group: "h", … }
+37	{ id: 38, name: "Scotland", group: "c", … }
+38	{ id: 39, name: "Senegal", group: "i", … }
+39	{ id: 40, name: "South Africa", group: "a", … }
+40	{ id: 41, name: "Spain", group: "h", … }
+41	{ id: 42, name: "Sweden", group: "f", … }
+42	{ id: 43, name: "Switzerland", group: "b", … }
+43	{ id: 44, name: "Tunisia", group: "f", … }
+44	{ id: 45, name: "Türkiye", group: "d", … }
+45	{ id: 46, name: "Uruguay", group: "h", … }
+46	{ id: 47, name: "USA", group: "d", … }
+47	{ id: 48, name: "Uzbekistan", group: "k", … }

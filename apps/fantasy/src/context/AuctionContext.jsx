@@ -1,19 +1,21 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
-import { MAX_LOCKED_PLAYERS } from '../config/constants';
+import { MAX_SQUAD_SIZE } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
 export function AuctionProvider({ children }) {
   const [auctionState, setAuctionState] = useState(null);
   const [bids, setBids] = useState([]);
+  const [ownedPlayerIds, setOwnedPlayerIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAuctionState();
     fetchBids();
+    fetchOwnedPlayerIds();
 
-    // Realtime: subscribe to new bids
+    // Realtime: subscribe to new bids and team_players assignments
     const channel = supabase
       .channel('auction-bids')
       .on(
@@ -43,10 +45,25 @@ export function AuctionProvider({ children }) {
           setAuctionState(payload.new);
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'team_players' },
+        (payload) => {
+          setOwnedPlayerIds((prev) => new Set(prev).add(payload.new.player_id));
+        }
+      )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
   }, []);
+
+  // When the round counter advances (realtime auction_state UPDATE), re-fetch bids and
+  // ownership so every client picks up carry-over bids and newly awarded players immediately.
+  useEffect(() => {
+    if (!auctionState?.current_round) return;
+    fetchBids();
+    fetchOwnedPlayerIds();
+  }, [auctionState?.current_round]);
 
   async function fetchAuctionState() {
     const { data } = await supabase.from('auction_state').select('*').order('id').limit(1).single();
@@ -60,6 +77,11 @@ export function AuctionProvider({ children }) {
       .select('*, players(name, position, price), users(display_name)')
       .order('created_at', { ascending: false });
     setBids(data ?? []);
+  }
+
+  async function fetchOwnedPlayerIds() {
+    const { data } = await supabase.from('team_players').select('player_id');
+    setOwnedPlayerIds(new Set((data ?? []).map((r) => r.player_id)));
   }
 
   // Returns highest bid for a given player in the current round.
@@ -80,8 +102,7 @@ export function AuctionProvider({ children }) {
   // they were not awarded (i.e., contested carry-over floor). Returns null if
   // no carry-over floor exists for this player.
   function getContestFloor(playerId) {
-    const isWon = bids.some((b) => b.player_id === playerId && b.is_winning);
-    if (isWon) return null;
+    if (ownedPlayerIds.has(playerId)) return null;
     const previousBids = bids.filter(
       (b) => b.player_id === playerId && b.round_number < (auctionState?.current_round ?? 1)
     );
@@ -158,6 +179,16 @@ export function AuctionProvider({ children }) {
           playerName: topBid?.players?.name ?? `Player #${playerId}`,
           amount: topBid?.bid_amount ?? 0,
         });
+        // Auto-carry the leader's bid into the next round before nextRound() advances current_round.
+        if (topBid) {
+          await supabase.from('auction_bids').insert({
+            user_id: topBid.user_id,
+            player_id: playerId,
+            bid_amount: topBid.bid_amount,
+            round_number: round + 1,
+            is_carryover: true,
+          });
+        }
         continue;
       }
 
@@ -187,14 +218,23 @@ export function AuctionProvider({ children }) {
         continue;
       }
 
-      // 3. Assign player to team (ignore if already assigned from a re-run)
+      // 3. Safety net: skip if team already has a full squad (carry-over race).
+      const { count: currentSquadSize } = await supabase
+        .from('team_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('team_id', team.id);
+
+      if ((currentSquadSize ?? 0) >= MAX_SQUAD_SIZE) {
+        errors.push({ playerId, reason: `Squad is full (${MAX_SQUAD_SIZE}/${MAX_SQUAD_SIZE}) — player skipped.` });
+        continue;
+      }
+
+      // 4. Assign player to team (ignore if already assigned from a re-run)
       const { error: tpErr } = await supabase.from('team_players').upsert(
         {
           team_id: team.id,
           player_id: playerId,
-          is_locked: true,
           acquisition_price: winner.bid_amount,
-          slot_type: 'locked',
         },
         { onConflict: 'team_id,player_id', ignoreDuplicates: true }
       );
@@ -204,13 +244,13 @@ export function AuctionProvider({ children }) {
         continue;
       }
 
-      // 4. Persist winning bid as current_price (price never reverts after auction)
+      // 5. Persist winning bid as current_price (price never reverts after auction)
       await supabase
         .from('players')
         .update({ current_price: winner.bid_amount })
         .eq('id', playerId);
 
-      // 5. Deduct from team budget
+      // 6. Deduct from team budget
       await supabase
         .from('teams')
         .update({
@@ -226,14 +266,17 @@ export function AuctionProvider({ children }) {
       });
     }
 
+    fetchBids();
+    fetchOwnedPlayerIds();
     return { resolved, contested, errors };
   }
 
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
   // Place a bid. Enforces max 10 active bids per user per round, one bid per
-  // player per round, and the carry-over floor for contested players.
-  async function placeBid(playerId, amount, userId) {
+  // player per round, carry-over floor, effective budget, and squad slot limits.
+  // teamSnapshot = { budgetRemaining, squadSize } — pass from the caller.
+  async function placeBid(playerId, amount, userId, teamSnapshot) {
     const activeBids = bids.filter(
       (b) => b.user_id === userId && b.round_number === auctionState?.current_round
     );
@@ -243,26 +286,23 @@ export function AuctionProvider({ children }) {
     if (activeBids.some((b) => b.player_id === playerId)) {
       return { error: 'You already have a bid on this player this round.' };
     }
-    // Gate: prevent bidding once the team already holds MAX_LOCKED_PLAYERS locked acquisitions.
-    const { data: bidderTeam } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-    if (bidderTeam) {
-      const { count } = await supabase
-        .from('team_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('team_id', bidderTeam.id)
-        .eq('slot_type', 'locked');
-      if (count >= MAX_LOCKED_PLAYERS) {
-        return { error: `Your squad already has ${MAX_LOCKED_PLAYERS} locked players — the maximum allowed.` };
-      }
-    }
     // Enforce carry-over floor: bid must strictly exceed the highest bid from previous rounds.
     const floor = getContestFloor(playerId);
     if (floor !== null && amount <= floor) {
       return { error: `This player carries over — minimum bid is £${(floor + 0.1).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
+    }
+    // Enforce effective budget and squad slot limits.
+    if (teamSnapshot) {
+      const sumOfActive = activeBids.reduce((s, b) => s + b.bid_amount, 0);
+      const effectiveBudget = teamSnapshot.budgetRemaining - sumOfActive;
+      const projectedSquad  = teamSnapshot.squadSize + activeBids.length + 1;
+
+      if (projectedSquad > MAX_SQUAD_SIZE) {
+        return { error: 'No squad slots remain for new bids.' };
+      }
+      if (amount > effectiveBudget) {
+        return { error: `Effective budget left: £${effectiveBudget.toFixed(1)}M.` };
+      }
     }
     const { data, error } = await supabase.from('auction_bids').insert({
       user_id: userId,
@@ -270,12 +310,17 @@ export function AuctionProvider({ children }) {
       bid_amount: amount,
       round_number: auctionState?.current_round,
     });
+    // DB unique constraint violation — concurrent duplicate bid.
+    if (error?.code === '23505') {
+      return { error: 'Bid already placed for this round.' };
+    }
     return { data, error };
   }
 
   const value = {
     auctionState,
     bids,
+    ownedPlayerIds,
     loading,
     getHighestBid,
     getContestFloor,

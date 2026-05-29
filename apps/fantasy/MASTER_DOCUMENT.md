@@ -32,8 +32,8 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 | Feature | Standard Fantasy | Our Version |
 |---------|-----------------|-------------|
-| Player Acquisition | Free market | Blind auction for locked players |
-| Squad Ownership | Shared pool | 8-10 exclusive locked players per user |
+| Player Acquisition | Free market | Blind auction + open market, all exclusive |
+| Squad Ownership | Shared pool | Every player exclusively owned by one team |
 | Competition Format | League only | League stage + H2H Knockouts |
 | Transfer System | Anytime | Structured windows with priority order |
 
@@ -71,8 +71,8 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 ### 3.1 Squad Composition
 
 - **Total squad size:** 15 players
-- **Locked players:** 8-10 players (acquired via auction, ≤8.5M each)
-- **Free slots:** 5-7 players (open market, any price)
+- **All players exclusively owned** — once a player is on your squad, no other team can acquire them
+- Players can be acquired via the blind auction or the open market; there is no lock/free distinction
 
 ### 3.2 Formation Requirements
 
@@ -103,8 +103,7 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 | **Total budget** | **105M** |
 
 **Rules:**
-- Locked players must be ≤8.5M base price each
-- Free slots can be any price
+- Any player can be acquired at any price (no price threshold)
 - Team must remain ≤105M at all times
 
 ---
@@ -113,9 +112,9 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 ### 4.1 Eligibility
 
-- Only players priced **≤8.5M** are available for auction/locking
-- Players **>8.5M** can only be acquired via free slots (post-auction)
-- Each locked player is **exclusive** to one user for the entire tournament
+- **All players** are available for auction regardless of price
+- Every player won at auction is **exclusively owned** by the winning team — they disappear from the auction list immediately
+- Players not won at auction remain available on the open market
 
 ### 4.2 Auction Format: Timed Blind Auction
 
@@ -162,14 +161,11 @@ If two users bid the same amount on the same player:
 
 After auction closes:
 
-1. Each user receives their won players (8-10 locked players)
+1. Each user receives their won players (exclusively owned, price locked in)
 2. Remaining budget calculated automatically
-3. Users shop for free slot players from remaining pool
-4. **Free slot acquisition = open shopping** (not draft order)
-5. Multiple users can own the same free-slot player
-6. Deadline: Before first World Cup match kicks off
-
-**Important:** Same player cannot be in both locked AND free slots for the same user.
+3. Users shop the open market for remaining squad spots — only globally unowned players appear
+4. **Market acquisition = open shopping** (not draft order), but each player can only be owned by one team
+5. Deadline: Before first World Cup match kicks off
 
 ---
 
@@ -320,6 +316,41 @@ Location: `/src/config/scoring.json`
 }
 ```
 
+### 6.4 Alternative: Opta Scoring System
+
+A second scoring system is available, based on Opta Points format. Admin can toggle which system is active.
+
+Location: `/src/config/opta_scoring.json`
+
+| Key | Event | Points |
+|-----|-------|--------|
+| G | Goal | 10 |
+| SOnT | Shot on target | 4 |
+| SOffT | Shot off target | 2 |
+| BS | Blocked shot | 2 |
+| OG | Own goal | -5 |
+| A | Assist | 6 |
+| P | Pass | 0.2 |
+| C | Cross | 0.2 |
+| Tk | Tackle | 2 |
+| INT | Interception | 2 |
+| FW | Foul won | 1 |
+| FC | Foul conceded | -1 |
+| O | Offside | -1 |
+| YC | Yellow card | -2 |
+| RC | Red card | -5 |
+| PW | Penalty won | 4 |
+| GC_player | Goal conceded (non-GK) | -1 per goal |
+| GC_gk | Goal conceded (GK) | -6 per goal |
+| SAV_gk | Save (GK only) | 5 |
+| PSAV_gk | Penalty save (GK only) | 5 |
+
+Captain 2× multiplier applies to both systems.
+
+### 6.5 Scoring System Selection
+
+Admin can switch between "current" (FPL-style) and "opta" modes via the Admin dashboard. The active system is stored in `auction_state.scoring_system`. When calculating standings, Admin previews both systems side-by-side before confirming which set of points to write to the DB.
+
 ---
 
 ## 7. League Stage (Matchdays 1-4)
@@ -379,28 +410,29 @@ Once Round of 32 scores are finalized:
 | Format | Free agent pickup |
 | Locked player trades | Allowed |
 
-### 8.4 Locked Player Swap Rules
+### 8.4 Transfer Rules
 
-You CAN trade a locked player, but only for another **lockable player (≤8.5M)**:
+- Any player in your squad can be transferred out for any globally unowned player
+- No price restriction on incoming player — only the 105M total budget cap applies
+- Budget impact is the difference between the outgoing player's acquisition price and the incoming player's current price
 
 | Scenario | Result |
 |----------|--------|
-| Swap 7.0M locked → 6.5M player | +0.5M to free budget |
-| Swap 7.0M locked → 8.0M player | -1.0M from free budget |
-| Swap 7.0M locked → 9.0M player | ❌ Not allowed (>8.5M) |
+| Swap 7.0M player → 6.5M player | +0.5M to budget |
+| Swap 7.0M player → 9.0M player | -2.0M from budget |
 
 **Budget Rule:** Team must remain ≤105M after all transfers complete.
 
 ### 8.5 Eliminated World Cup Players
 
-If a locked player's national team is eliminated from the World Cup:
+If a player's national team is eliminated from the World Cup:
 
 **Option A:** Keep the player
 - Player earns 0 points for remaining matchdays
 - No budget impact
 
 **Option B:** Use a transfer
-- Replace with available player (following locked/free rules)
+- Replace with any globally unowned player
 - Counts against transfer limit
 
 ---
@@ -588,12 +620,12 @@ All 12 positions determined by knockout results:
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 18 + Vite |
-| Styling | Tailwind CSS |
+| Frontend | React 19 + Vite 8 |
+| Styling | Tailwind CSS v4 (`@tailwindcss/vite`) |
 | Backend/DB | Supabase (PostgreSQL) |
 | Authentication | Supabase Auth |
 | Realtime | Supabase Realtime |
-| Hosting | Vercel |
+| Hosting | Netlify (monorepo) |
 | Repository | GitHub (monorepo) |
 
 ### 10.2 Why Supabase?
@@ -629,14 +661,11 @@ CREATE TABLE players (
   country_code TEXT,
   position TEXT CHECK (position IN ('GK', 'DEF', 'MID', 'FWD')),
   price DECIMAL(4,1) NOT NULL,
+  current_price NUMERIC NOT NULL,  -- ratcheted auction price; persists after auction
   is_eliminated BOOLEAN DEFAULT false,
   photo_url TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
-
--- Auto-calculated lockable status
-CREATE VIEW lockable_players AS
-SELECT *, (price <= 8.5) AS is_lockable FROM players;
 ```
 
 #### Teams Table
@@ -659,11 +688,10 @@ CREATE TABLE team_players (
   id SERIAL PRIMARY KEY,
   team_id INTEGER REFERENCES teams(id) ON DELETE CASCADE,
   player_id INTEGER REFERENCES players(id),
-  is_locked BOOLEAN NOT NULL,
   acquisition_price DECIMAL(4,1) NOT NULL,
-  slot_type TEXT CHECK (slot_type IN ('locked', 'free')),
   created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(team_id, player_id)
+  UNIQUE(team_id, player_id),
+  UNIQUE(player_id)  -- global exclusivity: one team per player
 );
 ```
 
@@ -711,6 +739,7 @@ CREATE TABLE auction_state (
   round_duration_seconds INTEGER DEFAULT 180,
   round_started_at TIMESTAMP,
   last_bid_at TIMESTAMP,
+  scoring_system TEXT DEFAULT 'current' CHECK (scoring_system IN ('current', 'opta')),
   created_at TIMESTAMP DEFAULT NOW()
 );
 ```
@@ -751,6 +780,19 @@ CREATE TABLE player_stats (
   bonus_points INTEGER DEFAULT 0,
   total_points INTEGER DEFAULT 0,
   game_started_at TIMESTAMP,
+  -- Opta-specific columns (migration 020)
+  shots_on_target  INTEGER DEFAULT 0,
+  shots_off_target INTEGER DEFAULT 0,
+  blocked_shots    INTEGER DEFAULT 0,
+  tackles          INTEGER DEFAULT 0,
+  interceptions    INTEGER DEFAULT 0,
+  fouls_won        INTEGER DEFAULT 0,
+  fouls_conceded   INTEGER DEFAULT 0,
+  offsides         INTEGER DEFAULT 0,
+  passes           NUMERIC(8,1) DEFAULT 0,
+  crosses          NUMERIC(8,1) DEFAULT 0,
+  penalties_won    INTEGER DEFAULT 0,
+  opta_points      NUMERIC(8,2) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(player_id, matchday_id)
 );
@@ -804,7 +846,6 @@ CREATE TABLE transfers (
   window_number INTEGER NOT NULL,
   player_out_id INTEGER REFERENCES players(id),
   player_in_id INTEGER REFERENCES players(id),
-  transfer_type TEXT CHECK (transfer_type IN ('locked_swap', 'free_slot')),
   price_difference DECIMAL(4,1),
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -821,6 +862,25 @@ CREATE TABLE transfer_windows (
   opens_at TIMESTAMP,
   closes_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### Match Metadata Table
+
+Stores per-match context uploaded alongside Opta stats.
+
+```sql
+CREATE TABLE match_metadata (
+  id SERIAL PRIMARY KEY,
+  matchday_id INTEGER REFERENCES matchdays(id) ON DELETE CASCADE,
+  competition TEXT,
+  match_date DATE,
+  home_team TEXT NOT NULL,
+  away_team TEXT NOT NULL,
+  score_home INTEGER,
+  score_away INTEGER,
+  uploaded_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(matchday_id, home_team, away_team)
 );
 ```
 
@@ -919,9 +979,23 @@ Manuel Neuer,90,0,0,1,5,0,0,0,0,0,0,2026-06-11T15:00:00Z
 - `game_time` - ISO timestamp of when game started (for lockout logic)
 
 **Points Calculation:**
-System automatically calculates total points based on scoring config.
+System automatically calculates total points based on the active scoring config.
 
-### 11.3 Data Sources for Scraping
+### 11.3 Opta JSON Stats Upload
+
+An alternative upload path using Opta Points JSON format. Used when Opta data is available for a match (richer stats for the Opta scoring system).
+
+**Format:** JSON file produced by the `opta_points_extraction_prompt.md` workflow. Each player entry includes:
+- `name`, `team`, `position` (for scoring lookup)
+- All Opta stat fields: `G`, `A`, `SOnT`, `SOffT`, `BS`, `Tk`, `INT`, `FW`, `FC`, `O`, `P`, `C`, `PW`, `YC`, `RC`, `PTS` (pre-computed Opta total)
+- Match metadata at the top level: `competition`, `match_date`, `home_team`, `away_team`, `score_home`, `score_away`
+
+**Behaviour:**
+- Upserts into `player_stats` (all Opta columns + `opta_points`)
+- Stores match context in `match_metadata`
+- FPL stats columns (minutes, clean_sheet, etc.) are left at 0 — use the CSV upload to fill those separately if needed
+
+### 11.4 Data Sources for Scraping
 
 | Source | Use Case | URL |
 |--------|----------|-----|
@@ -965,11 +1039,11 @@ For development, use Euro 2024 player data with adjusted prices:
 | Page | Features |
 |------|----------|
 | League Settings | Edit league name, invite users |
-| Players | Upload/edit player database |
-| Matchdays | Create matchdays, upload stats |
+| Players | CSV player import (name, country, position, price) |
+| Matchdays | Create matchdays, upload stats via CSV or Opta JSON |
 | Auction | Start/pause/end auction, monitor bids |
-| Scoring | Edit scoring config |
-| Transfers | Open/close windows, view activity |
+| Scoring | Toggle active scoring system (FPL-style vs Opta), preview standings comparison |
+| Transfers | Open/close windows, view activity, priority queue |
 | Manual Adjustments | Point corrections if needed |
 
 ### 12.4 Mobile Responsiveness
@@ -991,73 +1065,82 @@ For development, use Euro 2024 player data with adjusted prices:
 
 ## 13. Development Phases
 
-### Phase 1: Foundation (Week 1)
+### Phase 1: Foundation ✅ Complete
 
-- [ ] Initialize GitHub repository
-- [ ] Setup Vite + React + Tailwind
-- [ ] Create Supabase project
-- [ ] Configure environment variables
-- [ ] Implement authentication (email/password)
-- [ ] Create database schema (migrations)
-- [ ] Basic layout components (Header, Sidebar)
-- [ ] Admin: CSV upload for players
+- [x] Initialize GitHub repository
+- [x] Setup Vite + React + Tailwind
+- [x] Create Supabase project
+- [x] Configure environment variables
+- [x] Implement authentication (email/password)
+- [x] Create database schema (migrations 001–003)
+- [x] Basic layout components (Header, Sidebar)
+- [x] Admin: CSV player import
 
-### Phase 2: Auction System (Week 2)
+### Phase 2: Auction System ✅ Complete
 
-- [ ] Auction room UI design
-- [ ] Real-time bid subscription
-- [ ] Bid placement logic
-- [ ] Budget validation (105M limit)
-- [ ] Max 10 players validation
-- [ ] Auction timer component
-- [ ] Round progression logic
-- [ ] "No new bids" end condition
-- [ ] Winning bid assignment
-- [ ] Locked player assignment to teams
+- [x] Auction room UI design
+- [x] Real-time bid subscription
+- [x] Bid placement logic
+- [x] Budget validation (105M limit)
+- [x] Max 10 players validation
+- [x] Auction timer component
+- [x] Round progression logic
+- [x] "No new bids" end condition
+- [x] Winning bid assignment
+- [x] Exclusive player assignment to teams
 
-### Phase 3: Squad Management (Week 3)
+### Phase 3: Squad Management ✅ Complete
 
-- [ ] Post-auction free slot shopping
-- [ ] Player market with filters
-- [ ] Team builder interface
-- [ ] Drag-and-drop lineup
-- [ ] Formation validation
-- [ ] Captain selection
-- [ ] Bench ordering
-- [ ] Budget tracking display
+- [x] Post-auction open market shopping (exclusively unowned players)
+- [x] Player market with filters (position, country, price)
+- [x] Team builder interface
+- [x] Lineup selection (11 starters)
+- [x] Formation validation
+- [x] Captain selection
+- [x] Bench ordering
+- [x] Budget tracking display
 
-### Phase 4: Matchday & Scoring (Week 4)
+### Phase 4: Matchday & Scoring ✅ Complete
 
-- [ ] Matchday creation (admin)
-- [ ] Stats CSV upload
-- [ ] Point calculation engine
-- [ ] Auto-substitution logic
-- [ ] Rolling lockout (per-game)
-- [ ] Standings calculation
-- [ ] Matchday results view
-- [ ] Points breakdown modal
+- [x] Matchday creation (admin)
+- [x] Stats CSV upload
+- [x] Point calculation engine
+- [x] Auto-substitution logic
+- [x] Rolling lockout (per-game)
+- [x] Standings calculation
+- [x] Matchday results view
+- [x] Points breakdown modal
 
-### Phase 5: Knockout System (Week 5)
+### Phase 5: Knockout System ✅ Complete
 
-- [ ] Bracket seeding logic
-- [ ] Bracket visualization component
-- [ ] H2H matchup cards
-- [ ] Tiebreaker implementation
-- [ ] Bracket advancement
-- [ ] Losers bracket logic
-- [ ] Final standings display
+- [x] Bracket seeding logic
+- [x] Bracket visualization component
+- [x] H2H matchup cards
+- [x] Tiebreaker implementation (captain → goals → league rank)
+- [x] Bracket advancement (championship + relegation + losers)
+- [x] Losers bracket logic (5th/7th place)
+- [x] Final standings display
 
-### Phase 6: Transfer Windows (Week 6)
+### Phase 6: Transfer Windows ✅ Complete
 
-- [ ] Transfer window state management
-- [ ] Inverse order queue logic
-- [ ] Transfer interface
-- [ ] Locked player swap validation
-- [ ] Budget recalculation
-- [ ] Transfer history log
-- [ ] Admin: Open/close windows
+- [x] Transfer window state management
+- [x] Inverse order queue logic (priority queue UI)
+- [x] Transfer interface
+- [x] Any-player swap (exclusive ownership, no lock distinction)
+- [x] Budget recalculation
+- [x] Transfer history / lineup cleanup on transfer
+- [x] Admin: Open/close windows
 
-### Phase 7: Polish & Testing (Week 7)
+### Phase 7 (Post-Phase-6 additions): Opta Scoring ✅ Complete
+
+- [x] `calculateOptaPoints()` scoring function + `opta_scoring.json`
+- [x] Opta JSON Stats Upload in Admin (writes player_stats + match_metadata)
+- [x] CSV Player Import (replaces Bulk Import; sets price + current_price)
+- [x] Scoring system toggle (admin selects FPL vs Opta)
+- [x] Standings preview step (compare both systems before writing to DB)
+- [x] Migration 020 (Opta columns on player_stats, match_metadata, scoring_system on auction_state)
+
+### Phase 8: Polish & Testing (in progress)
 
 - [ ] Mobile responsiveness audit
 - [ ] Error handling & validation
@@ -1068,9 +1151,9 @@ For development, use Euro 2024 player data with adjusted prices:
 - [ ] Performance optimization
 - [ ] Documentation
 
-### Phase 8: Deployment (Week 8)
+### Phase 9: Deployment
 
-- [ ] Vercel deployment setup
+- [ ] Netlify deployment setup (netlify.toml configured; SSR adapters needed)
 - [ ] Environment variables configuration
 - [ ] Domain setup (optional)
 - [ ] Final testing in production
@@ -1082,34 +1165,24 @@ For development, use Euro 2024 player data with adjusted prices:
 ## 14. File Structure
 
 ```
-worldcup-fantasy/
-├── README.md
+apps/fantasy/                   (Vite + React SPA, base /fantasy/)
 ├── MASTER_DOCUMENT.md
 ├── package.json
 ├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
-├── .env.example
-├── .gitignore
+├── eslint.config.js
+├── index.html
 │
 ├── public/
-│   ├── favicon.ico
-│   └── logo.svg
+│   └── favicon.ico
 │
 ├── src/
 │   ├── main.jsx
-│   ├── App.jsx
+│   ├── App.jsx                 (routing — React Router v7)
 │   ├── index.css
 │   │
 │   ├── components/
-│   │   ├── common/
-│   │   │   ├── Button.jsx
-│   │   │   ├── Card.jsx
-│   │   │   ├── Modal.jsx
-│   │   │   ├── Loading.jsx
-│   │   │   ├── Badge.jsx
-│   │   │   ├── Input.jsx
-│   │   │   └── Toast.jsx
+│   │   ├── auction/
+│   │   │   └── AuctionTimer.jsx
 │   │   │
 │   │   ├── layout/
 │   │   │   ├── Header.jsx
@@ -1117,70 +1190,27 @@ worldcup-fantasy/
 │   │   │   ├── Layout.jsx
 │   │   │   └── MobileNav.jsx
 │   │   │
-│   │   ├── auction/
-│   │   │   ├── AuctionRoom.jsx
-│   │   │   ├── PlayerBidCard.jsx
-│   │   │   ├── BidPanel.jsx
-│   │   │   ├── AuctionTimer.jsx
-│   │   │   ├── MyBids.jsx
-│   │   │   └── AuctionHistory.jsx
-│   │   │
-│   │   ├── team/
-│   │   │   ├── TeamBuilder.jsx
-│   │   │   ├── LineupGrid.jsx
-│   │   │   ├── PlayerSlot.jsx
-│   │   │   ├── BenchList.jsx
-│   │   │   ├── FormationPicker.jsx
-│   │   │   └── CaptainBadge.jsx
-│   │   │
 │   │   ├── market/
-│   │   │   ├── PlayerMarket.jsx
-│   │   │   ├── PlayerList.jsx
 │   │   │   ├── PlayerCard.jsx
-│   │   │   ├── FilterBar.jsx
-│   │   │   └── PlayerModal.jsx
+│   │   │   └── FilterBar.jsx
 │   │   │
-│   │   ├── standings/
-│   │   │   ├── LeagueTable.jsx
-│   │   │   ├── StandingsRow.jsx
-│   │   │   └── PointsBreakdown.jsx
-│   │   │
-│   │   ├── knockout/
-│   │   │   ├── BracketView.jsx
-│   │   │   ├── MatchCard.jsx
-│   │   │   ├── ChampionshipBracket.jsx
-│   │   │   ├── RelegationBracket.jsx
-│   │   │   └── LosersBracket.jsx
-│   │   │
-│   │   ├── transfers/
-│   │   │   ├── TransferCenter.jsx
-│   │   │   ├── TransferQueue.jsx
-│   │   │   ├── PlayerSwap.jsx
-│   │   │   └── TransferHistory.jsx
-│   │   │
-│   │   └── admin/
-│   │       ├── AdminDashboard.jsx
-│   │       ├── PlayerUpload.jsx
-│   │       ├── StatsUpload.jsx
-│   │       ├── MatchdayManager.jsx
-│   │       ├── AuctionControl.jsx
-│   │       ├── TransferWindowControl.jsx
-│   │       └── ScoringConfig.jsx
+│   │   └── team/
+│   │       ├── LineupGrid.jsx
+│   │       ├── PlayerSlot.jsx
+│   │       ├── BenchList.jsx
+│   │       └── FormationPicker.jsx
 │   │
-│   ├── pages/
-│   │   ├── Home.jsx
-│   │   ├── Login.jsx
-│   │   ├── Register.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── MyTeam.jsx
-│   │   ├── Market.jsx
-│   │   ├── Standings.jsx
-│   │   ├── Bracket.jsx
+│   ├── pages/                  (full-page views, all in one file each)
+│   │   ├── Admin.jsx           (all admin sections: players, matchdays, auction, knockout, transfers, scoring)
 │   │   ├── Auction.jsx
-│   │   ├── Transfers.jsx
+│   │   ├── Bracket.jsx
+│   │   ├── Dashboard.jsx
 │   │   ├── History.jsx
-│   │   ├── Admin.jsx
-│   │   └── NotFound.jsx
+│   │   ├── Market.jsx
+│   │   ├── MyTeam.jsx
+│   │   ├── NotFound.jsx
+│   │   ├── Standings.jsx
+│   │   └── Transfers.jsx
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.js
@@ -1193,34 +1223,38 @@ worldcup-fantasy/
 │   │   └── useRealtime.js
 │   │
 │   ├── lib/
-│   │   ├── supabase.js
-│   │   ├── scoring.js
+│   │   ├── scoring.js          (calculatePlayerPoints + calculateOptaPoints)
+│   │   ├── matchday.js         (applyAutoSubs, calculateTeamMatchdayPoints)
 │   │   ├── validation.js
 │   │   ├── formations.js
 │   │   ├── brackets.js
 │   │   └── utils.js
 │   │
 │   ├── context/
-│   │   ├── AuthContext.jsx
 │   │   ├── LeagueContext.jsx
 │   │   └── AuctionContext.jsx
 │   │
 │   └── config/
-│       ├── scoring.json
+│       ├── scoring.json        (FPL-style scoring weights)
+│       ├── opta_scoring.json   (Opta scoring weights)
 │       └── constants.js
 │
-├── supabase/
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_rls_policies.sql
-│   │   └── 003_functions.sql
-│   ├── seed.sql
-│   └── config.toml
-│
 └── data/
-    ├── sample_players.csv
-    ├── sample_stats.csv
-    └── euro2024_players.csv
+    └── sample_players.csv
+
+supabase/migrations/            (shared across all apps)
+    ├── 001_initial_schema.sql
+    ├── 002_rls_policies.sql
+    ├── 003_functions.sql
+    ├── 004–012_*.sql           (auction RLS, admin policies, transfer windows RLS)
+    ├── 013_polla_tables.sql
+    ├── 014_polla_rls.sql
+    ├── 015_leaderboard_view.sql
+    ├── 016_lock_system.sql     (adds current_price to players)
+    ├── 017_match_enhancements.sql
+    ├── 018_leaderboard_access.sql
+    ├── 019_simplify_ownership.sql  (removes is_locked/slot_type, adds global UNIQUE(player_id))
+    └── 020_opta_stats.sql      (Opta columns, match_metadata, scoring_system on auction_state)
 ```
 
 ---
@@ -1230,9 +1264,9 @@ worldcup-fantasy/
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- pnpm
 - Supabase account (free tier)
-- Vercel account (free tier)
+- Netlify account (free tier)
 - GitHub account
 
 ### Local Development Setup
@@ -1255,32 +1289,29 @@ cp .env.example .env
 # 5. Run Supabase migrations (if using local Supabase)
 npx supabase db push
 
-# 6. Start development server
-npm run dev
+# 6. Start fantasy app dev server (from monorepo root)
+pnpm dev:fantasy
 
-# 7. Open http://localhost:5173
+# 7. Open http://localhost:4323/fantasy/
 ```
 
 ### Environment Variables
 
 ```env
-# .env.example
+# apps/fantasy/.env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_APP_NAME=World Cup Fantasy
 ```
 
-### Deployment to Vercel
+### Deployment to Netlify
+
+The monorepo is deployed as a single Netlify site via `netlify.toml` at the project root.
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# Build all apps
+pnpm build
 
-# Deploy
-vercel
-
-# Set environment variables in Vercel dashboard
-# or use: vercel env add
+# Deploy via Netlify CLI or push to GitHub (auto-deploy)
 ```
 
 ---
@@ -1290,16 +1321,16 @@ vercel
 | Feature | Implementation |
 |---------|----------------|
 | League Size | 12 players max |
-| Squad Size | 15 (8-10 locked + 5-7 free) |
+| Squad Size | 15 (all exclusively owned) |
 | Budget | 105M total |
-| Auction | Timed blind, 0.3M increment, transparent bidding |
-| Scoring | UEFA-style, admin-editable config |
+| Auction | Timed blind, 0.3M increment, transparent bidding, all players eligible |
+| Scoring | FPL-style or Opta — admin toggles; preview before committing |
 | League Stage | 4 matchdays, total points |
 | Knockouts | 3 rounds, H2H matchday points only |
 | Tiebreaker | Captain → Goals → League rank |
 | Transfer Windows | 1 big (7) + 2 small (3 each), inverse order |
 | Lineup Changes | Rolling lockout per game |
-| Tech Stack | React + Supabase + Vercel |
+| Tech Stack | React 19 + Supabase + Netlify (monorepo) |
 
 ---
 
@@ -1307,10 +1338,10 @@ vercel
 
 | Item | Value |
 |------|-------|
-| Version | 1.0 |
+| Version | 1.2 |
 | Created | March 2025 |
-| Last Updated | March 2025 |
-| Status | ✅ Ready for Development |
+| Last Updated | May 2026 |
+| Status | ✅ Active — exclusive ownership + dual scoring (Phases 1–7 complete) |
 
 ---
 
@@ -1318,14 +1349,14 @@ vercel
 
 ### Auction Rules
 - Budget: 105M
-- Lockable: ≤8.5M players only
+- All players eligible (no price threshold)
 - Bid increment: 0.3M
 - Max simultaneous bids: 10
 - Round duration: 3 minutes
+- Won players disappear from auction immediately (exclusive ownership)
 
 ### Squad Rules
-- 15 players total
-- 8-10 locked + 5-7 free
+- 15 players total, all exclusively owned
 - Formation: 1 GK, 3-5 DEF, 3-5 MID, 1-3 FWD
 - Captain gets 2x points
 
