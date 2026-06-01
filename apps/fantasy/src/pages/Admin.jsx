@@ -313,17 +313,21 @@ export default function Admin() {
   const [windowActivity, setWindowActivity] = useState([]);
   const [activityLoading, setActivityLoading] = useState(false);
 
-  const fetchTransferWindows = useCallback(async () => {
-    setTwLoading(true);
+  async function fetchTransferWindows() {
     const { data } = await supabase
       .from('transfer_windows')
       .select('*')
       .order('window_number');
     setTransferWindows(data ?? []);
     setTwLoading(false);
-  }, []);
+  }
 
-  useEffect(() => { fetchTransferWindows(); }, [fetchTransferWindows]);
+  useEffect(() => {
+    supabase.from('transfer_windows').select('*').order('window_number').then(({ data }) => {
+      setTransferWindows(data ?? []);
+      setTwLoading(false);
+    });
+  }, []);
 
   async function fetchWindowActivity(windowNumber) {
     setActivityLoading(true);
@@ -358,6 +362,7 @@ export default function Admin() {
     setTwSaving(false);
     if (error) { setTwError(error.message); return; }
     setTwForm(EMPTY_TW_FORM);
+    setTwLoading(true);
     await fetchTransferWindows();
   }
 
@@ -368,12 +373,14 @@ export default function Admin() {
       await supabase.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
     }
     await supabase.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
+    setTwLoading(true);
     await fetchTransferWindows();
     if (activating) await fetchWindowActivity(tw.window_number);
   }
 
   async function handleDeleteTransferWindow(tw) {
     await supabase.from('transfer_windows').delete().eq('id', tw.id);
+    setTwLoading(true);
     await fetchTransferWindows();
   }
   // ──────────────────────────────────────────────────────────────────────────
@@ -769,7 +776,7 @@ export default function Admin() {
       return;
     }
 
-    // Fetch existing players for dedup by normName(name)|normName(country)
+    // Fetch existing players for ded up by normName(name)|normName(country)
     const { data: existing } = await supabase.from('players').select('id, name, country');
     const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const existingSet = new Set(
@@ -869,7 +876,7 @@ export default function Admin() {
 
     if (metaError) errors.push(`match_metadata error: ${metaError.message}`);
 
-    // Fetch all players for name-normalisation lookup
+    // Fetch all players for name-normalization lookup
     const { data: allPlayers } = await supabase.from('players').select('id, name, position');
     const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
     const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
