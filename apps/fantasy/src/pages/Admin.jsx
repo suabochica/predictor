@@ -75,6 +75,9 @@ export default function Admin() {
         warnings.push(`${team.name}: only ${squad.length}/15 players — no default lineup created.`);
         continue;
       }
+      if (!squad.some((p) => p.position === 'GK')) {
+        warnings.push(`${team.name}: no goalkeeper in squad!`);
+      }
       const { starters, bench, captainId } = buildDefaultLineup(squad);
       for (const p of starters) {
         toInsert.push({ team_id: team.id, player_id: p.id, matchday_id: null, is_starting: true, is_captain: p.id === captainId, bench_order: null });
@@ -1350,15 +1353,17 @@ export default function Admin() {
                     <th className="pb-3 pr-4 font-medium">Listed</th>
                     <th className="pb-3 pr-4 font-medium">Top Bid</th>
                     <th className="pb-3 pr-4 font-medium">Leading</th>
-                    <th className="pb-3 font-medium">Bids</th>
+                    <th className="pb-3 pr-4 font-medium">Bids</th>
+                    <th className="pb-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {biddedPlayerIds.map((playerId) => {
-                    const highBid    = getHighestBid(playerId);
-                    const player     = highBid?.players;
-                    const position   = player?.position ?? '—';
-                    const playerBids = currentRoundBids.filter((b) => b.player_id === playerId);
+                    const highBid       = getHighestBid(playerId);
+                    const player        = highBid?.players;
+                    const position      = player?.position ?? '—';
+                    const playerBids    = currentRoundBids.filter((b) => b.player_id === playerId);
+                    const uniqueBidders = new Set(playerBids.map((b) => b.user_id)).size;
 
                     return (
                       <tr key={playerId} className="text-secondary hover:bg-surface-hover/40">
@@ -1379,7 +1384,14 @@ export default function Admin() {
                         <td className="py-3 pr-4 text-primary">
                           {highBid?.users?.display_name ?? '—'}
                         </td>
-                        <td className="py-3 text-muted">{playerBids.length}</td>
+                        <td className="py-3 pr-4 text-muted">{playerBids.length}</td>
+                        <td className="py-3">
+                          {uniqueBidders > 1 && (
+                            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-warning/15 text-warning">
+                              ⚡ Contested
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}

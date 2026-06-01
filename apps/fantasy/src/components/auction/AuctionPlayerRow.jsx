@@ -17,6 +17,7 @@ export default function AuctionPlayerRow({
   highBid,
   myBidOnPlayer,
   canBid,
+  isGkReserved,
   minBid,
   isSubmitting,
   bidValue,
@@ -41,9 +42,14 @@ export default function AuctionPlayerRow({
     );
   } else if (isContested) {
     statusPill = (
-      <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
-        ⚡ Contested
-      </span>
+      <div className="space-y-0.5">
+        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
+          ⚡ Contested
+        </span>
+        {contestFloor !== null && (
+          <p className="text-xs text-muted">floor £{contestFloor.toFixed(1)}</p>
+        )}
+      </div>
     );
   } else if (myBidOnPlayer && isLeading) {
     statusPill = (
@@ -80,6 +86,10 @@ export default function AuctionPlayerRow({
           {isSubmitting ? '…' : 'Bid'}
         </button>
       </div>
+    );
+  } else if (isActive && isGkReserved) {
+    bidCell = (
+      <span className="text-xs text-warning italic">Last slot reserved for GK.</span>
     );
   } else if (isActive && !myBidOnPlayer && myBidCount >= MAX_SIMULTANEOUS_BIDS) {
     bidCell = (

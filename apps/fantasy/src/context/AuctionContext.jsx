@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
-import { MAX_SQUAD_SIZE } from '../config/constants';
+import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
@@ -8,34 +8,27 @@ export function AuctionProvider({ children }) {
   const [auctionState, setAuctionState] = useState(null);
   const [bids, setBids] = useState([]);
   const [ownedPlayerIds, setOwnedPlayerIds] = useState(new Set());
+  const [playerOwners, setPlayerOwners] = useState(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAuctionState();
     fetchBids();
     fetchOwnedPlayerIds();
+    fetchPlayerOwners();
 
-    // Realtime: subscribe to new bids and team_players assignments
     const channel = supabase
       .channel('auction-bids')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'auction_bids' },
-        async (payload) => {
-          // Re-fetch the inserted bid with joins — Realtime payloads lack joined data.
-          const { data } = await supabase
-            .from('auction_bids')
-            .select('*, players(name, position, price), users(display_name)')
-            .eq('id', payload.new.id)
-            .single();
-          if (data) setBids((prev) => [...prev, data]);
-        }
+        () => { fetchBids(); }
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'auction_bids' },
         (payload) => {
-          setBids((prev) => prev.map((b) => (b.id === payload.new.id ? payload.new : b)));
+          setBids((prev) => prev.map((b) => (b.id === payload.new.id ? { ...b, ...payload.new } : b)));
         }
       )
       .on(
@@ -43,13 +36,17 @@ export function AuctionProvider({ children }) {
         { event: 'UPDATE', schema: 'public', table: 'auction_state' },
         (payload) => {
           setAuctionState(payload.new);
+          fetchBids();
+          fetchOwnedPlayerIds();
+          fetchPlayerOwners();
         }
       )
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'team_players' },
-        (payload) => {
-          setOwnedPlayerIds((prev) => new Set(prev).add(payload.new.player_id));
+        () => {
+          fetchOwnedPlayerIds();
+          fetchPlayerOwners();
         }
       )
       .subscribe();
@@ -57,8 +54,7 @@ export function AuctionProvider({ children }) {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  // When the round counter advances (realtime auction_state UPDATE), re-fetch bids and
-  // ownership so every client picks up carry-over bids and newly awarded players immediately.
+  // Fallback re-fetch when round counter advances in case the realtime handler fires late.
   useEffect(() => {
     if (!auctionState?.current_round) return;
     fetchBids();
@@ -82,6 +78,19 @@ export function AuctionProvider({ children }) {
   async function fetchOwnedPlayerIds() {
     const { data } = await supabase.from('team_players').select('player_id');
     setOwnedPlayerIds(new Set((data ?? []).map((r) => r.player_id)));
+  }
+
+  async function fetchPlayerOwners() {
+    const { data } = await supabase
+      .from('team_players')
+      .select('player_id, teams(name, user_id)');
+    const map = new Map();
+    for (const tp of data ?? []) {
+      if (tp.teams) {
+        map.set(tp.player_id, { teamName: tp.teams.name, userId: tp.teams.user_id });
+      }
+    }
+    setPlayerOwners(map);
   }
 
   // Returns highest bid for a given player in the current round.
@@ -165,7 +174,7 @@ export function AuctionProvider({ children }) {
     const errors    = [];
 
     for (const playerId of playerIds) {
-      // Skip players already resolved in a previous resolveRound() call (prevents double budget deduction).
+      // Skip players already resolved in a previous resolveRound() call.
       if (roundBids.some((b) => b.player_id === playerId && b.is_winning)) continue;
 
       const playerBids    = roundBids.filter((b) => b.player_id === playerId);
@@ -179,7 +188,6 @@ export function AuctionProvider({ children }) {
           playerName: topBid?.players?.name ?? `Player #${playerId}`,
           amount: topBid?.bid_amount ?? 0,
         });
-        // Auto-carry the leader's bid into the next round before nextRound() advances current_round.
         if (topBid) {
           await supabase.from('auction_bids').insert({
             user_id: topBid.user_id,
@@ -218,15 +226,26 @@ export function AuctionProvider({ children }) {
         continue;
       }
 
-      // 3. Safety net: skip if team already has a full squad (carry-over race).
-      const { count: currentSquadSize } = await supabase
+      // 3. Safety net: skip if team already has a full squad. Also fetch positions for GK check.
+      const { data: currentSquad } = await supabase
         .from('team_players')
-        .select('*', { count: 'exact', head: true })
+        .select('player_id, players(position)')
         .eq('team_id', team.id);
 
-      if ((currentSquadSize ?? 0) >= MAX_SQUAD_SIZE) {
+      const currentSquadSize = currentSquad?.length ?? 0;
+
+      if (currentSquadSize >= MAX_SQUAD_SIZE) {
         errors.push({ playerId, reason: `Squad is full (${MAX_SQUAD_SIZE}/${MAX_SQUAD_SIZE}) — player skipped.` });
         continue;
+      }
+
+      // GK safety net: if awarding a non-GK would fill the squad while the team has no GK, skip.
+      if (winner.players?.position !== 'GK') {
+        const hasGK = (currentSquad ?? []).some((tp) => tp.players?.position === 'GK');
+        if (!hasGK && currentSquadSize + 1 >= MAX_SQUAD_SIZE) {
+          errors.push({ playerId, reason: `Squad would be full with no goalkeeper — player skipped.` });
+          continue;
+        }
       }
 
       // 4. Assign player to team (ignore if already assigned from a re-run)
@@ -268,14 +287,16 @@ export function AuctionProvider({ children }) {
 
     fetchBids();
     fetchOwnedPlayerIds();
+    fetchPlayerOwners();
     return { resolved, contested, errors };
   }
 
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
-  // Place a bid. Enforces max 10 active bids per user per round, one bid per
-  // player per round, carry-over floor, effective budget, and squad slot limits.
-  // teamSnapshot = { budgetRemaining, squadSize } — pass from the caller.
+  // Place a bid. Client-side guards (fast UX): max 10 active bids, one bid per
+  // player, carry-over floor, effective budget, squad slots, and GK reserve.
+  // The RPC is the server-side source of truth for race safety and ascending bids.
+  // teamSnapshot = { budgetRemaining, squadSize, gkOwned, playerPosition }
   async function placeBid(playerId, amount, userId, teamSnapshot) {
     const activeBids = bids.filter(
       (b) => b.user_id === userId && b.round_number === auctionState?.current_round
@@ -286,16 +307,15 @@ export function AuctionProvider({ children }) {
     if (activeBids.some((b) => b.player_id === playerId)) {
       return { error: 'You already have a bid on this player this round.' };
     }
-    // Enforce carry-over floor: bid must strictly exceed the highest bid from previous rounds.
     const floor = getContestFloor(playerId);
     if (floor !== null && amount <= floor) {
-      return { error: `This player carries over — minimum bid is £${(floor + 0.1).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
+      return { error: `This player carries over — minimum bid is £${(floor + MIN_BID_INCREMENT).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
     }
-    // Enforce effective budget and squad slot limits.
     if (teamSnapshot) {
-      const sumOfActive = activeBids.reduce((s, b) => s + b.bid_amount, 0);
-      const effectiveBudget = teamSnapshot.budgetRemaining - sumOfActive;
-      const projectedSquad  = teamSnapshot.squadSize + activeBids.length + 1;
+      const { budgetRemaining, squadSize, gkOwned = 0, playerPosition } = teamSnapshot;
+      const sumOfActive    = activeBids.reduce((s, b) => s + b.bid_amount, 0);
+      const effectiveBudget = budgetRemaining - sumOfActive;
+      const projectedSquad  = squadSize + activeBids.length + 1;
 
       if (projectedSquad > MAX_SQUAD_SIZE) {
         return { error: 'No squad slots remain for new bids.' };
@@ -303,24 +323,31 @@ export function AuctionProvider({ children }) {
       if (amount > effectiveBudget) {
         return { error: `Effective budget left: £${effectiveBudget.toFixed(1)}M.` };
       }
+
+      // GK reserve: keep the last slot open for a GK when none is owned or in active bids.
+      if (playerPosition && playerPosition !== 'GK' && gkOwned === 0) {
+        const noGkInActiveBids = !activeBids.some((b) => b.players?.position === 'GK');
+        if (noGkInActiveBids && projectedSquad > MAX_SQUAD_SIZE - 1) {
+          return { error: 'Last squad slot must stay open for a goalkeeper.' };
+        }
+      }
     }
-    const { data, error } = await supabase.from('auction_bids').insert({
-      user_id: userId,
-      player_id: playerId,
-      bid_amount: amount,
-      round_number: auctionState?.current_round,
+
+    const { data, error } = await supabase.rpc('place_bid', {
+      p_player_id: playerId,
+      p_amount: amount,
+      p_round: auctionState?.current_round,
     });
-    // DB unique constraint violation — concurrent duplicate bid.
-    if (error?.code === '23505') {
-      return { error: 'Bid already placed for this round.' };
-    }
-    return { data, error };
+    if (error) return { error: error.message };
+    if (data?.error) return { error: data.error };
+    return { data, error: null };
   }
 
   const value = {
     auctionState,
     bids,
     ownedPlayerIds,
+    playerOwners,
     loading,
     getHighestBid,
     getContestFloor,

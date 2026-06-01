@@ -31,6 +31,8 @@ export const TRANSFER_WINDOWS = [
   { window: 3, maxTransfers: 3, label: 'After QF, before SF' },
 ];
 
+export const MIN_GOALKEEPERS = 1;
+
 export const AUCTION_STATUSES = {
   PENDING: 'pending',
   ACTIVE: 'active',
