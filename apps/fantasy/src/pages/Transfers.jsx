@@ -6,6 +6,7 @@ import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { POSITIONS } from '../config/constants';
+import { repointLineupPlayer } from '../lib/lineupSync';
 
 // ── Small reusable components ─────────────────────────────────────────────
 
@@ -285,22 +286,8 @@ export default function Transfers() {
       price_difference: priceDiff,
     });
 
-    // 5. Remove transferred-out player from active matchday lineup (if any)
-    if (activeMatchday?.id) {
-      await supabase
-        .from('lineups')
-        .delete()
-        .eq('team_id', team.id)
-        .eq('player_id', playerOut.id)
-        .eq('matchday_id', activeMatchday.id);
-    }
-    // Also remove from null-matchday lineup (pre-tournament)
-    await supabase
-      .from('lineups')
-      .delete()
-      .eq('team_id', team.id)
-      .eq('player_id', playerOut.id)
-      .is('matchday_id', null);
+    // 5. Repoint the upcoming matchday lineup and null default from player_out → player_in
+    await repointLineupPlayer(team.id, playerOut.id, playerIn.id);
 
     // 6. Refresh everything
     await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers(), fetchPriorityQueue()]);

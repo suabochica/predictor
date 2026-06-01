@@ -32,6 +32,7 @@ export const TRANSFER_WINDOWS = [
 ];
 
 export const MIN_GOALKEEPERS = 1;
+export const LOCK_LEAD_MINUTES = 10;
 
 export const AUCTION_STATUSES = {
   PENDING: 'pending',

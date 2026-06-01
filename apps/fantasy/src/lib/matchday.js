@@ -43,20 +43,12 @@ export function applyAutoSubs(lineup, statsMap) {
 
 /**
  * Calculate total fantasy points for a team on a given matchday.
+ * Manual subs only — the saved starting XI is final; a starter with no minutes scores 0.
  *
- * Returns { totalPoints, goalsScored, breakdown: [{ playerId, basePoints, isCaptain, finalPoints, subbed }] }
+ * Returns { totalPoints, goalsScored, breakdown: [{ playerId, basePoints, isCaptain, finalPoints }], subsApplied: [] }
  */
 export function calculateTeamMatchdayPoints(lineup, statsMap, positionMap, scorerFn = calculatePlayerPoints) {
-  const { starters: rawStarters, bench: rawBench, captainId, formation } = lineup;
-
-  // Apply auto-subs first
-  const { starters, subsApplied } = applyAutoSubs(
-    { starters: rawStarters, bench: rawBench, captainId, formation },
-    statsMap,
-  );
-
-  const subbedInIds = new Set(subsApplied.map((s) => s.playerIn.id));
-  const subbedOutIds = new Set(subsApplied.map((s) => s.playerOut.id));
+  const { starters, captainId } = lineup;
 
   let totalPoints = 0;
   let goalsScored = 0;
@@ -64,38 +56,24 @@ export function calculateTeamMatchdayPoints(lineup, statsMap, positionMap, score
 
   for (const player of starters) {
     const stats = statsMap[player.id];
-    if (!stats) continue;
-
     const position = positionMap[player.id] ?? player.position;
-    const base = scorerFn(stats, position);
+    const base = stats ? scorerFn(stats, position) : 0;
     const isCaptain = player.id === captainId;
     const final = isCaptain ? applyCaptainMultiplier(base) : base;
 
     totalPoints += final;
-    goalsScored += stats.goals ?? 0;
+    goalsScored += stats?.goals ?? 0;
     breakdown.push({
       playerId: player.id,
       basePoints: base,
       finalPoints: final,
       isCaptain,
-      subbedIn: subbedInIds.has(player.id),
+      subbedIn: false,
       subbedOut: false,
     });
   }
 
-  // Record subbed-out players as 0 pts
-  for (const { playerOut } of subsApplied) {
-    breakdown.push({
-      playerId: playerOut.id,
-      basePoints: 0,
-      finalPoints: 0,
-      isCaptain: false,
-      subbedIn: false,
-      subbedOut: true,
-    });
-  }
-
-  return { totalPoints, goalsScored, breakdown, subsApplied };
+  return { totalPoints, goalsScored, breakdown, subsApplied: [] };
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

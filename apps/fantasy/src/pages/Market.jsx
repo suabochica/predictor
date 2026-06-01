@@ -6,6 +6,7 @@ import { usePlayers } from '../hooks/usePlayers';
 import { supabase } from '@predictor/supabase';
 import { formatPrice, getPositionColor } from '../lib/utils';
 import { MAX_SQUAD_SIZE } from '../config/constants';
+import { repointLineupPlayer } from '../lib/lineupSync';
 import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import FilterBar from '../components/market/FilterBar';
 import PlayerRow from '../components/market/PlayerRow';
@@ -179,13 +180,8 @@ export default function Market() {
       return;
     }
 
-    // Remove outgoing player from pre-tournament lineup
-    await supabase
-      .from('lineups')
-      .delete()
-      .eq('team_id', team.id)
-      .eq('player_id', playerOut.id)
-      .is('matchday_id', null);
+    // Repoint the upcoming matchday lineup and null default from playerOut → playerIn
+    await repointLineupPlayer(team.id, playerOut.id, playerIn.id);
 
     await Promise.all([refreshSquad(), refreshTeam(), refreshPlayers()]);
     setConfirmSwapIn(null);

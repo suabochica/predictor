@@ -301,6 +301,34 @@ export default function Admin() {
   const [knockoutCalcRunning, setKnockoutCalcRunning] = useState(false);
   const [knockoutCalcResult, setKnockoutCalcResult] = useState(null);
 
+  // ── Matchday Fixtures ─────────────────────────────────────────────────────
+  const [fixtureMatches, setFixtureMatches] = useState([]);
+  const [fixtureLoading, setFixtureLoading] = useState(false);
+  const [fixtureSavingIds, setFixtureSavingIds] = useState(new Set());
+
+  const fetchFixtureMatches = useCallback(async () => {
+    setFixtureLoading(true);
+    const { data } = await supabase
+      .from('matches')
+      .select('id, match_code, team_a, team_b, match_date, matchday_id')
+      .order('match_date', { ascending: true });
+    setFixtureMatches(data ?? []);
+    setFixtureLoading(false);
+  }, []);
+
+  useEffect(() => { fetchFixtureMatches(); }, [fetchFixtureMatches]);
+
+  async function handleFixtureMatchdayChange(matchId, newMatchdayId) {
+    setFixtureSavingIds(prev => new Set(prev).add(matchId));
+    await supabase
+      .from('matches')
+      .update({ matchday_id: newMatchdayId === '' ? null : Number(newMatchdayId) })
+      .eq('id', matchId);
+    setFixtureSavingIds(prev => { const s = new Set(prev); s.delete(matchId); return s; });
+    await fetchFixtureMatches();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   // ── Transfer Windows ──────────────────────────────────────────────────────
   const WINDOW_DEFAULTS = [
     { window_number: 1, max_transfers: 7, label: 'Window 1 — After R32 (7 transfers)' },
@@ -1518,6 +1546,116 @@ export default function Admin() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* ── Matchday Fixtures ────────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">Matchday Fixtures</h2>
+          <p className="text-xs text-muted mt-1">
+            Assign polla matches to fantasy matchdays. Player lock times are derived from kickoff times —
+            team names must exactly match <code className="text-secondary">players.country</code>.
+          </p>
+        </div>
+
+        {fixtureLoading ? (
+          <p className="text-muted text-sm">Loading matches…</p>
+        ) : fixtureMatches.length === 0 ? (
+          <p className="text-muted text-sm">No matches found. Add matches via the polla app first.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted border-b border-border">
+                  <th className="pb-3 pr-4 font-medium">Match</th>
+                  <th className="pb-3 pr-4 font-medium">Kickoff</th>
+                  <th className="pb-3 font-medium">Fantasy Matchday</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {fixtureMatches.map(match => (
+                  <tr key={match.id} className="text-secondary hover:bg-surface-hover/40">
+                    <td className="py-2.5 pr-4 text-primary font-medium">
+                      {match.team_a} vs {match.team_b}
+                    </td>
+                    <td className="py-2.5 pr-4 text-xs text-secondary">
+                      {new Date(match.match_date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                    </td>
+                    <td className="py-2.5">
+                      <select
+                        value={match.matchday_id ?? ''}
+                        onChange={e => handleFixtureMatchdayChange(match.id, e.target.value)}
+                        disabled={fixtureSavingIds.has(match.id)}
+                        className="bg-surface-hover border border-border rounded-lg px-2 py-1 text-primary text-xs focus:outline-none focus:border-tertiary disabled:opacity-50"
+                      >
+                        <option value="">— unassigned —</option>
+                        {matchdays.map(md => (
+                          <option key={md.id} value={md.id}>{md.name}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* ── Stats CSV Upload ─────────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-primary">Stats CSV Upload</h2>
+        <p className="text-xs text-muted">
+          CSV columns: <code className="text-secondary">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
+        </p>
+
+        <form onSubmit={handleStatsUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Matchday</label>
+              <select
+                value={statsMatchdayId}
+                onChange={e => setStatsMatchdayId(e.target.value)}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              >
+                <option value="">Select matchday…</option>
+                {matchdays.map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">CSV File</label>
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={e => setStatsFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={statsUploading}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {statsUploading ? 'Uploading…' : 'Upload Stats'}
+          </button>
+        </form>
+
+        {statsResult && (
+          <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+            {statsResult.inserted > 0 && (
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ {statsResult.inserted} player stat row{statsResult.inserted !== 1 ? 's' : ''} saved.
+              </p>
+            )}
+            {statsResult.errors?.map((err, i) => (
+              <p key={i} className="text-error text-xs">{err}</p>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Opta JSON Stats Upload ───────────────────────────────────────── */}
