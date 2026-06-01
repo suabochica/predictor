@@ -22,9 +22,9 @@ const WC_STAGES = [
 
 const STATUS_BADGE = {
   pending:   'bg-border text-secondary',
-  active:    'bg-tertiary text-tertiary',
-  paused:    'bg-warning text-warning',
-  completed: 'bg-info text-info',
+  active:    'bg-tertiary text-on-tertiary',
+  paused:    'bg-warning text-on-warning',
+  completed: 'bg-info text-on-info',
 };
 
 const POSITION_BADGE = {
@@ -268,12 +268,6 @@ export default function Admin() {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  // ── Stats CSV Upload ──────────────────────────────────────────────────────
-  const [statsMatchdayId, setStatsMatchdayId] = useState('');
-  const [statsFile, setStatsFile] = useState(null);
-  const [statsUploading, setStatsUploading] = useState(false);
-  const [statsResult, setStatsResult] = useState(null); // { inserted, errors }
-
   function parseCsv(text) {
     const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
     if (lines.length < 2) return [];
@@ -283,73 +277,6 @@ export default function Admin() {
       return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
     });
   }
-
-  async function handleStatsUpload(e) {
-    e.preventDefault();
-    setStatsResult(null);
-    if (!statsMatchdayId) { setStatsResult({ errors: ['Select a matchday first.'] }); return; }
-    if (!statsFile)        { setStatsResult({ errors: ['Select a CSV file.'] }); return; }
-
-    setStatsUploading(true);
-    const text = await statsFile.text();
-    const rows = parseCsv(text);
-    if (rows.length === 0) {
-      setStatsResult({ errors: ['CSV is empty or has no data rows.'] });
-      setStatsUploading(false);
-      return;
-    }
-
-    // Fetch all players to resolve names → id + position
-    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
-    const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
-
-    const toUpsert = [];
-    const errors   = [];
-
-    for (const row of rows) {
-      const name   = (row['player_name'] ?? '').trim();
-      const player = playerMap[normName(name)];
-      if (!player) { errors.push(`Player not found: "${name}"`); continue; }
-
-      const minutes        = parseInt(row['minutes'] ?? '0', 10) || 0;
-      const goals          = parseInt(row['goals'] ?? '0', 10) || 0;
-      const assists        = parseInt(row['assists'] ?? '0', 10) || 0;
-      const clean_sheet    = row['clean_sheet'] === '1' || row['clean_sheet'] === 'true';
-      const saves          = parseInt(row['saves'] ?? '0', 10) || 0;
-      const penalty_saves  = parseInt(row['penalty_saves'] ?? '0', 10) || 0;
-      const penalty_misses = parseInt(row['penalty_misses'] ?? '0', 10) || 0;
-      const yellow_cards   = parseInt(row['yellow'] ?? '0', 10) || 0;
-      const red_cards      = parseInt(row['red'] ?? '0', 10) || 0;
-      const own_goals      = parseInt(row['own_goals'] ?? '0', 10) || 0;
-      const goals_conceded = parseInt(row['goals_conceded'] ?? '0', 10) || 0;
-      const game_time      = row['game_time'] ?? null;
-
-      const stats = { minutes_played: minutes, goals, assists, clean_sheet, saves,
-                      penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded };
-      const total_points = calculatePlayerPoints(stats, player.position);
-
-      toUpsert.push({
-        player_id: player.id,
-        matchday_id: parseInt(statsMatchdayId, 10),
-        ...stats,
-        total_points,
-        game_started_at: game_time || null,
-      });
-    }
-
-    if (toUpsert.length > 0) {
-      const { error } = await supabase
-        .from('player_stats')
-        .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
-      if (error) errors.push(`DB error: ${error.message}`);
-    }
-
-    setStatsResult({ inserted: toUpsert.length, errors });
-    setStatsFile(null);
-    setStatsUploading(false);
-  }
-  // ──────────────────────────────────────────────────────────────────────────
 
   // ── Standings Calculation ─────────────────────────────────────────────────
   const [calcMatchdayId, setCalcMatchdayId] = useState('');
@@ -386,17 +313,21 @@ export default function Admin() {
   const [windowActivity, setWindowActivity] = useState([]);
   const [activityLoading, setActivityLoading] = useState(false);
 
-  const fetchTransferWindows = useCallback(async () => {
-    setTwLoading(true);
+  async function fetchTransferWindows() {
     const { data } = await supabase
       .from('transfer_windows')
       .select('*')
       .order('window_number');
     setTransferWindows(data ?? []);
     setTwLoading(false);
-  }, []);
+  }
 
-  useEffect(() => { fetchTransferWindows(); }, [fetchTransferWindows]);
+  useEffect(() => {
+    supabase.from('transfer_windows').select('*').order('window_number').then(({ data }) => {
+      setTransferWindows(data ?? []);
+      setTwLoading(false);
+    });
+  }, []);
 
   async function fetchWindowActivity(windowNumber) {
     setActivityLoading(true);
@@ -431,6 +362,7 @@ export default function Admin() {
     setTwSaving(false);
     if (error) { setTwError(error.message); return; }
     setTwForm(EMPTY_TW_FORM);
+    setTwLoading(true);
     await fetchTransferWindows();
   }
 
@@ -441,12 +373,14 @@ export default function Admin() {
       await supabase.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
     }
     await supabase.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
+    setTwLoading(true);
     await fetchTransferWindows();
     if (activating) await fetchWindowActivity(tw.window_number);
   }
 
   async function handleDeleteTransferWindow(tw) {
     await supabase.from('transfer_windows').delete().eq('id', tw.id);
+    setTwLoading(true);
     await fetchTransferWindows();
   }
   // ──────────────────────────────────────────────────────────────────────────
@@ -842,7 +776,7 @@ export default function Admin() {
       return;
     }
 
-    // Fetch existing players for dedup by normName(name)|normName(country)
+    // Fetch existing players for ded up by normName(name)|normName(country)
     const { data: existing } = await supabase.from('players').select('id, name, country');
     const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const existingSet = new Set(
@@ -942,7 +876,7 @@ export default function Admin() {
 
     if (metaError) errors.push(`match_metadata error: ${metaError.message}`);
 
-    // Fetch all players for name-normalisation lookup
+    // Fetch all players for name-normalization lookup
     const { data: allPlayers } = await supabase.from('players').select('id, name, position');
     const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
     const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
@@ -1203,7 +1137,7 @@ export default function Admin() {
           {isPending && (
             <button
               onClick={startAuction}
-              className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
               Start Auction
             </button>
@@ -1213,20 +1147,20 @@ export default function Admin() {
             <>
               <button
                 onClick={pauseAuction}
-                className="px-5 py-2 rounded-lg bg-warning hover:bg-tertiary text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                className="px-5 py-2 rounded-lg bg-warning hover:bg-tertiary text-on-warning font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Pause
               </button>
               <button
                 onClick={() => { setConfirming(true); setResolveErrors([]); }}
                 disabled={confirming}
-                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Resolve & Next Round →
               </button>
               <button
                 onClick={handleCompleteAuction}
-                className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-on-error font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Complete Auction
               </button>
@@ -1237,13 +1171,13 @@ export default function Admin() {
             <>
               <button
                 onClick={resumeAuction}
-                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Resume
               </button>
               <button
                 onClick={handleCompleteAuction}
-                className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-on-error font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Complete Auction
               </button>
@@ -1377,7 +1311,7 @@ export default function Admin() {
             <button
               onClick={handleResolveAndAdvance}
               disabled={resolving}
-              className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-primary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
               {resolving ? 'Resolving…' : `Confirm & Advance to Round ${current_round + 1}`}
             </button>
@@ -1507,7 +1441,7 @@ export default function Admin() {
           <button
             type="submit"
             disabled={mdSaving}
-            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {mdSaving ? 'Creating…' : 'Create Matchday'}
           </button>
@@ -1546,7 +1480,7 @@ export default function Admin() {
                           disabled={md.is_completed}
                           className={`px-3 py-1 rounded text-xs font-semibold transition-colors disabled:opacity-40 ${
                             md.is_active
-                              ? 'bg-tertiary text-tertiary hover:bg-tertiary'
+                              ? 'bg-tertiary text-on-tertiary hover:bg-tertiary'
                               : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
                         >
@@ -1558,7 +1492,7 @@ export default function Admin() {
                           onClick={() => handleToggleCompleted(md)}
                           className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
                             md.is_completed
-                              ? 'bg-info text-info hover:brightness-90'
+                              ? 'bg-info text-on-info hover:brightness-90'
                               : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
                         >
@@ -1572,62 +1506,6 @@ export default function Admin() {
             </div>
           )}
         </div>
-      </section>
-
-      {/* ── Stats CSV Upload ─────────────────────────────────────────────── */}
-      <section className="bg-surface rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-primary">Stats CSV Upload</h2>
-        <p className="text-xs text-muted">
-          CSV columns: <code className="text-secondary">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
-        </p>
-
-        <form onSubmit={handleStatsUpload} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-muted mb-1">Matchday</label>
-              <select
-                value={statsMatchdayId}
-                onChange={e => setStatsMatchdayId(e.target.value)}
-                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
-              >
-                <option value="">Select matchday…</option>
-                {matchdays.map(md => (
-                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-muted mb-1">CSV File</label>
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={e => setStatsFile(e.target.files?.[0] ?? null)}
-                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={statsUploading}
-            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-          >
-            {statsUploading ? 'Uploading…' : 'Upload Stats'}
-          </button>
-        </form>
-
-        {statsResult && (
-          <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
-            {statsResult.inserted > 0 && (
-              <p className="text-tertiary text-sm font-semibold">
-                ✓ {statsResult.inserted} player stat row{statsResult.inserted !== 1 ? 's' : ''} saved.
-              </p>
-            )}
-            {statsResult.errors?.map((err, i) => (
-              <p key={i} className="text-error text-xs">{err}</p>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* ── Opta JSON Stats Upload ───────────────────────────────────────── */}
@@ -1668,7 +1546,7 @@ export default function Admin() {
           <button
             type="submit"
             disabled={optaUploading}
-            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {optaUploading ? 'Uploading…' : 'Upload Opta Stats'}
           </button>
@@ -1711,7 +1589,7 @@ export default function Admin() {
                   disabled={savingSystem || isActive}
                   className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
                     isActive
-                      ? 'bg-tertiary text-primary cursor-default'
+                      ? 'bg-tertiary text-on-tertiary cursor-default'
                       : 'bg-surface-hover hover:bg-border text-secondary disabled:opacity-50'
                   }`}
                 >
@@ -1740,7 +1618,7 @@ export default function Admin() {
           <button
             type="submit"
             disabled={calcRunning || previewReady}
-            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {calcRunning ? 'Calculating…' : 'Preview Standings'}
           </button>
@@ -1794,7 +1672,7 @@ export default function Admin() {
               <button
                 onClick={handleConfirmStandings}
                 disabled={confirmingSave}
-                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 {confirmingSave ? 'Saving…' : 'Confirm & Save'}
               </button>
@@ -1889,7 +1767,7 @@ export default function Admin() {
                   <button
                     onClick={handleSeedBracket}
                     disabled={bracketSeeding || standings.length < 8}
-                    className="px-5 py-2 rounded-lg bg-info hover:brightness-90 disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                    className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                   >
                     {bracketSeeding ? 'Seeding…' : 'Seed Bracket'}
                   </button>
@@ -1974,7 +1852,7 @@ export default function Admin() {
                           <button
                             onClick={() => handleCalculateKnockoutRound(activeRound)}
                             disabled={knockoutCalcRunning || !knockoutCalcMatchdayId}
-                            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                           >
                             {knockoutCalcRunning ? 'Calculating…' : `Calculate Round ${activeRound}`}
                           </button>
@@ -2024,7 +1902,7 @@ export default function Admin() {
                 key={preset.window_number}
                 onClick={() => handleCreateTransferWindow(preset)}
                 disabled={twSaving}
-                className="px-3 py-1.5 rounded-lg text-sm bg-info hover:brightness-90 text-info transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-sm bg-tertiary hover:bg-tertiary text-on-tertiary transition-colors disabled:opacity-50"
               >
                 + {preset.label}
               </button>
@@ -2081,7 +1959,7 @@ export default function Admin() {
             <button
               onClick={() => handleCreateTransferWindow(null)}
               disabled={twSaving}
-              className="px-4 py-1.5 rounded-lg text-sm bg-info hover:brightness-90 text-primary transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 rounded-lg text-sm bg-tertiary hover:bg-tertiary text-on-tertiary transition-colors disabled:opacity-50"
             >
               {twSaving ? 'Creating…' : 'Create'}
             </button>
@@ -2133,7 +2011,7 @@ export default function Admin() {
                           onClick={() => handleToggleTransferWindow(tw)}
                           className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
                             tw.is_active
-                              ? 'bg-error hover:brightness-90 text-error'
+                              ? 'bg-error hover:brightness-90 text-on-error'
                               : 'bg-tertiary/15 hover:brightness-90 text-tertiary'
                           }`}
                         >
@@ -2143,7 +2021,7 @@ export default function Admin() {
                           <button
                             onClick={() => fetchWindowActivity(tw.window_number)}
                             disabled={activityLoading}
-                            className="px-3 py-1 rounded text-xs font-semibold bg-info hover:brightness-90 text-info transition-colors"
+                            className="px-3 py-1 rounded text-xs font-semibold bg-info hover:brightness-90 text-on-info transition-colors"
                           >
                             {activityLoading ? 'Loading…' : 'View Activity'}
                           </button>
@@ -2246,7 +2124,7 @@ export default function Admin() {
           <button
             type="submit"
             disabled={csvImportRunning}
-            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
             {csvImportRunning ? 'Importing…' : 'Import Players'}
           </button>
