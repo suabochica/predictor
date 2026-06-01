@@ -19,6 +19,18 @@ export function LeagueProvider({ children }) {
     Promise.all([fetchTeam(), fetchActiveMatchday(), fetchActiveTransferWindow()]).finally(() =>
       setLoading(false)
     );
+
+    // Keep budget live: auction wins / transfers update teams.budget_remaining.
+    const channel = supabase
+      .channel('league-team')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'teams' },
+        () => { fetchTeam(); }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [user]);
 
   async function fetchTeam() {

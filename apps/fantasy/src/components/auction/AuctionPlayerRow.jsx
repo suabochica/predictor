@@ -1,5 +1,4 @@
 import { Td } from '@predictor/ui';
-import { MAX_SIMULTANEOUS_BIDS } from '../../config/constants';
 
 const POSITION_BADGE = {
   GK:  'bg-warning/15 text-warning',
@@ -27,6 +26,7 @@ export default function AuctionPlayerRow({
   isActive,
   status,
   myBidCount,
+  freeSlots,
 }) {
   let statusPill = null;
   if (ownerLabel) {
@@ -91,9 +91,9 @@ export default function AuctionPlayerRow({
     bidCell = (
       <span className="text-xs text-warning italic">Last slot reserved for GK.</span>
     );
-  } else if (isActive && !myBidOnPlayer && myBidCount >= MAX_SIMULTANEOUS_BIDS) {
+  } else if (isActive && !myBidOnPlayer && myBidCount >= freeSlots) {
     bidCell = (
-      <span className="text-xs text-muted italic">Max bids reached.</span>
+      <span className="text-xs text-muted italic">No squad slots left.</span>
     );
   } else if (!isActive && !myBidOnPlayer) {
     bidCell = (

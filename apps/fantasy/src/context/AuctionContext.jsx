@@ -27,9 +27,7 @@ export function AuctionProvider({ children }) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'auction_bids' },
-        (payload) => {
-          setBids((prev) => prev.map((b) => (b.id === payload.new.id ? { ...b, ...payload.new } : b)));
-        }
+        () => { fetchBids(); }
       )
       .on(
         'postgres_changes',
@@ -126,6 +124,9 @@ export function AuctionProvider({ children }) {
       .from('auction_state')
       .update(updates)
       .eq('id', auctionState.id);
+    // Refresh local state immediately so the admin's own page reflects the change
+    // without waiting for the realtime echo (which then re-sets the same value).
+    if (!error) await fetchAuctionState();
     return { error };
   }
 
@@ -159,15 +160,45 @@ export function AuctionProvider({ children }) {
     });
   }
 
+  // End the current round early: push round_started_at into the past so every
+  // client's timer reads 0 (same end-state as a natural timeout). Bidding stops;
+  // the round is NOT resolved — admin then runs Resolve & Next Round.
+  async function endRound() {
+    const duration = auctionState.round_duration_seconds ?? 0;
+    const expired = new Date(Date.now() - (duration + 1) * 1000).toISOString();
+    return updateAuctionState({ round_started_at: expired });
+  }
+
   // Resolves the current round: marks winning bids, assigns players to teams,
   // and deducts acquisition cost from each winner's budget.
   // A player is only awarded if exactly ONE user bid on them this round.
   // Players with multiple bidders are contested and carry over to the next round.
   // Returns { resolved: [...], contested: [...], errors: [...] }
   async function resolveRound() {
-    const round = auctionState.current_round;
-    const roundBids = bids.filter((b) => b.round_number === round);
+    // Read fresh from the DB rather than React state: realtime may not have
+    // delivered this round's bids (or a round advance) into local state yet,
+    // which previously caused contested players to be lost on early/quick resolves.
+    const { data: freshState } = await supabase
+      .from('auction_state').select('current_round').order('id').limit(1).single();
+    const round = freshState?.current_round ?? auctionState.current_round;
+
+    const { data: freshBids } = await supabase
+      .from('auction_bids')
+      .select('*, players(name, position, price), users(display_name)')
+      .eq('round_number', round);
+    const roundBids = freshBids ?? [];
     const playerIds = [...new Set(roundBids.map((b) => b.player_id))];
+
+    // Highest bid for a player this round; tie-break earliest created_at (first bidder).
+    const highestOf = (playerId) => {
+      const pb = roundBids.filter((b) => b.player_id === playerId);
+      if (!pb.length) return null;
+      return pb.sort((a, b) =>
+        a.bid_amount !== b.bid_amount
+          ? b.bid_amount - a.bid_amount
+          : new Date(a.created_at) - new Date(b.created_at)
+      )[0];
+    };
 
     const resolved  = [];
     const contested = [];
@@ -182,25 +213,32 @@ export function AuctionProvider({ children }) {
 
       // Multiple bidders → contested, carry over to next round.
       if (uniqueBidders.size > 1) {
-        const topBid = getHighestBid(playerId);
+        const topBid = highestOf(playerId);
         contested.push({
           playerId,
           playerName: topBid?.players?.name ?? `Player #${playerId}`,
           amount: topBid?.bid_amount ?? 0,
         });
         if (topBid) {
-          await supabase.from('auction_bids').insert({
-            user_id: topBid.user_id,
-            player_id: playerId,
-            bid_amount: topBid.bid_amount,
-            round_number: round + 1,
-            is_carryover: true,
-          });
+          // Carry the top bid into the next round, owned by the top bidder.
+          // upsert + ignoreDuplicates against auction_bids_unique_user_player_round
+          // (migration 021) keeps a re-run of resolveRound() on the same round idempotent.
+          const { error: coErr } = await supabase.from('auction_bids').upsert(
+            {
+              user_id: topBid.user_id,
+              player_id: playerId,
+              bid_amount: topBid.bid_amount,
+              round_number: round + 1,
+              is_carryover: true,
+            },
+            { onConflict: 'user_id,player_id,round_number', ignoreDuplicates: true }
+          );
+          if (coErr) errors.push({ playerId, reason: `Carry-over failed: ${coErr.message}` });
         }
         continue;
       }
 
-      const winner = getHighestBid(playerId);
+      const winner = highestOf(playerId);
       if (!winner) continue;
 
       // 1. Mark winning bid
@@ -293,17 +331,14 @@ export function AuctionProvider({ children }) {
 
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
-  // Place a bid. Client-side guards (fast UX): max 10 active bids, one bid per
-  // player, carry-over floor, effective budget, squad slots, and GK reserve.
+  // Place a bid. Client-side guards (fast UX): one bid per player, carry-over
+  // floor, effective budget, squad slots, and GK reserve.
   // The RPC is the server-side source of truth for race safety and ascending bids.
   // teamSnapshot = { budgetRemaining, squadSize, gkOwned, playerPosition }
   async function placeBid(playerId, amount, userId, teamSnapshot) {
     const activeBids = bids.filter(
       (b) => b.user_id === userId && b.round_number === auctionState?.current_round
     );
-    if (activeBids.length >= 10) {
-      return { error: 'You already have 10 active bids this round.' };
-    }
     if (activeBids.some((b) => b.player_id === playerId)) {
       return { error: 'You already have a bid on this player this round.' };
     }
@@ -357,6 +392,7 @@ export function AuctionProvider({ children }) {
     resumeAuction,
     completeAuction,
     nextRound,
+    endRound,
     resolveRound,
     refreshBids: fetchBids,
   };

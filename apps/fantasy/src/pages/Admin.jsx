@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
+import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
 import { AUCTION_STATUSES } from '../config/constants';
 import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
@@ -45,6 +46,7 @@ export default function Admin() {
     resumeAuction,
     completeAuction,
     nextRound,
+    endRound,
     resolveRound,
   } = useAuction();
 
@@ -1049,6 +1051,7 @@ export default function Admin() {
       return;
     }
     await nextRound();
+    await fetchParticipants();
     setResolving(false);
     setConfirming(false);
   }
@@ -1155,12 +1158,19 @@ export default function Admin() {
             <p className="text-primary text-2xl font-bold">{round_duration_seconds}s</p>
           </div>
           <div>
-            <p className="text-muted mb-1">Round Started</p>
-            <p className="text-primary font-medium">
-              {round_started_at
-                ? new Date(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                : '—'}
-            </p>
+            <p className="text-muted mb-1">{isActive ? 'Time Remaining' : 'Round Started'}</p>
+            {isActive ? (
+              <AuctionTimer
+                roundStartedAt={round_started_at}
+                roundDurationSeconds={round_duration_seconds}
+              />
+            ) : (
+              <p className="text-primary font-medium">
+                {round_started_at
+                  ? new Date(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                  : '—'}
+              </p>
+            )}
           </div>
         </div>
 
@@ -1181,6 +1191,13 @@ export default function Admin() {
                 className="px-5 py-2 rounded-lg bg-warning hover:bg-tertiary text-on-warning font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Pause
+              </button>
+              <button
+                onClick={endRound}
+                className="px-5 py-2 rounded-lg bg-surface-hover hover:brightness-95 text-primary font-semibold border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                title="End the round early (stops bidding now). Then Resolve & Next Round."
+              >
+                End Round
               </button>
               <button
                 onClick={() => { setConfirming(true); setResolveErrors([]); }}

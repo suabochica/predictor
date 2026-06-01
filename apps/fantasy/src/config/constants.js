@@ -1,7 +1,6 @@
 export const MAX_SQUAD_SIZE = 15;
 export const TOTAL_BUDGET = 105.0;
 export const AUCTION_CUSHION = 5.0;
-export const MAX_SIMULTANEOUS_BIDS = 10;
 export const MIN_BID_INCREMENT = 0.3;
 export const DEFAULT_ROUND_DURATION_SECONDS = 180;
 export const MAX_LEAGUE_PARTICIPANTS = 12;

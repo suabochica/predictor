@@ -9,7 +9,6 @@ import AuctionPlayerRow from '../components/auction/AuctionPlayerRow';
 import {
   AUCTION_STATUSES,
   MIN_BID_INCREMENT,
-  MAX_SIMULTANEOUS_BIDS,
   MAX_SQUAD_SIZE,
   POSITIONS,
 } from '../config/constants';
@@ -172,7 +171,7 @@ export default function Auction() {
               <p className="text-2xl font-bold text-primary tabular-nums">
                 {myBidCount}
                 <span className="text-muted text-base font-normal">
-                  /{MAX_SIMULTANEOUS_BIDS}
+                  /{freeSlots}
                 </span>
               </p>
               <p className="text-xs text-muted mt-0.5">bids this round</p>
@@ -331,7 +330,7 @@ export default function Auction() {
                       <span className="text-error">
                         {myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length} outbid
                       </span>
-                      <span className="text-muted">{myBidCount}/{MAX_SIMULTANEOUS_BIDS} slots</span>
+                      <span className="text-muted">{myBidCount}/{freeSlots} slots</span>
                     </div>
                   </div>
 
@@ -519,7 +518,7 @@ export default function Auction() {
                 gkOwned === 0 &&
                 !gkInActiveBids &&
                 squadSize + myBidCount + 1 > MAX_SQUAD_SIZE - 1;
-              const canBid        = isActive && !roundExpired && !myBidOnPlayer && !isOwned && myBidCount < MAX_SIMULTANEOUS_BIDS && !isGkReserved;
+              const canBid        = isActive && !roundExpired && !myBidOnPlayer && !isOwned && myBidCount < freeSlots && !isGkReserved;
               const minBid        = minBidFor(player);
               const isSubmitting  = submitting.has(player.id);
 
@@ -544,6 +543,7 @@ export default function Auction() {
                   isActive={isActive}
                   status={status}
                   myBidCount={myBidCount}
+                  freeSlots={freeSlots}
                 />
               );
             })}

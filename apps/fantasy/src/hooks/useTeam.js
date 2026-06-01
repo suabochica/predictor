@@ -10,6 +10,18 @@ export function useTeam() {
   useEffect(() => {
     if (!team) { setLoading(false); return; }
     fetchTeamPlayers();
+
+    // Keep the squad live: auction awards / transfers insert or delete team_players.
+    const channel = supabase
+      .channel(`team-players-${team.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'team_players', filter: `team_id=eq.${team.id}` },
+        () => { fetchTeamPlayers(); }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [team]);
 
   async function fetchTeamPlayers() {
