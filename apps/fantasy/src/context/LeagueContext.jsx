@@ -68,9 +68,9 @@ export function LeagueProvider({ children }) {
     const lead = LOCK_LEAD_MINUTES * 60 * 1000;
     const now = Date.now();
 
-    // Chronological order = by earliest kickoff; matchdays without a schedule sort last.
-    const firstKick = (md) => (kicksByMd[md.id] ? Math.min(...kicksByMd[md.id]) : Infinity);
-    const ordered = [...matchdays].sort((a, b) => firstKick(a) - firstKick(b));
+    // Canonical tournament sequence order (id ascending); unscheduled matchdays stay in
+    // their correct position rather than floating to the front/back by kickoff time.
+    const ordered = [...matchdays].sort((a, b) => a.id - b.id);
 
     // A matchday's window closes 10 min before ITS last game. The active matchday is the
     // first one whose window hasn't closed yet (unscheduled matchdays count as still-open).
@@ -92,8 +92,8 @@ export function LeagueProvider({ children }) {
     const activeKicks = kicksByMd[activeMd.id];
     const lastKickoffActive = activeKicks ? Math.max(...activeKicks) : null;
 
-    // Preseason = before the first WC game (minus lead) → unlimited transfers.
-    const isPreseason = firstKickoffOverall != null && now < firstKickoffOverall - lead;
+    // Preseason = no matches scheduled yet, or before the first WC game (minus lead).
+    const isPreseason = firstKickoffOverall == null || now < firstKickoffOverall - lead;
 
     let maxTransfers = null;
     if (!isPreseason) {

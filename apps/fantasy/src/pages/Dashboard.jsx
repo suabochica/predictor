@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
-import transfersIcon from '@predictor/ui/icons/transfers.svg';
 import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
@@ -56,7 +55,7 @@ export default function Dashboard() {
       {/* Transfer window notice */}
       {activeTransferWindow && (
         <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-start gap-3">
-          <img src={transfersIcon} className="w-6 h-6 mt-0.5" alt="" />
+          <img src={marketIcon} className="w-6 h-6 mt-0.5" alt="" />
           <div>
             <p className="font-semibold text-info">
               {activeTransferWindow.is_preseason
@@ -71,8 +70,8 @@ export default function Dashboard() {
                 ? `Window closes ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
                 : 'Players lock at kickoff'}
             </p>
-            <Link to="/transfers" className="text-sm text-info hover:text-info mt-1 inline-block">
-              Go to transfers →
+            <Link to="/market" className="text-sm text-info hover:text-info mt-1 inline-block">
+              Go to market →
             </Link>
           </div>
         </div>

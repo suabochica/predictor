@@ -15,59 +15,51 @@ export default function PlayerRow({
   isMine,
   owner,
   canAfford,
-  squadFull,
-  mustBuyGk,
+  windowOpen,
   offerOutName,
-  onBuy,
+  isLocked,
   onSwap,
   stats,
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  let actionLabel = `Buy £${player.price.toFixed(1)}M`;
-  let disabled = false;
+  let actionLabel = 'Pick player to swap out';
+  let disabled = true;
   let disabledReason = '';
-  let actionStyle = 'bg-tertiary hover:brightness-90 text-primary cursor-pointer';
+  let actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
   let rowOpacity = '';
 
   if (isMine) {
     actionLabel = '✓ In Squad';
-    disabled = true;
     actionStyle = 'bg-tertiary/10 text-tertiary cursor-default border border-tertiary/40';
     rowOpacity = 'opacity-70';
   } else if (owner) {
     actionLabel = `Owned: ${owner.teamName}`;
-    disabled = true;
     disabledReason = `Owned by ${owner.teamName}`;
     actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
     rowOpacity = 'opacity-60';
-  } else if (squadFull && offerOutName) {
-    actionLabel = `Swap with ${offerOutName}`;
-    actionStyle = 'bg-tertiary hover:brightness-90 text-primary cursor-pointer';
-  } else if (squadFull) {
-    actionLabel = 'Squad Full';
-    disabled = true;
-    disabledReason = 'You already have 15 players';
-    actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
-  } else if (mustBuyGk) {
-    actionLabel = 'GK required';
-    disabled = true;
-    disabledReason = 'Last slot must be a GK — your squad has none';
-    actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
-  } else if (!canAfford) {
-    actionLabel = 'Over Budget';
-    disabled = true;
-    disabledReason = 'Not enough budget';
-    actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
+  } else if (isLocked) {
+    actionLabel = 'Locked';
+    disabledReason = 'Match kicked off';
+    actionStyle = 'bg-warning/10 text-warning cursor-not-allowed border border-warning/30';
+  } else if (!windowOpen) {
+    actionLabel = 'No window open';
+    disabledReason = 'No transfer window is currently open';
+  } else if (offerOutName) {
+    if (!canAfford) {
+      actionLabel = 'Over Budget';
+      disabledReason = 'Not enough budget for this swap';
+    } else {
+      actionLabel = `Swap with ${offerOutName}`;
+      disabled = false;
+      actionStyle = 'bg-tertiary hover:brightness-90 text-primary cursor-pointer';
+    }
   }
+  // else: no offerOut yet — "Pick player to swap out" (default)
 
   function handleClick() {
     if (disabled) return;
-    if (squadFull && offerOutName) {
-      onSwap(player);
-    } else {
-      onBuy(player);
-    }
+    onSwap(player);
   }
 
   const hasStats = stats && stats.gp > 0;

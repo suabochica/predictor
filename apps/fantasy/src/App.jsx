@@ -10,7 +10,6 @@ import Market from './pages/Market';
 import Standings from './pages/Standings';
 import Bracket from './pages/Bracket';
 import Auction from './pages/Auction';
-import Transfers from './pages/Transfers';
 import History from './pages/History';
 import Admin from './pages/Admin';
 import ComoJugar from './pages/ComoJugar';
@@ -62,7 +61,6 @@ function AppRoutes() {
         <Route path="/standings" element={<ProtectedRoute><Standings /></ProtectedRoute>} />
         <Route path="/bracket" element={<ProtectedRoute><Bracket /></ProtectedRoute>} />
         <Route path="/auction" element={<ProtectedRoute><Auction /></ProtectedRoute>} />
-        <Route path="/transfers" element={<ProtectedRoute><Transfers /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/como-jugar" element={<ProtectedRoute><ComoJugar /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
