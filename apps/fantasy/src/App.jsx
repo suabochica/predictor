@@ -13,6 +13,7 @@ import Auction from './pages/Auction';
 import Transfers from './pages/Transfers';
 import History from './pages/History';
 import Admin from './pages/Admin';
+import ComoJugar from './pages/ComoJugar';
 import NotFound from './pages/NotFound';
 
 function redirectToGateway() {
@@ -63,6 +64,7 @@ function AppRoutes() {
         <Route path="/auction" element={<ProtectedRoute><Auction /></ProtectedRoute>} />
         <Route path="/transfers" element={<ProtectedRoute><Transfers /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+        <Route path="/como-jugar" element={<ProtectedRoute><ComoJugar /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
 
         <Route path="*" element={<NotFound />} />

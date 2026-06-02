@@ -10,6 +10,7 @@ import transfersIcon from '@predictor/ui/icons/transfers.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import bracketsIcon from '@predictor/ui/icons/brackets.svg';
 import historyIcon from '@predictor/ui/icons/history.svg';
+import rulesIcon from '@predictor/ui/icons/rules.svg';
 import adminIcon from '@predictor/ui/icons/admin.svg';
 
 const navItems = [
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/standings', icon: standingsIcon, label: 'Standings' },
   { to: '/bracket', icon: bracketsIcon, label: 'Bracket' },
   { to: '/history', icon: historyIcon, label: 'History' },
+  { to: '/como-jugar', icon: rulesIcon, label: '¿Cómo jugar?' },
 ];
 
 const adminItems = [
