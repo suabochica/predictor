@@ -1,6 +1,6 @@
-# 🏆 FIFA World Cup 2026 Fantasy League
+# FIFA World Cup 2026 Fantasy League
 
-## Master Document v1.0
+## Master Document v2.0
 
 ---
 
@@ -12,13 +12,13 @@
 4. [Auction System](#4-auction-system)
 5. [Matchday Management](#5-matchday-management)
 6. [Scoring System](#6-scoring-system)
-7. [League Stage](#7-league-stage-matchdays-1-4)
+7. [League Stage](#7-league-stage-matchdays-1-3)
 8. [Transfer Windows](#8-transfer-windows)
 9. [Knockout Stage](#9-knockout-stage-fantasy-rounds-1-3)
 10. [Technical Architecture](#10-technical-architecture)
 11. [Data Management](#11-data-management)
 12. [User Interface](#12-user-interface-screens)
-13. [Development Phases](#13-development-phases)
+13. [Development Stages](#13-development-stages)
 14. [File Structure](#14-file-structure)
 15. [Getting Started](#15-getting-started)
 
@@ -26,7 +26,7 @@
 
 ## 1. Project Overview
 
-A custom private fantasy football league for the FIFA World Cup 2026, designed for a small group of friends (max 12 players). Features a unique blind auction system for player locking, H2H knockout brackets, and simplified management.
+A custom private fantasy football league for the FIFA World Cup 2026, designed for a small group of friends (max 12 players). Features a unique blind auction system for player acquisition, single-elimination knockout brackets, and automated matchday/transfer-window timing.
 
 ### Key Differentiators from Standard Fantasy
 
@@ -34,8 +34,9 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 |---------|-----------------|-------------|
 | Player Acquisition | Free market | Blind auction + open market, all exclusive |
 | Squad Ownership | Shared pool | Every player exclusively owned by one team |
-| Competition Format | League only | League stage + H2H Knockouts |
-| Transfer System | Anytime | Structured windows with priority order |
+| Competition Format | League only | League stage + single-elimination knockouts |
+| Transfer System | Anytime | Per-matchday windows, auto-timed from kickoffs |
+| Lineup Rule | Formation-based | 11 starters + exactly 1 GK — any outfield split |
 
 ---
 
@@ -49,20 +50,17 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 ### 2.2 Fantasy Timeline
 
-| Phase | World Cup Stage | Dates (2026) | Fantasy Activity |
-|-------|----------------|--------------|------------------|
-| Pre-Tournament | Before kickoff | Before June 11 | Auction + Squad Completion |
-| League Stage MD1 | Group Stage MD1 | June 11-14 | Points accumulation |
-| League Stage MD2 | Group Stage MD2 | June 15-18 | Points accumulation |
-| League Stage MD3 | Group Stage MD3 | June 19-26 | Points accumulation |
-| League Stage MD4 | Round of 32 | June 28-30 | Final league standings |
-| Transfer Window 1 | - | June 30 - July 1 | 7 transfers max, inverse order |
-| Knockout Round 1 | Round of 16 | July 1-3 | H2H matches begin |
-| Transfer Window 2 | - | July 3-4 | 3 transfers max |
-| Knockout Round 2 | Quarter-finals | July 5-6 | H2H continues |
-| Transfer Window 3 | - | July 6-7 | 3 transfers max |
-| Knockout Round 3 | Semi-finals | July 9-10 | Finals + all placement matches |
-| End of Fantasy | Final + 3rd Place | July 18-19 | Watch party - no fantasy scoring |
+| Phase | World Cup Stage | Fantasy Activity |
+|-------|----------------|------------------|
+| Pre-Tournament | Before Group MD1 | Auction + squad completion (unlimited transfers) |
+| League Stage MD1 | Group Stage MD1 | Points accumulation, 2-transfer window |
+| League Stage MD2 | Group Stage MD2 | Points accumulation, 2-transfer window |
+| League Stage MD3 | Group Stage MD3 | Final league standings, 2-transfer window |
+| Knockout QF (Round 1) | WC Round of 32 | Top 8 bracket begins, 5-transfer window |
+| Knockout SF (Round 2) | WC Round of 16 | Semi-finals, 5-transfer window |
+| Knockout Final (Round 3) | WC Quarter-finals | Championship final |
+
+Transfer windows open automatically between matchdays; exact open/close times are derived from real match kickoff times in the `matches` table.
 
 ---
 
@@ -72,29 +70,21 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 - **Total squad size:** 15 players
 - **All players exclusively owned** — once a player is on your squad, no other team can acquire them
-- Players can be acquired via the blind auction or the open market; there is no lock/free distinction
+- Players can be acquired via the blind auction or the open market
 
-### 3.2 Formation Requirements
+### 3.2 Lineup Rule
 
-| Position | Required in Squad | On Field | On Bench |
-|----------|-------------------|----------|----------|
-| Goalkeepers (GK) | 2 | 1 | 1 |
-| Defenders (DEF) | 5 | 3-5 | 0-2 |
-| Midfielders (MID) | 5 | 3-5 | 0-2 |
-| Forwards (FWD) | 3 | 1-3 | 0-2 |
-| **Total** | **15** | **11** | **4** |
+| Constraint | Rule |
+|------------|------|
+| Starters | Exactly 11 |
+| Goalkeeper | Exactly 1 GK must start |
+| Outfield split | Any DEF/MID/FWD combination |
+| Captain | Must be one of the 11 starters |
+| Bench | 4 players (remaining squad) |
 
-### 3.3 Valid Formations
+There are no fixed valid formations — any split of defenders, midfielders, and forwards is allowed as long as exactly one goalkeeper starts.
 
-- 3-4-3
-- 3-5-2
-- 4-3-3
-- 4-4-2
-- 4-5-1
-- 5-3-2
-- 5-4-1
-
-### 3.4 Budget
+### 3.3 Budget
 
 | Item | Amount |
 |------|--------|
@@ -132,7 +122,7 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 | Simultaneous bids | Up to 10 players at a time |
 | Minimum bid | Player's base price |
 | Bid increment | 0.3M minimum |
-| Visibility | Transparent - shows WHO bid and amounts |
+| Visibility | Transparent — shows WHO bid and amounts |
 | Round refresh | Every 3 minutes (configurable) |
 | Notifications | Users notified when outbid |
 
@@ -140,9 +130,7 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 1. Users place/update bids on up to 10 players
 2. Timer counts down (3 minutes)
-3. Round ends - system reveals:
-   - Current highest bid per player
-   - Which user placed each bid
+3. Round ends — system reveals current highest bid + user per player
 4. Outbid users can raise or switch targets
 5. Next round begins
 
@@ -153,9 +141,7 @@ A custom private fantasy football league for the FIFA World Cup 2026, designed f
 
 #### Tie-Breaking
 
-If two users bid the same amount on the same player:
-- **First bidder wins** (timestamp-based)
-- System tracks exact bid timestamps
+If two users bid the same amount on the same player: **first bidder wins** (timestamp-based).
 
 ### 4.3 Post-Auction: Squad Completion
 
@@ -164,8 +150,9 @@ After auction closes:
 1. Each user receives their won players (exclusively owned, price locked in)
 2. Remaining budget calculated automatically
 3. Users shop the open market for remaining squad spots — only globally unowned players appear
-4. **Market acquisition = open shopping** (not draft order), but each player can only be owned by one team
-5. Deadline: Before first World Cup match kicks off
+4. Market acquisition is open (not draft order), but each player can only be owned by one team
+5. Deadline: before first World Cup match kicks off
+6. **Preseason transfers are unlimited** — freely swap any owned player for any unowned player before MD1 starts
 
 ---
 
@@ -174,8 +161,9 @@ After auction closes:
 ### 5.1 Lineup Selection
 
 - Select 11 starters from 15-player squad
-- Select 1 captain (earns **2x points**)
-- Order bench players 1-4 for auto-substitution priority
+- Exactly 1 GK must be in the starting XI
+- Select 1 captain (earns **2x points**); captain must be a starter
+- Remaining 4 players sit on the bench
 
 ### 5.2 Lineup Change Rules
 
@@ -185,45 +173,39 @@ After auction closes:
 - Rearrange bench order
 
 #### After Matchday Starts (Rolling Lockout)
-- **Can change:** Players whose specific game has NOT kicked off yet
+- **Can change:** Players whose specific game has NOT kicked off yet (lockout begins 10 minutes before kickoff)
 - **Cannot change:** Players whose game has already started
 - **Captain:** Can be changed to a player whose game hasn't started
-- **Bench order:** Can be adjusted for players not yet playing
 
 **Example Scenario:**
 > France plays at 3:00 PM, Germany plays at 6:00 PM
-> 
+>
 > At 4:00 PM (France game in progress):
-> - ❌ Cannot substitute French players
-> - ✅ Can substitute German players
-> - ✅ Can change captain to a German player (if French captain underperforming)
-> - ✅ Can reorder bench if German players are on bench
+> - Cannot substitute French players
+> - Can substitute German players
+> - Can change captain to a German player
 
 ### 5.3 Auto-Substitution Rules
 
 If a starting player scores **0 points** (did not play at all):
 
 1. System checks bench in order (1st, 2nd, 3rd, 4th)
-2. First eligible player subs in if:
-   - Same position, OR
-   - Different position but formation remains valid
+2. First eligible player subs in if same position, OR different position but still exactly 1 GK in starting XI
 3. Substituted player's points count instead
 
-**Captain Exception:** If captain doesn't play, they score 0 points (doubled = 0). Captain is NOT auto-substituted. Plan wisely!
+**Captain Exception:** If captain doesn't play, they score 0 points (doubled = 0). Captain is NOT auto-substituted.
 
 ### 5.4 Default Lineup
 
 If user sets no lineup:
 - Previous matchday lineup carries over
-- If no previous lineup exists, system creates default:
-  - Highest-priced players start
-  - Most expensive player = captain
+- If no previous lineup exists, system creates default: highest-priced players start, most expensive = captain
 
 ---
 
 ## 6. Scoring System
 
-### 6.1 Base Scoring
+### 6.1 Base Scoring (FPL-style)
 
 All values are **admin-editable** via configuration file.
 
@@ -231,7 +213,7 @@ All values are **admin-editable** via configuration file.
 
 | Minutes Played | Points |
 |----------------|--------|
-| 1-59 minutes | 1 |
+| 1–59 minutes | 1 |
 | 60+ minutes | 2 |
 
 #### Goals Scored
@@ -288,23 +270,10 @@ Location: `/src/config/scoring.json`
 
 ```json
 {
-  "minutes": {
-    "1-59": 1,
-    "60+": 2
-  },
-  "goals": {
-    "GK": 6,
-    "DEF": 6,
-    "MID": 5,
-    "FWD": 4
-  },
+  "minutes": { "1-59": 1, "60+": 2 },
+  "goals": { "GK": 6, "DEF": 6, "MID": 5, "FWD": 4 },
   "assists": 3,
-  "clean_sheet": {
-    "GK": 4,
-    "DEF": 4,
-    "MID": 1,
-    "FWD": 0
-  },
+  "clean_sheet": { "GK": 4, "DEF": 4, "MID": 1, "FWD": 0 },
   "saves_per_3": 1,
   "penalty_save": 5,
   "penalty_miss": -2,
@@ -318,7 +287,7 @@ Location: `/src/config/scoring.json`
 
 ### 6.4 Alternative: Opta Scoring System
 
-A second scoring system is available, based on Opta Points format. Admin can toggle which system is active.
+A second scoring system based on Opta Points format. Admin can toggle which system is active.
 
 Location: `/src/config/opta_scoring.json`
 
@@ -351,33 +320,34 @@ Captain 2× multiplier applies to both systems.
 
 Admin can switch between "current" (FPL-style) and "opta" modes via the Admin dashboard. The active system is stored in `auction_state.scoring_system`. When calculating standings, Admin previews both systems side-by-side before confirming which set of points to write to the DB.
 
+**Scoring stays manual:** after each matchday the admin runs an external Python script to pull stats and upload `player_stats` rows, then presses "calculate standings" in the admin UI.
+
 ---
 
-## 7. League Stage (Matchdays 1-4)
+## 7. League Stage (Matchdays 1–3)
 
 ### 7.1 Format
 
-- All 12 fantasy managers compete
+- All 12 fantasy managers compete simultaneously
 - Classic league format (total points accumulation)
-- 4 matchdays count toward standings:
+- 3 matchdays aligned with the WC Group Stage:
   - Group Stage Matchday 1
   - Group Stage Matchday 2
   - Group Stage Matchday 3
-  - Round of 32
 
 ### 7.2 Standings Calculation
 
-**Primary:** Total points accumulated across 4 matchdays
+**Primary:** Total points accumulated across 3 matchdays
 
 **Tiebreaker:** Most goals scored by owned players
 
 ### 7.3 After League Stage
 
-Once Round of 32 scores are finalized:
+Once Group Stage MD3 scores are finalized:
 
 1. Final standings locked
-2. **Top 8** → Championship Bracket
-3. **Bottom 4** → Relegation Bracket
+2. **Top 8 → Knockout Stage** (single-elimination bracket)
+3. **Bottom 4 → Eliminated** (no relegation bracket; their squads stay owned and locked, they simply stop competing)
 
 ---
 
@@ -385,32 +355,15 @@ Once Round of 32 scores are finalized:
 
 ### 8.1 Overview
 
-| Window | Timing | Max Transfers | Order |
-|--------|--------|---------------|-------|
-| Window 1 | After R32, before R16 | 7 | Inverse ranking |
-| Window 2 | After R16, before QF | 3 | Inverse ranking |
-| Window 3 | After QF, before SF | 3 | Inverse ranking |
+Transfer windows open automatically between matchdays. Timing is derived from real match kickoff times in the `matches` table — no manual admin action needed to open/close windows.
 
-### 8.2 Transfer Window 1 (Main Window)
+| Phase | Max Transfers per Window | Timing |
+|-------|--------------------------|--------|
+| Preseason | Unlimited | Before Group MD1 opens |
+| Round-robin (MD1–3) | 2 | Between matchdays |
+| Knockout (QF/SF/Final) | 5 | Between matchday rounds |
 
-| Rule | Detail |
-|------|--------|
-| Maximum transfers | 7 |
-| Selection order | 12th place picks first → 1st place picks last |
-| Format | Free agent pickup (claim, not auction) |
-| Locked player trades | Allowed |
-| Budget constraint | Team must stay ≤105M |
-
-### 8.3 Transfer Windows 2-3 (Mini Windows)
-
-| Rule | Detail |
-|------|--------|
-| Maximum transfers | 3 per window |
-| Selection order | Inverse ranking within current bracket |
-| Format | Free agent pickup |
-| Locked player trades | Allowed |
-
-### 8.4 Transfer Rules
+### 8.2 Transfer Rules
 
 - Any player in your squad can be transferred out for any globally unowned player
 - No price restriction on incoming player — only the 105M total budget cap applies
@@ -423,87 +376,82 @@ Once Round of 32 scores are finalized:
 
 **Budget Rule:** Team must remain ≤105M after all transfers complete.
 
-### 8.5 Eliminated World Cup Players
+### 8.3 Per-Player Transfer Lock
 
-If a player's national team is eliminated from the World Cup:
+A player becomes **non-transferable** (in or out) once their World Cup game kicks off (10-minute lead). They are re-unlocked at the start of the next transfer window.
 
-**Option A:** Keep the player
-- Player earns 0 points for remaining matchdays
-- No budget impact
+This means within a single matchday window, you can freely transfer players from teams that haven't played yet, but not players whose games have already started.
 
-**Option B:** Use a transfer
-- Replace with any globally unowned player
-- Counts against transfer limit
+### 8.4 Eliminated World Cup Players
+
+If a player's national team is eliminated from the World Cup, they earn 0 points for remaining matchdays. You can use a transfer to replace them (counts against the window limit), or keep them.
 
 ---
 
-## 9. Knockout Stage (Fantasy Rounds 1-3)
+## 9. Knockout Stage (Fantasy Rounds 1–3)
 
-### 9.1 Bracket Seeding
+### 9.1 Bracket Overview
 
-After league stage standings are finalized:
+**8-team single-elimination. No relegation bracket. No losers bracket. No 3rd-place match.** Losers are eliminated and stay eliminated.
 
-**Championship Bracket (Top 8):**
+| Fantasy Round | WC Stage | Users | Advancing |
+|---------------|----------|-------|-----------|
+| QF (Round 1) | WC Round of 32 | 8 | Top 4 |
+| SF (Round 2) | WC Round of 16 | 4 | Top 2 |
+| Final (Round 3) | WC Quarter-finals | 2 | Champion |
 
-| Seed | Matchup |
-|------|---------|
+### 9.2 Bracket Seeding
+
+After league stage standings are finalized, the top 8 are seeded:
+
+| Match | Matchup |
+|-------|---------|
 | Match A | 1st vs 8th |
 | Match B | 4th vs 5th |
 | Match C | 2nd vs 7th |
 | Match D | 3rd vs 6th |
 
-**Relegation Bracket (Bottom 4):**
-
-| Seed | Matchup |
-|------|---------|
-| Match X | 9th vs 12th |
-| Match Y | 10th vs 11th |
-
-### 9.2 H2H Scoring Rules
+### 9.3 H2H Scoring Rules
 
 | Rule | Detail |
 |------|--------|
-| Points counted | Only matchday points (not cumulative season) |
+| Points counted | Only the current matchday's points (not cumulative season) |
 | Winner | Higher matchday score advances |
-| League stage points | Irrelevant for knockout advancement |
 
-### 9.3 H2H Tiebreaker
+### 9.4 H2H Tiebreaker
 
-If both managers score **identical matchday points**, winner determined by:
+If both managers score **identical matchday points**:
 
-1. **Captain score** - Higher captain points wins
-2. **Goals scored** - Total goals by owned players that matchday
-3. **League stage standing** - Higher seed advances
+1. **Captain score** — higher captain points wins
+2. **Goals scored** — total goals by owned players that matchday
+3. **League stage standing** — higher seed advances
 
-### 9.4 Complete Bracket Structure
-
-#### Championship Bracket (8 Players)
+### 9.5 Bracket Structure
 
 ```
-ROUND 1 (R16 Matchday)
-══════════════════════
+ROUND 1 (QF — WC Round of 32)
+══════════════════════════════
 
 Match A: 1st ────┐
-                 ├─── Winner A
-Match A: 8th ────┘
-
-Match B: 4th ────┐
-                 ├─── Winner B
+                 ├─── Winner A ───┐
+Match A: 8th ────┘                │
+                                  ├─── ROUND 2
+Match B: 4th ────┐                │
+                 ├─── Winner B ───┘
 Match B: 5th ────┘
 
 Match C: 2nd ────┐
-                 ├─── Winner C
-Match C: 7th ────┘
-
-Match D: 3rd ────┐
-                 ├─── Winner D
+                 ├─── Winner C ───┐
+Match C: 7th ────┘                │
+                                  ├─── ROUND 2
+Match D: 3rd ────┐                │
+                 ├─── Winner D ───┘
 Match D: 6th ────┘
 
 
-ROUND 2 (QF Matchday)
-═════════════════════
+ROUND 2 (SF — WC Round of 16)
+══════════════════════════════
 
-SEMI-FINALS:
 Winner A ────┐
              ├─── Finalist 1
 Winner B ────┘
@@ -512,105 +460,14 @@ Winner C ────┐
              ├─── Finalist 2
 Winner D ────┘
 
-LOSERS BRACKET (5th-8th):
-Loser A ────┐
-            ├─── 5th/6th Match
-Loser B ────┘
 
-Loser C ────┐
-            ├─── 7th/8th Match
-Loser D ────┘
+ROUND 3 (Final — WC Quarter-finals)
+═════════════════════════════════════
 
-
-ROUND 3 (SF Matchday)
-═════════════════════
-
-FINALS:
 Finalist 1 ────┐
-               ├─── 🏆 CHAMPION
+               ├─── Champion
 Finalist 2 ────┘
-               └─── 2nd Place
-
-3RD PLACE MATCH:
-SF Loser 1 ────┐
-               ├─── 3rd Place
-SF Loser 2 ────┘
-               └─── 4th Place
-
-5TH PLACE MATCH:
-5/6 Winner ────── 5th Place
-5/6 Loser  ────── 6th Place
-
-7TH PLACE MATCH:
-7/8 Winner ────── 7th Place
-7/8 Loser  ────── 8th Place
 ```
-
-#### Relegation Bracket (4 Players)
-
-```
-ROUND 1 (R16 Matchday)
-══════════════════════
-
-Match X: 9th ────┐
-                 ├─── Winner X
-Match X: 12th ───┘
-
-Match Y: 10th ───┐
-                 ├─── Winner Y
-Match Y: 11th ───┘
-
-
-ROUND 2 (QF Matchday)
-═════════════════════
-
-9TH PLACE MATCH:
-Winner X ────┐
-             ├─── 9th Place
-Winner Y ────┘
-             └─── 10th Place
-
-11TH PLACE MATCH:
-Loser X ────┐
-            ├─── 11th Place
-Loser Y ────┘
-            └─── 12th Place
-
-
-ROUND 3 (SF Matchday)
-═════════════════════
-(Final placements already determined in Round 2)
-Relegation players can still set lineups for fun/pride
-```
-
-### 9.5 Knockout Round Summary
-
-| Round | WC Stage | Championship Matches | Relegation Matches | Total H2H |
-|-------|----------|---------------------|-------------------|-----------|
-| Round 1 | R16 | 4 | 2 | 6 |
-| Round 2 | QF | 4 (2 SF + 2 losers) | 2 | 6 |
-| Round 3 | SF | 4 (Final + 3rd + 5th + 7th) | 0* | 4 |
-
-*Relegation placements determined in Round 2
-
-### 9.6 Final Standings
-
-All 12 positions determined by knockout results:
-
-| Place | Determined By |
-|-------|---------------|
-| 1st | Championship Final Winner |
-| 2nd | Championship Final Loser |
-| 3rd | 3rd Place Match Winner |
-| 4th | 3rd Place Match Loser |
-| 5th | 5th Place Match Winner |
-| 6th | 5th Place Match Loser |
-| 7th | 7th Place Match Winner |
-| 8th | 7th Place Match Loser |
-| 9th | 9th Place Match Winner |
-| 10th | 9th Place Match Loser |
-| 11th | 11th Place Match Winner |
-| 12th | 11th Place Match Loser |
 
 ---
 
@@ -620,7 +477,7 @@ All 12 positions determined by knockout results:
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 19 + Vite 8 |
+| Frontend | React 19 + Vite |
 | Styling | Tailwind CSS v4 (`@tailwindcss/vite`) |
 | Backend/DB | Supabase (PostgreSQL) |
 | Authentication | Supabase Auth |
@@ -628,16 +485,7 @@ All 12 positions determined by knockout results:
 | Hosting | Netlify (monorepo) |
 | Repository | GitHub (monorepo) |
 
-### 10.2 Why Supabase?
-
-- ✅ Free tier sufficient for 12 users
-- ✅ PostgreSQL for complex queries
-- ✅ Built-in authentication
-- ✅ Realtime subscriptions (perfect for auction)
-- ✅ Row-level security
-- ✅ Easy integration with React
-
-### 10.3 Database Schema
+### 10.2 Database Schema
 
 #### Users Table
 
@@ -759,6 +607,21 @@ CREATE TABLE matchdays (
 );
 ```
 
+#### Matches Table
+
+```sql
+-- Lives in polla schema; used by fantasy for timing
+CREATE TABLE matches (
+  id SERIAL PRIMARY KEY,
+  team_a TEXT NOT NULL,
+  team_b TEXT NOT NULL,
+  match_date TIMESTAMP WITH TIME ZONE,
+  stage TEXT,
+  matchday_id INTEGER REFERENCES matchdays(id),
+  ...
+);
+```
+
 #### Player Stats Table
 
 ```sql
@@ -798,6 +661,27 @@ CREATE TABLE player_stats (
 );
 ```
 
+#### Player Tournament Totals View
+
+Aggregates stats across all scored matchdays per player. Used on Market and Transfers pages.
+
+```sql
+CREATE OR REPLACE VIEW player_tournament_totals AS
+SELECT
+  player_id,
+  COUNT(*) FILTER (WHERE minutes_played > 0)         AS gp,
+  COALESCE(SUM(minutes_played), 0)::integer           AS minutes,
+  COALESCE(SUM(goals), 0)::integer                    AS goals,
+  COALESCE(SUM(assists), 0)::integer                  AS assists,
+  COALESCE(SUM(total_points), 0)::integer             AS total_points,
+  SUM(opta_points)                                    AS opta_points,
+  -- additional Opta fields: shots_on_target, blocked_shots, tackles,
+  --   interceptions, fouls_won, penalties_won, saves, penalty_saves, clean_sheets
+  ...
+FROM player_stats
+GROUP BY player_id;
+```
+
 #### Fantasy Standings Table
 
 ```sql
@@ -820,7 +704,7 @@ CREATE TABLE fantasy_standings (
 CREATE TABLE knockout_matches (
   id SERIAL PRIMARY KEY,
   round INTEGER NOT NULL,
-  bracket TEXT CHECK (bracket IN ('championship', 'relegation', 'losers')),
+  bracket TEXT CHECK (bracket IN ('championship')),  -- single-elim only
   match_label TEXT,
   team_a_id INTEGER REFERENCES teams(id),
   team_b_id INTEGER REFERENCES teams(id),
@@ -844,6 +728,7 @@ CREATE TABLE transfers (
   id SERIAL PRIMARY KEY,
   team_id INTEGER REFERENCES teams(id),
   window_number INTEGER NOT NULL,
+  matchday_id INTEGER REFERENCES matchdays(id),
   player_out_id INTEGER REFERENCES players(id),
   player_in_id INTEGER REFERENCES players(id),
   price_difference DECIMAL(4,1),
@@ -857,7 +742,8 @@ CREATE TABLE transfers (
 CREATE TABLE transfer_windows (
   id SERIAL PRIMARY KEY,
   window_number INTEGER NOT NULL,
-  max_transfers INTEGER NOT NULL,
+  matchday_id INTEGER REFERENCES matchdays(id),
+  max_transfers INTEGER,           -- NULL = unlimited (preseason)
   is_active BOOLEAN DEFAULT false,
   opens_at TIMESTAMP,
   closes_at TIMESTAMP,
@@ -866,8 +752,6 @@ CREATE TABLE transfer_windows (
 ```
 
 #### Match Metadata Table
-
-Stores per-match context uploaded alongside Opta stats.
 
 ```sql
 CREATE TABLE match_metadata (
@@ -884,37 +768,39 @@ CREATE TABLE match_metadata (
 );
 ```
 
+### 10.3 Migrations
+
+| Migration | Purpose |
+|-----------|---------|
+| 001 | Initial schema |
+| 002 | RLS policies |
+| 003 | Functions |
+| 004–012 | Auction RLS, admin policies, transfer window RLS |
+| 013 | Polla tables (matches, predictions, scoring_rules) |
+| 014 | Polla RLS |
+| 015 | Leaderboard view |
+| 016 | Lock system (adds `current_price` to players) |
+| 017 | Match enhancements |
+| 018 | Leaderboard access |
+| 019 | Simplify ownership (global `UNIQUE(player_id)`, removes is_locked) |
+| 020 | Opta stats (Opta columns, match_metadata, scoring_system) |
+| 021 | Auction constraints (bid increment, GK cap validation) |
+| 022 | Auction visibility |
+| 023 | Match–matchday link (`matches.matchday_id`) |
+| 024 | Auction bids admin policy |
+| 025 | `place_bid` budget/squad/GK validation |
+| 026 | Realtime publication |
+| 027 | Place bid round guard |
+| 028 | `player_tournament_totals` view |
+| 029 | Transfer window matchday link (`transfer_windows.matchday_id`, `transfers.matchday_id`) |
+| 030 | Single-elim bracket (drops relegation/losers constraint) |
+
 ### 10.4 Row-Level Security (RLS)
 
-```sql
--- Users can only read their own data
-ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own team"
-  ON teams FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own team"
-  ON teams FOR UPDATE
-  USING (auth.uid() = user_id);
-
--- Everyone can view standings
-CREATE POLICY "Anyone can view standings"
-  ON fantasy_standings FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Admin policies
-CREATE POLICY "Admins can do anything"
-  ON players FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = auth.uid()
-      AND users.is_admin = true
-    )
-  );
-```
+All tables have RLS enabled. Key policies:
+- Users can read/write their own team, lineups, bids, and transfers
+- Standings and knockout matches are readable by all authenticated users
+- Admin users have full access to all tables
 
 ### 10.5 Realtime Subscriptions
 
@@ -922,19 +808,6 @@ Used for:
 - Live auction bid updates
 - Transfer window activity
 - Standings updates (optional)
-
-```javascript
-// Example: Subscribe to auction bids
-const subscription = supabase
-  .channel('auction-bids')
-  .on('postgres_changes', 
-    { event: 'INSERT', schema: 'public', table: 'auction_bids' },
-    (payload) => {
-      // Update UI with new bid
-    }
-  )
-  .subscribe();
-```
 
 ---
 
@@ -952,64 +825,22 @@ Pedri,Spain,ESP,MID,8.0
 Serge Dest,USA,USA,DEF,6.0
 ```
 
-**Required columns:**
-- `name` - Player full name
-- `country` - Country name
-- `position` - GK, DEF, MID, or FWD
-- `price` - Decimal value (e.g., 8.5)
+**Required columns:** `name`, `country`, `position`, `price`
 
-**Optional columns:**
-- `country_code` - 3-letter code
-- `photo_url` - Player image URL
+**Optional columns:** `country_code`, `photo_url`
 
-### 11.2 Matchday Stats Import
+### 11.2 Opta JSON Stats Upload
 
-**CSV Format:**
+Upload path using Opta Points JSON format. Each player entry includes:
+- `name`, `team`, `position`
+- All Opta stat fields: `G`, `A`, `SOnT`, `SOffT`, `BS`, `Tk`, `INT`, `FW`, `FC`, `O`, `P`, `C`, `PW`, `YC`, `RC`, `PTS`
+- Match metadata: `competition`, `match_date`, `home_team`, `away_team`, `score_home`, `score_away`
 
-```csv
-player_name,minutes,goals,assists,clean_sheet,saves,penalty_saves,penalty_misses,yellow,red,own_goals,goals_conceded,game_time
-Kylian Mbappé,90,2,1,0,0,0,0,0,0,0,0,2026-06-11T18:00:00Z
-Manuel Neuer,90,0,0,1,5,0,0,0,0,0,0,2026-06-11T15:00:00Z
-```
+Upserts into `player_stats` (all Opta columns + `opta_points`) and stores match context in `match_metadata`.
 
-**Required columns:**
-- `player_name` - Must match database exactly
-- `minutes` - Minutes played (0-120+)
-- All stat columns (use 0 if not applicable)
-- `game_time` - ISO timestamp of when game started (for lockout logic)
+### 11.3 Tournament Stat Totals
 
-**Points Calculation:**
-System automatically calculates total points based on the active scoring config.
-
-### 11.3 Opta JSON Stats Upload
-
-An alternative upload path using Opta Points JSON format. Used when Opta data is available for a match (richer stats for the Opta scoring system).
-
-**Format:** JSON file produced by the `opta_points_extraction_prompt.md` workflow. Each player entry includes:
-- `name`, `team`, `position` (for scoring lookup)
-- All Opta stat fields: `G`, `A`, `SOnT`, `SOffT`, `BS`, `Tk`, `INT`, `FW`, `FC`, `O`, `P`, `C`, `PW`, `YC`, `RC`, `PTS` (pre-computed Opta total)
-- Match metadata at the top level: `competition`, `match_date`, `home_team`, `away_team`, `score_home`, `score_away`
-
-**Behaviour:**
-- Upserts into `player_stats` (all Opta columns + `opta_points`)
-- Stores match context in `match_metadata`
-- FPL stats columns (minutes, clean_sheet, etc.) are left at 0 — use the CSV upload to fill those separately if needed
-
-### 11.4 Data Sources for Scraping
-
-| Source | Use Case | URL |
-|--------|----------|-----|
-| FotMob | Match stats, lineups | fotmob.com |
-| SofaScore | Live stats, detailed data | sofascore.com |
-| Transfermarkt | Player values, squad lists | transfermarkt.com |
-| ESPN | Match reports | espn.com/soccer |
-
-### 11.4 Testing Data
-
-For development, use Euro 2024 player data with adjusted prices:
-- Scale prices to fit 8.5M threshold
-- Use historical match stats
-- Sample data included in `/data/` folder
+The `player_tournament_totals` view aggregates GP, minutes, goals, assists, total_points, and opta_points across all scored matchdays. This view powers the **GP / Min / G / A / Pts** columns on the Market and Transfers pages, with an expandable Opta detail section.
 
 ---
 
@@ -1017,148 +848,89 @@ For development, use Euro 2024 player data with adjusted prices:
 
 ### 12.1 Public Pages
 
-| Page | Description |
-|------|-------------|
-| Landing | Login/Register forms |
-| Rules | League rules summary |
+| Page | Route | Description |
+|------|-------|-------------|
+| Landing | `/` | Login/Register forms |
+| Rules | `/rules` | League rules summary |
+| ¿Cómo jugar? | `/como-jugar` | Full Spanish-language how-to-play guide |
 
 ### 12.2 User Dashboard
 
 | Page | Features |
 |------|----------|
-| My Team | Lineup builder, captain select, bench order |
-| Player Market | Browse players, filters, buy for free slots |
+| My Team | Lineup builder, captain select, bench — single-GK rule enforced |
+| Player Market | Browse players, GP/Min/G/A/Pts columns, expandable Opta stats |
 | Standings | League table, points breakdown |
-| Bracket | Visual knockout bracket |
+| Bracket | Visual single-elimination knockout bracket |
 | Auction Room | Real-time bidding interface |
-| Transfers | Transfer window interface |
+| Transfers | Transfer window interface with per-player kickoff locks |
 | History | Past matchday scores |
 
 ### 12.3 Admin Dashboard
 
-| Page | Features |
-|------|----------|
-| League Settings | Edit league name, invite users |
+| Section | Features |
+|---------|----------|
 | Players | CSV player import (name, country, position, price) |
-| Matchdays | Create matchdays, upload stats via CSV or Opta JSON |
-| Auction | Start/pause/end auction, monitor bids |
+| Matchdays | Create matchdays, upload stats via Opta JSON |
+| Auction | Start/pause/end auction, monitor bids, configurable timer |
 | Scoring | Toggle active scoring system (FPL-style vs Opta), preview standings comparison |
-| Transfers | Open/close windows, view activity, priority queue |
-| Manual Adjustments | Point corrections if needed |
+| Transfers | View transfer activity per window; windows open/close automatically |
+| Knockout | Seed bracket from standings, advance rounds |
 
 ### 12.4 Mobile Responsiveness
 
 **Priority actions on mobile:**
-- ✅ Set lineup / swap players
-- ✅ Select captain
-- ✅ Place auction bids
-- ✅ View standings
-- ✅ Make transfers
+- Set lineup / swap players
+- Select captain
+- Place auction bids
+- View standings
+- Make transfers
 
-**Approach:**
-- Tailwind CSS responsive classes
-- Mobile-first design
-- Touch-friendly buttons (min 44px)
-- Swipe gestures for player cards
+**Approach:** Tailwind CSS responsive classes, mobile-first design, touch-friendly buttons (min 44px).
 
 ---
 
-## 13. Development Phases
+## 13. Development Stages
 
-### Phase 1: Foundation ✅ Complete
+### Stage 0 — Plan & Decisions ✅ Complete
 
-- [x] Initialize GitHub repository
-- [x] Setup Vite + React + Tailwind
-- [x] Create Supabase project
-- [x] Configure environment variables
-- [x] Implement authentication (email/password)
-- [x] Create database schema (migrations 001–003)
-- [x] Basic layout components (Header, Sidebar)
-- [x] Admin: CSV player import
+- Documented rework decisions in `REWORK_PLAN.md`
 
-### Phase 2: Auction System ✅ Complete
+### Stage 1 — Lineup Rule Simplification ✅ Complete
 
-- [x] Auction room UI design
-- [x] Real-time bid subscription
-- [x] Bid placement logic
-- [x] Budget validation (105M limit)
-- [x] Max 10 players validation
-- [x] Auction timer component
-- [x] Round progression logic
-- [x] "No new bids" end condition
-- [x] Winning bid assignment
-- [x] Exclusive player assignment to teams
+- Dropped `VALID_FORMATIONS` and `FormationPicker` — no fixed formation constraints
+- `canSave` rule: 11 starters + exactly 1 GK + captain-is-starter
+- Swap/slot handlers enforce the single-GK constraint inline
 
-### Phase 3: Squad Management ✅ Complete
+### Stage 2 — Tournament Stat Aggregates ✅ Complete
 
-- [x] Post-auction open market shopping (exclusively unowned players)
-- [x] Player market with filters (position, country, price)
-- [x] Team builder interface
-- [x] Lineup selection (11 starters)
-- [x] Formation validation
-- [x] Captain selection
-- [x] Bench ordering
-- [x] Budget tracking display
+- Migration 028: `player_tournament_totals` view
+- New `usePlayerTotals` hook joins totals to player list
+- Market `PlayerRow` + Transfers list: compact GP/Min/G/A/Pts columns + expandable Opta detail
 
-### Phase 4: Matchday & Scoring ✅ Complete
+### Stage 3 — Auto Matchday + Transfer-Window Timing ✅ Complete
 
-- [x] Matchday creation (admin)
-- [x] Stats CSV upload
-- [x] Point calculation engine
-- [x] Auto-substitution logic
-- [x] Rolling lockout (per-game)
-- [x] Standings calculation
-- [x] Matchday results view
-- [x] Points breakdown modal
+- `LeagueContext` derives active matchday and transfer window directly from `matches.match_date` / `matchday_id`
+- Transfer caps: preseason = unlimited, round-robin = 2, knockout = 5 (constants in `constants.js`)
+- Per-player transfer lock at kickoff − 10 min (reuses `useMatchdayLocks`)
+- Priority queue removed
+- Migration 029: `matchday_id` on `transfer_windows` and `transfers`
 
-### Phase 5: Knockout System ✅ Complete
+### Stage 4 — Single-Elimination Bracket ✅ Complete
 
-- [x] Bracket seeding logic
-- [x] Bracket visualization component
-- [x] H2H matchup cards
-- [x] Tiebreaker implementation (captain → goals → league rank)
-- [x] Bracket advancement (championship + relegation + losers)
-- [x] Losers bracket logic (5th/7th place)
-- [x] Final standings display
+- `lib/brackets.js` rewritten: 8-team single-elim, no losers/relegation/3rd-place
+- `Admin.jsx` knockout section: seed + advance only championship bracket
+- `Bracket.jsx` + `useKnockout.js` display single-elim tree
+- Migration 030: `knockout_matches.bracket` constrained to `('championship')`
 
-### Phase 6: Transfer Windows ✅ Complete
+### Stage 5 — Spanish "¿Cómo jugar?" Page ✅ Complete
 
-- [x] Transfer window state management
-- [x] Inverse order queue logic (priority queue UI)
-- [x] Transfer interface
-- [x] Any-player swap (exclusive ownership, no lock distinction)
-- [x] Budget recalculation
-- [x] Transfer history / lineup cleanup on transfer
-- [x] Admin: Open/close windows
+- `pages/ComoJugar.jsx` at route `/como-jugar`, Spanish-only content
+- Nav entry in `Sidebar.jsx` + `MobileNav.jsx`
 
-### Phase 7 (Post-Phase-6 additions): Opta Scoring ✅ Complete
+### Stage 6 — Master Document Update ✅ Complete
 
-- [x] `calculateOptaPoints()` scoring function + `opta_scoring.json`
-- [x] Opta JSON Stats Upload in Admin (writes player_stats + match_metadata)
-- [x] CSV Player Import (replaces Bulk Import; sets price + current_price)
-- [x] Scoring system toggle (admin selects FPL vs Opta)
-- [x] Standings preview step (compare both systems before writing to DB)
-- [x] Migration 020 (Opta columns on player_stats, match_metadata, scoring_system on auction_state)
-
-### Phase 8: Polish & Testing (in progress)
-
-- [ ] Mobile responsiveness audit
-- [ ] Error handling & validation
-- [ ] Loading states & skeletons
-- [ ] Empty states
-- [ ] Toast notifications
-- [ ] End-to-end testing
-- [ ] Performance optimization
-- [ ] Documentation
-
-### Phase 9: Deployment
-
-- [ ] Netlify deployment setup (netlify.toml configured; SSR adapters needed)
-- [ ] Environment variables configuration
-- [ ] Domain setup (optional)
-- [ ] Final testing in production
-- [ ] User onboarding guide
-- [ ] Admin guide
+- `MASTER_DOCUMENT.md` rewritten to v2.0 reflecting the reworked design
 
 ---
 
@@ -1167,6 +939,7 @@ For development, use Euro 2024 player data with adjusted prices:
 ```
 apps/fantasy/                   (Vite + React SPA, base /fantasy/)
 ├── MASTER_DOCUMENT.md
+├── REWORK_PLAN.md
 ├── package.json
 ├── vite.config.js
 ├── eslint.config.js
@@ -1191,19 +964,19 @@ apps/fantasy/                   (Vite + React SPA, base /fantasy/)
 │   │   │   └── MobileNav.jsx
 │   │   │
 │   │   ├── market/
-│   │   │   ├── PlayerCard.jsx
+│   │   │   ├── PlayerRow.jsx
 │   │   │   └── FilterBar.jsx
 │   │   │
 │   │   └── team/
 │   │       ├── LineupGrid.jsx
 │   │       ├── PlayerSlot.jsx
-│   │       ├── BenchList.jsx
-│   │       └── FormationPicker.jsx
+│   │       └── BenchList.jsx
 │   │
-│   ├── pages/                  (full-page views, all in one file each)
-│   │   ├── Admin.jsx           (all admin sections: players, matchdays, auction, knockout, transfers, scoring)
+│   ├── pages/
+│   │   ├── Admin.jsx           (players, matchdays, auction, knockout, transfers, scoring)
 │   │   ├── Auction.jsx
 │   │   ├── Bracket.jsx
+│   │   ├── ComoJugar.jsx       (Spanish how-to-play, route /como-jugar)
 │   │   ├── Dashboard.jsx
 │   │   ├── History.jsx
 │   │   ├── Market.jsx
@@ -1214,47 +987,60 @@ apps/fantasy/                   (Vite + React SPA, base /fantasy/)
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.js
-│   │   ├── useTeam.js
 │   │   ├── useAuction.js
-│   │   ├── usePlayers.js
-│   │   ├── useStandings.js
 │   │   ├── useKnockout.js
-│   │   ├── useTransfers.js
-│   │   └── useRealtime.js
+│   │   ├── useMatchdayLocks.js  (per-player kickoff lock, 10-min lead)
+│   │   ├── usePlayers.js
+│   │   ├── usePlayerTotals.js   (tournament-total stats from player_tournament_totals)
+│   │   ├── useRealtime.js
+│   │   ├── useStandings.js
+│   │   ├── useTeam.js
+│   │   └── useTransfers.js
 │   │
 │   ├── lib/
-│   │   ├── scoring.js          (calculatePlayerPoints + calculateOptaPoints)
-│   │   ├── matchday.js         (applyAutoSubs, calculateTeamMatchdayPoints)
+│   │   ├── brackets.js          (8-team single-elim generation + advancement)
+│   │   ├── defaultLineup.js
+│   │   ├── lineupSync.js        (repointLineupPlayer on transfer)
+│   │   ├── matchday.js          (applyAutoSubs, calculateTeamMatchdayPoints)
+│   │   ├── scoring.js           (calculatePlayerPoints + calculateOptaPoints)
 │   │   ├── validation.js
-│   │   ├── formations.js
-│   │   ├── brackets.js
 │   │   └── utils.js
 │   │
 │   ├── context/
-│   │   ├── LeagueContext.jsx
+│   │   ├── LeagueContext.jsx    (active matchday + transfer window, auto-derived from matches)
 │   │   └── AuctionContext.jsx
 │   │
 │   └── config/
-│       ├── scoring.json        (FPL-style scoring weights)
-│       ├── opta_scoring.json   (Opta scoring weights)
-│       └── constants.js
+│       ├── scoring.json         (FPL-style scoring weights)
+│       ├── opta_scoring.json    (Opta scoring weights)
+│       └── constants.js         (TRANSFER_CAP_ROUND_ROBIN=2, TRANSFER_CAP_KNOCKOUT=5, LOCK_LEAD_MINUTES=10)
 │
 └── data/
     └── sample_players.csv
 
-supabase/migrations/            (shared across all apps)
+supabase/migrations/
     ├── 001_initial_schema.sql
     ├── 002_rls_policies.sql
     ├── 003_functions.sql
-    ├── 004–012_*.sql           (auction RLS, admin policies, transfer windows RLS)
+    ├── 004–012_*.sql
     ├── 013_polla_tables.sql
     ├── 014_polla_rls.sql
     ├── 015_leaderboard_view.sql
-    ├── 016_lock_system.sql     (adds current_price to players)
+    ├── 016_lock_system.sql
     ├── 017_match_enhancements.sql
     ├── 018_leaderboard_access.sql
-    ├── 019_simplify_ownership.sql  (removes is_locked/slot_type, adds global UNIQUE(player_id))
-    └── 020_opta_stats.sql      (Opta columns, match_metadata, scoring_system on auction_state)
+    ├── 019_simplify_ownership.sql
+    ├── 020_opta_stats.sql
+    ├── 021_auction_constraints.sql
+    ├── 022_auction_visibility.sql
+    ├── 023_match_matchday_link.sql
+    ├── 024_auction_bids_admin_policy.sql
+    ├── 025_place_bid_validation.sql
+    ├── 026_realtime_publication.sql
+    ├── 027_place_bid_round_guard.sql
+    ├── 028_tournament_totals_view.sql
+    ├── 029_transfer_window_matchday.sql
+    └── 030_single_elim_bracket.sql
 ```
 
 ---
@@ -1267,7 +1053,6 @@ supabase/migrations/            (shared across all apps)
 - pnpm
 - Supabase account (free tier)
 - Netlify account (free tier)
-- GitHub account
 
 ### Local Development Setup
 
@@ -1277,41 +1062,29 @@ git clone https://github.com/[username]/worldcup-fantasy.git
 cd worldcup-fantasy
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Setup environment variables
-cp .env.example .env
-
-# 4. Add your Supabase credentials to .env
-# VITE_SUPABASE_URL=your-project-url
+# apps/fantasy/.env:
+# VITE_SUPABASE_URL=https://your-project.supabase.co
 # VITE_SUPABASE_ANON_KEY=your-anon-key
 
-# 5. Run Supabase migrations (if using local Supabase)
-npx supabase db push
+# 4. Apply migrations
+supabase db push
 
-# 6. Start fantasy app dev server (from monorepo root)
+# 5. Start fantasy app dev server
 pnpm dev:fantasy
 
-# 7. Open http://localhost:4323/fantasy/
-```
-
-### Environment Variables
-
-```env
-# apps/fantasy/.env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+# 6. Open http://localhost:4323/fantasy/
 ```
 
 ### Deployment to Netlify
 
-The monorepo is deployed as a single Netlify site via `netlify.toml` at the project root.
+The monorepo deploys as a single Netlify site via `netlify.toml` at the project root.
 
 ```bash
-# Build all apps
 pnpm build
-
-# Deploy via Netlify CLI or push to GitHub (auto-deploy)
+# Push to GitHub for auto-deploy, or use Netlify CLI
 ```
 
 ---
@@ -1323,13 +1096,16 @@ pnpm build
 | League Size | 12 players max |
 | Squad Size | 15 (all exclusively owned) |
 | Budget | 105M total |
-| Auction | Timed blind, 0.3M increment, transparent bidding, all players eligible |
+| Auction | Timed blind, 0.3M increment, transparent bidding |
+| Lineup Rule | 11 starters + exactly 1 GK — any outfield split |
 | Scoring | FPL-style or Opta — admin toggles; preview before committing |
-| League Stage | 4 matchdays, total points |
-| Knockouts | 3 rounds, H2H matchday points only |
+| League Stage | 3 matchdays (Group Stage), total points |
+| Knockouts | 8-team single-elim, 3 rounds, H2H matchday points only |
 | Tiebreaker | Captain → Goals → League rank |
-| Transfer Windows | 1 big (7) + 2 small (3 each), inverse order |
-| Lineup Changes | Rolling lockout per game |
+| Transfer Windows | Preseason=unlimited, round-robin=2, knockout=5; auto-timed from kickoffs |
+| Player Lock | Kicked off 10 min before game; re-unlocked next window |
+| Tournament Stats | GP/Min/G/A/Pts on Market & Transfers (player_tournament_totals view) |
+| How to Play | /como-jugar (Spanish) |
 | Tech Stack | React 19 + Supabase + Netlify (monorepo) |
 
 ---
@@ -1338,37 +1114,10 @@ pnpm build
 
 | Item | Value |
 |------|-------|
-| Version | 1.2 |
+| Version | 2.0 |
 | Created | March 2025 |
-| Last Updated | May 2026 |
-| Status | ✅ Active — exclusive ownership + dual scoring (Phases 1–7 complete) |
-
----
-
-## Appendix A: Quick Reference Card
-
-### Auction Rules
-- Budget: 105M
-- All players eligible (no price threshold)
-- Bid increment: 0.3M
-- Max simultaneous bids: 10
-- Round duration: 3 minutes
-- Won players disappear from auction immediately (exclusive ownership)
-
-### Squad Rules
-- 15 players total, all exclusively owned
-- Formation: 1 GK, 3-5 DEF, 3-5 MID, 1-3 FWD
-- Captain gets 2x points
-
-### Knockout Tiebreaker
-1. Captain score
-2. Goals by owned players
-3. League stage rank
-
-### Transfer Limits
-- Window 1: 7 transfers
-- Window 2: 3 transfers
-- Window 3: 3 transfers
+| Last Updated | June 2026 |
+| Status | Active — rework complete (Stages 0–6 done) |
 
 ---
 
