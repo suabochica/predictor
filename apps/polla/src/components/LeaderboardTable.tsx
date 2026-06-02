@@ -4,14 +4,6 @@ import { supabase } from '@predictor/supabase';
 import type { LeaderboardEntry, LeaderboardRow } from '../types';
 import { users as fallbackUsers } from '../data/users';
 
-const AVATARS = ['👨‍💻', '👩‍🎨', '🏀', '📚', '⚽', '🎵', '🎮', '🌟', '🚀', '💃', '🎸', '🎨', '🏆', '🌹'];
-
-function avatarForName(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATARS[Math.abs(hash) % AVATARS.length];
-}
-
 export default function LeaderboardTable({ currentUser }: { currentUser?: string }) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +121,6 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{avatarForName(entry.display_name)}</span>
                       <span className="font-medium text-primary">
                         {entry.display_name}
                       </span>
