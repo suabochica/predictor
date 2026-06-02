@@ -7,7 +7,7 @@ import { AUCTION_STATUSES } from '../config/constants';
 import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
 import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
-import { generateChampionshipBracket, generateRelegationBracket, resolveH2H } from '../lib/brackets';
+import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
 
 const WC_STAGES = [
   'Group Stage MD1',
@@ -624,13 +624,6 @@ export default function Admin() {
       round: 1, bracket: 'championship', match_label: s.label,
       team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
     }));
-    if (standings.length >= 12) {
-      const relSeed = generateRelegationBracket(standings);
-      relSeed.forEach(s => rows.push({
-        round: 1, bracket: 'relegation', match_label: s.label,
-        team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
-      }));
-    }
     const { error } = await supabase.from('knockout_matches').insert(rows);
     setBracketSeedResult(error ? { error: error.message } : { ok: true, count: rows.length });
     if (!error) await fetchKnockoutData();
@@ -643,31 +636,18 @@ export default function Admin() {
     const rows = [];
 
     if (round === 1) {
-      const add = (bracket, label, aId, bId) => {
-        if (aId && bId && !exists(bracket, 2, label))
-          rows.push({ round: 2, bracket, match_label: label, team_a_id: aId, team_b_id: bId });
-      };
-      add('championship', 'Semi A',    results['Match A']?.w, results['Match B']?.w);
-      add('championship', 'Semi B',    results['Match C']?.w, results['Match D']?.w);
-      add('losers',       '5/6 Match', results['Match A']?.l, results['Match B']?.l);
-      add('losers',       '7/8 Match', results['Match C']?.l, results['Match D']?.l);
-      add('relegation',   '9th Place',  results['Match X']?.w, results['Match Y']?.w);
-      add('relegation',   '11th Place', results['Match X']?.l, results['Match Y']?.l);
+      const wA = results['Match A']?.w, wB = results['Match B']?.w;
+      const wC = results['Match C']?.w, wD = results['Match D']?.w;
+      if (wA && wB && !exists('championship', 2, 'Semi A'))
+        rows.push({ round: 2, bracket: 'championship', match_label: 'Semi A', team_a_id: wA, team_b_id: wB });
+      if (wC && wD && !exists('championship', 2, 'Semi B'))
+        rows.push({ round: 2, bracket: 'championship', match_label: 'Semi B', team_a_id: wC, team_b_id: wD });
     }
 
     if (round === 2) {
-      const wSA = results['Semi A']?.w, lSA = results['Semi A']?.l;
-      const wSB = results['Semi B']?.w, lSB = results['Semi B']?.l;
-      const w56 = results['5/6 Match']?.w, l56 = results['5/6 Match']?.l;
-      const w78 = results['7/8 Match']?.w, l78 = results['7/8 Match']?.l;
+      const wSA = results['Semi A']?.w, wSB = results['Semi B']?.w;
       if (wSA && wSB && !exists('championship', 3, 'Final'))
-        rows.push({ round: 3, bracket: 'championship', match_label: 'Final',     team_a_id: wSA, team_b_id: wSB });
-      if (lSA && lSB && !exists('championship', 3, '3rd Place'))
-        rows.push({ round: 3, bracket: 'championship', match_label: '3rd Place', team_a_id: lSA, team_b_id: lSB });
-      if (w56 && l56 && !exists('losers', 3, '5th Place'))
-        rows.push({ round: 3, bracket: 'losers', match_label: '5th Place', team_a_id: w56, team_b_id: l56, winner_id: w56, placement: '5th Place' });
-      if (w78 && l78 && !exists('losers', 3, '7th Place'))
-        rows.push({ round: 3, bracket: 'losers', match_label: '7th Place', team_a_id: w78, team_b_id: l78, winner_id: w78, placement: '7th Place' });
+        rows.push({ round: 3, bracket: 'championship', match_label: 'Final', team_a_id: wSA, team_b_id: wSB });
     }
 
     return rows;
@@ -686,7 +666,6 @@ export default function Admin() {
     const toResolve = knockoutMatches.filter(m => {
       if (m.winner_id) return false;
       if (m.round !== round) return false;
-      if (round === 3 && m.bracket === 'losers') return false; // pre-set placement rows
       return true;
     });
 
@@ -757,9 +736,8 @@ export default function Admin() {
       matchResults[match.match_label] = { w: winnerId, l: loserId };
 
       let placement;
-      if (match.bracket === 'relegation') placement = match.match_label;
-      else if (round === 3 && match.bracket === 'championship') {
-        placement = match.match_label === 'Final' ? '1st Place' : '3rd Place';
+      if (round === 3 && match.match_label === 'Final') {
+        placement = '1st Place';
       }
 
       updates.push({
@@ -1885,7 +1863,6 @@ export default function Admin() {
             (() => {
               const standings = computeKnockoutStandings();
               const champSeed = standings.length >= 8 ? generateChampionshipBracket(standings) : [];
-              const relSeed   = standings.length >= 12 ? generateRelegationBracket(standings) : [];
               return (
                 <div className="space-y-4">
                   {standings.length < 8 ? (
@@ -1893,35 +1870,18 @@ export default function Admin() {
                       Need standings for at least 8 teams. Run Calculate Standings first.
                     </p>
                   ) : (
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Championship (Top 8)</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {champSeed.map(m => (
-                            <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
-                              <span className="text-muted">{m.label}: </span>
-                              <span className="text-primary">{m.teamA.display_name}</span>
-                              <span className="text-muted"> vs </span>
-                              <span className="text-primary">{m.teamB.display_name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      {relSeed.length > 0 && (
-                        <div>
-                          <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Relegation (Bottom 4)</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {relSeed.map(m => (
-                              <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
-                                <span className="text-muted">{m.label}: </span>
-                                <span className="text-primary">{m.teamA.display_name}</span>
-                                <span className="text-muted"> vs </span>
-                                <span className="text-primary">{m.teamB.display_name}</span>
-                              </div>
-                            ))}
+                    <div>
+                      <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Quarter-finals (Top 8)</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {champSeed.map(m => (
+                          <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
+                            <span className="text-muted">{m.label}: </span>
+                            <span className="text-primary">{m.teamA.display_name}</span>
+                            <span className="text-muted"> vs </span>
+                            <span className="text-primary">{m.teamB.display_name}</span>
                           </div>
-                        </div>
-                      )}
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -1975,7 +1935,7 @@ export default function Admin() {
 
                   {/* Unresolved matches for the active round */}
                   {activeRound && (() => {
-                    const pending = knockoutMatches.filter(m => m.round === activeRound && !m.winner_id && !(m.round === 3 && m.bracket === 'losers'));
+                    const pending = knockoutMatches.filter(m => m.round === activeRound && !m.winner_id);
                     return (
                       <div className="space-y-3">
                         <div className="overflow-x-auto">

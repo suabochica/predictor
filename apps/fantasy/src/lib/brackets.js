@@ -1,6 +1,6 @@
 /**
- * Generates the championship bracket seeding from final league standings.
- * standings: array of team objects sorted by total_points desc (rank 1..12)
+ * Generates the QF seeding for the 8-team single-elimination bracket.
+ * standings: array of team objects sorted by total_points desc (rank 1..8)
  */
 export function generateChampionshipBracket(standings) {
   const top8 = standings.slice(0, 8);
@@ -12,20 +12,12 @@ export function generateChampionshipBracket(standings) {
   ];
 }
 
-export function generateRelegationBracket(standings) {
-  const bottom4 = standings.slice(8, 12);
-  return [
-    { label: 'Match X', teamA: bottom4[0], teamB: bottom4[3] },
-    { label: 'Match Y', teamA: bottom4[1], teamB: bottom4[2] },
-  ];
-}
-
 /**
- * Determine H2H winner with tiebreaker rules:
+ * Determine H2H winner:
  * 1. Higher matchday points
  * 2. Higher captain points
  * 3. More goals scored
- * 4. Higher league seed
+ * 4. Higher league seed (lower rank number wins)
  */
 export function resolveH2H(matchup) {
   const { teamA, teamB } = matchup;
@@ -39,6 +31,5 @@ export function resolveH2H(matchup) {
   if (teamA.goals_scored !== teamB.goals_scored) {
     return teamA.goals_scored > teamB.goals_scored ? teamA : teamB;
   }
-  // Higher seed (lower rank number) wins
   return teamA.league_rank < teamB.league_rank ? teamA : teamB;
 }
