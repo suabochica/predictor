@@ -1,9 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTransfers } from '../hooks/useTransfers';
 import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { usePlayerTotals } from '../hooks/usePlayerTotals';
+import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { POSITIONS } from '../config/constants';
@@ -41,12 +42,21 @@ function PlayerStatsBadge({ stats }) {
   );
 }
 
-function SquadPlayerRow({ player, selected, isOut, onSelect, stats }) {
+function LockBadge() {
+  return (
+    <span className="text-label-caps text-warning font-semibold hidden sm:inline">LOCKED</span>
+  );
+}
+
+function SquadPlayerRow({ player, selected, isOut, isLocked, onSelect, stats }) {
   return (
     <button
-      onClick={() => onSelect(player)}
+      onClick={() => !isLocked && onSelect(player)}
+      disabled={isLocked}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
-        isOut
+        isLocked
+          ? 'opacity-50 cursor-not-allowed'
+          : isOut
           ? 'ring-2 ring-error bg-error/5'
           : selected
           ? 'ring-2 ring-tertiary bg-tertiary/5'
@@ -59,7 +69,7 @@ function SquadPlayerRow({ player, selected, isOut, onSelect, stats }) {
         {player.position}
       </span>
       <span className="text-sm text-primary flex-1 truncate">{player.name}</span>
-      <PlayerStatsBadge stats={stats} />
+      {isLocked ? <LockBadge /> : <PlayerStatsBadge stats={stats} />}
       <span className="text-xs text-secondary flex-shrink-0">{player.country_code}</span>
       <span className="text-xs text-tertiary flex-shrink-0 w-12 text-right">
         {formatPrice(player.acquisition_price)}
@@ -68,8 +78,8 @@ function SquadPlayerRow({ player, selected, isOut, onSelect, stats }) {
   );
 }
 
-function AvailablePlayerRow({ player, selected, canAfford, onSelect, stats }) {
-  const disabled = !canAfford;
+function AvailablePlayerRow({ player, selected, canAfford, isLocked, onSelect, stats }) {
+  const disabled = !canAfford || isLocked;
 
   return (
     <button
@@ -89,7 +99,7 @@ function AvailablePlayerRow({ player, selected, canAfford, onSelect, stats }) {
         {player.position}
       </span>
       <span className="text-sm text-primary flex-1 truncate">{player.name}</span>
-      <PlayerStatsBadge stats={stats} />
+      {isLocked ? <LockBadge /> : <PlayerStatsBadge stats={stats} />}
       <span className="text-xs text-secondary flex-shrink-0">{player.country_code}</span>
       <span className="text-xs text-tertiary flex-shrink-0 w-12 text-right">
         {formatPrice(player.price)}
@@ -101,12 +111,13 @@ function AvailablePlayerRow({ player, selected, canAfford, onSelect, stats }) {
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function Transfers() {
-  const { activeTransferWindow, team, activeMatchday, refreshTeam } = useLeague();
+  const { activeTransferWindow, team, refreshTeam } = useLeague();
   const { players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { transfers, transfersUsedThisWindow, transfersRemaining, refresh: refreshTransfers } =
     useTransfers();
   const { players: allPlayers, loading: playersLoading } = usePlayers({ available: true });
   const { totals: playerTotals } = usePlayerTotals();
+  const { lockTimeFor } = useMatchdayLocks(activeTransferWindow?.matchday_id);
 
   const [playerOut, setPlayerOut] = useState(null);
   const [playerIn, setPlayerIn] = useState(null);
@@ -115,63 +126,6 @@ export default function Transfers() {
   const [transferring, setTransferring] = useState(false);
   const [transferError, setTransferError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
-
-  // Priority queue: standings in inverse order (12th → 1st)
-  const [priorityQueue, setPriorityQueue] = useState([]);
-  const [queueLoading, setQueueLoading] = useState(false);
-  const [allTeamTransfers, setAllTeamTransfers] = useState([]);
-
-  useEffect(() => {
-    if (!activeTransferWindow) return;
-    fetchPriorityQueue();
-  }, [activeTransferWindow]);
-
-  async function fetchPriorityQueue() {
-    setQueueLoading(true);
-    const [teamsRes, standingsRes, transfersRes] = await Promise.all([
-      supabase.from('teams').select('id, name, users(display_name)'),
-      supabase.from('fantasy_standings').select('team_id, total_points, goals_scored'),
-      supabase
-        .from('transfers')
-        .select('team_id')
-        .eq('window_number', activeTransferWindow.window_number),
-    ]);
-
-    const teams = teamsRes.data ?? [];
-    const standingsData = standingsRes.data ?? [];
-    const windowTransfers = transfersRes.data ?? [];
-
-    // Aggregate standings per team (take highest total_points row)
-    const standingsMap = {};
-    for (const row of standingsData) {
-      if (!standingsMap[row.team_id] || row.total_points > standingsMap[row.team_id].total_points) {
-        standingsMap[row.team_id] = row;
-      }
-    }
-
-    // Count transfers used this window per team
-    const usedMap = {};
-    for (const t of windowTransfers) {
-      usedMap[t.team_id] = (usedMap[t.team_id] ?? 0) + 1;
-    }
-
-    // Sort teams worst-to-best (inverse rank = 12th first)
-    const sorted = [...teams]
-      .map((t) => ({
-        ...t,
-        total_points: standingsMap[t.team_id]?.total_points ?? 0,
-        goals_scored: standingsMap[t.team_id]?.goals_scored ?? 0,
-        transfers_used: usedMap[t.id] ?? 0,
-      }))
-      .sort((a, b) => {
-        if (a.total_points !== b.total_points) return a.total_points - b.total_points;
-        return a.goals_scored - b.goals_scored;
-      });
-
-    setPriorityQueue(sorted);
-    setAllTeamTransfers(windowTransfers);
-    setQueueLoading(false);
-  }
 
   const budget = team?.budget_remaining ?? 0;
 
@@ -191,14 +145,19 @@ export default function Transfers() {
     [squadRows]
   );
 
+  function isPlayerLocked(player) {
+    if (!player) return false;
+    const lockMs = lockTimeFor(player.country);
+    return lockMs !== null && Date.now() >= lockMs;
+  }
+
   const ownedIds = useMemo(() => new Set(squad.map((p) => p.id)), [squad]);
 
-  // Budget impact preview
   const priceDiff = playerOut && playerIn
     ? Number((playerOut.acquisition_price - playerIn.price).toFixed(1))
     : null;
   const budgetAfter = priceDiff !== null ? Number((budget + priceDiff).toFixed(1)) : null;
-  // Filter available players (globally unowned via usePlayers({ available: true }))
+
   const availablePlayers = useMemo(() => {
     return allPlayers.filter((p) => {
       if (posFilter && p.position !== posFilter) return false;
@@ -217,7 +176,7 @@ export default function Transfers() {
       setPlayerIn(null);
     } else {
       setPlayerOut(player);
-      setPlayerIn(null); // reset in when out changes
+      setPlayerIn(null);
       setTransferError(null);
     }
   }
@@ -232,9 +191,19 @@ export default function Transfers() {
     setTransferring(true);
     setTransferError(null);
 
-    // Validation
-    if (transfersRemaining <= 0) {
+    // Cap check (null = unlimited)
+    if (transfersRemaining !== null && transfersRemaining <= 0) {
       setTransferError('No transfers remaining in this window.');
+      setTransferring(false);
+      return;
+    }
+    if (isPlayerLocked(playerOut)) {
+      setTransferError(`${playerOut.name} is locked — their match has kicked off.`);
+      setTransferring(false);
+      return;
+    }
+    if (isPlayerLocked(playerIn)) {
+      setTransferError(`${playerIn.name} is locked — their match has kicked off.`);
       setTransferring(false);
       return;
     }
@@ -295,16 +264,17 @@ export default function Transfers() {
     await supabase.from('transfers').insert({
       team_id: team.id,
       window_number: activeTransferWindow.window_number,
+      matchday_id: activeTransferWindow.is_preseason ? null : activeTransferWindow.matchday_id,
       player_out_id: playerOut.id,
       player_in_id: playerIn.id,
       price_difference: priceDiff,
     });
 
-    // 5. Repoint the upcoming matchday lineup and null default from player_out → player_in
+    // 5. Repoint the upcoming matchday lineup
     await repointLineupPlayer(team.id, playerOut.id, playerIn.id);
 
     // 6. Refresh everything
-    await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers(), fetchPriorityQueue()]);
+    await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers()]);
 
     setSuccessMsg(`${playerOut.name} → ${playerIn.name} transfer complete!`);
     setPlayerOut(null);
@@ -318,6 +288,14 @@ export default function Transfers() {
       (playerOut.position === 'GK' ? 1 : 0) +
       (playerIn.position === 'GK' ? 1 : 0)
   ) < 1;
+
+  const confirmDisabled =
+    transferring ||
+    budgetAfter < 0 ||
+    (transfersRemaining !== null && transfersRemaining <= 0) ||
+    positionViolation ||
+    isPlayerLocked(playerOut) ||
+    isPlayerLocked(playerIn);
 
   // ── Render ─────────────────────────────────────────────────────────────
 
@@ -340,27 +318,8 @@ export default function Transfers() {
       {/* ── Window status ── */}
       {!activeTransferWindow ? (
         <div className="bg-surface border border-border rounded-xl p-5 text-center">
-          <p className="text-secondary font-semibold">No transfer window is currently open</p>
-          <p className="text-muted text-sm mt-1">
-            Transfer windows open after each league stage round. Check back after matchday results.
-          </p>
-          <div className="mt-4 grid grid-cols-3 gap-3 max-w-sm mx-auto text-xs text-muted">
-            <div className="bg-surface-hover rounded-lg p-2 text-center">
-              <p className="font-semibold text-secondary">Window 1</p>
-              <p>After R32</p>
-              <p className="text-tertiary">7 transfers</p>
-            </div>
-            <div className="bg-surface-hover rounded-lg p-2 text-center">
-              <p className="font-semibold text-secondary">Window 2</p>
-              <p>After R16</p>
-              <p className="text-tertiary">3 transfers</p>
-            </div>
-            <div className="bg-surface-hover rounded-lg p-2 text-center">
-              <p className="font-semibold text-secondary">Window 3</p>
-              <p>After QF</p>
-              <p className="text-tertiary">3 transfers</p>
-            </div>
-          </div>
+          <p className="text-secondary font-semibold">Season complete</p>
+          <p className="text-muted text-sm mt-1">No further transfer windows are open.</p>
         </div>
       ) : (
         <>
@@ -368,78 +327,39 @@ export default function Transfers() {
           <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-info font-semibold">
-                Transfer Window {activeTransferWindow.window_number} — Open
+                {activeTransferWindow.is_preseason
+                  ? 'Preseason — Unlimited Transfers'
+                  : `${activeTransferWindow.matchday_name} Window`}
               </p>
               <p className="text-secondary text-sm mt-0.5">
                 {activeTransferWindow.closes_at
-                  ? `Closes ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
-                  : 'Deadline TBD'}
+                  ? `First locks at ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
+                  : 'Players lock when their match kicks off'}
               </p>
             </div>
             <div className="flex items-center gap-6">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">{transfersRemaining}</p>
-                <p className="text-label-caps text-muted uppercase tracking-wider">Remaining</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-secondary">{transfersUsedThisWindow}</p>
-                <p className="text-label-caps text-muted uppercase tracking-wider">Used</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-muted">{activeTransferWindow.max_transfers}</p>
-                <p className="text-label-caps text-muted uppercase tracking-wider">Max</p>
-              </div>
+              {activeTransferWindow.max_transfers !== null ? (
+                <>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{transfersRemaining}</p>
+                    <p className="text-label-caps text-muted uppercase tracking-wider">Remaining</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-secondary">{transfersUsedThisWindow}</p>
+                    <p className="text-label-caps text-muted uppercase tracking-wider">Used</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-muted">{activeTransferWindow.max_transfers}</p>
+                    <p className="text-label-caps text-muted uppercase tracking-wider">Max</p>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-tertiary">∞</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">Unlimited</p>
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Transfer priority queue */}
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-secondary">Transfer Priority Order</h3>
-              <span className="text-xs text-muted">Lowest rank picks first</span>
-            </div>
-            {queueLoading ? (
-              <p className="text-muted text-sm text-center py-4">Loading…</p>
-            ) : (
-              <div className="divide-y divide-border">
-                {priorityQueue.map((entry, idx) => {
-                  const isMe = entry.id === team?.id;
-                  const remaining = activeTransferWindow.max_transfers - entry.transfers_used;
-                  return (
-                    <div
-                      key={entry.id}
-                      className={`flex items-center gap-3 px-4 py-2.5 text-sm ${
-                        isMe ? 'bg-info/5' : ''
-                      }`}
-                    >
-                      <span className="w-5 text-center text-xs font-bold text-muted">
-                        {idx + 1}
-                      </span>
-                      <span className={`flex-1 font-medium ${isMe ? 'text-info' : 'text-secondary'}`}>
-                        {entry.users?.display_name ?? entry.name}
-                        {isMe && <span className="ml-1.5 text-label-caps text-info">(you)</span>}
-                      </span>
-                      <span className="text-xs text-muted">{entry.total_points} pts</span>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: activeTransferWindow.max_transfers }).map((_, i) => (
-                          <span
-                            key={i}
-                            className={`w-2.5 h-2.5 rounded-full ${
-                              i < entry.transfers_used ? 'bg-tertiary' : 'bg-border'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className={`text-xs font-semibold w-16 text-right ${
-                        remaining > 0 ? 'text-tertiary' : 'text-muted'
-                      }`}>
-                        {remaining > 0 ? `${remaining} left` : 'Done'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           {/* Success / Error messages */}
@@ -514,7 +434,7 @@ export default function Transfers() {
                 {playerOut && playerIn && (
                   <button
                     onClick={executeTransfer}
-                    disabled={transferring || budgetAfter < 0 || transfersRemaining <= 0 || positionViolation}
+                    disabled={confirmDisabled}
                     className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:bg-tertiary text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                   >
                     {transferring ? 'Transferring…' : 'Confirm Transfer'}
@@ -542,6 +462,7 @@ export default function Transfers() {
                       player={p}
                       selected={playerOut?.id === p.id}
                       isOut={playerOut?.id === p.id}
+                      isLocked={isPlayerLocked(p)}
                       onSelect={selectPlayerOut}
                       stats={playerTotals[p.id] ?? null}
                     />
@@ -586,6 +507,7 @@ export default function Transfers() {
                       player={p}
                       selected={playerIn?.id === p.id}
                       canAfford={(budget + (playerOut?.acquisition_price ?? 0) - p.price) >= 0}
+                      isLocked={isPlayerLocked(p)}
                       onSelect={selectPlayerIn}
                       stats={playerTotals[p.id] ?? null}
                     />
@@ -607,7 +529,7 @@ export default function Transfers() {
             {transfers.map((t) => (
               <div key={t.id} className="px-4 py-3 flex items-center gap-3 flex-wrap text-sm">
                 <span className="text-label-caps font-semibold px-2 py-0.5 rounded bg-surface-hover text-secondary">
-                  W{t.window_number}
+                  {t.matchday_id ? `MD${t.matchday_id}` : `W${t.window_number}`}
                 </span>
                 <span className="text-error">
                   {t.player_out?.name ?? `Player #${t.player_out_id}`}

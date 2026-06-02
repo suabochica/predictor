@@ -54,7 +54,9 @@ export default function Sidebar() {
         )}
         {activeTransferWindow && (
           <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2">
-            <p className="text-xs text-info font-medium">Transfer Window {activeTransferWindow.window_number}</p>
+            <p className="text-xs text-info font-medium">
+              {activeTransferWindow.is_preseason ? 'Preseason Transfers' : `${activeTransferWindow.matchday_name} Window`}
+            </p>
           </div>
         )}
       </div>

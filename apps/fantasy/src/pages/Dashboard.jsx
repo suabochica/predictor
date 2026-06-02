@@ -59,13 +59,17 @@ export default function Dashboard() {
           <img src={transfersIcon} className="w-6 h-6 mt-0.5" alt="" />
           <div>
             <p className="font-semibold text-info">
-              Transfer Window {activeTransferWindow.window_number} is Open
+              {activeTransferWindow.is_preseason
+                ? 'Preseason — Unlimited Transfers'
+                : `${activeTransferWindow.matchday_name} Transfer Window`}
             </p>
             <p className="text-sm text-secondary mt-0.5">
-              Max {activeTransferWindow.max_transfers} transfers. Closes{' '}
+              {activeTransferWindow.max_transfers != null
+                ? `${activeTransferWindow.max_transfers} transfers allowed. `
+                : 'Unlimited transfers. '}
               {activeTransferWindow.closes_at
-                ? new Date(activeTransferWindow.closes_at).toLocaleString()
-                : 'TBD'}
+                ? `First locks ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
+                : 'Players lock at kickoff'}
             </p>
             <Link to="/transfers" className="text-sm text-info hover:text-info mt-1 inline-block">
               Go to transfers →

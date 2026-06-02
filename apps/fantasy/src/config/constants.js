@@ -14,11 +14,9 @@ export const SQUAD_REQUIREMENTS = {
   FWD: { squad: 3, minOnField: 1, maxOnField: 3 },
 };
 
-export const TRANSFER_WINDOWS = [
-  { window: 1, maxTransfers: 7, label: 'After R32, before R16' },
-  { window: 2, maxTransfers: 3, label: 'After R16, before QF' },
-  { window: 3, maxTransfers: 3, label: 'After QF, before SF' },
-];
+// Per-matchday transfer allowances (preseason = null = unlimited)
+export const TRANSFER_CAP_ROUND_ROBIN = 2;
+export const TRANSFER_CAP_KNOCKOUT = 5;
 
 export const MIN_GOALKEEPERS = 1;
 export const LOCK_LEAD_MINUTES = 10;
