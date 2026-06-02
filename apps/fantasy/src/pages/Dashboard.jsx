@@ -68,7 +68,7 @@ export default function Dashboard() {
                 ? `${activeTransferWindow.max_transfers} transfers allowed. `
                 : 'Unlimited transfers. '}
               {activeTransferWindow.closes_at
-                ? `First locks ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
+                ? `Window closes ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
                 : 'Players lock at kickoff'}
             </p>
             <Link to="/transfers" className="text-sm text-info hover:text-info mt-1 inline-block">

@@ -333,7 +333,7 @@ export default function Transfers() {
               </p>
               <p className="text-secondary text-sm mt-0.5">
                 {activeTransferWindow.closes_at
-                  ? `First locks at ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
+                  ? `Window closes ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
                   : 'Players lock when their match kicks off'}
               </p>
             </div>
