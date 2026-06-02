@@ -3,6 +3,7 @@ import { useTransfers } from '../hooks/useTransfers';
 import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { usePlayers } from '../hooks/usePlayers';
+import { usePlayerTotals } from '../hooks/usePlayerTotals';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { POSITIONS } from '../config/constants';
@@ -30,7 +31,17 @@ function PositionFilter({ value, onChange }) {
   );
 }
 
-function SquadPlayerRow({ player, selected, isOut, onSelect }) {
+function PlayerStatsBadge({ stats }) {
+  if (!stats || stats.gp === 0) return null;
+  return (
+    <span className="text-label-caps text-muted tabular-nums whitespace-nowrap hidden sm:inline">
+      GP{stats.gp} G{stats.goals} A{stats.assists}{' '}
+      <span className="text-tertiary">{stats.total_points}pts</span>
+    </span>
+  );
+}
+
+function SquadPlayerRow({ player, selected, isOut, onSelect, stats }) {
   return (
     <button
       onClick={() => onSelect(player)}
@@ -48,6 +59,7 @@ function SquadPlayerRow({ player, selected, isOut, onSelect }) {
         {player.position}
       </span>
       <span className="text-sm text-primary flex-1 truncate">{player.name}</span>
+      <PlayerStatsBadge stats={stats} />
       <span className="text-xs text-secondary flex-shrink-0">{player.country_code}</span>
       <span className="text-xs text-tertiary flex-shrink-0 w-12 text-right">
         {formatPrice(player.acquisition_price)}
@@ -56,7 +68,7 @@ function SquadPlayerRow({ player, selected, isOut, onSelect }) {
   );
 }
 
-function AvailablePlayerRow({ player, selected, canAfford, onSelect }) {
+function AvailablePlayerRow({ player, selected, canAfford, onSelect, stats }) {
   const disabled = !canAfford;
 
   return (
@@ -77,6 +89,7 @@ function AvailablePlayerRow({ player, selected, canAfford, onSelect }) {
         {player.position}
       </span>
       <span className="text-sm text-primary flex-1 truncate">{player.name}</span>
+      <PlayerStatsBadge stats={stats} />
       <span className="text-xs text-secondary flex-shrink-0">{player.country_code}</span>
       <span className="text-xs text-tertiary flex-shrink-0 w-12 text-right">
         {formatPrice(player.price)}
@@ -93,6 +106,7 @@ export default function Transfers() {
   const { transfers, transfersUsedThisWindow, transfersRemaining, refresh: refreshTransfers } =
     useTransfers();
   const { players: allPlayers, loading: playersLoading } = usePlayers({ available: true });
+  const { totals: playerTotals } = usePlayerTotals();
 
   const [playerOut, setPlayerOut] = useState(null);
   const [playerIn, setPlayerIn] = useState(null);
@@ -529,6 +543,7 @@ export default function Transfers() {
                       selected={playerOut?.id === p.id}
                       isOut={playerOut?.id === p.id}
                       onSelect={selectPlayerOut}
+                      stats={playerTotals[p.id] ?? null}
                     />
                   ))
                 )}
@@ -572,6 +587,7 @@ export default function Transfers() {
                       selected={playerIn?.id === p.id}
                       canAfford={(budget + (playerOut?.acquisition_price ?? 0) - p.price) >= 0}
                       onSelect={selectPlayerIn}
+                      stats={playerTotals[p.id] ?? null}
                     />
                   ))
                 )}

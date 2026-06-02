@@ -3,6 +3,7 @@ import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { useAuction } from '../hooks/useAuction';
 import { usePlayers } from '../hooks/usePlayers';
+import { usePlayerTotals } from '../hooks/usePlayerTotals';
 import { supabase } from '@predictor/supabase';
 import { formatPrice, getPositionColor } from '../lib/utils';
 import { MAX_SQUAD_SIZE } from '../config/constants';
@@ -16,6 +17,7 @@ export default function Market() {
   const { refreshTeam } = useLeague();
   const { auctionState } = useAuction();
   const { players: allPlayers, loading: playersLoading, refresh: refreshPlayers } = usePlayers({ withOwner: true });
+  const { totals: playerTotals } = usePlayerTotals();
 
   const [filters, setFilters] = useState({});
   const [offerOut, setOfferOut] = useState(null);       // squad player selected to swap out
@@ -359,9 +361,14 @@ export default function Market() {
             <tr>
               <Th>Pos</Th>
               <Th>Player</Th>
-              <Th>Country</Th>
+              <Th className="hidden sm:table-cell">Country</Th>
+              <Th className="hidden sm:table-cell text-center">GP</Th>
+              <Th className="hidden sm:table-cell text-center">G</Th>
+              <Th className="hidden sm:table-cell text-center">A</Th>
+              <Th className="hidden sm:table-cell text-center">Pts</Th>
               <Th className="text-right">Price</Th>
-              <Th>Owner</Th>
+              <Th className="hidden sm:table-cell">Owner</Th>
+              <Th className="hidden sm:table-cell w-6" />
               <Th>Action</Th>
             </tr>
           </Thead>
@@ -380,6 +387,7 @@ export default function Market() {
                   offerOutName={offerOut?.name ?? null}
                   onBuy={setConfirmPlayer}
                   onSwap={setConfirmSwapIn}
+                  stats={playerTotals[player.id] ?? null}
                 />
               );
             })}
