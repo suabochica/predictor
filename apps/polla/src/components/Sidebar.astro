@@ -3,6 +3,7 @@ import homeIcon from '@predictor/ui/icons/home.svg';
 import predictionsIcon from '@predictor/ui/icons/predictions.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import rulesIcon from '@predictor/ui/icons/rules.svg';
+import adminIcon from '@predictor/ui/icons/admin.svg';
 
 const base = '/polla';
 const currentPath = Astro.url.pathname;
@@ -10,6 +11,7 @@ const currentPath = Astro.url.pathname;
 const displayName = Astro.locals.displayName;
 const rank = Astro.locals.leaderboardRank;
 const points = Astro.locals.totalPoints;
+const isAdmin = Astro.locals.isAdmin as boolean;
 
 const navItems = [
   { href: `${base}/`, icon: homeIcon, label: 'Home' },
@@ -17,6 +19,10 @@ const navItems = [
   { href: `${base}/leaderboard`, icon: standingsIcon, label: 'Leaderboard' },
   { href: `${base}/rules`, icon: rulesIcon, label: 'Rules' },
 ];
+
+if (isAdmin) {
+  navItems.push({ href: `${base}/admin`, icon: adminIcon, label: 'Admin' });
+}
 
 function rankBadge(r: number): string {
   if (r === 1) return '🥇';
