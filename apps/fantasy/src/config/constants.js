@@ -7,16 +7,6 @@ export const MAX_LEAGUE_PARTICIPANTS = 12;
 
 export const POSITIONS = ['GK', 'DEF', 'MID', 'FWD'];
 
-export const VALID_FORMATIONS = [
-  '3-4-3',
-  '3-5-2',
-  '4-3-3',
-  '4-4-2',
-  '4-5-1',
-  '5-3-2',
-  '5-4-1',
-];
-
 export const SQUAD_REQUIREMENTS = {
   GK: { squad: 2, minOnField: 1, maxOnField: 1 },
   DEF: { squad: 5, minOnField: 3, maxOnField: 5 },

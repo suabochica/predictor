@@ -5,7 +5,6 @@ import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { buildDefaultLineup } from '../lib/defaultLineup';
-import { VALID_FORMATIONS } from '../config/constants';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 
@@ -416,8 +415,7 @@ export default function MyTeam() {
 
   const gkCount = starters.filter((p) => p.position === 'GK').length;
   const captainIsStarter = captainId !== null && starters.some((s) => s.id === captainId);
-  const validFormation = VALID_FORMATIONS.includes(derivedFormation);
-  const canSave = starters.length === 11 && gkCount === 1 && captainIsStarter && validFormation;
+  const canSave = starters.length === 11 && gkCount === 1 && captainIsStarter;
 
   const captainPlayer = captainId ? starters.find((s) => s.id === captainId) ?? null : null;
   const captainGameLocked = captainPlayer ? isGameLocked(captainPlayer) : false;
@@ -835,7 +833,6 @@ export default function MyTeam() {
             {starters.length !== 11 && `Need exactly 11 starters (have ${starters.length}). `}
             {starters.length === 11 && gkCount !== 1 && 'Need exactly 1 GK in starting XI. '}
             {!captainIsStarter && 'Select a captain from your starters. '}
-            {starters.length === 11 && gkCount === 1 && captainIsStarter && !validFormation && `Formation ${derivedFormation} is not valid. `}
           </p>
         )}
 

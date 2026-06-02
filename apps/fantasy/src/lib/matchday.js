@@ -29,7 +29,7 @@ export function applyAutoSubs(lineup, statsMap) {
         .filter((s) => s.id !== starter.id)
         .concat(candidate);
 
-      if (isFormationValid(proposedStarters, lineup.formation)) {
+      if (isFormationValid(proposedStarters)) {
         starters = proposedStarters;
         remainingBench = remainingBench.filter((_, idx) => idx !== i);
         subsApplied.push({ playerOut: starter, playerIn: candidate });
@@ -78,20 +78,7 @@ export function calculateTeamMatchdayPoints(lineup, statsMap, positionMap, score
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function parseFormation(formation) {
-  const [def, mid, fwd] = (formation ?? '4-3-3').split('-').map(Number);
-  return { GK: 1, DEF: def, MID: mid, FWD: fwd };
-}
-
-function isFormationValid(starters, formation) {
+function isFormationValid(starters) {
   if (starters.length !== 11) return false;
-  const req = parseFormation(formation);
-  const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-  for (const p of starters) counts[p.position] = (counts[p.position] ?? 0) + 1;
-  return (
-    counts.GK === req.GK &&
-    counts.DEF === req.DEF &&
-    counts.MID === req.MID &&
-    counts.FWD === req.FWD
-  );
+  return starters.filter((p) => p.position === 'GK').length === 1;
 }
