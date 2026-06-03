@@ -98,6 +98,7 @@ function normalizeTime(str) {
   return str
     .replace(/&nbsp;/g, ' ')
     .replace(/−/g, '-')        // Unicode minus → ASCII hyphen
+    .replace(/<\/?includeonly>/g, '')  // Strip <includeonly>...</includeonly> tags
     .replace(/\[\[UTC[+-]\d{2}:\d{2}\|(UTC[+-]\d+)\]\]/g, '$1');
 }
 
