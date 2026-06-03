@@ -333,11 +333,11 @@ export default function Admin() {
 
   // ── Transfer Windows ──────────────────────────────────────────────────────
   const WINDOW_DEFAULTS = [
-    { window_number: 1, max_transfers: 7, label: 'Window 1 — After R32 (7 transfers)' },
-    { window_number: 2, max_transfers: 3, label: 'Window 2 — After R16 (3 transfers)' },
-    { window_number: 3, max_transfers: 3, label: 'Window 3 — After QF (3 transfers)' },
+    { window_number: 1, max_transfers: 5, label: 'Window 1 — Before R32 / fantasy QF (5 transfers)' },
+    { window_number: 2, max_transfers: 5, label: 'Window 2 — Before R16 / fantasy SF (5 transfers)' },
+    { window_number: 3, max_transfers: 5, label: 'Window 3 — Before WC QF / fantasy Final (5 transfers)' },
   ];
-  const EMPTY_TW_FORM = { window_number: '1', max_transfers: '7', opens_at: '', closes_at: '' };
+  const EMPTY_TW_FORM = { window_number: '1', max_transfers: '5', opens_at: '', closes_at: '' };
   const [transferWindows, setTransferWindows] = useState([]);
   const [twLoading, setTwLoading] = useState(true);
   const [twForm, setTwForm] = useState(EMPTY_TW_FORM);
@@ -1852,7 +1852,7 @@ export default function Admin() {
           <div>
             <h2 className="text-lg font-semibold text-primary">Knockout Bracket</h2>
             <p className="text-xs text-muted mt-1">
-              Seed after league stage (4 matchdays) is complete. Then calculate each round using that round's matchday.
+              Seed after league stage (3 matchdays) is complete. Then calculate each round using that round's matchday.
             </p>
           </div>
 

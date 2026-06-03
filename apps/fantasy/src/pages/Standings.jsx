@@ -47,9 +47,11 @@ export default function Standings() {
   const hasScores = standings.some((s) => s.total_points > 0);
   const totalParticipants = standings.length;
 
-  // Determine if league stage is complete (all 4 league matchdays done)
-  const leagueMatchdays = matchdays.filter((md) => !md.wc_stage?.toLowerCase().includes('knockout'));
-  const leagueComplete = leagueMatchdays.length >= 4 && leagueMatchdays.every((md) => md.is_completed);
+  // League stage = the 3 group round-robin matchdays (MD1/MD2/MD3).
+  const leagueMatchdays = matchdays.filter((md) => md.wc_stage?.toLowerCase().includes('group'));
+  const leagueComplete = leagueMatchdays.length >= 3 && leagueMatchdays.every((md) => md.is_completed);
+  // Per-matchday point columns show only the 3 group matchdays (round-robin).
+  const groupMatchdays = leagueMatchdays.slice(0, 3);
 
   if (loading) {
     return (
@@ -83,7 +85,7 @@ export default function Standings() {
           <p className="text-xs text-muted uppercase tracking-wider">Matchdays</p>
           <p className="text-2xl font-bold text-primary mt-1">
             {matchdays.filter((md) => md.is_completed).length}
-            <span className="text-sm text-muted font-normal"> / {Math.max(4, matchdays.length)}</span>
+            <span className="text-sm text-muted font-normal"> / {Math.max(6, matchdays.length)}</span>
           </p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
@@ -123,16 +125,16 @@ export default function Standings() {
       ) : (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[2rem_1fr_repeat(4,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-2.5 border-b border-border text-label-caps font-semibold text-muted uppercase tracking-wider">
+          <div className="grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-2.5 border-b border-border text-label-caps font-semibold text-muted uppercase tracking-wider">
             <span>#</span>
             <span>Manager</span>
-            {matchdays.length > 0
-              ? matchdays.slice(0, 4).map((md) => (
+            {groupMatchdays.length > 0
+              ? groupMatchdays.map((md) => (
                   <span key={md.id} className="hidden sm:block text-center truncate" title={md.name}>
                     {md.name.replace(/matchday\s*/i, 'MD').replace(/group stage /i, '')}
                   </span>
                 ))
-              : [1, 2, 3, 4].map((n) => (
+              : [1, 2, 3].map((n) => (
                   <span key={n} className="hidden sm:block text-center text-secondary">
                     MD{n}
                   </span>
@@ -167,7 +169,7 @@ export default function Standings() {
               return (
                 <div
                   key={entry.team_id}
-                  className={`grid grid-cols-[2rem_1fr_repeat(4,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-3 items-center ${leftBorder} ${
+                  className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-3 items-center ${leftBorder} ${
                     rank <= 3 ? 'bg-surface' : 'bg-surface'
                   }`}
                 >
@@ -183,8 +185,8 @@ export default function Standings() {
                   </div>
 
                   {/* Per-matchday points */}
-                  {matchdays.length > 0
-                    ? matchdays.slice(0, 4).map((md) => (
+                  {groupMatchdays.length > 0
+                    ? groupMatchdays.map((md) => (
                         <span
                           key={md.id}
                           className="hidden sm:block text-center text-sm text-secondary"
@@ -194,7 +196,7 @@ export default function Standings() {
                             : '—'}
                         </span>
                       ))
-                    : [1, 2, 3, 4].map((n) => (
+                    : [1, 2, 3].map((n) => (
                         <span key={n} className="hidden sm:block text-center text-sm text-secondary">
                           —
                         </span>
