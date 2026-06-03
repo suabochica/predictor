@@ -12,7 +12,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "import-matches": "node scripts/import-matches.mjs",
-    "sync-schedule": "node scripts/sync-schedule.mjs"
+    "sync-schedule": "node scripts/sync-schedule.mjs",
+    "sync-schedule:sql": "node scripts/sync-schedule.mjs --sql"
   },
   "dependencies": {
     "@astrojs/netlify": "^6.6.5",
