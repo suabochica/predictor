@@ -30,7 +30,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -81,6 +81,10 @@ if (!OFFLINE) {
 
 // CSV lives in the fantasy app; resolve from this script's location.
 const CSV_PATH = resolve(__dirname, '../../fantasy/data/csv/fifa_world_cup_2026_schedule.csv');
+
+// Generated SQL is written here (tracked, applied by hand in the Supabase SQL editor —
+// matches are script-imported, not migration-seeded, so this can't be an auto-run migration).
+const MANUAL_SQL_DIR = resolve(__dirname, '../../../supabase/manual');
 
 // US Eastern in June/July 2026 = EDT = UTC-04:00 (no DST boundary in range). The CSV's
 // Time_ET column normalizes every venue to Eastern, so a single offset is correct.
@@ -314,7 +318,8 @@ async function main() {
 
   if (INSERT_GROUPS) {
     const sql = generateInsertSql(rows, INSERT_GROUPS);
-    const outPath = resolve(__dirname, 'insert-missing-matches.generated.sql');
+    mkdirSync(MANUAL_SQL_DIR, { recursive: true });
+    const outPath = resolve(MANUAL_SQL_DIR, '02_insert_missing_group_matches.sql');
     writeFileSync(outPath, sql);
     console.log(`\nWrote SQL to: ${outPath}`);
     console.log('Open it in the Supabase SQL editor and run it.');
@@ -323,7 +328,8 @@ async function main() {
 
   if (EMIT_SQL) {
     const sql = generateSql(rows);
-    const outPath = resolve(__dirname, 'sync-schedule.generated.sql');
+    mkdirSync(MANUAL_SQL_DIR, { recursive: true });
+    const outPath = resolve(MANUAL_SQL_DIR, '01_sync_schedule.sql');
     writeFileSync(outPath, sql);
     console.log(`\nWrote SQL to: ${outPath}`);
     console.log('Open it in the Supabase SQL editor and run it.');
