@@ -32,17 +32,21 @@ export function useProxyTargets() {
   }, [team?.auto_bid_enabled]);
 
   async function fetchTargets() {
+    if (!user) { setLoading(false); return; }
     const { data } = await supabase
       .from('proxy_targets')
       .select('*, players(id, name, position, price, current_price)')
+      .eq('user_id', user.id)
       .order('priority', { ascending: true });
     setTargets(data ?? []);
     setLoading(false);
   }
 
   async function addTarget(playerId, maxPrice) {
+    if (!user) return;
     const nextPriority = targets.length > 0 ? Math.max(...targets.map((t) => t.priority)) + 1 : 1;
     await supabase.from('proxy_targets').insert({
+      user_id: user.id,
       player_id: playerId,
       priority: nextPriority,
       max_price: maxPrice,
@@ -63,15 +67,26 @@ export function useProxyTargets() {
   }
 
   async function reorder(orderedIds) {
-    // Two-pass update avoids transient UNIQUE(user_id,priority) conflicts across
-    // separate transactions: first shift all to a temporary high range, then assign final values.
-    const offset = 1000;
-    for (let i = 0; i < orderedIds.length; i++) {
-      await supabase.from('proxy_targets').update({ priority: offset + i + 1 }).eq('id', orderedIds[i]);
-    }
-    for (let i = 0; i < orderedIds.length; i++) {
-      await supabase.from('proxy_targets').update({ priority: i + 1 }).eq('id', orderedIds[i]);
-    }
+    // Single bulk upsert = one transaction. The UNIQUE(user_id, priority) constraint is
+    // DEFERRABLE INITIALLY DEFERRED, so transient duplicates during the statement are
+    // tolerated and only the final 1..N assignment is checked at commit. A per-row update
+    // approach can't work here: each request is its own transaction (deferral doesn't help),
+    // and a temporary high range would violate CHECK(priority BETWEEN 1 AND 30).
+    const byId = new Map(targets.map((t) => [t.id, t]));
+    const rows = orderedIds
+      .map((id, i) => {
+        const t = byId.get(id);
+        if (!t) return null;
+        return {
+          id: t.id,
+          user_id: t.user_id,
+          player_id: t.player_id,
+          max_price: t.max_price,
+          priority: i + 1,
+        };
+      })
+      .filter(Boolean);
+    await supabase.from('proxy_targets').upsert(rows, { onConflict: 'id' });
     await fetchTargets();
   }
 
