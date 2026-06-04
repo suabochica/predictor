@@ -27,3 +27,6 @@ export const AUCTION_STATUSES = {
   PAUSED: 'paused',
   COMPLETED: 'completed',
 };
+
+export const AUTO_BID_DELAY_SECONDS = 90;
+export const MAX_PROXY_TARGETS = 30;

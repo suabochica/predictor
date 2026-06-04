@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
-import { AUCTION_STATUSES } from '../config/constants';
+import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
 import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
 import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
@@ -48,14 +48,19 @@ export default function Admin() {
     nextRound,
     endRound,
     resolveRound,
+    runAutoBids,
+    autoCompleteSquads,
   } = useAuction();
 
   // Completes the auction, auto-creates default lineups for full squads, then activates the first matchday.
   async function handleCompleteAuction() {
     await completeAuction();
 
+    // Fill any squads under 15 with random affordable players (GK first).
+    const { data: fillResult } = await autoCompleteSquads();
+    const warnings = (fillResult?.warnings ?? []).map((w) => `${w.team}: ${w.reason}`);
+
     // Auto-create pre-tournament (matchday_id = null) lineups for every full squad.
-    const warnings = [];
     const [{ data: teams }, { data: existingLineups }] = await Promise.all([
       supabase
         .from('teams')
@@ -113,6 +118,45 @@ export default function Admin() {
   const [resolving, setResolving]   = useState(false);
   const [resolveErrors, setResolveErrors] = useState([]);
   const [lineupWarnings, setLineupWarnings] = useState([]);
+
+  // ── Auto-bid 90s trigger ──────────────────────────────────────────────────
+  const [autoBidRunning, setAutoBidRunning] = useState(false);
+  const [autoBidResult, setAutoBidResult]   = useState(null);
+  const autoBidFiredRef = useRef({});
+
+  async function handleRunAutoBids() {
+    setAutoBidRunning(true);
+    setAutoBidResult(null);
+    const { data } = await runAutoBids();
+    setAutoBidResult(data);
+    setAutoBidRunning(false);
+  }
+
+  useEffect(() => {
+    if (!auctionState) return;
+    const { status, current_round, round_started_at } = auctionState;
+    if (status !== AUCTION_STATUSES.ACTIVE || !round_started_at) return;
+
+    const guardKey = `${current_round}-${round_started_at}`;
+
+    const checkAndFire = () => {
+      if (autoBidFiredRef.current[guardKey]) return;
+      const elapsed = (Date.now() - new Date(round_started_at).getTime()) / 1000;
+      if (elapsed >= AUTO_BID_DELAY_SECONDS) {
+        autoBidFiredRef.current[guardKey] = true;
+        handleRunAutoBids();
+      }
+    };
+
+    checkAndFire();
+    const interval = setInterval(() => {
+      if (autoBidFiredRef.current[guardKey]) { clearInterval(interval); return; }
+      checkAndFire();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [auctionState?.status, auctionState?.current_round, auctionState?.round_started_at]);
+  // ──────────────────────────────────────────────────────────────────────────
 
   // ── League Participants ────────────────────────────────────────────────────
   const [participants, setParticipants] = useState([]);
@@ -1178,6 +1222,14 @@ export default function Admin() {
                 End Round
               </button>
               <button
+                onClick={handleRunAutoBids}
+                disabled={autoBidRunning}
+                className="px-5 py-2 rounded-lg bg-surface-hover hover:brightness-95 disabled:opacity-50 text-secondary font-semibold border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                title="Manually fire the proxy-bid pass for this round (auto-fires at 1:30)."
+              >
+                {autoBidRunning ? 'Auto-pujando…' : 'Run Auto-Bids'}
+              </button>
+              <button
                 onClick={() => { setConfirming(true); setResolveErrors([]); }}
                 disabled={confirming}
                 className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
@@ -1214,6 +1266,13 @@ export default function Admin() {
             <p className="text-muted text-sm italic">Auction is complete. No further actions available.</p>
           )}
         </div>
+
+        {autoBidResult && (
+          <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info">
+            Auto-bids: <span className="font-semibold">{autoBidResult.bids_placed ?? 0} placed</span>
+            {autoBidResult.note && <span className="ml-2 text-muted">({autoBidResult.note})</span>}
+          </div>
+        )}
 
         {lineupWarnings.length > 0 && (
           <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-1">

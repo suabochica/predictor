@@ -27,6 +27,10 @@ export default function AuctionPlayerRow({
   status,
   myBidCount,
   freeSlots,
+  isPending,
+  isInPista,
+  pistaFull,
+  onAddToPista,
 }) {
   let statusPill = null;
   if (ownerLabel) {
@@ -66,7 +70,24 @@ export default function AuctionPlayerRow({
   }
 
   let bidCell = null;
-  if (canBid) {
+  if (isPending && !ownerLabel) {
+    if (isInPista) {
+      bidCell = (
+        <span className="text-xs font-medium px-2 py-0.5 rounded bg-tertiary/10 text-tertiary border border-tertiary/40 whitespace-nowrap">
+          ✓ En pista
+        </span>
+      );
+    } else if (!pistaFull) {
+      bidCell = (
+        <button
+          onClick={onAddToPista}
+          className="px-3 py-1 rounded bg-surface-hover hover:bg-border text-secondary text-xs font-medium border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary whitespace-nowrap"
+        >
+          + Pista
+        </button>
+      );
+    }
+  } else if (canBid) {
     bidCell = (
       <div className="flex gap-1.5 items-center">
         <input

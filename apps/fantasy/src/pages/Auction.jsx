@@ -4,12 +4,14 @@ import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTeam } from '../hooks/useTeam';
+import { useProxyTargets } from '../hooks/useProxyTargets';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import AuctionPlayerRow from '../components/auction/AuctionPlayerRow';
 import {
   AUCTION_STATUSES,
   MIN_BID_INCREMENT,
   MAX_SQUAD_SIZE,
+  MAX_PROXY_TARGETS,
   POSITIONS,
 } from '../config/constants';
 
@@ -41,6 +43,7 @@ export default function Auction() {
   const { team, players: teamPlayers } = useTeam();
   const { auctionState, bids, ownedPlayerIds, playerOwners, loading, getHighestBid, getContestFloor, placeBid, refreshBids } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
+  const { targets, autoBidEnabled, addTarget, removeTarget, reorder, setMaxPrice, toggleAutoBid } = useProxyTargets();
 
   const [posFilter, setPosFilter]         = useState('All');
   const [countryFilter, setCountryFilter] = useState('All');
@@ -49,6 +52,7 @@ export default function Auction() {
   const [errors, setErrors]              = useState({});
   const [roundExpired, setRoundExpired]  = useState(false);
   const [bidsTab, setBidsTab]            = useState('my');
+  const [maxPriceDraft, setMaxPriceDraft] = useState({});
 
   const handleRoundExpire = useCallback(() => setRoundExpired(true), []);
 
@@ -59,7 +63,11 @@ export default function Auction() {
   }
 
   const { status, current_round, round_duration_seconds, round_started_at } = auctionState;
-  const isActive = status === AUCTION_STATUSES.ACTIVE;
+  const isActive  = status === AUCTION_STATUSES.ACTIVE;
+  const isPending = status === AUCTION_STATUSES.PENDING;
+
+  const pistaPlayerIds = useMemo(() => new Set(targets.map((t) => t.player_id)), [targets]);
+  const pistaFull = targets.length >= MAX_PROXY_TARGETS;
 
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const myBids           = currentRoundBids.filter((b) => b.user_id === user?.id);
@@ -281,6 +289,143 @@ export default function Auction() {
                   ))}
               </div>
             </details>
+          )}
+        </section>
+      )}
+
+      {/* ── Pista de Subasta ─────────────────────────────────────────── */}
+      {team && (isPending || targets.length > 0) && (
+        <section className="bg-surface rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-primary">Pista de Subasta</h2>
+              <p className="text-xs text-muted mt-0.5">
+                {isPending
+                  ? `Elige hasta ${MAX_PROXY_TARGETS} jugadores con un precio máximo. El sistema pujará automáticamente en el minuto 1:30 de cada ronda.`
+                  : 'Subasta en progreso — la pista está bloqueada.'}
+              </p>
+            </div>
+
+            {/* Auto-bid toggle (interactive in any state) */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div
+                onClick={() => toggleAutoBid(!autoBidEnabled)}
+                className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                  autoBidEnabled ? 'bg-tertiary' : 'bg-border'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-primary shadow-sm transition-transform ${
+                    autoBidEnabled ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </div>
+              <span className="text-sm font-medium text-primary">Subasta Automática</span>
+            </label>
+          </div>
+
+          {targets.length === 0 ? (
+            <p className="text-muted text-sm italic">
+              {isPending ? 'Ningún jugador añadido aún. Usa "+ Pista" en la tabla.' : 'No configuraste pista antes de la subasta.'}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted border-b border-border">
+                    <th className="pb-2 pr-2 font-medium w-8">#</th>
+                    <th className="pb-2 pr-4 font-medium">Jugador</th>
+                    <th className="pb-2 pr-4 font-medium">Pos</th>
+                    <th className="pb-2 pr-4 font-medium">Precio</th>
+                    <th className="pb-2 pr-2 font-medium">Máx.</th>
+                    {isPending && <th className="pb-2 font-medium">Orden / Quitar</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {targets.map((t, idx) => (
+                    <tr key={t.id} className="hover:bg-surface-hover/40">
+                      <td className="py-2 pr-2 text-muted text-xs tabular-nums">{t.priority}</td>
+                      <td className="py-2 pr-4 font-medium text-primary">
+                        {t.players?.name ?? `Player #${t.player_id}`}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
+                          POSITION_BADGE[t.players?.position] ?? 'bg-border text-secondary'
+                        }`}>
+                          {t.players?.position ?? '—'}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-secondary text-xs">
+                        £{(t.players?.current_price ?? t.players?.price ?? 0).toFixed(1)}
+                      </td>
+                      <td className="py-2 pr-2">
+                        {isPending ? (
+                          <input
+                            type="number"
+                            step="0.1"
+                            min={t.players?.current_price ?? t.players?.price ?? 0}
+                            value={maxPriceDraft[t.id] ?? t.max_price}
+                            onChange={(e) => setMaxPriceDraft((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                            onBlur={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val) && val > 0) {
+                                setMaxPrice(t.id, val);
+                                setMaxPriceDraft((prev) => { const n = { ...prev }; delete n[t.id]; return n; });
+                              }
+                            }}
+                            className="w-20 bg-surface-hover border border-border rounded px-2 py-1 text-primary text-xs focus:outline-none focus:border-tertiary"
+                          />
+                        ) : (
+                          <span className="text-secondary text-xs">£{t.max_price.toFixed(1)}</span>
+                        )}
+                      </td>
+                      {isPending && (
+                        <td className="py-2">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                if (idx === 0) return;
+                                const ids = targets.map((x) => x.id);
+                                [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]];
+                                reorder(ids);
+                              }}
+                              disabled={idx === 0}
+                              className="px-2 py-0.5 rounded text-xs bg-surface-hover hover:bg-border disabled:opacity-30 text-secondary border border-border"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (idx === targets.length - 1) return;
+                                const ids = targets.map((x) => x.id);
+                                [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]];
+                                reorder(ids);
+                              }}
+                              disabled={idx === targets.length - 1}
+                              className="px-2 py-0.5 rounded text-xs bg-surface-hover hover:bg-border disabled:opacity-30 text-secondary border border-border"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              onClick={() => removeTarget(t.id)}
+                              className="px-2 py-0.5 rounded text-xs bg-error/10 hover:bg-error/20 text-error border border-error/30"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {isPending && targets.length > 0 && (
+            <p className="text-xs text-muted">
+              {targets.length}/{MAX_PROXY_TARGETS} jugadores · El precio máx. se edita en la columna Máx.
+            </p>
           )}
         </section>
       )}
@@ -544,6 +689,10 @@ export default function Auction() {
                   status={status}
                   myBidCount={myBidCount}
                   freeSlots={freeSlots}
+                  isPending={isPending}
+                  isInPista={pistaPlayerIds.has(player.id)}
+                  pistaFull={pistaFull}
+                  onAddToPista={() => addTarget(player.id, player.current_price ?? player.price)}
                 />
               );
             })}

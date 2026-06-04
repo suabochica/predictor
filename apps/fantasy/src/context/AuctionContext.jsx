@@ -329,6 +329,21 @@ export function AuctionProvider({ children }) {
     return { resolved, contested, errors };
   }
 
+  // ── Auto-bid RPCs ────────────────────────────────────────────────────────────
+
+  async function runAutoBids() {
+    const { data: freshState } = await supabase
+      .from('auction_state').select('current_round').order('id').limit(1).single();
+    const round = freshState?.current_round ?? auctionState?.current_round;
+    const { data, error } = await supabase.rpc('run_auto_bids', { p_round: round });
+    return { data, error };
+  }
+
+  async function autoCompleteSquads() {
+    const { data, error } = await supabase.rpc('auto_complete_squads');
+    return { data, error };
+  }
+
   // ── Bidding ─────────────────────────────────────────────────────────────────
 
   // Place a bid. Client-side guards (fast UX): one bid per player, carry-over
@@ -394,6 +409,8 @@ export function AuctionProvider({ children }) {
     nextRound,
     endRound,
     resolveRound,
+    runAutoBids,
+    autoCompleteSquads,
     refreshBids: fetchBids,
   };
 
