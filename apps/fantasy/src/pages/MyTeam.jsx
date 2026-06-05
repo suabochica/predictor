@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
+import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { buildDefaultLineup } from '../lib/defaultLineup';
@@ -38,16 +39,20 @@ export default function MyTeam() {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // player_id → game_started_at (ISO string) for active matchday
-  const [playerGameTimes, setPlayerGameTimes] = useState({});
-  // player_id → { total_points, minutes_played } for active matchday
+  // Matchday selector: which matchday the user is currently editing
+  const [selectedMatchday, setSelectedMatchday] = useState(null);
+  const [allMatchdays, setAllMatchdays] = useState([]);
+
+  // Live stats for the active matchday (display only, not used for locking)
   const [playerMatchdayStats, setPlayerMatchdayStats] = useState({});
   // Historical: completed matchdays + per-player stats across them
   const [completedMatchdays, setCompletedMatchdays] = useState([]);
-  // { [matchday_id]: { [player_id]: { total_points, minutes_played, goals, assists } } }
   const [historicalStats, setHistoricalStats] = useState({});
 
   const squad = normalizeSquad(players);
+
+  // Per-country kickoff times for the selected matchday — drives player locks
+  const { lockTimeFor, kickoffByCountry } = useMatchdayLocks(selectedMatchday?.id ?? null);
 
   // Ticks every 30s so isGameLocked re-evaluates as matches kick off
   const [now, setNow] = useState(Date.now());
@@ -56,33 +61,44 @@ export default function MyTeam() {
     return () => clearInterval(id);
   }, []);
 
-  function isGameLocked(playerId) {
-    const gt = playerGameTimes[playerId];
-    return gt ? new Date(gt).getTime() <= now : false;
+  // Lock = kickoff time (from polla matches) minus 10 min lead
+  function isGameLocked(player) {
+    const lockMs = lockTimeFor(player.country);
+    return lockMs !== null ? now >= lockMs : false;
   }
 
-  // ── Load game start times + per-player stats for active matchday ─────────
+  // ── Load non-completed matchdays for selector ──────────────────────────
   useEffect(() => {
-    if (!activeMatchday) {
-      setPlayerGameTimes({});
-      setPlayerMatchdayStats({});
-      return;
+    supabase
+      .from('matchdays')
+      .select('id, name, wc_stage, is_active')
+      .eq('is_completed', false)
+      .order('id', { ascending: true })
+      .then(({ data }) => setAllMatchdays(data ?? []));
+  }, []);
+
+  // ── Initialize selectedMatchday to the active matchday once it loads ───
+  useEffect(() => {
+    if (activeMatchday && !selectedMatchday) {
+      setSelectedMatchday(activeMatchday);
     }
+  }, [activeMatchday?.id]); // eslint-disable-line
+
+  // ── Load live stats for the active matchday (display only) ─────────────
+  useEffect(() => {
+    if (!activeMatchday) { setPlayerMatchdayStats({}); return; }
     supabase
       .from('player_stats')
-      .select('player_id, game_started_at, total_points, minutes_played')
+      .select('player_id, total_points, minutes_played')
       .eq('matchday_id', activeMatchday.id)
       .then(({ data }) => {
-        const times = {};
         const stats = {};
         for (const row of data ?? []) {
-          if (row.game_started_at) times[row.player_id] = row.game_started_at;
           stats[row.player_id] = {
             total_points: row.total_points ?? 0,
             minutes_played: row.minutes_played ?? 0,
           };
         }
-        setPlayerGameTimes(times);
         setPlayerMatchdayStats(stats);
       });
   }, [activeMatchday?.id]); // eslint-disable-line
@@ -129,33 +145,45 @@ export default function MyTeam() {
     return () => supabase.removeChannel(channel);
   }, [team?.id]); // eslint-disable-line
 
-  // ── Load lineup from DB (or build default) ──────────────────────────────
+  // ── Load lineup from DB, seeding from most recent saved if none exists ──
   const loadLineup = useCallback(async () => {
     if (!team || squad.length === 0) return;
     setLineupLoading(true);
 
-    const matchdayId = activeMatchday?.id ?? null;
-    let query = supabase
-      .from('lineups')
-      .select('*')
-      .eq('team_id', team.id);
-
-    query = matchdayId
+    const matchdayId = selectedMatchday?.id ?? null;
+    let query = supabase.from('lineups').select('*').eq('team_id', team.id);
+    query = matchdayId !== null
       ? query.eq('matchday_id', matchdayId)
       : query.is('matchday_id', null);
-
     let { data } = await query;
 
-    // If the active matchday has no saved lineup yet, fall back to the
-    // pre-tournament (null) lineup so the user sees what they actually set up
-    // rather than a system-generated default.
+    // Seed from most recent saved lineup if none found for this matchday
     if ((!data || data.length === 0) && matchdayId !== null) {
-      const { data: nullData } = await supabase
+      const { data: recentCheck } = await supabase
         .from('lineups')
-        .select('*')
+        .select('matchday_id')
         .eq('team_id', team.id)
-        .is('matchday_id', null);
-      data = nullData;
+        .not('matchday_id', 'is', null)
+        .order('matchday_id', { ascending: false })
+        .limit(1);
+
+      if (recentCheck && recentCheck.length > 0) {
+        const recentId = recentCheck[0].matchday_id;
+        const { data: recentRows } = await supabase
+          .from('lineups')
+          .select('*')
+          .eq('team_id', team.id)
+          .eq('matchday_id', recentId);
+        data = recentRows;
+      } else {
+        // Fall back to null default
+        const { data: nullData } = await supabase
+          .from('lineups')
+          .select('*')
+          .eq('team_id', team.id)
+          .is('matchday_id', null);
+        data = nullData;
+      }
     }
 
     if (data && data.length > 0) {
@@ -167,6 +195,7 @@ export default function MyTeam() {
         .sort((a, b) => (a.bench_order ?? 99) - (b.bench_order ?? 99));
       const captainRow = data.find((r) => r.is_captain);
 
+      // Re-validate against current squad (handles post-transfer seeding)
       const savedStarters = squad.filter((p) => starterIds.has(p.id));
       const savedBench = benchRows
         .map((r) => squad.find((p) => p.id === r.player_id))
@@ -183,7 +212,7 @@ export default function MyTeam() {
     }
 
     setLineupLoading(false);
-  }, [team?.id, players.length, activeMatchday?.id]); // eslint-disable-line
+  }, [team?.id, players.length, selectedMatchday?.id]); // eslint-disable-line
 
   useEffect(() => {
     loadLineup();
@@ -205,11 +234,11 @@ export default function MyTeam() {
   }
 
   function doSwap(p1, p2) {
-    if (isGameLocked(p1.id)) {
+    if (isGameLocked(p1)) {
       setSwapError(`${p1.name}'s game has already started — they cannot be moved.`);
       return;
     }
-    if (isGameLocked(p2.id)) {
+    if (isGameLocked(p2)) {
       setSwapError(`${p2.name}'s game has already started — they cannot be moved.`);
       return;
     }
@@ -272,7 +301,7 @@ export default function MyTeam() {
   // ── Empty slot handlers ──────────────────────────────────────────────────
   function handleEmptySlotClick() {
     if (!selectedPlayer) return;
-    if (isGameLocked(selectedPlayer.id)) {
+    if (isGameLocked(selectedPlayer)) {
       setSwapError(`${selectedPlayer.name}'s game has already started — they cannot be moved.`);
       return;
     }
@@ -292,7 +321,7 @@ export default function MyTeam() {
 
   function handleEmptyBenchSlotClick() {
     if (!selectedPlayer) return;
-    if (isGameLocked(selectedPlayer.id)) {
+    if (isGameLocked(selectedPlayer)) {
       setSwapError(`${selectedPlayer.name}'s game has already started — they cannot be moved.`);
       return;
     }
@@ -332,13 +361,12 @@ export default function MyTeam() {
   }
 
   // ── Save lineup ──────────────────────────────────────────────────────────
-  // TODO Bug 8: redesign lineup editing (drag-and-drop, formation picker, sub rules)
   async function saveLineup() {
     if (!team) return;
     setSaving(true);
     setSaveError(null);
 
-    const matchdayId = activeMatchday?.id ?? null;
+    const matchdayId = selectedMatchday?.id ?? null;
 
     // Delete existing rows for this team+matchday
     let delQuery = supabase.from('lineups').delete().eq('team_id', team.id);
@@ -387,9 +415,10 @@ export default function MyTeam() {
 
   const gkCount = starters.filter((p) => p.position === 'GK').length;
   const captainIsStarter = captainId !== null && starters.some((s) => s.id === captainId);
-  const canSave = gkCount === 1 && captainIsStarter;
-  // Captain warning: captain's game has already kicked off
-  const captainGameLocked = captainId ? isGameLocked(captainId) : false;
+  const canSave = starters.length === 11 && gkCount === 1 && captainIsStarter;
+
+  const captainPlayer = captainId ? starters.find((s) => s.id === captainId) ?? null : null;
+  const captainGameLocked = captainPlayer ? isGameLocked(captainPlayer) : false;
 
   const selectedIsStarter =
     selectedPlayer && starters.some((s) => s.id === selectedPlayer.id);
@@ -442,7 +471,7 @@ export default function MyTeam() {
         <div>
           <h1 className="text-2xl font-bold text-primary">My Team</h1>
           <p className="text-secondary text-sm mt-0.5">
-            {activeMatchday ? `Lineup for: ${activeMatchday.name}` : 'Pre-tournament lineup'}
+            {selectedMatchday ? `Lineup for: ${selectedMatchday.name}` : 'Pre-tournament lineup'}
           </p>
         </div>
         <div className="text-right">
@@ -451,6 +480,27 @@ export default function MyTeam() {
           <p className="text-xs text-muted">{squad.length} / 15 players</p>
         </div>
       </div>
+
+      {/* ── Matchday selector ── */}
+      {allMatchdays.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted uppercase tracking-wider font-semibold">Matchday:</span>
+          {allMatchdays.map((md) => (
+            <button
+              key={md.id}
+              onClick={() => setSelectedMatchday(md)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
+                selectedMatchday?.id === md.id
+                  ? 'bg-tertiary text-primary'
+                  : 'bg-border text-secondary hover:bg-border-strong'
+              }`}
+            >
+              {md.name}
+              {md.is_active && <span className="ml-1 text-tertiary">●</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── Formation label ── */}
       <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
@@ -463,7 +513,7 @@ export default function MyTeam() {
         <p className="text-xs text-muted ml-auto">{starters.length} / 11 starters</p>
       </div>
 
-      {/* ── Live matchday stats panel ── */}
+      {/* ── Live matchday stats panel (always shows active matchday) ── */}
       {activeMatchday && Object.keys(playerMatchdayStats).length > 0 && (() => {
         const livePts = starters.reduce((sum, p) => {
           const pts = playerMatchdayStats[p.id]?.total_points ?? 0;
@@ -488,7 +538,7 @@ export default function MyTeam() {
               </p>
             </div>
             <p className="text-label-caps text-muted ml-auto hidden sm:block">
-              C ×2 applied · auto-subs at end
+              C ×2 applied · starters are final
             </p>
           </div>
         );
@@ -497,14 +547,14 @@ export default function MyTeam() {
       {/* ── Captain warning ── */}
       {captainGameLocked && (
         <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
-          Your captain's game has already kicked off. If they don't play, you'll score 0 × 2 = 0 pts — captains are not auto-subbed.
+          Your captain's fixture has started. If they don't play, you'll score 0 × 2 = 0 pts — the XI is final, no bench promotion.
         </div>
       )}
 
       {/* ── Rolling lockout notice ── */}
-      {activeMatchday && Object.keys(playerGameTimes).length > 0 && (
+      {selectedMatchday && Object.keys(kickoffByCountry).length > 0 && (
         <div className="bg-surface-hover/60 border border-border rounded-xl p-3 text-xs text-secondary" role="alert">
-          Rolling lockout active — players whose game has kicked off cannot be moved.
+          Rolling lockout active — players lock 10 min before their fixture kicks off. Players in later games remain editable.
         </div>
       )}
 
@@ -675,8 +725,8 @@ export default function MyTeam() {
                     </span>
                   )}
                   <span className="text-label-caps flex-shrink-0 w-16 text-right flex items-center justify-end gap-1">
-                    {activeMatchday && (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0 && (
-                      <span title="Has played — locked">🔒</span>
+                    {isGameLocked(p) && (
+                      <span title="Locked — fixture started">🔒</span>
                     )}
                     {isCaptain ? (
                       <span className="text-tertiary font-semibold">Captain</span>
@@ -780,7 +830,8 @@ export default function MyTeam() {
 
         {!canSave && !saving && (
           <p className="text-xs text-muted">
-            {gkCount !== 1 && 'Need exactly 1 GK in starting XI. '}
+            {starters.length !== 11 && `Need exactly 11 starters (have ${starters.length}). `}
+            {starters.length === 11 && gkCount !== 1 && 'Need exactly 1 GK in starting XI. '}
             {!captainIsStarter && 'Select a captain from your starters. '}
           </p>
         )}

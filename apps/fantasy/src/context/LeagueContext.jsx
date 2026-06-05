@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useAuth } from '@predictor/supabase';
+import { LOCK_LEAD_MINUTES, TRANSFER_CAP_ROUND_ROBIN, TRANSFER_CAP_KNOCKOUT } from '../config/constants';
 
 const LeagueContext = createContext(null);
 
@@ -16,9 +17,18 @@ export function LeagueProvider({ children }) {
       setLoading(false);
       return;
     }
-    Promise.all([fetchTeam(), fetchActiveMatchday(), fetchActiveTransferWindow()]).finally(() =>
-      setLoading(false)
-    );
+    Promise.all([fetchTeam(), fetchMatchdayAndWindow()]).finally(() => setLoading(false));
+
+    const channel = supabase
+      .channel('league-team')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'teams' },
+        () => { fetchTeam(); }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [user]);
 
   async function fetchTeam() {
@@ -30,22 +40,80 @@ export function LeagueProvider({ children }) {
     setTeam(data);
   }
 
-  async function fetchActiveMatchday() {
-    const { data } = await supabase
-      .from('matchdays')
-      .select('*')
-      .eq('is_active', true)
-      .single();
-    setActiveMatchday(data);
-  }
+  async function fetchMatchdayAndWindow() {
+    const { data: matchdays } = await supabase.from('matchdays').select('*');
 
-  async function fetchActiveTransferWindow() {
-    const { data } = await supabase
-      .from('transfer_windows')
-      .select('*')
-      .eq('is_active', true)
-      .single();
-    setActiveTransferWindow(data);
+    if (!matchdays?.length) {
+      setActiveMatchday(null);
+      setActiveTransferWindow(null);
+      return;
+    }
+
+    // Window timing is derived purely from real kickoff times (matches.match_date),
+    // NOT from the admin's is_completed flag (that drives scoring only).
+    const { data: matches } = await supabase
+      .from('matches')
+      .select('matchday_id, match_date');
+
+    // Collect kickoff timestamps per matchday + the very first kickoff of the tournament.
+    const kicksByMd = {};
+    let firstKickoffOverall = null;
+    for (const m of matches ?? []) {
+      if (m.matchday_id == null || !m.match_date) continue;
+      const t = new Date(m.match_date).getTime();
+      (kicksByMd[m.matchday_id] ??= []).push(t);
+      if (firstKickoffOverall == null || t < firstKickoffOverall) firstKickoffOverall = t;
+    }
+
+    const lead = LOCK_LEAD_MINUTES * 60 * 1000;
+    const now = Date.now();
+
+    // Canonical tournament sequence order (id ascending); unscheduled matchdays stay in
+    // their correct position rather than floating to the front/back by kickoff time.
+    const ordered = [...matchdays].sort((a, b) => a.id - b.id);
+
+    // A matchday's window closes 10 min before ITS last game. The active matchday is the
+    // first one whose window hasn't closed yet (unscheduled matchdays count as still-open).
+    const activeMd = ordered.find((md) => {
+      const ks = kicksByMd[md.id];
+      if (!ks) return true;
+      return now < Math.max(...ks) - lead;
+    });
+
+    // Every window has closed → season over: no transfer window, last matchday for history.
+    if (!activeMd) {
+      setActiveMatchday(ordered[ordered.length - 1]);
+      setActiveTransferWindow(null);
+      return;
+    }
+
+    setActiveMatchday(activeMd);
+
+    const activeKicks = kicksByMd[activeMd.id];
+    const lastKickoffActive = activeKicks ? Math.max(...activeKicks) : null;
+
+    // Preseason = no matches scheduled yet, or before the first WC game (minus lead).
+    const isPreseason = firstKickoffOverall == null || now < firstKickoffOverall - lead;
+
+    let maxTransfers = null;
+    if (!isPreseason) {
+      const isGroup = activeMd.wc_stage?.toLowerCase().includes('group');
+      maxTransfers = isGroup ? TRANSFER_CAP_ROUND_ROBIN : TRANSFER_CAP_KNOCKOUT;
+    }
+
+    // Window closes 10 min before this matchday's final kickoff.
+    const closesAt =
+      lastKickoffActive != null ? new Date(lastKickoffActive - lead).toISOString() : null;
+
+    setActiveTransferWindow({
+      matchday_id: activeMd.id,
+      window_number: activeMd.id,
+      matchday_name: activeMd.name,
+      wc_stage: activeMd.wc_stage,
+      max_transfers: maxTransfers,
+      is_preseason: isPreseason,
+      closes_at: closesAt,
+    });
   }
 
   const value = {
@@ -55,6 +123,7 @@ export function LeagueProvider({ children }) {
     activeTransferWindow,
     loading,
     refreshTeam: fetchTeam,
+    refreshWindow: fetchMatchdayAndWindow,
   };
 
   return <LeagueContext.Provider value={value}>{children}</LeagueContext.Provider>;

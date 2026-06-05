@@ -22,13 +22,21 @@ export function useTransfers() {
     setLoading(false);
   }
 
+  // Count transfers used in the current window (keyed by matchday_id for new model).
+  // Preseason transfers have matchday_id = null.
   const transfersUsedThisWindow = activeTransferWindow
-    ? transfers.filter((t) => t.window_number === activeTransferWindow.window_number).length
+    ? transfers.filter((t) =>
+        activeTransferWindow.is_preseason
+          ? t.matchday_id == null
+          : t.matchday_id === activeTransferWindow.matchday_id
+      ).length
     : 0;
 
-  const transfersRemaining = activeTransferWindow
-    ? activeTransferWindow.max_transfers - transfersUsedThisWindow
-    : 0;
+  // null = unlimited (preseason)
+  const transfersRemaining =
+    activeTransferWindow?.max_transfers != null
+      ? Math.max(0, activeTransferWindow.max_transfers - transfersUsedThisWindow)
+      : null;
 
   return { transfers, transfersUsedThisWindow, transfersRemaining, loading, refresh: fetchTransfers };
 }

@@ -6,10 +6,10 @@ import homeIcon from '@predictor/ui/icons/home.svg';
 import teamIcon from '@predictor/ui/icons/team.svg';
 import marketIcon from '@predictor/ui/icons/market.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
-import transfersIcon from '@predictor/ui/icons/transfers.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import bracketsIcon from '@predictor/ui/icons/brackets.svg';
 import historyIcon from '@predictor/ui/icons/history.svg';
+import rulesIcon from '@predictor/ui/icons/rules.svg';
 import adminIcon from '@predictor/ui/icons/admin.svg';
 
 const navItems = [
@@ -17,10 +17,10 @@ const navItems = [
   { to: '/my-team', icon: teamIcon, label: 'My Team' },
   { to: '/market', icon: marketIcon, label: 'Player Market' },
   { to: '/auction', icon: auctionIcon, label: 'Auction' },
-  { to: '/transfers', icon: transfersIcon, label: 'Transfers' },
   { to: '/standings', icon: standingsIcon, label: 'Standings' },
   { to: '/bracket', icon: bracketsIcon, label: 'Bracket' },
   { to: '/history', icon: historyIcon, label: 'History' },
+  { to: '/como-jugar', icon: rulesIcon, label: '¿Cómo jugar?' },
 ];
 
 const adminItems = [
@@ -54,7 +54,9 @@ export default function Sidebar() {
         )}
         {activeTransferWindow && (
           <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2">
-            <p className="text-xs text-info font-medium">Transfer Window {activeTransferWindow.window_number}</p>
+            <p className="text-xs text-info font-medium">
+              {activeTransferWindow.is_preseason ? 'Preseason Transfers' : `${activeTransferWindow.matchday_name} Window`}
+            </p>
           </div>
         )}
       </div>

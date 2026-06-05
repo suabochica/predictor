@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
+import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
-import { AUCTION_STATUSES } from '../config/constants';
+import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
 import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
 import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
-import { generateChampionshipBracket, generateRelegationBracket, resolveH2H } from '../lib/brackets';
+import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
 
 const WC_STAGES = [
   'Group Stage MD1',
@@ -45,15 +46,21 @@ export default function Admin() {
     resumeAuction,
     completeAuction,
     nextRound,
+    endRound,
     resolveRound,
+    runAutoBids,
+    autoCompleteSquads,
   } = useAuction();
 
   // Completes the auction, auto-creates default lineups for full squads, then activates the first matchday.
   async function handleCompleteAuction() {
     await completeAuction();
 
+    // Fill any squads under 15 with random affordable players (GK first).
+    const { data: fillResult } = await autoCompleteSquads();
+    const warnings = (fillResult?.warnings ?? []).map((w) => `${w.team}: ${w.reason}`);
+
     // Auto-create pre-tournament (matchday_id = null) lineups for every full squad.
-    const warnings = [];
     const [{ data: teams }, { data: existingLineups }] = await Promise.all([
       supabase
         .from('teams')
@@ -74,6 +81,9 @@ export default function Admin() {
       if (squad.length < 15) {
         warnings.push(`${team.name}: only ${squad.length}/15 players — no default lineup created.`);
         continue;
+      }
+      if (!squad.some((p) => p.position === 'GK')) {
+        warnings.push(`${team.name}: no goalkeeper in squad!`);
       }
       const { starters, bench, captainId } = buildDefaultLineup(squad);
       for (const p of starters) {
@@ -108,6 +118,45 @@ export default function Admin() {
   const [resolving, setResolving]   = useState(false);
   const [resolveErrors, setResolveErrors] = useState([]);
   const [lineupWarnings, setLineupWarnings] = useState([]);
+
+  // ── Auto-bid 90s trigger ──────────────────────────────────────────────────
+  const [autoBidRunning, setAutoBidRunning] = useState(false);
+  const [autoBidResult, setAutoBidResult]   = useState(null);
+  const autoBidFiredRef = useRef({});
+
+  async function handleRunAutoBids() {
+    setAutoBidRunning(true);
+    setAutoBidResult(null);
+    const { data } = await runAutoBids();
+    setAutoBidResult(data);
+    setAutoBidRunning(false);
+  }
+
+  useEffect(() => {
+    if (!auctionState) return;
+    const { status, current_round, round_started_at } = auctionState;
+    if (status !== AUCTION_STATUSES.ACTIVE || !round_started_at) return;
+
+    const guardKey = `${current_round}-${round_started_at}`;
+
+    const checkAndFire = () => {
+      if (autoBidFiredRef.current[guardKey]) return;
+      const elapsed = (Date.now() - new Date(round_started_at).getTime()) / 1000;
+      if (elapsed >= AUTO_BID_DELAY_SECONDS) {
+        autoBidFiredRef.current[guardKey] = true;
+        handleRunAutoBids();
+      }
+    };
+
+    checkAndFire();
+    const interval = setInterval(() => {
+      if (autoBidFiredRef.current[guardKey]) { clearInterval(interval); return; }
+      checkAndFire();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [auctionState?.status, auctionState?.current_round, auctionState?.round_started_at]);
+  // ──────────────────────────────────────────────────────────────────────────
 
   // ── League Participants ────────────────────────────────────────────────────
   const [participants, setParticipants] = useState([]);
@@ -298,13 +347,41 @@ export default function Admin() {
   const [knockoutCalcRunning, setKnockoutCalcRunning] = useState(false);
   const [knockoutCalcResult, setKnockoutCalcResult] = useState(null);
 
+  // ── Matchday Fixtures ─────────────────────────────────────────────────────
+  const [fixtureMatches, setFixtureMatches] = useState([]);
+  const [fixtureLoading, setFixtureLoading] = useState(false);
+  const [fixtureSavingIds, setFixtureSavingIds] = useState(new Set());
+
+  const fetchFixtureMatches = useCallback(async () => {
+    setFixtureLoading(true);
+    const { data } = await supabase
+      .from('matches')
+      .select('id, match_code, team_a, team_b, match_date, matchday_id')
+      .order('match_date', { ascending: true });
+    setFixtureMatches(data ?? []);
+    setFixtureLoading(false);
+  }, []);
+
+  useEffect(() => { fetchFixtureMatches(); }, [fetchFixtureMatches]);
+
+  async function handleFixtureMatchdayChange(matchId, newMatchdayId) {
+    setFixtureSavingIds(prev => new Set(prev).add(matchId));
+    await supabase
+      .from('matches')
+      .update({ matchday_id: newMatchdayId === '' ? null : Number(newMatchdayId) })
+      .eq('id', matchId);
+    setFixtureSavingIds(prev => { const s = new Set(prev); s.delete(matchId); return s; });
+    await fetchFixtureMatches();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   // ── Transfer Windows ──────────────────────────────────────────────────────
   const WINDOW_DEFAULTS = [
-    { window_number: 1, max_transfers: 7, label: 'Window 1 — After R32 (7 transfers)' },
-    { window_number: 2, max_transfers: 3, label: 'Window 2 — After R16 (3 transfers)' },
-    { window_number: 3, max_transfers: 3, label: 'Window 3 — After QF (3 transfers)' },
+    { window_number: 1, max_transfers: 5, label: 'Window 1 — Before R32 / fantasy QF (5 transfers)' },
+    { window_number: 2, max_transfers: 5, label: 'Window 2 — Before R16 / fantasy SF (5 transfers)' },
+    { window_number: 3, max_transfers: 5, label: 'Window 3 — Before WC QF / fantasy Final (5 transfers)' },
   ];
-  const EMPTY_TW_FORM = { window_number: '1', max_transfers: '7', opens_at: '', closes_at: '' };
+  const EMPTY_TW_FORM = { window_number: '1', max_transfers: '5', opens_at: '', closes_at: '' };
   const [transferWindows, setTransferWindows] = useState([]);
   const [twLoading, setTwLoading] = useState(true);
   const [twForm, setTwForm] = useState(EMPTY_TW_FORM);
@@ -591,13 +668,6 @@ export default function Admin() {
       round: 1, bracket: 'championship', match_label: s.label,
       team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
     }));
-    if (standings.length >= 12) {
-      const relSeed = generateRelegationBracket(standings);
-      relSeed.forEach(s => rows.push({
-        round: 1, bracket: 'relegation', match_label: s.label,
-        team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
-      }));
-    }
     const { error } = await supabase.from('knockout_matches').insert(rows);
     setBracketSeedResult(error ? { error: error.message } : { ok: true, count: rows.length });
     if (!error) await fetchKnockoutData();
@@ -610,31 +680,18 @@ export default function Admin() {
     const rows = [];
 
     if (round === 1) {
-      const add = (bracket, label, aId, bId) => {
-        if (aId && bId && !exists(bracket, 2, label))
-          rows.push({ round: 2, bracket, match_label: label, team_a_id: aId, team_b_id: bId });
-      };
-      add('championship', 'Semi A',    results['Match A']?.w, results['Match B']?.w);
-      add('championship', 'Semi B',    results['Match C']?.w, results['Match D']?.w);
-      add('losers',       '5/6 Match', results['Match A']?.l, results['Match B']?.l);
-      add('losers',       '7/8 Match', results['Match C']?.l, results['Match D']?.l);
-      add('relegation',   '9th Place',  results['Match X']?.w, results['Match Y']?.w);
-      add('relegation',   '11th Place', results['Match X']?.l, results['Match Y']?.l);
+      const wA = results['Match A']?.w, wB = results['Match B']?.w;
+      const wC = results['Match C']?.w, wD = results['Match D']?.w;
+      if (wA && wB && !exists('championship', 2, 'Semi A'))
+        rows.push({ round: 2, bracket: 'championship', match_label: 'Semi A', team_a_id: wA, team_b_id: wB });
+      if (wC && wD && !exists('championship', 2, 'Semi B'))
+        rows.push({ round: 2, bracket: 'championship', match_label: 'Semi B', team_a_id: wC, team_b_id: wD });
     }
 
     if (round === 2) {
-      const wSA = results['Semi A']?.w, lSA = results['Semi A']?.l;
-      const wSB = results['Semi B']?.w, lSB = results['Semi B']?.l;
-      const w56 = results['5/6 Match']?.w, l56 = results['5/6 Match']?.l;
-      const w78 = results['7/8 Match']?.w, l78 = results['7/8 Match']?.l;
+      const wSA = results['Semi A']?.w, wSB = results['Semi B']?.w;
       if (wSA && wSB && !exists('championship', 3, 'Final'))
-        rows.push({ round: 3, bracket: 'championship', match_label: 'Final',     team_a_id: wSA, team_b_id: wSB });
-      if (lSA && lSB && !exists('championship', 3, '3rd Place'))
-        rows.push({ round: 3, bracket: 'championship', match_label: '3rd Place', team_a_id: lSA, team_b_id: lSB });
-      if (w56 && l56 && !exists('losers', 3, '5th Place'))
-        rows.push({ round: 3, bracket: 'losers', match_label: '5th Place', team_a_id: w56, team_b_id: l56, winner_id: w56, placement: '5th Place' });
-      if (w78 && l78 && !exists('losers', 3, '7th Place'))
-        rows.push({ round: 3, bracket: 'losers', match_label: '7th Place', team_a_id: w78, team_b_id: l78, winner_id: w78, placement: '7th Place' });
+        rows.push({ round: 3, bracket: 'championship', match_label: 'Final', team_a_id: wSA, team_b_id: wSB });
     }
 
     return rows;
@@ -653,7 +710,6 @@ export default function Admin() {
     const toResolve = knockoutMatches.filter(m => {
       if (m.winner_id) return false;
       if (m.round !== round) return false;
-      if (round === 3 && m.bracket === 'losers') return false; // pre-set placement rows
       return true;
     });
 
@@ -724,9 +780,8 @@ export default function Admin() {
       matchResults[match.match_label] = { w: winnerId, l: loserId };
 
       let placement;
-      if (match.bracket === 'relegation') placement = match.match_label;
-      else if (round === 3 && match.bracket === 'championship') {
-        placement = match.match_label === 'Final' ? '1st Place' : '3rd Place';
+      if (round === 3 && match.match_label === 'Final') {
+        placement = '1st Place';
       }
 
       updates.push({
@@ -1018,6 +1073,7 @@ export default function Admin() {
       return;
     }
     await nextRound();
+    await fetchParticipants();
     setResolving(false);
     setConfirming(false);
   }
@@ -1124,12 +1180,19 @@ export default function Admin() {
             <p className="text-primary text-2xl font-bold">{round_duration_seconds}s</p>
           </div>
           <div>
-            <p className="text-muted mb-1">Round Started</p>
-            <p className="text-primary font-medium">
-              {round_started_at
-                ? new Date(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                : '—'}
-            </p>
+            <p className="text-muted mb-1">{isActive ? 'Time Remaining' : 'Round Started'}</p>
+            {isActive ? (
+              <AuctionTimer
+                roundStartedAt={round_started_at}
+                roundDurationSeconds={round_duration_seconds}
+              />
+            ) : (
+              <p className="text-primary font-medium">
+                {round_started_at
+                  ? new Date(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                  : '—'}
+              </p>
+            )}
           </div>
         </div>
 
@@ -1150,6 +1213,21 @@ export default function Admin() {
                 className="px-5 py-2 rounded-lg bg-warning hover:bg-tertiary text-on-warning font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
                 Pause
+              </button>
+              <button
+                onClick={endRound}
+                className="px-5 py-2 rounded-lg bg-surface-hover hover:brightness-95 text-primary font-semibold border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                title="End the round early (stops bidding now). Then Resolve & Next Round."
+              >
+                End Round
+              </button>
+              <button
+                onClick={handleRunAutoBids}
+                disabled={autoBidRunning}
+                className="px-5 py-2 rounded-lg bg-surface-hover hover:brightness-95 disabled:opacity-50 text-secondary font-semibold border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                title="Manually fire the proxy-bid pass for this round (auto-fires at 1:30)."
+              >
+                {autoBidRunning ? 'Auto-pujando…' : 'Run Auto-Bids'}
               </button>
               <button
                 onClick={() => { setConfirming(true); setResolveErrors([]); }}
@@ -1188,6 +1266,13 @@ export default function Admin() {
             <p className="text-muted text-sm italic">Auction is complete. No further actions available.</p>
           )}
         </div>
+
+        {autoBidResult && (
+          <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info">
+            Auto-bids: <span className="font-semibold">{autoBidResult.bids_placed ?? 0} placed</span>
+            {autoBidResult.note && <span className="ml-2 text-muted">({autoBidResult.note})</span>}
+          </div>
+        )}
 
         {lineupWarnings.length > 0 && (
           <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-1">
@@ -1350,15 +1435,17 @@ export default function Admin() {
                     <th className="pb-3 pr-4 font-medium">Listed</th>
                     <th className="pb-3 pr-4 font-medium">Top Bid</th>
                     <th className="pb-3 pr-4 font-medium">Leading</th>
-                    <th className="pb-3 font-medium">Bids</th>
+                    <th className="pb-3 pr-4 font-medium">Bids</th>
+                    <th className="pb-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {biddedPlayerIds.map((playerId) => {
-                    const highBid    = getHighestBid(playerId);
-                    const player     = highBid?.players;
-                    const position   = player?.position ?? '—';
-                    const playerBids = currentRoundBids.filter((b) => b.player_id === playerId);
+                    const highBid       = getHighestBid(playerId);
+                    const player        = highBid?.players;
+                    const position      = player?.position ?? '—';
+                    const playerBids    = currentRoundBids.filter((b) => b.player_id === playerId);
+                    const uniqueBidders = new Set(playerBids.map((b) => b.user_id)).size;
 
                     return (
                       <tr key={playerId} className="text-secondary hover:bg-surface-hover/40">
@@ -1379,7 +1466,14 @@ export default function Admin() {
                         <td className="py-3 pr-4 text-primary">
                           {highBid?.users?.display_name ?? '—'}
                         </td>
-                        <td className="py-3 text-muted">{playerBids.length}</td>
+                        <td className="py-3 pr-4 text-muted">{playerBids.length}</td>
+                        <td className="py-3">
+                          {uniqueBidders > 1 && (
+                            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-warning/15 text-warning">
+                              ⚡ Contested
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -1506,6 +1600,116 @@ export default function Admin() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* ── Matchday Fixtures ────────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">Matchday Fixtures</h2>
+          <p className="text-xs text-muted mt-1">
+            Assign polla matches to fantasy matchdays. Player lock times are derived from kickoff times —
+            team names must exactly match <code className="text-secondary">players.country</code>.
+          </p>
+        </div>
+
+        {fixtureLoading ? (
+          <p className="text-muted text-sm">Loading matches…</p>
+        ) : fixtureMatches.length === 0 ? (
+          <p className="text-muted text-sm">No matches found. Add matches via the polla app first.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted border-b border-border">
+                  <th className="pb-3 pr-4 font-medium">Match</th>
+                  <th className="pb-3 pr-4 font-medium">Kickoff</th>
+                  <th className="pb-3 font-medium">Fantasy Matchday</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {fixtureMatches.map(match => (
+                  <tr key={match.id} className="text-secondary hover:bg-surface-hover/40">
+                    <td className="py-2.5 pr-4 text-primary font-medium">
+                      {match.team_a} vs {match.team_b}
+                    </td>
+                    <td className="py-2.5 pr-4 text-xs text-secondary">
+                      {new Date(match.match_date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                    </td>
+                    <td className="py-2.5">
+                      <select
+                        value={match.matchday_id ?? ''}
+                        onChange={e => handleFixtureMatchdayChange(match.id, e.target.value)}
+                        disabled={fixtureSavingIds.has(match.id)}
+                        className="bg-surface-hover border border-border rounded-lg px-2 py-1 text-primary text-xs focus:outline-none focus:border-tertiary disabled:opacity-50"
+                      >
+                        <option value="">— unassigned —</option>
+                        {matchdays.map(md => (
+                          <option key={md.id} value={md.id}>{md.name}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* ── Stats CSV Upload ─────────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-primary">Stats CSV Upload</h2>
+        <p className="text-xs text-muted">
+          CSV columns: <code className="text-secondary">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
+        </p>
+
+        <form onSubmit={handleStatsUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Matchday</label>
+              <select
+                value={statsMatchdayId}
+                onChange={e => setStatsMatchdayId(e.target.value)}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              >
+                <option value="">Select matchday…</option>
+                {matchdays.map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">CSV File</label>
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={e => setStatsFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={statsUploading}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {statsUploading ? 'Uploading…' : 'Upload Stats'}
+          </button>
+        </form>
+
+        {statsResult && (
+          <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+            {statsResult.inserted > 0 && (
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ {statsResult.inserted} player stat row{statsResult.inserted !== 1 ? 's' : ''} saved.
+              </p>
+            )}
+            {statsResult.errors?.map((err, i) => (
+              <p key={i} className="text-error text-xs">{err}</p>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Opta JSON Stats Upload ───────────────────────────────────────── */}
@@ -1707,7 +1911,7 @@ export default function Admin() {
           <div>
             <h2 className="text-lg font-semibold text-primary">Knockout Bracket</h2>
             <p className="text-xs text-muted mt-1">
-              Seed after league stage (4 matchdays) is complete. Then calculate each round using that round's matchday.
+              Seed after league stage (3 matchdays) is complete. Then calculate each round using that round's matchday.
             </p>
           </div>
 
@@ -1718,7 +1922,6 @@ export default function Admin() {
             (() => {
               const standings = computeKnockoutStandings();
               const champSeed = standings.length >= 8 ? generateChampionshipBracket(standings) : [];
-              const relSeed   = standings.length >= 12 ? generateRelegationBracket(standings) : [];
               return (
                 <div className="space-y-4">
                   {standings.length < 8 ? (
@@ -1726,35 +1929,18 @@ export default function Admin() {
                       Need standings for at least 8 teams. Run Calculate Standings first.
                     </p>
                   ) : (
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Championship (Top 8)</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {champSeed.map(m => (
-                            <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
-                              <span className="text-muted">{m.label}: </span>
-                              <span className="text-primary">{m.teamA.display_name}</span>
-                              <span className="text-muted"> vs </span>
-                              <span className="text-primary">{m.teamB.display_name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      {relSeed.length > 0 && (
-                        <div>
-                          <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Relegation (Bottom 4)</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {relSeed.map(m => (
-                              <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
-                                <span className="text-muted">{m.label}: </span>
-                                <span className="text-primary">{m.teamA.display_name}</span>
-                                <span className="text-muted"> vs </span>
-                                <span className="text-primary">{m.teamB.display_name}</span>
-                              </div>
-                            ))}
+                    <div>
+                      <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Quarter-finals (Top 8)</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {champSeed.map(m => (
+                          <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
+                            <span className="text-muted">{m.label}: </span>
+                            <span className="text-primary">{m.teamA.display_name}</span>
+                            <span className="text-muted"> vs </span>
+                            <span className="text-primary">{m.teamB.display_name}</span>
                           </div>
-                        </div>
-                      )}
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -1808,7 +1994,7 @@ export default function Admin() {
 
                   {/* Unresolved matches for the active round */}
                   {activeRound && (() => {
-                    const pending = knockoutMatches.filter(m => m.round === activeRound && !m.winner_id && !(m.round === 3 && m.bracket === 'losers'));
+                    const pending = knockoutMatches.filter(m => m.round === activeRound && !m.winner_id);
                     return (
                       <div className="space-y-3">
                         <div className="overflow-x-auto">

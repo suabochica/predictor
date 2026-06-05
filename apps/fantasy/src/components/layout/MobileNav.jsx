@@ -6,13 +6,14 @@ import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import marketIcon from '@predictor/ui/icons/market.svg';
+import rulesIcon from '@predictor/ui/icons/rules.svg';
 
 const mobileNavItems = [
   { to: '/dashboard', icon: homeIcon, label: 'Home' },
   { to: '/my-team', icon: teamIcon, label: 'Team' },
-  { to: '/auction', icon: auctionIcon, label: 'Auction' },
   { to: '/standings', icon: standingsIcon, label: 'Standings' },
   { to: '/market', icon: marketIcon, label: 'Market' },
+  { to: '/como-jugar', icon: rulesIcon, label: 'Reglas' },
 ];
 
 export default function MobileNav() {

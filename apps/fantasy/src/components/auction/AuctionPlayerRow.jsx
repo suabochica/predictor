@@ -1,5 +1,4 @@
 import { Td } from '@predictor/ui';
-import { MAX_SIMULTANEOUS_BIDS } from '../../config/constants';
 
 const POSITION_BADGE = {
   GK:  'bg-warning/15 text-warning',
@@ -17,6 +16,7 @@ export default function AuctionPlayerRow({
   highBid,
   myBidOnPlayer,
   canBid,
+  isGkReserved,
   minBid,
   isSubmitting,
   bidValue,
@@ -26,6 +26,11 @@ export default function AuctionPlayerRow({
   isActive,
   status,
   myBidCount,
+  freeSlots,
+  isPending,
+  isInPista,
+  pistaFull,
+  onAddToPista,
 }) {
   let statusPill = null;
   if (ownerLabel) {
@@ -41,9 +46,14 @@ export default function AuctionPlayerRow({
     );
   } else if (isContested) {
     statusPill = (
-      <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
-        ⚡ Contested
-      </span>
+      <div className="space-y-0.5">
+        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
+          ⚡ Contested
+        </span>
+        {contestFloor !== null && (
+          <p className="text-xs text-muted">floor £{contestFloor.toFixed(1)}</p>
+        )}
+      </div>
     );
   } else if (myBidOnPlayer && isLeading) {
     statusPill = (
@@ -60,7 +70,24 @@ export default function AuctionPlayerRow({
   }
 
   let bidCell = null;
-  if (canBid) {
+  if (isPending && !ownerLabel) {
+    if (isInPista) {
+      bidCell = (
+        <span className="text-xs font-medium px-2 py-0.5 rounded bg-tertiary/10 text-tertiary border border-tertiary/40 whitespace-nowrap">
+          ✓ En pista
+        </span>
+      );
+    } else if (!pistaFull) {
+      bidCell = (
+        <button
+          onClick={onAddToPista}
+          className="px-3 py-1 rounded bg-surface-hover hover:bg-border text-secondary text-xs font-medium border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary whitespace-nowrap"
+        >
+          + Pista
+        </button>
+      );
+    }
+  } else if (canBid) {
     bidCell = (
       <div className="flex gap-1.5 items-center">
         <input
@@ -81,9 +108,13 @@ export default function AuctionPlayerRow({
         </button>
       </div>
     );
-  } else if (isActive && !myBidOnPlayer && myBidCount >= MAX_SIMULTANEOUS_BIDS) {
+  } else if (isActive && isGkReserved) {
     bidCell = (
-      <span className="text-xs text-muted italic">Max bids reached.</span>
+      <span className="text-xs text-warning italic">Last slot reserved for GK.</span>
+    );
+  } else if (isActive && !myBidOnPlayer && myBidCount >= freeSlots) {
+    bidCell = (
+      <span className="text-xs text-muted italic">No squad slots left.</span>
     );
   } else if (!isActive && !myBidOnPlayer) {
     bidCell = (
