@@ -36,17 +36,17 @@ export function LoginForm({ redirectTo = '/' }: { redirectTo?: string }) {
       <Input
         id="email"
         type="email"
-        label="Email"
+        label="Correo electrónico"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
+        placeholder="tu@ejemplo.com"
         required
         disabled={loading}
       />
       <Input
         id="password"
         type="password"
-        label="Password"
+        label="Contraseña"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="••••••••"
@@ -54,7 +54,7 @@ export function LoginForm({ redirectTo = '/' }: { redirectTo?: string }) {
         disabled={loading}
       />
       <Button type="submit" disabled={loading}>
-        {loading ? 'Signing in…' : 'Sign in'}
+        {loading ? 'Iniciando sesión…' : 'Iniciar sesión'}
       </Button>
     </form>
   );

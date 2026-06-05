@@ -15,7 +15,7 @@ interface AdminPrediction {
 }
 
 function formatDateLabel(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString('es-ES', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -24,7 +24,7 @@ function formatDateLabel(dateStr: string): string {
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+  return new Date(dateStr).toLocaleTimeString('es-ES', {
     hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short',
@@ -106,7 +106,7 @@ export default function AdminTable() {
     return (
       <div className="rounded-sm border border-warning/30 bg-warning/10 px-6 py-8 text-center">
         <p className="text-warning text-body-md">
-          No predictions found. Users haven't submitted any predictions yet.
+          No se encontraron predicciones. Los usuarios aún no han enviado ninguna predicción.
         </p>
       </div>
     );
@@ -141,7 +141,7 @@ export default function AdminTable() {
                       {' vs '}
                       {teamB?.flag} {teamB?.name || first.team_b}
                       <span className="text-muted font-normal text-body-sm ml-2">
-                        {formatTime(first.match_date)} · {first.group_name || 'N/A'}
+                        {formatTime(first.match_date)} · {first.group_name || 'N/D'}
                       </span>
                     </h3>
 
@@ -150,7 +150,7 @@ export default function AdminTable() {
                         <thead className="bg-neutral">
                           <tr>
                             <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                              User
+                              Usuario
                             </th>
                             <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                               {teamA?.name || first.team_a}

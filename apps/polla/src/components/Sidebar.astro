@@ -14,10 +14,10 @@ const points = Astro.locals.totalPoints;
 const isAdmin = Astro.locals.isAdmin as boolean;
 
 const navItems = [
-  { href: `${base}/`, icon: homeIcon, label: 'Home' },
-  { href: `${base}/predictions`, icon: predictionsIcon, label: 'Predictions' },
-  { href: `${base}/leaderboard`, icon: standingsIcon, label: 'Leaderboard' },
-  { href: `${base}/rules`, icon: rulesIcon, label: 'Rules' },
+  { href: `${base}/`, icon: homeIcon, label: 'Inicio' },
+  { href: `${base}/predictions`, icon: predictionsIcon, label: 'Predicciones' },
+  { href: `${base}/leaderboard`, icon: standingsIcon, label: 'Tabla de posiciones' },
+  { href: `${base}/rules`, icon: rulesIcon, label: 'Reglas' },
 ];
 
 if (isAdmin) {
@@ -35,7 +35,7 @@ function rankBadge(r: number): string {
 <aside class="hidden md:flex flex-col w-56 bg-surface border-r border-border min-h-screen pt-4 pb-8">
   {displayName && (
     <div class="px-4 mb-6">
-      <p class="text-xs text-muted uppercase tracking-wider mb-1">Player</p>
+      <p class="text-xs text-muted uppercase tracking-wider mb-1">Jugador</p>
       <p class="font-semibold text-primary text-sm truncate">{displayName}</p>
       {rank != null && (
         <p class="text-tertiary text-sm font-medium">

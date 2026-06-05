@@ -8,18 +8,18 @@ if (Astro.locals.user) {
 }
 ---
 
-<Layout title="Login">
+<Layout title="Iniciar sesión">
   <main class="flex min-h-screen items-center justify-center p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
         <h1 class="mt-4 font-atomic text-h2 text-primary">Predictor</h1>
-        <p class="mt-1 text-secondary text-body-sm">Sign in to make your predictions</p>
+        <p class="mt-1 text-secondary text-body-sm">Inicia sesión para hacer tus predicciones</p>
       </div>
       <div class="rounded-md border border-border bg-surface p-5">
         <LoginForm client:load />
       </div>
       <p class="mt-6 text-center text-body-sm text-muted">
-        No account? <a href="/register" class="text-tertiary hover:underline">Register</a>
+        ¿No tienes cuenta? <a href="/register" class="text-tertiary hover:underline">Registrarse</a>
       </p>
     </div>
   </main>

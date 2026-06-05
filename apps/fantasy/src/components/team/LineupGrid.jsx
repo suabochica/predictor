@@ -12,7 +12,7 @@ function EmptySlot({ onClick, isTargetable }) {
       }`}
     >
       <span className={`text-label-caps font-semibold ${isTargetable ? 'text-tertiary' : 'text-tertiary'}`}>
-        {isTargetable ? '+ here' : 'Add to XI'}
+        {isTargetable ? '+ aquí' : 'Agregar al XI'}
       </span>
     </button>
   );

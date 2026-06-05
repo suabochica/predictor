@@ -36,12 +36,12 @@ export default function Header() {
                 </Link>
               )}
               <Button variant="primary" onClick={handleSignOut}>
-                Sign out
+                Cerrar sesión
               </Button>
             </>
           ) : (
             <Link to="/login" className="inline-flex items-center justify-center font-medium rounded-sm bg-tertiary text-on-tertiary hover:brightness-95 px-5 py-3 transition-colors">
-              Sign in
+              Iniciar sesión
             </Link>
           )}
         </div>

@@ -78,7 +78,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
     <div>
       {usingFallback && (
         <div className="mb-4 rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
-          Using offline data — live leaderboard unavailable.
+          Usando datos offline — tabla de posiciones en vivo no disponible.
         </div>
       )}
 
@@ -87,16 +87,16 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
           <thead className="bg-neutral">
             <tr>
               <th className="px-4 py-3 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                Rank
+                Pos.
               </th>
               <th className="px-4 py-3 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                Player
+                Jugador
               </th>
               <th className="px-4 py-3 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                Points
+                Puntos
               </th>
               <th className="px-4 py-3 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                Predictions
+                Predicciones
               </th>
             </tr>
           </thead>
@@ -104,7 +104,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
             {entries.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center text-muted">
-                  No players yet. Be the first to submit predictions!
+                  Aún no hay jugadores. ¡Sé el primero en enviar predicciones!
                 </td>
               </tr>
             )}
@@ -126,7 +126,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
                       </span>
                       {isCurrentUser && (
                         <span className="rounded-sm bg-success/15 px-2 py-0.5 font-label text-label-caps text-success">
-                          You
+                          Tú
                         </span>
                       )}
                     </div>

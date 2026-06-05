@@ -1,8 +1,8 @@
-export default function ComoJugar() {
+export default function HowToPlay() {
   return (
     <div className="space-y-8 max-w-3xl pb-8">
       <div>
-        <h1 className="text-2xl font-bold text-primary">¿Cómo jugar?</h1>
+        <h1 className="text-2xl font-bold text-primary">Reglas</h1>
         <p className="text-secondary mt-1">
           Guía completa de la Fantasy League del Mundial FIFA 2026
         </p>
@@ -46,8 +46,7 @@ export default function ComoJugar() {
           </thead>
           <tbody className="divide-y divide-border">
             {[
-              ['Liga — JJ 1-3', 'Fase de grupos (JJ 1-3)', '12'],
-              ['Liga — JJ 4', 'Octavos de final', '12'],
+              ['Liga — Partidos jugados 1-3', 'Fase de grupos (Partidos jugados 1-3)', '12'],
               ['Eliminatoria — Cuartos', 'Dieciseisavos de final del Mundial', '8'],
               ['Eliminatoria — Semis', 'Octavos de final del Mundial', '4'],
               ['Eliminatoria — Final', 'Cuartos de final del Mundial', '2'],

@@ -34,37 +34,37 @@ export default function AuctionPlayerRow({
 }) {
   let statusPill = null;
   if (ownerLabel) {
-    const isMine = ownerLabel === 'In your squad';
+    const isMine = ownerLabel === 'En tu plantilla';
     statusPill = (
       <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
         isMine
           ? 'bg-tertiary/10 text-tertiary border border-tertiary/40'
           : 'bg-surface-hover text-muted border border-border'
       }`}>
-        {isMine ? '★ In your squad' : ownerLabel}
+        {isMine ? '★ En tu plantilla' : ownerLabel}
       </span>
     );
   } else if (isContested) {
     statusPill = (
       <div className="space-y-0.5">
         <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
-          ⚡ Contested
+          ⚡ Disputado
         </span>
         {contestFloor !== null && (
-          <p className="text-xs text-muted">floor £{contestFloor.toFixed(1)}</p>
+          <p className="text-xs text-muted">piso £{contestFloor.toFixed(1)}</p>
         )}
       </div>
     );
   } else if (myBidOnPlayer && isLeading) {
     statusPill = (
       <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-tertiary/10 text-tertiary border border-tertiary/40 whitespace-nowrap">
-        ✓ Leading
+        ✓ Liderando
       </span>
     );
   } else if (myBidOnPlayer && !isLeading) {
     statusPill = (
       <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-error/10 text-error border border-error/30 whitespace-nowrap">
-        ✗ Outbid
+        ✗ Superado
       </span>
     );
   }
@@ -104,22 +104,22 @@ export default function AuctionPlayerRow({
           disabled={isSubmitting}
           className="px-3 py-1 rounded bg-tertiary hover:brightness-90 disabled:opacity-50 text-primary text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary shrink-0"
         >
-          {isSubmitting ? '…' : 'Bid'}
+          {isSubmitting ? '…' : 'Pujar'}
         </button>
       </div>
     );
   } else if (isActive && isGkReserved) {
     bidCell = (
-      <span className="text-xs text-warning italic">Last slot reserved for GK.</span>
+      <span className="text-xs text-warning italic">Último cupo reservado para POR.</span>
     );
   } else if (isActive && !myBidOnPlayer && myBidCount >= freeSlots) {
     bidCell = (
-      <span className="text-xs text-muted italic">No squad slots left.</span>
+      <span className="text-xs text-muted italic">Sin cupos disponibles.</span>
     );
   } else if (!isActive && !myBidOnPlayer) {
     bidCell = (
       <span className="text-xs text-secondary italic">
-        Bidding {status === 'pending' ? 'not started' : status}.
+        Pujas {status === 'pending' ? 'no iniciadas' : status}.
       </span>
     );
   }
@@ -146,7 +146,7 @@ export default function AuctionPlayerRow({
               <span className="text-muted ml-1">— {highBid.users?.display_name ?? '?'}</span>
             </>
           ) : (
-            <span className="text-muted italic">No bids</span>
+            <span className="text-muted italic">Sin pujas</span>
           )}
         </Td>
         <Td className="py-2 whitespace-nowrap">{statusPill}</Td>

@@ -18,7 +18,7 @@ export default function Dashboard() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-primary">
-          Welcome back, {profile?.display_name ?? 'Manager'}!
+          ¡Bienvenido de nuevo, {profile?.display_name ?? 'Manager'}!
         </h1>
         <p className="text-secondary mt-1">FIFA World Cup 2026 Fantasy League</p>
       </div>
@@ -26,9 +26,9 @@ export default function Dashboard() {
       {/* Status cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-xs text-muted uppercase tracking-wider">Current Phase</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Fase actual</p>
           <p className="text-lg font-semibold text-primary mt-1">
-            {activeMatchday ? activeMatchday.name : 'Pre-Tournament'}
+            {activeMatchday ? activeMatchday.name : 'Pretemporada'}
           </p>
           {activeMatchday && (
             <p className="text-xs text-tertiary mt-1">{activeMatchday.wc_stage}</p>
@@ -36,19 +36,19 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-xs text-muted uppercase tracking-wider">Budget Remaining</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Presupuesto restante</p>
           <p className="text-lg font-semibold text-tertiary mt-1">
             {team ? formatPrice(team.budget_remaining) : '—'}
           </p>
-          <p className="text-xs text-muted mt-1">of 105.0M total</p>
+          <p className="text-xs text-muted mt-1">de 105.0M total</p>
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-xs text-muted uppercase tracking-wider">Squad Size</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Tamaño de plantilla</p>
           <p className="text-lg font-semibold text-primary mt-1">
             {players.length} / 15
           </p>
-          <p className="text-xs text-muted mt-1">players registered</p>
+          <p className="text-xs text-muted mt-1">jugadores registrados</p>
         </div>
       </div>
 
@@ -59,19 +59,19 @@ export default function Dashboard() {
           <div>
             <p className="font-semibold text-info">
               {activeTransferWindow.is_preseason
-                ? 'Preseason — Unlimited Transfers'
-                : `${activeTransferWindow.matchday_name} Transfer Window`}
+                ? 'Pretemporada — Fichajes ilimitados'
+                : `Ventana de fichajes ${activeTransferWindow.matchday_name}`}
             </p>
             <p className="text-sm text-secondary mt-0.5">
               {activeTransferWindow.max_transfers != null
-                ? `${activeTransferWindow.max_transfers} transfers allowed. `
-                : 'Unlimited transfers. '}
+                ? `${activeTransferWindow.max_transfers} fichajes permitidos. `
+                : 'Fichajes ilimitados. '}
               {activeTransferWindow.closes_at
-                ? `Window closes ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
-                : 'Players lock at kickoff'}
+                ? `La ventana cierra ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
+                : 'Jugadores se bloquean al inicio del partido'}
             </p>
             <Link to="/market" className="text-sm text-info hover:text-info mt-1 inline-block">
-              Go to market →
+              Ir al mercado →
             </Link>
           </div>
         </div>
@@ -79,35 +79,35 @@ export default function Dashboard() {
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">Quick Actions</h2>
+        <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">Acciones rápidas</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Link
             to="/my-team"
             className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
           >
             <img src={teamIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Set Lineup</span>
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Alineación</span>
           </Link>
           <Link
             to="/auction"
             className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
           >
             <img src={auctionIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Auction Room</span>
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Sala de subasta</span>
           </Link>
           <Link
             to="/standings"
             className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
           >
             <img src={standingsIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Standings</span>
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Tabla de posiciones</span>
           </Link>
           <Link
             to="/market"
             className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
           >
             <img src={marketIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Player Market</span>
+            <span className="text-xs font-medium text-secondary group-hover:text-primary">Mercado de jugadores</span>
           </Link>
         </div>
       </div>

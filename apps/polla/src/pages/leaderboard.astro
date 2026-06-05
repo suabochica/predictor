@@ -5,9 +5,9 @@ import LeaderboardTable from '../components/LeaderboardTable';
 const userId = Astro.locals.user?.id as string | undefined;
 ---
 
-<Layout title="Leaderboard">
+<Layout title="Tabla de posiciones">
   <div class="space-y-6 max-w-4xl">
-    <h1 class="text-2xl font-bold text-primary">Leaderboard</h1>
+    <h1 class="text-2xl font-bold text-primary">Tabla de posiciones</h1>
 
     <LeaderboardTable client:load currentUser={userId} />
   </div>

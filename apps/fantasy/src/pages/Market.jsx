@@ -35,7 +35,7 @@ export default function Market() {
     () =>
       squadRows.map((tp) => ({
         id: tp.player_id,
-        name: tp.players?.name ?? 'Unknown',
+        name: tp.players?.name ?? 'Desconocido',
         country: tp.players?.country ?? '',
         country_code: tp.players?.country_code ?? null,
         position: tp.players?.position ?? 'FWD',
@@ -116,22 +116,22 @@ export default function Market() {
 
     // Guards
     if (transfersRemaining !== null && transfersRemaining <= 0) {
-      setSwapError('No transfers remaining in this window.');
+      setSwapError('Sin fichajes restantes en esta ventana.');
       setSwapping(false);
       return;
     }
     if (isPlayerLocked(playerOut)) {
-      setSwapError(`${playerOut.name} is locked — their match has kicked off.`);
+      setSwapError(`${playerOut.name} está bloqueado — su partido ya inició.`);
       setSwapping(false);
       return;
     }
     if (isPlayerLocked(playerIn)) {
-      setSwapError(`${playerIn.name} is locked — their match has kicked off.`);
+      setSwapError(`${playerIn.name} está bloqueado — su partido ya inició.`);
       setSwapping(false);
       return;
     }
     if (newBudget < 0) {
-      setSwapError('Insufficient budget for this swap.');
+      setSwapError('Presupuesto insuficiente para este cambio.');
       setSwapping(false);
       return;
     }
@@ -140,7 +140,7 @@ export default function Market() {
       (playerOut.position === 'GK' ? 1 : 0) +
       (playerIn.position === 'GK' ? 1 : 0);
     if (gksAfter < 1) {
-      setSwapError('Swap rejected: your squad must always have at least 1 goalkeeper.');
+      setSwapError('Cambio rechazado: tu plantilla debe tener siempre al menos 1 portero.');
       setSwapping(false);
       return;
     }
@@ -195,7 +195,7 @@ export default function Market() {
   if (teamLoading || playersLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Loading market…
+        Cargando mercado…
       </div>
     );
   }
@@ -203,9 +203,9 @@ export default function Market() {
   if (!team) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Player Market</h1>
+        <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
         <div className="bg-surface border border-border rounded-xl p-6 text-center text-secondary">
-          You're not enrolled in the league yet. Ask an admin to add you.
+          Aún no estás inscrito en la liga. Pide a un admin que te agregue.
         </div>
       </div>
     );
@@ -214,11 +214,11 @@ export default function Market() {
   if (!marketOpen) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Player Market</h1>
+        <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
         <div className="bg-surface border border-warning/30 rounded-xl p-6 text-center">
-          <p className="text-warning font-semibold">Market is closed</p>
+          <p className="text-warning font-semibold">Mercado cerrado</p>
           <p className="text-secondary text-sm mt-1">
-            The market opens once the auction is complete.
+            El mercado abre al completar la subasta.
           </p>
         </div>
       </div>
@@ -230,18 +230,18 @@ export default function Market() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Player Market</h1>
+          <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
           <p className="text-secondary text-sm mt-0.5">
-            Swap players in and out during transfer windows
+            Intercambia jugadores durante las ventanas de fichajes
           </p>
         </div>
         <div className="flex gap-3">
           <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
-            <p className="text-label-caps text-muted uppercase tracking-wider">Budget</p>
+            <p className="text-label-caps text-muted uppercase tracking-wider">Presupuesto</p>
             <p className="text-base font-bold text-tertiary">{formatPrice(budget)}</p>
           </div>
           <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
-            <p className="text-label-caps text-muted uppercase tracking-wider">Squad</p>
+            <p className="text-label-caps text-muted uppercase tracking-wider">Plantilla</p>
             <p className="text-base font-bold text-primary">
               {squad.length}
               <span className="text-muted font-normal text-sm">/{MAX_SQUAD_SIZE}</span>
@@ -253,21 +253,21 @@ export default function Market() {
       {/* ── Transfer window banner ── */}
       {!activeTransferWindow ? (
         <div className="bg-surface border border-border rounded-xl p-5 text-center">
-          <p className="text-secondary font-semibold">Season complete</p>
-          <p className="text-muted text-sm mt-1">No further transfer windows are open.</p>
+          <p className="text-secondary font-semibold">Temporada finalizada</p>
+          <p className="text-muted text-sm mt-1">No hay más ventanas de fichajes abiertas.</p>
         </div>
       ) : (
         <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-info font-semibold">
               {activeTransferWindow.is_preseason
-                ? 'Preseason — Unlimited Transfers'
-                : `${activeTransferWindow.matchday_name} Window`}
+                ? 'Pretemporada — Fichajes ilimitados'
+                : `Ventana ${activeTransferWindow.matchday_name}`}
             </p>
             <p className="text-secondary text-sm mt-0.5">
               {activeTransferWindow.closes_at
-                ? `Window closes ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
-                : 'Players lock when their match kicks off'}
+                ? `La ventana cierra ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
+                : 'Los jugadores se bloquean al iniciar su partido'}
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -275,21 +275,21 @@ export default function Market() {
               <>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary">{transfersRemaining}</p>
-                  <p className="text-label-caps text-muted uppercase tracking-wider">Remaining</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">Restantes</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-secondary">{transfersUsedThisWindow}</p>
-                  <p className="text-label-caps text-muted uppercase tracking-wider">Used</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">Usados</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-muted">{activeTransferWindow.max_transfers}</p>
-                  <p className="text-label-caps text-muted uppercase tracking-wider">Max</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">Máx</p>
                 </div>
               </>
             ) : (
               <div className="text-center">
                 <p className="text-2xl font-bold text-tertiary">∞</p>
-                <p className="text-label-caps text-muted uppercase tracking-wider">Unlimited</p>
+                <p className="text-label-caps text-muted uppercase tracking-wider">Ilimitado</p>
               </div>
             )}
           </div>
@@ -303,12 +303,12 @@ export default function Market() {
             <div>
               <h3 className="text-sm font-semibold text-secondary">
                 {offerOut
-                  ? `Offering out: ${offerOut.name}`
-                  : 'My Squad — pick one to offer out'}
+                  ? `Ofreciendo: ${offerOut.name}`
+                  : 'Mi plantilla — elige uno para ofrecer'}
               </h3>
               {offerOut && (
                 <p className="text-xs text-muted mt-0.5">
-                  Now select a free agent below to swap in
+                  Ahora selecciona un agente libre para intercambiar
                 </p>
               )}
             </div>
@@ -317,7 +317,7 @@ export default function Market() {
                 onClick={() => { setOfferOut(null); setSwapError(null); }}
                 className="text-xs text-secondary hover:text-primary px-2 py-1 rounded hover:bg-surface-hover transition-colors"
               >
-                Cancel
+                Cancelar
               </button>
             )}
           </div>
@@ -345,7 +345,7 @@ export default function Market() {
                     </span>
                     <span className="text-sm text-primary flex-1 truncate">{p.name}</span>
                     {locked && (
-                      <span className="text-label-caps text-warning font-semibold text-xs flex-shrink-0">LOCKED</span>
+                      <span className="text-label-caps text-warning font-semibold text-xs flex-shrink-0">BLOQUEADO</span>
                     )}
                     <span className="text-xs text-tertiary flex-shrink-0">
                       {formatPrice(p.acquisition_price)}
@@ -363,7 +363,7 @@ export default function Market() {
         <div className="bg-tertiary/10 border border-tertiary/40 rounded-xl p-3 text-sm text-tertiary flex items-center gap-2" role="status">
           <span>✓</span>
           <span>
-            <strong>{recentAction.outName}</strong> swapped out for{' '}
+            <strong>{recentAction.outName}</strong> intercambiado por{' '}
             <strong>{recentAction.inName}</strong>
           </span>
         </div>
@@ -379,23 +379,23 @@ export default function Market() {
       {/* ── Player table ── */}
       {filteredPlayers.length === 0 ? (
         <div className="text-center py-12 text-muted">
-          No players match your filters.
+          Ningún jugador coincide con tus filtros.
         </div>
       ) : (
         <Table>
           <Thead className="sticky top-0 z-10">
             <tr>
               <Th>Pos</Th>
-              <Th>Player</Th>
-              <Th className="hidden sm:table-cell">Country</Th>
-              <Th className="hidden sm:table-cell text-center">GP</Th>
+              <Th>Jugador</Th>
+              <Th className="hidden sm:table-cell">País</Th>
+              <Th className="hidden sm:table-cell text-center">PJ</Th>
               <Th className="hidden sm:table-cell text-center">G</Th>
               <Th className="hidden sm:table-cell text-center">A</Th>
               <Th className="hidden sm:table-cell text-center">Pts</Th>
-              <Th className="text-right">Price</Th>
-              <Th className="hidden sm:table-cell">Owner</Th>
+              <Th className="text-right">Precio</Th>
+              <Th className="hidden sm:table-cell">Dueño</Th>
               <Th className="hidden sm:table-cell w-6" />
-              <Th>Action</Th>
+              <Th>Acción</Th>
             </tr>
           </Thead>
           <Tbody>
@@ -430,7 +430,7 @@ export default function Market() {
           onClick={(e) => e.target === e.currentTarget && !swapping && setConfirmSwapIn(null)}
         >
           <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-primary">Confirm Transfer</h2>
+            <h2 className="text-lg font-bold text-primary">Confirmar fichaje</h2>
 
             <div className="space-y-2">
               {/* Out */}
@@ -441,7 +441,7 @@ export default function Market() {
                   {offerOut.position}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-label-caps text-error font-semibold mb-0.5">Out</p>
+                  <p className="text-label-caps text-error font-semibold mb-0.5">Sale</p>
                   <p className="text-sm font-semibold text-primary truncate">{offerOut.name}</p>
                 </div>
                 <span className="text-sm font-bold text-secondary flex-shrink-0">
@@ -459,7 +459,7 @@ export default function Market() {
                   {confirmSwapIn.position}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-label-caps text-tertiary font-semibold mb-0.5">In</p>
+                  <p className="text-label-caps text-tertiary font-semibold mb-0.5">Entra</p>
                   <p className="text-sm font-semibold text-primary truncate">{confirmSwapIn.name}</p>
                 </div>
                 <span className="text-sm font-bold text-tertiary flex-shrink-0">
@@ -470,19 +470,19 @@ export default function Market() {
 
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-secondary">
-                <span>Budget before</span>
+                <span>Presupuesto antes</span>
                 <span className="text-primary">{formatPrice(budget)}</span>
               </div>
               <div className="flex justify-between text-secondary">
-                <span>Received for {offerOut.name}</span>
+                <span>Recibido por {offerOut.name}</span>
                 <span className="text-tertiary">+{formatPrice(offerOut.acquisition_price)}</span>
               </div>
               <div className="flex justify-between text-secondary">
-                <span>Cost of {confirmSwapIn.name}</span>
+                <span>Costo de {confirmSwapIn.name}</span>
                 <span className="text-error">−{formatPrice(confirmSwapIn.price)}</span>
               </div>
               <div className="flex justify-between font-semibold border-t border-border pt-1.5">
-                <span className="text-secondary">Budget after</span>
+                <span className="text-secondary">Presupuesto después</span>
                 <span className={budgetAfterSwap >= 0 ? 'text-tertiary' : 'text-error'}>
                   {formatPrice(budgetAfterSwap)}
                 </span>
@@ -499,14 +499,14 @@ export default function Market() {
                 disabled={swapping}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={executeSwap}
                 disabled={swapping || budgetAfterSwap < 0}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                {swapping ? 'Transferring…' : 'Confirm Transfer'}
+                {swapping ? 'Fichando…' : 'Confirmar fichaje'}
               </button>
             </div>
           </div>
@@ -517,7 +517,7 @@ export default function Market() {
       {transfers.length > 0 && (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-semibold text-secondary">Transfer History</h3>
+            <h3 className="text-sm font-semibold text-secondary">Historial de fichajes</h3>
           </div>
           <div className="divide-y divide-border">
             {transfers.map((t) => (
@@ -526,11 +526,11 @@ export default function Market() {
                   {t.matchday_id ? `MD${t.matchday_id}` : `W${t.window_number}`}
                 </span>
                 <span className="text-error">
-                  {t.player_out?.name ?? `Player #${t.player_out_id}`}
+                  {t.player_out?.name ?? `Jugador #${t.player_out_id}`}
                 </span>
                 <span className="text-muted">→</span>
                 <span className="text-tertiary">
-                  {t.player_in?.name ?? `Player #${t.player_in_id}`}
+                  {t.player_in?.name ?? `Jugador #${t.player_in_id}`}
                 </span>
                 {t.price_difference != null && (
                   <span

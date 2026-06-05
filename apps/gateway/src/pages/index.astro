@@ -9,23 +9,41 @@ import AppCard from '../components/AppCard';
 const displayName = Astro.locals.displayName;
 ---
 
-<Layout title="Dashboard">
+<Layout title="Inicio">
   <main class="flex min-h-screen flex-col items-center justify-center gap-10 p-6">
     <div class="text-center">
       <h1 class="font-heading text-h2 font-semibold text-primary">
-        Welcome back{displayName ? `, ${displayName}` : ''}
+        Bienvenido {displayName ? `, ${displayName}` : ''}
       </h1>
-      <p class="mt-2 text-secondary text-body-sm">Choose an app to continue</p>
+      <p class="mt-2 text-secondary text-body-sm">Elige una modalidad de predicción para continuar</p>
     </div>
 
     <div class="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
-      <AppCard name="Polla" description="Predict World Cup match scores and climb the leaderboard" href="/polla/" icon={pollaIcon.src} />
-      <AppCard name="Fantasy" description="Draft players, manage your squad, and dominate the standings" href="/fantasy/" icon={fantasyIcon.src} />
+      <AppCard name="Polla" description="Predice los resultados del Mundial y sube en la clasificación" href="/polla/" icon={pollaIcon.src} />
+      <AppCard name="Fantasy" description="Ficha jugadores, gestiona tu plantilla y domina la clasificación" href="/fantasy/" icon={fantasyIcon.src} />
+    </div>
+
+    <div class="max-w-[520px]">
+      <h2 class="font-heading text-h3 font-semibold text-primary">
+        Premiación
+      </h2>
+      <p class="mt-2 text-secondary text-body-sm">
+        La inscripción para participar en la competición es de <b>50.000 COP</b>,
+        que serán transferidos al administrador de la aplicación.
+      </p>
+      <p class="mt-2 text-secondary text-body-sm">
+        La repartición del monto será; <b>30.000 COP</b> para el modo Polla y <b>20.000 COP</b> para el modo Fantasy.
+      </p>
+      <p class="mt-2 text-secondary text-body-sm">
+        Cada aplicación tendrá su tabla de posiciones y el dinero se repartirá en premios
+        para el primer y segundo puesto de la siguiente manera: el segundo puesto recibirá
+        el costo de la inscripción por modalidad y el primer puesto recibirá el resto del monto.
+      </p>
     </div>
 
     <form method="POST" action="/auth/signout">
       <button type="submit" class={BUTTON_PRIMARY_CLASSES}>
-        Sign out
+        Cerrar sesión
       </button>
     </form>
   </main>

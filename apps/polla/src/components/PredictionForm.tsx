@@ -13,7 +13,7 @@ interface PredictionState {
 }
 
 function formatDateLabel(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString('es-ES', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -22,7 +22,7 @@ function formatDateLabel(dateStr: string): string {
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+  return new Date(dateStr).toLocaleTimeString('es-ES', {
     hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short',
@@ -190,8 +190,8 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       <div className="rounded-sm border border-warning/30 bg-warning/10 px-6 py-8 text-center">
         <p className="text-warning text-body-md">
           {usingFallback
-            ? 'Unable to connect to database. Run the import script or check your connection.'
-            : 'No group stage matches in the database yet. Run the import script to populate them:'}
+            ? 'No se puede conectar a la base de datos. Ejecuta el script de importación o verifica tu conexión.'
+            : 'No hay partidos de fase de grupos en la base de datos todavía. Ejecuta el script de importación para cargarlos:'}
         </p>
         {!usingFallback && (
           <code className="mt-3 block text-body-sm text-warning font-label">
@@ -216,23 +216,23 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
               <thead className="bg-neutral">
                 <tr>
                   <th className="px-2 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Time
+                    Hora
                   </th>
                   <th colSpan={2} className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                    Home
+                    Local
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Score
+                    Marcador
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Score
+                    Marcador
                   </th>
                   <th colSpan={2} className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                    Away
+                    Visitante
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Group
+                    Grupo
                   </th>
                 </tr>
               </thead>
@@ -270,7 +270,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                           onChange={(e) => handleScoreChange(match.match_id, 'a', e.target.value)}
                           className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
                           placeholder="-"
-                          aria-label={`${teamA?.name || match.team_a} score`}
+                          aria-label={`Marcador de ${teamA?.name || match.team_a}`}
                         />
                       </td>
 
@@ -288,7 +288,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                           onChange={(e) => handleScoreChange(match.match_id, 'b', e.target.value)}
                           className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
                           placeholder="-"
-                          aria-label={`${teamB?.name || match.team_b} score`}
+                          aria-label={`Marcador de ${teamB?.name || match.team_b}`}
                         />
                       </td>
 
@@ -319,7 +319,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
           onClick={handleSave}
           disabled={saving || !currentUser}
         >
-          {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Predictions'}
+          {saving ? 'Guardando...' : saved ? '✓ ¡Guardado!' : 'Guardar predicciones'}
         </Button>
       </div>
     </div>

@@ -13,18 +13,18 @@ import rulesIcon from '@predictor/ui/icons/rules.svg';
 import adminIcon from '@predictor/ui/icons/admin.svg';
 
 const navItems = [
-  { to: '/dashboard', icon: homeIcon, label: 'Dashboard' },
-  { to: '/my-team', icon: teamIcon, label: 'My Team' },
-  { to: '/market', icon: marketIcon, label: 'Player Market' },
-  { to: '/auction', icon: auctionIcon, label: 'Auction' },
-  { to: '/standings', icon: standingsIcon, label: 'Standings' },
-  { to: '/bracket', icon: bracketsIcon, label: 'Bracket' },
-  { to: '/history', icon: historyIcon, label: 'History' },
-  { to: '/como-jugar', icon: rulesIcon, label: '¿Cómo jugar?' },
+  { to: '/dashboard', icon: homeIcon, label: 'Inicio' },
+  { to: '/my-team', icon: teamIcon, label: 'Mi equipo' },
+  { to: '/market', icon: marketIcon, label: 'Mercado de jugadores' },
+  { to: '/auction', icon: auctionIcon, label: 'Subasta' },
+  { to: '/leaderboard', icon: standingsIcon, label: 'Tabla de posiciones' },
+  { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' },
+  { to: '/history', icon: historyIcon, label: 'Históricos' },
+  { to: '/rules', icon: rulesIcon, label: 'Reglas' },
 ];
 
 const adminItems = [
-  { to: '/admin', icon: adminIcon, label: 'Admin Panel' },
+  { to: '/admin', icon: adminIcon, label: 'Panel de admin' },
 ];
 
 export default function Sidebar() {
@@ -36,10 +36,10 @@ export default function Sidebar() {
       {/* Team info */}
       {team && (
         <div className="px-4 mb-6">
-          <p className="text-xs text-muted uppercase tracking-wider mb-1">Your Team</p>
+          <p className="text-xs text-muted uppercase tracking-wider mb-1">Tu equipo</p>
           <p className="font-semibold text-primary text-sm truncate">{team.name}</p>
           <p className="text-tertiary text-sm font-medium">
-            {Number(team.budget_remaining).toFixed(1)}M remaining
+            {Number(team.budget_remaining).toFixed(1)}M disponibles
           </p>
         </div>
       )}
@@ -48,14 +48,14 @@ export default function Sidebar() {
       <div className="px-4 mb-4 space-y-2">
         {activeMatchday && (
           <div className="bg-tertiary/10 border border-tertiary/40 rounded-lg px-3 py-2">
-            <p className="text-xs text-tertiary font-medium">Active Matchday</p>
+            <p className="text-xs text-tertiary font-medium">Jornada activa</p>
             <p className="text-xs text-secondary truncate">{activeMatchday.name}</p>
           </div>
         )}
         {activeTransferWindow && (
           <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2">
             <p className="text-xs text-info font-medium">
-              {activeTransferWindow.is_preseason ? 'Preseason Transfers' : `${activeTransferWindow.matchday_name} Window`}
+              {activeTransferWindow.is_preseason ? 'Fichajes de pretemporada' : `Ventana ${activeTransferWindow.matchday_name}`}
             </p>
           </div>
         )}

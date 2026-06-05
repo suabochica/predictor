@@ -29,17 +29,17 @@ function BracketBadge({ bracket }) {
   if (bracket === 'championship')
     return (
       <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-tertiary/15 text-tertiary border border-tertiary/40">
-        Champ
+        Camp
       </span>
     );
   return (
     <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-error/10 text-error border border-error/30">
-      Releg
+      Desc
     </span>
   );
 }
 
-export default function Standings() {
+export default function Leaderboard() {
   const { standings, matchdays, loading } = useStandings();
   const { user } = useAuth();
   const { activeMatchday } = useLeague();
@@ -56,7 +56,7 @@ export default function Standings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Loading standings…
+        Cargando posiciones…
       </div>
     );
   }
@@ -65,13 +65,13 @@ export default function Standings() {
     <div className="space-y-5 max-w-3xl">
       {/* ── Header ── */}
       <div>
-        <h1 className="text-2xl font-bold text-primary">Standings</h1>
+        <h1 className="text-2xl font-bold text-primary">Tabla de posiciones</h1>
         <p className="text-secondary text-sm mt-0.5">
           {activeMatchday
-            ? `Active: ${activeMatchday.name}`
+            ? `Activo: ${activeMatchday.name}`
             : leagueComplete
-            ? 'League stage complete — brackets locked'
-            : 'Pre-tournament'}
+            ? 'Fase de liga completada — cuadros bloqueados'
+            : 'Pretemporada'}
         </p>
       </div>
 
@@ -82,14 +82,14 @@ export default function Standings() {
           <p className="text-2xl font-bold text-primary mt-1">{totalParticipants}</p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Matchdays</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Jornadas</p>
           <p className="text-2xl font-bold text-primary mt-1">
             {matchdays.filter((md) => md.is_completed).length}
             <span className="text-sm text-muted font-normal"> / {Math.max(6, matchdays.length)}</span>
           </p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Leader</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Líder</p>
           <p className="text-sm font-bold text-tertiary mt-1 truncate">
             {standings[0]?.display_name ?? '—'}
           </p>
@@ -101,11 +101,11 @@ export default function Standings() {
         <div className="flex items-center gap-4 text-xs text-secondary flex-wrap">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
-            Positions 1–{CHAMPIONSHIP_SPOTS} → Championship bracket
+            Positions 1–{CHAMPIONSHIP_SPOTS} → Cuadro de campeonato
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-error/10 inline-block" />
-            Positions {totalParticipants - RELEGATION_SPOTS + 1}–{totalParticipants} → Relegation bracket
+            Positions {totalParticipants - RELEGATION_SPOTS + 1}–{totalParticipants} → Cuadro de descenso
           </span>
         </div>
       )}
@@ -113,14 +113,14 @@ export default function Standings() {
       {/* ── Pre-tournament notice ── */}
       {!hasScores && (
         <div className="bg-surface/50 border border-border rounded-xl p-4 text-sm text-secondary text-center">
-          No scores yet — standings will update after the first matchday is completed.
+          Aún sin puntuaciones — la tabla se actualizará al completar la primera jornada.
         </div>
       )}
 
       {/* ── Standings table ── */}
       {standings.length === 0 ? (
         <div className="bg-surface border border-border rounded-xl p-6 text-center text-muted">
-          No participants enrolled yet.
+          Aún no hay participantes inscritos.
         </div>
       ) : (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
@@ -131,12 +131,12 @@ export default function Standings() {
             {groupMatchdays.length > 0
               ? groupMatchdays.map((md) => (
                   <span key={md.id} className="hidden sm:block text-center truncate" title={md.name}>
-                    {md.name.replace(/matchday\s*/i, 'MD').replace(/group stage /i, '')}
+                    {md.name.replace(/matchday\s*/i, 'JD').replace(/group stage /i, '')}
                   </span>
                 ))
               : [1, 2, 3].map((n) => (
                   <span key={n} className="hidden sm:block text-center text-secondary">
-                    MD{n}
+                    JD{n}
                   </span>
                 ))}
             <span className="text-center">Pts</span>
@@ -225,17 +225,17 @@ export default function Standings() {
       {/* ── Tiebreaker note ── */}
       {hasScores && (
         <p className="text-xs text-muted">
-          Tiebreaker: goals scored by owned players. GS column shows tiebreaker value.
+          Desempate: goles marcados por jugadores. La columna GS muestra el valor de desempate.
         </p>
       )}
 
       {/* ── League stage note ── */}
       {leagueComplete && (
         <div className="bg-tertiary/5 border border-tertiary/40 rounded-xl p-4 text-sm">
-          <p className="text-tertiary font-semibold">League stage complete</p>
+          <p className="text-tertiary font-semibold">Fase de liga completada</p>
           <p className="text-secondary mt-1">
-            Top {CHAMPIONSHIP_SPOTS} advance to the Championship bracket. Bottom{' '}
-            {RELEGATION_SPOTS} enter the Relegation bracket. Transfer Window 1 now open.
+            Los mejores {CHAMPIONSHIP_SPOTS} avanzan al cuadro de campeonato. Los últimos{' '}
+            {RELEGATION_SPOTS} entran al cuadro de descenso. Ventana de fichajes 1 abierta.
           </p>
         </div>
       )}

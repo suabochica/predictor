@@ -17,15 +17,15 @@ import {
 
 const STATUS_BANNER = {
   pending: {
-    text: "The auction hasn't started yet. Check back soon.",
+    text: 'La subasta aún no ha comenzado. Vuelve pronto.',
     cls: 'bg-surface-hover text-secondary',
   },
   paused: {
-    text: 'Auction is paused. Bidding is temporarily suspended.',
+    text: 'Subasta en pausa. Las pujas están temporalmente suspendidas.',
     cls: 'bg-warning/10 text-warning border border-warning/30',
   },
   completed: {
-    text: 'The auction is complete. All squads have been finalised.',
+    text: 'La subasta ha terminado. Todas las plantillas han sido finalizadas.',
     cls: 'bg-info/10 text-info border border-info/30',
   },
 };
@@ -59,7 +59,7 @@ export default function Auction() {
   useEffect(() => { setRoundExpired(false); }, [auctionState?.current_round, auctionState?.round_started_at]);
 
   if (loading || !auctionState) {
-    return <div className="text-secondary p-6">Loading auction…</div>;
+    return <div className="text-secondary p-6">Cargando subasta…</div>;
   }
 
   const { status, current_round, round_duration_seconds, round_started_at } = auctionState;
@@ -101,7 +101,7 @@ export default function Auction() {
 
   async function handleBid(playerId) {
     if (!team) {
-      setErrors((prev) => ({ ...prev, [playerId]: 'You must have a registered team to bid.' }));
+      setErrors((prev) => ({ ...prev, [playerId]: 'Debes tener un equipo registrado para pujar.' }));
       return;
     }
 
@@ -110,7 +110,7 @@ export default function Auction() {
     const minBid = minBidFor(player);
 
     if (isNaN(amount) || amount < minBid) {
-      setErrors((prev) => ({ ...prev, [playerId]: `Min bid: £${minBid.toFixed(1)}` }));
+      setErrors((prev) => ({ ...prev, [playerId]: `Puja mín: £${minBid.toFixed(1)}` }));
       return;
     }
 
@@ -134,7 +134,7 @@ export default function Auction() {
         refreshBids();
       }
     } catch {
-      setErrors((prev) => ({ ...prev, [playerId]: 'Failed to place bid. Please try again.' }));
+      setErrors((prev) => ({ ...prev, [playerId]: 'Error al realizar la puja. Intenta de nuevo.' }));
     } finally {
       setSubmitting((prev) => { const n = new Set(prev); n.delete(playerId); return n; });
     }
@@ -162,9 +162,9 @@ export default function Auction() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Auction Room</h1>
+          <h1 className="text-2xl font-bold text-primary">Sala de subasta</h1>
           {isActive && (
-            <p className="text-muted text-sm mt-1">Round {current_round}</p>
+            <p className="text-muted text-sm mt-1">Ronda {current_round}</p>
           )}
         </div>
 
@@ -182,7 +182,7 @@ export default function Auction() {
                   /{freeSlots}
                 </span>
               </p>
-              <p className="text-xs text-muted mt-0.5">bids this round</p>
+              <p className="text-xs text-muted mt-0.5">pujas esta ronda</p>
             </div>
           </div>
         )}
@@ -198,7 +198,7 @@ export default function Auction() {
       {/* ── Round expired banner ──────────────────────────────────────── */}
       {isActive && roundExpired && (
         <div className="rounded-xl px-5 py-4 text-sm font-medium bg-warning/10 text-warning border border-warning/30">
-          Round {current_round} has ended — bidding locked. Waiting for admin to advance.
+          La ronda {current_round} ha terminado — pujas bloqueadas. Esperando que el admin avance.
         </div>
       )}
 
@@ -208,36 +208,36 @@ export default function Auction() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Budget */}
             <div className="space-y-1">
-              <p className="text-xs text-muted uppercase tracking-wider font-medium">Budget</p>
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">Presupuesto</p>
               <p className="text-xl font-bold text-primary tabular-nums">
                 £{team.budget_remaining.toFixed(1)}M
               </p>
               {isActive && myBids.length > 0 && (
                 <p className="text-xs text-secondary">
-                  Effective:{' '}
+                  Efectivo:{' '}
                   <span className={`font-semibold ${effectiveBudget < 0 ? 'text-error' : 'text-tertiary'}`}>
                     £{effectiveBudget.toFixed(1)}M
                   </span>{' '}
-                  <span className="text-muted">after active bids</span>
+                  <span className="text-muted">después de pujas activas</span>
                 </p>
               )}
             </div>
 
             {/* Squad progress */}
             <div className="space-y-1">
-              <p className="text-xs text-muted uppercase tracking-wider font-medium">Squad</p>
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">Plantilla</p>
               <p className="text-xl font-bold text-primary tabular-nums">
                 {squadSize}
                 <span className="text-muted text-base font-normal">/{MAX_SQUAD_SIZE}</span>
               </p>
               <p className="text-xs text-secondary">
-                {freeSlots} slot{freeSlots !== 1 ? 's' : ''} remaining
+                {freeSlots} cupo{freeSlots !== 1 ? 's' : ''} restante{freeSlots !== 1 ? 's' : ''}
               </p>
             </div>
 
             {/* By Position — informational only, warn if no GK */}
             <div className="space-y-1">
-              <p className="text-xs text-muted uppercase tracking-wider font-medium">By Position</p>
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">Por posición</p>
               <div className="grid grid-cols-2 gap-1.5 pt-0.5">
                 {POSITIONS.map((pos) => {
                   const acquired   = (teamPlayers ?? []).filter((tp) => tp.players?.position === pos).length;
@@ -250,7 +250,7 @@ export default function Auction() {
                       <span className={isGkMissing ? 'text-error font-semibold' : 'text-primary'}>
                         {acquired}
                       </span>
-                      {isGkMissing && <span className="text-error text-xs">Need ≥1 GK</span>}
+                      {isGkMissing && <span className="text-error text-xs">Necesita ≥1 POR</span>}
                     </div>
                   );
                 })}
@@ -262,7 +262,7 @@ export default function Auction() {
           {squadSize > 0 && (
             <details>
               <summary className="cursor-pointer text-xs text-muted hover:text-secondary font-medium select-none">
-                Show {squadSize} acquired player{squadSize !== 1 ? 's' : ''}
+                Mostrar {squadSize} jugador{squadSize !== 1 ? 'es' : ''} adquirido{squadSize !== 1 ? 's' : ''}
               </summary>
               <div className="mt-3 space-y-1">
                 {[...teamPlayers]
@@ -443,7 +443,7 @@ export default function Auction() {
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >
-              My Bids {myBidCount > 0 && `(${myBidCount})`}
+              Mis pujas {myBidCount > 0 && `(${myBidCount})`}
             </button>
             <button
               onClick={() => setBidsTab('all')}
@@ -453,7 +453,7 @@ export default function Auction() {
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >
-              All Bids {currentRoundBids.length > 0 && `(${currentRoundBids.length})`}
+              Todas las pujas {currentRoundBids.length > 0 && `(${currentRoundBids.length})`}
             </button>
           </div>
 
@@ -461,21 +461,21 @@ export default function Auction() {
           {bidsTab === 'my' && (
             <>
               {myBidCount === 0 ? (
-                <p className="text-muted text-sm">No bids placed yet this round.</p>
+                <p className="text-muted text-sm">Aún no hay pujas en esta ronda.</p>
               ) : (
                 <>
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-base font-semibold text-primary">
-                      My Bids — Round {current_round}
+                      Mis pujas — Ronda {current_round}
                     </h2>
                     <div className="flex gap-4 text-xs font-medium">
                       <span className="text-tertiary">
-                        {myBids.filter((b) => getHighestBid(b.player_id)?.user_id === user?.id).length} leading
+                        {myBids.filter((b) => getHighestBid(b.player_id)?.user_id === user?.id).length} liderando
                       </span>
                       <span className="text-error">
-                        {myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length} outbid
+                        {myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length} superado{myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length !== 1 ? 's' : ''}
                       </span>
-                      <span className="text-muted">{myBidCount}/{freeSlots} slots</span>
+                      <span className="text-muted">{myBidCount}/{freeSlots} cupos</span>
                     </div>
                   </div>
 
@@ -507,7 +507,7 @@ export default function Auction() {
                             </span>
                             {bid.is_carryover && (
                               <span
-                                title={`Carried over from Round ${bid.round_number - 1}`}
+                                title={`Arrastrada de la ronda ${bid.round_number - 1}`}
                                 className="shrink-0 text-xs font-medium px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30"
                               >
                                 ↩ R{bid.round_number - 1}
@@ -517,16 +517,16 @@ export default function Auction() {
 
                           <div className="flex items-center gap-4 shrink-0 ml-3">
                             <span className="text-secondary text-xs">
-                              Your bid:{' '}
+                              Tu puja:{' '}
                               <span className="text-primary font-semibold">£{bid.bid_amount.toFixed(1)}</span>
                             </span>
                             {isLeading ? (
                               <span className="text-tertiary text-xs font-semibold w-20 text-right">
-                                Leading
+                                Liderando
                               </span>
                             ) : (
                               <span className="text-error text-xs font-semibold w-20 text-right">
-                                Outbid £{highBid?.bid_amount.toFixed(1)}
+                                Superado £{highBid?.bid_amount.toFixed(1)}
                               </span>
                             )}
                           </div>
@@ -543,17 +543,17 @@ export default function Auction() {
           {bidsTab === 'all' && (
             <>
               {allBidsByPlayer.length === 0 ? (
-                <p className="text-muted text-sm">No bids placed yet this round.</p>
+                <p className="text-muted text-sm">Aún no hay pujas en esta ronda.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted border-b border-border">
-                        <th className="pb-2 pr-4 font-medium">Player</th>
+                        <th className="pb-2 pr-4 font-medium">Jugador</th>
                         <th className="pb-2 pr-4 font-medium">Pos</th>
-                        <th className="pb-2 pr-4 font-medium">Top Bid</th>
-                        <th className="pb-2 pr-4 font-medium">Leader</th>
-                        <th className="pb-2 font-medium">Status</th>
+                        <th className="pb-2 pr-4 font-medium">Mejor puja</th>
+                        <th className="pb-2 pr-4 font-medium">Líder</th>
+                        <th className="pb-2 font-medium">Estado</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -576,10 +576,10 @@ export default function Auction() {
                           <td className="py-2">
                             {uniqueBidders > 1 ? (
                               <span className="text-xs font-medium px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
-                                ⚡ Contested ({uniqueBidders})
+                                ⚡ Disputada ({uniqueBidders})
                               </span>
                             ) : (
-                              <span className="text-xs text-tertiary font-medium">Leading</span>
+                              <span className="text-xs text-tertiary font-medium">Liderando</span>
                             )}
                           </td>
                         </tr>
@@ -619,7 +619,7 @@ export default function Auction() {
               onClick={() => setCountryFilter(country)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
                 countryFilter === country
-                  ? 'bg-info text-primary'
+                  ? 'bg-info text-on-info'
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >
@@ -631,18 +631,18 @@ export default function Auction() {
 
       {/* ── Player table ─────────────────────────────────────────────── */}
       {playersLoading ? (
-        <p className="text-muted text-sm">Loading players…</p>
+        <p className="text-muted text-sm">Cargando jugadores…</p>
       ) : (
         <Table>
           <Thead className="sticky top-0 z-10">
             <tr>
               <Th>Pos</Th>
-              <Th>Player</Th>
-              <Th>Country</Th>
-              <Th className="text-right">Listed</Th>
-              <Th className="text-right">Top bid</Th>
-              <Th>Status</Th>
-              <Th>Bid</Th>
+              <Th>Jugador</Th>
+              <Th>País</Th>
+              <Th className="text-right">Listado</Th>
+              <Th className="text-right">Mejor puja</Th>
+              <Th>Estado</Th>
+              <Th>Pujar</Th>
             </tr>
           </Thead>
           <Tbody>
@@ -651,8 +651,8 @@ export default function Auction() {
               const ownerInfo     = playerOwners.get(player.id);
               const ownerLabel    = !isOwned ? null
                 : ownerInfo?.userId === user?.id
-                  ? 'In your squad'
-                  : `Owned: ${ownerInfo?.teamName ?? 'Another team'}`;
+                  ? 'En tu plantilla'
+                  : `Dueño: ${ownerInfo?.teamName ?? 'Otro equipo'}`;
               const highBid       = getHighestBid(player.id);
               const contestFloor  = getContestFloor(player.id);
               const isContested   = contestFloor !== null;

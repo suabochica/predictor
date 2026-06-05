@@ -123,7 +123,7 @@ export default function Bracket() {
   if (matchesLoading || standingsLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Loading bracket…
+        Cargando cuadro…
       </div>
     );
   }
@@ -152,16 +152,16 @@ export default function Bracket() {
     <div className="space-y-8 max-w-5xl">
       {/* ── Header ── */}
       <div>
-        <h1 className="text-2xl font-bold text-primary">Bracket</h1>
-        <p className="text-secondary text-sm mt-0.5">Single-elimination — H2H matchday points</p>
+        <h1 className="text-2xl font-bold text-primary">Cuadro</h1>
+        <p className="text-secondary text-sm mt-0.5">Eliminación directa — puntos H2H por jornada</p>
       </div>
 
       {/* ── Not seeded yet ── */}
       {!hasMatches && !hasEnoughStandings && (
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
-          <p className="text-secondary font-semibold">Bracket not seeded yet</p>
+          <p className="text-secondary font-semibold">Cuadro no configurado aún</p>
           <p className="text-muted text-sm mt-1">
-            The knockout bracket is set once the league stage (3 matchdays) is complete.
+            El cuadro eliminatorio se define al completar la fase de liga (3 jornadas).
           </p>
         </div>
       )}
@@ -170,11 +170,11 @@ export default function Bracket() {
       {!hasMatches && hasEnoughStandings && (
         <>
           <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 text-sm text-tertiary">
-            Preview based on current standings — bracket locks when league stage is finalised.
+            Vista previa basada en posiciones actuales — el cuadro se bloquea al finalizar la fase de liga.
           </div>
 
           <div className="flex items-start gap-2 overflow-x-auto pb-2">
-            <RoundColumn title="Quarter-finals" subtitle="WC Round of 32">
+            <RoundColumn title="Cuartos de final" subtitle="Ronda de 32 del Mundial">
               {generateChampionshipBracket(standings).map((m, i) => (
                 <PreviewMatchCard
                   key={m.label}
@@ -187,13 +187,13 @@ export default function Bracket() {
               ))}
             </RoundColumn>
             <Connector />
-            <RoundColumn title="Semi-finals" subtitle="WC Round of 16">
-              <PreviewMatchCard label="Semi A" teamA={null} teamB={null} seedA="WA" seedB="WB" />
-              <PreviewMatchCard label="Semi B" teamA={null} teamB={null} seedA="WC" seedB="WD" />
+            <RoundColumn title="Semifinales" subtitle="Octavos de final del Mundial">
+              <PreviewMatchCard label="Semi A" teamA={null} teamB={null} seedA="GA" seedB="GB" />
+              <PreviewMatchCard label="Semi B" teamA={null} teamB={null} seedA="GC" seedB="GD" />
             </RoundColumn>
             <Connector />
-            <RoundColumn title="Final" subtitle="WC Quarter-finals">
-              <PreviewMatchCard label="Final" teamA={null} teamB={null} seedA="W Semi A" seedB="W Semi B" />
+            <RoundColumn title="Final" subtitle="Cuartos de final del Mundial">
+              <PreviewMatchCard label="Final" teamA={null} teamB={null} seedA="G Semi A" seedB="G Semi B" />
             </RoundColumn>
           </div>
         </>
@@ -204,14 +204,14 @@ export default function Bracket() {
         <>
           <div className="flex items-start gap-2 overflow-x-auto pb-3">
             {/* Round 1: Quarter-finals */}
-            <RoundColumn title="Quarter-finals" subtitle="WC Round of 32">
-              {['Match A', 'Match B', 'Match C', 'Match D'].map((label, i) => {
-                const m = getMatch('championship', 1, label);
+            <RoundColumn title="Cuartos de final" subtitle="Ronda de 32 del Mundial">
+              {[{ key: 'Match A', display: 'Partido A' }, { key: 'Match B', display: 'Partido B' }, { key: 'Match C', display: 'Partido C' }, { key: 'Match D', display: 'Partido D' }].map(({ key, display }, i) => {
+                const m = getMatch('championship', 1, key);
                 const seeds = [{ a: 1, b: 8 }, { a: 4, b: 5 }, { a: 2, b: 7 }, { a: 3, b: 6 }];
                 return (
                   <MatchCard
-                    key={label}
-                    label={label}
+                    key={key}
+                    label={display}
                     seed={seeds[i]}
                     {...matchProps(m)}
                   />
@@ -222,7 +222,7 @@ export default function Bracket() {
             <Connector />
 
             {/* Round 2: Semi-finals */}
-            <RoundColumn title="Semi-finals" subtitle="WC Round of 16">
+            <RoundColumn title="Semifinales" subtitle="Octavos de final del Mundial">
               {['Semi A', 'Semi B'].map((label) => {
                 const m = getMatch('championship', 2, label);
                 return <MatchCard key={label} label={label} {...matchProps(m)} />;
@@ -232,7 +232,7 @@ export default function Bracket() {
             <Connector />
 
             {/* Round 3: Final */}
-            <RoundColumn title="Final" subtitle="WC Quarter-finals">
+            <RoundColumn title="Final" subtitle="Cuartos de final del Mundial">
               {(() => {
                 const m = getMatch('championship', 3, 'Final');
                 return <MatchCard label="Final" {...matchProps(m)} />;
@@ -252,19 +252,19 @@ export default function Bracket() {
             const teamName = (t) => t?.users?.display_name ?? t?.name ?? 'TBD';
             return (
               <section>
-                <h2 className="text-base font-bold text-primary mb-4">Final Standings</h2>
+                <h2 className="text-base font-bold text-primary mb-4">Clasificación final</h2>
                 <div className="flex flex-col gap-2 max-w-xs">
                   <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3">
                     <span className="text-lg font-black text-tertiary flex-shrink-0">🏆</span>
                     <div>
-                      <p className="text-label-caps text-muted">Champion</p>
+                      <p className="text-label-caps text-muted">Campeón</p>
                       <p className="text-sm font-medium text-primary">{teamName(champion)}</p>
                     </div>
                   </div>
                   <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3">
                     <span className="text-sm font-black text-muted flex-shrink-0 w-6 text-center">2.</span>
                     <div>
-                      <p className="text-label-caps text-muted">Runner-up</p>
+                      <p className="text-label-caps text-muted">Subcampeón</p>
                       <p className="text-sm font-medium text-primary">{teamName(runnerUp)}</p>
                     </div>
                   </div>
@@ -277,9 +277,9 @@ export default function Bracket() {
 
       {/* ── H2H scoring rules ── */}
       <div className="bg-surface/50 border border-border/50 rounded-xl p-4 text-xs text-muted space-y-1">
-        <p className="font-semibold text-secondary">H2H Scoring Rules</p>
-        <p>Winner = higher matchday points. Tiebreaker: captain points → goals scored → league seed.</p>
-        <p>Only current-round matchday points count — not cumulative season total.</p>
+        <p className="font-semibold text-secondary">Reglas de puntuación H2H</p>
+        <p>Ganador = más puntos en la jornada. Desempate: puntos del capitán → goles marcados → puesto en liga.</p>
+        <p>Solo cuentan los puntos de la jornada actual — no el total acumulado de la temporada.</p>
       </div>
     </div>
   );
