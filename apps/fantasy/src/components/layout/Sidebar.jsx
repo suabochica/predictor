@@ -14,13 +14,13 @@ import adminIcon from '@predictor/ui/icons/admin.svg';
 
 const navItems = [
   { to: '/dashboard', icon: homeIcon, label: 'Dashboard' },
-  { to: '/my-team', icon: teamIcon, label: 'My Team' },
-  { to: '/market', icon: marketIcon, label: 'Player Market' },
-  { to: '/auction', icon: auctionIcon, label: 'Auction' },
-  { to: '/standings', icon: standingsIcon, label: 'Standings' },
-  { to: '/bracket', icon: bracketsIcon, label: 'Bracket' },
-  { to: '/history', icon: historyIcon, label: 'History' },
-  { to: '/como-jugar', icon: rulesIcon, label: '¿Cómo jugar?' },
+  { to: '/my-team', icon: teamIcon, label: 'Mi equipo' },
+  { to: '/market', icon: marketIcon, label: 'Mercado de jugadores' },
+  { to: '/auction', icon: auctionIcon, label: 'Subasta' },
+  { to: '/leaderboard', icon: standingsIcon, label: 'Tabla de posiciones' },
+  { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' },
+  { to: '/history', icon: historyIcon, label: 'Históricos' },
+  { to: '/rules', icon: rulesIcon, label: 'Reglas' },
 ];
 
 const adminItems = [

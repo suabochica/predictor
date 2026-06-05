@@ -39,7 +39,7 @@ function BracketBadge({ bracket }) {
   );
 }
 
-export default function Standings() {
+export default function Leaderboard() {
   const { standings, matchdays, loading } = useStandings();
   const { user } = useAuth();
   const { activeMatchday } = useLeague();

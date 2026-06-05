@@ -5,10 +5,10 @@ import PredictionForm from '../components/PredictionForm';
 const userId = Astro.locals.user?.id as string | undefined;
 ---
 
-<Layout title="Predictions">
+<Layout title="Predicciones">
   <div class="max-w-4xl">
-    <h1 class="text-2xl font-bold text-primary">Predictions</h1>
-    <p class="text-secondary text-body-sm mt-1 mb-6">Enter your predicted scores (0–9). Save before leaving.</p>
+    <h1 class="text-2xl font-bold text-primary">Predicciones</h1>
+    <p class="text-secondary text-body-sm mt-1 mb-6">Ingresa tus marcadores (0–9). Guarda antes de salir.</p>
 
     <PredictionForm client:load currentUser={userId} />
   </div>

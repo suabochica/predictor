@@ -1,8 +1,8 @@
-export default function ComoJugar() {
+export default function HowToPlay() {
   return (
     <div className="space-y-8 max-w-3xl pb-8">
       <div>
-        <h1 className="text-2xl font-bold text-primary">¿Cómo jugar?</h1>
+        <h1 className="text-2xl font-bold text-primary">Reglas</h1>
         <p className="text-secondary mt-1">
           Guía completa de la Fantasy League del Mundial FIFA 2026
         </p>

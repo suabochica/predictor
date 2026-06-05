@@ -10,18 +10,18 @@ const user = Astro.locals.user;
 const displayName = Astro.locals.displayName;
 ---
 
-<Layout title="Home">
+<Layout title="Inicio">
   <div class="max-w-4xl">
     {
       user && (
         <div class="mb-8">
           <h1 class="text-2xl font-bold text-primary">
-            Welcome back, {displayName}!
+            ¡Bienvenido de nuevo, {displayName}!
           </h1>
           <p class="text-secondary mt-1">FIFA World Cup 2026 Polla</p>
           <p class="mt-1 text-secondary text-body-sm">
-            Predict match scores and compete with friends. Earn points based on
-            accuracy!
+            Predice los resultados y compite con amigos. ¡Gana puntos según tu
+            precisión!
           </p>
         </div>
       )
@@ -34,7 +34,7 @@ const displayName = Astro.locals.displayName;
       >
         <img src={predictionsIcon.src} class="w-8 h-8" alt="" />
         <span class="font-label text-label-md font-medium"
-          >Make Predictions</span
+          >Hacer predicciones</span
         >
       </a>
       <a
@@ -42,14 +42,14 @@ const displayName = Astro.locals.displayName;
         class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
       >
         <img src={standingsIcon.src} class="w-8 h-8" alt="" />
-        <span class="font-label text-label-md font-medium">Leaderboard</span>
+        <span class="font-label text-label-md font-medium">Tabla de posiciones</span>
       </a>
       <a
         href="/polla/rules"
         class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
       >
         <img src={rulesIcon.src} class="w-8 h-8" alt="" />
-        <span class="font-label text-label-md font-medium">Scoring Rules</span>
+        <span class="font-label text-label-md font-medium">Reglas de puntuación</span>
       </a>
     </nav>
   </div>
