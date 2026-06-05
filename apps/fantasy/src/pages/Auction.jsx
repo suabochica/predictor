@@ -619,7 +619,7 @@ export default function Auction() {
               onClick={() => setCountryFilter(country)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
                 countryFilter === country
-                  ? 'bg-info text-primary'
+                  ? 'bg-info text-on-info'
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >

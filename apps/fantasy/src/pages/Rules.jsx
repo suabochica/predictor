@@ -46,8 +46,7 @@ export default function HowToPlay() {
           </thead>
           <tbody className="divide-y divide-border">
             {[
-              ['Liga — JJ 1-3', 'Fase de grupos (JJ 1-3)', '12'],
-              ['Liga — JJ 4', 'Octavos de final', '12'],
+              ['Liga — Partidos jugados 1-3', 'Fase de grupos (Partidos jugados 1-3)', '12'],
               ['Eliminatoria — Cuartos', 'Dieciseisavos de final del Mundial', '8'],
               ['Eliminatoria — Semis', 'Octavos de final del Mundial', '4'],
               ['Eliminatoria — Final', 'Cuartos de final del Mundial', '2'],
