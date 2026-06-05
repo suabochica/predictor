@@ -7,12 +7,12 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import MyTeam from './pages/MyTeam';
 import Market from './pages/Market';
-import Standings from './pages/Standings';
+import Leaderboard from './pages/Leaderboard';
 import Bracket from './pages/Bracket';
 import Auction from './pages/Auction';
 import History from './pages/History';
 import Admin from './pages/Admin';
-import ComoJugar from './pages/ComoJugar';
+import Rules from './pages/Rules';
 import NotFound from './pages/NotFound';
 
 function redirectToGateway() {
@@ -26,7 +26,7 @@ function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-neutral text-primary">
-        Loading…
+        Cargando…
       </div>
     );
   }
@@ -58,11 +58,11 @@ function AppRoutes() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
         <Route path="/market" element={<ProtectedRoute><Market /></ProtectedRoute>} />
-        <Route path="/standings" element={<ProtectedRoute><Standings /></ProtectedRoute>} />
+        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/bracket" element={<ProtectedRoute><Bracket /></ProtectedRoute>} />
         <Route path="/auction" element={<ProtectedRoute><Auction /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-        <Route path="/como-jugar" element={<ProtectedRoute><ComoJugar /></ProtectedRoute>} />
+        <Route path="/rules" element={<ProtectedRoute><Rules /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
 
         <Route path="*" element={<NotFound />} />

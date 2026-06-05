@@ -14,7 +14,7 @@ function EmptyBenchSlot({ order, onClick, isTargetable }) {
         }`}
       >
         <span className={`text-label-caps ${isTargetable ? 'text-info font-semibold' : 'text-muted'}`}>
-          {isTargetable ? '+ here' : 'Empty'}
+          {isTargetable ? '+ aquí' : 'Vacío'}
         </span>
       </button>
     </div>
@@ -25,7 +25,7 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
   return (
     <div className="bg-surface border border-border rounded-xl p-4">
       <h3 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
-        Bench
+        Banca
       </h3>
       <div className="flex gap-3 flex-wrap">
         {bench.map((player, i) => (
@@ -42,8 +42,8 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
                 onClick={() => onReorder(i, i - 1)}
                 disabled={i === 0}
                 className="text-muted hover:text-secondary disabled:opacity-25 text-xs px-1.5 py-0.5 rounded hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                title="Move up priority"
-                aria-label="Move up priority"
+                title="Subir prioridad"
+                aria-label="Subir prioridad"
               >
                 ←
               </button>
@@ -51,8 +51,8 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
                 onClick={() => onReorder(i, i + 1)}
                 disabled={i === bench.length - 1}
                 className="text-muted hover:text-secondary disabled:opacity-25 text-xs px-1.5 py-0.5 rounded hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                title="Move down priority"
-                aria-label="Move down priority"
+                title="Bajar prioridad"
+                aria-label="Bajar prioridad"
               >
                 →
               </button>
@@ -71,7 +71,7 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
         ))}
       </div>
       <p className="text-label-caps text-muted mt-3">
-        Auto-sub priority: 1 (first choice) → 4 (last resort)
+        Prioridad de auto-cambio: 1 (primera opción) → 4 (último recurso)
       </p>
     </div>
   );

@@ -13,7 +13,7 @@ function normalizeSquad(teamPlayers) {
   return teamPlayers.map((tp) => ({
     id: tp.player_id,
     teamPlayerId: tp.id,
-    name: tp.players?.name ?? 'Unknown',
+    name: tp.players?.name ?? 'Desconocido',
     country: tp.players?.country ?? '',
     country_code: tp.players?.country_code ?? null,
     position: tp.players?.position ?? 'FWD',
@@ -235,11 +235,11 @@ export default function MyTeam() {
 
   function doSwap(p1, p2) {
     if (isGameLocked(p1)) {
-      setSwapError(`${p1.name}'s game has already started — they cannot be moved.`);
+      setSwapError(`El partido de ${p1.name} ya inició — no se puede mover.`);
       return;
     }
     if (isGameLocked(p2)) {
-      setSwapError(`${p2.name}'s game has already started — they cannot be moved.`);
+      setSwapError(`El partido de ${p2.name} ya inició — no se puede mover.`);
       return;
     }
     const p1IsStarter = starters.some((s) => s.id === p1.id);
@@ -259,11 +259,11 @@ export default function MyTeam() {
     if (p1IsStarter && !p2IsStarter) {
       const remainingStarters = starters.filter((s) => s.id !== p1.id);
       if (p2.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
-        setSwapError(`Can't move ${p2.name} to XI — only 1 GK allowed in starting XI.`);
+        setSwapError(`No se puede mover a ${p2.name} al XI — solo 1 POR permitido en el XI titular.`);
         return;
       }
       if (p1.position === 'GK' && p2.position !== 'GK') {
-        setSwapError(`Can't move the GK to bench — swap with a bench GK instead.`);
+        setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
         return;
       }
       newStarters = remainingStarters.concat(p2);
@@ -272,11 +272,11 @@ export default function MyTeam() {
     } else if (!p1IsStarter && p2IsStarter) {
       const remainingStarters = starters.filter((s) => s.id !== p2.id);
       if (p1.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
-        setSwapError(`Can't move ${p1.name} to XI — only 1 GK allowed in starting XI.`);
+        setSwapError(`No se puede mover a ${p1.name} al XI — solo 1 POR permitido en el XI titular.`);
         return;
       }
       if (p2.position === 'GK' && p1.position !== 'GK') {
-        setSwapError(`Can't move the GK to bench — swap with a bench GK instead.`);
+        setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
         return;
       }
       newStarters = remainingStarters.concat(p1);
@@ -302,7 +302,7 @@ export default function MyTeam() {
   function handleEmptySlotClick() {
     if (!selectedPlayer) return;
     if (isGameLocked(selectedPlayer)) {
-      setSwapError(`${selectedPlayer.name}'s game has already started — they cannot be moved.`);
+      setSwapError(`El partido de ${selectedPlayer.name} ya inició — no se puede mover.`);
       return;
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
@@ -310,7 +310,7 @@ export default function MyTeam() {
       return;
     }
     if (selectedPlayer.position === 'GK' && starters.some((s) => s.position === 'GK')) {
-      setSwapError(`Can't add ${selectedPlayer.name} to XI — only 1 GK allowed in starting XI.`);
+      setSwapError(`No se puede agregar a ${selectedPlayer.name} al XI — solo 1 POR permitido en el XI titular.`);
       return;
     }
     setStarters([...starters, selectedPlayer]);
@@ -322,7 +322,7 @@ export default function MyTeam() {
   function handleEmptyBenchSlotClick() {
     if (!selectedPlayer) return;
     if (isGameLocked(selectedPlayer)) {
-      setSwapError(`${selectedPlayer.name}'s game has already started — they cannot be moved.`);
+      setSwapError(`El partido de ${selectedPlayer.name} ya inició — no se puede mover.`);
       return;
     }
     if (bench.some((b) => b.id === selectedPlayer.id)) {
@@ -331,7 +331,7 @@ export default function MyTeam() {
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
       if (selectedPlayer.position === 'GK') {
-        setSwapError(`Can't move the GK to bench — swap with a bench GK instead.`);
+        setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
         setSelectedPlayer(null);
         return;
       }
@@ -432,7 +432,7 @@ export default function MyTeam() {
   if (teamLoading || lineupLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Loading squad…
+        Cargando plantilla…
       </div>
     );
   }
@@ -440,10 +440,10 @@ export default function MyTeam() {
   if (!team) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">My Team</h1>
+        <h1 className="text-2xl font-bold text-primary">Mi equipo</h1>
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
           <p className="text-secondary">
-            You're not enrolled in the league yet. Ask an admin to add you.
+            Aún no estás inscrito en la liga. Pide a un admin que te agregue.
           </p>
         </div>
       </div>
@@ -453,11 +453,11 @@ export default function MyTeam() {
   if (squad.length === 0) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">My Team</h1>
+        <h1 className="text-2xl font-bold text-primary">Mi equipo</h1>
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
-          <p className="text-secondary font-medium mb-1">No players yet</p>
+          <p className="text-secondary font-medium mb-1">Aún sin jugadores</p>
           <p className="text-muted text-sm">
-            Win players at the auction or shop on the free market to build your squad.
+            Gana jugadores en la subasta o ficha en el mercado libre para construir tu plantilla.
           </p>
         </div>
       </div>
@@ -469,22 +469,22 @@ export default function MyTeam() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-primary">My Team</h1>
+          <h1 className="text-2xl font-bold text-primary">Mi equipo</h1>
           <p className="text-secondary text-sm mt-0.5">
-            {selectedMatchday ? `Lineup for: ${selectedMatchday.name}` : 'Pre-tournament lineup'}
+            {selectedMatchday ? `Alineación para: ${selectedMatchday.name}` : 'Alineación de pretemporada'}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-muted uppercase tracking-wider">Budget Remaining</p>
+          <p className="text-xs text-muted uppercase tracking-wider">Presupuesto restante</p>
           <p className="text-lg font-bold text-tertiary">{formatPrice(team.budget_remaining)}</p>
-          <p className="text-xs text-muted">{squad.length} / 15 players</p>
+          <p className="text-xs text-muted">{squad.length} / 15 jugadores</p>
         </div>
       </div>
 
       {/* ── Matchday selector ── */}
       {allMatchdays.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted uppercase tracking-wider font-semibold">Matchday:</span>
+          <span className="text-xs text-muted uppercase tracking-wider font-semibold">Jornada:</span>
           {allMatchdays.map((md) => (
             <button
               key={md.id}
@@ -505,12 +505,12 @@ export default function MyTeam() {
       {/* ── Formation label ── */}
       <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
         <div>
-          <p className="text-xs font-semibold text-secondary uppercase tracking-wider">Formation</p>
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wider">Formación</p>
           <p className="text-lg font-bold text-tertiary mt-0.5">
             {starters.length > 0 ? derivedFormation : '—'}
           </p>
         </div>
-        <p className="text-xs text-muted ml-auto">{starters.length} / 11 starters</p>
+        <p className="text-xs text-muted ml-auto">{starters.length} / 11 titulares</p>
       </div>
 
       {/* ── Live matchday stats panel (always shows active matchday) ── */}
@@ -524,21 +524,21 @@ export default function MyTeam() {
         return (
           <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-6 flex-wrap">
             <div>
-              <p className="text-label-caps text-muted uppercase tracking-wider">Live Pts</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">Pts en vivo</p>
               <p className="text-xl font-bold text-tertiary">{livePts}</p>
             </div>
             <div>
-              <p className="text-label-caps text-muted uppercase tracking-wider">Played</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">Jugaron</p>
               <p className="text-sm font-semibold text-primary">{played.length} / {starters.length}</p>
             </div>
             <div>
-              <p className="text-label-caps text-muted uppercase tracking-wider">Yet to Play</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">Por jugar</p>
               <p className={`text-sm font-semibold ${notPlayed.length > 0 ? 'text-tertiary' : 'text-muted'}`}>
                 {notPlayed.length}
               </p>
             </div>
             <p className="text-label-caps text-muted ml-auto hidden sm:block">
-              C ×2 applied · starters are final
+              C ×2 aplicado · titulares definitivos
             </p>
           </div>
         );
@@ -547,14 +547,14 @@ export default function MyTeam() {
       {/* ── Captain warning ── */}
       {captainGameLocked && (
         <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
-          Your captain's fixture has started. If they don't play, you'll score 0 × 2 = 0 pts — the XI is final, no bench promotion.
+          El partido de tu capitán ya inició. Si no juega, sumarás 0 × 2 = 0 pts — el XI es definitivo, sin promoción de banca.
         </div>
       )}
 
       {/* ── Rolling lockout notice ── */}
       {selectedMatchday && Object.keys(kickoffByCountry).length > 0 && (
         <div className="bg-surface-hover/60 border border-border rounded-xl p-3 text-xs text-secondary" role="alert">
-          Rolling lockout active — players lock 10 min before their fixture kicks off. Players in later games remain editable.
+          Bloqueo progresivo activo — los jugadores se bloquean 10 min antes de su partido. Los de partidos posteriores siguen siendo editables.
         </div>
       )}
 
@@ -601,10 +601,10 @@ export default function MyTeam() {
                 {formatPrice(selectedPlayer.acquisition_price)}
               </span>
               {selectedIsStarter && (
-                <span className="text-label-caps text-muted">Starting</span>
+                <span className="text-label-caps text-muted">Titular</span>
               )}
               {!selectedIsStarter && (
-                <span className="text-label-caps text-muted">On bench</span>
+                <span className="text-label-caps text-muted">En banca</span>
               )}
             </div>
           </div>
@@ -620,20 +620,20 @@ export default function MyTeam() {
                     : 'bg-border text-tertiary hover:bg-warning/15 border border-warning/30'
                 }`}
               >
-                {selectedIsCaptain ? 'Captain ✓' : 'Make Captain'}
+                {selectedIsCaptain ? 'Capitán ✓' : 'Hacer capitán'}
               </button>
             )}
 
             {/* Swap hint */}
             <span className="text-xs text-muted italic">
-              Click another player to swap
+              Haz clic en otro jugador para intercambiar
             </span>
 
             {/* Deselect */}
             <button
               onClick={() => setSelectedPlayer(null)}
               className="px-2 py-1.5 rounded-lg text-xs text-secondary hover:text-primary hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              aria-label="Deselect player"
+              aria-label="Deseleccionar jugador"
             >
               ✕
             </button>
@@ -645,7 +645,7 @@ export default function MyTeam() {
       {unassigned.length > 0 && (
         <div className="bg-surface border border-warning/30 rounded-xl p-4">
           <p className="text-xs font-semibold text-warning uppercase tracking-wider mb-2">
-            Not in lineup ({unassigned.length})
+            Fuera de alineación ({unassigned.length})
           </p>
           <div className="flex flex-wrap gap-2">
             {unassigned.map((p) => (
@@ -668,7 +668,7 @@ export default function MyTeam() {
             ))}
           </div>
           <p className="text-body-sm text-muted mt-2">
-            Select one of these, then click a bench/starter to swap them in.
+            Selecciona uno de estos, luego haz clic en banca/titular para intercambiarlo.
           </p>
         </div>
       )}
@@ -676,8 +676,8 @@ export default function MyTeam() {
       {/* ── Squad overview table ── */}
       <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-secondary">Full Squad</h3>
-          <span className="text-xs text-muted">{squad.length} players</span>
+          <h3 className="text-sm font-semibold text-secondary">Plantilla completa</h3>
+          <span className="text-xs text-muted">{squad.length} jugadores</span>
         </div>
         <div className="divide-y divide-border">
           {['GK', 'DEF', 'MID', 'FWD'].map((pos) => {
@@ -726,14 +726,14 @@ export default function MyTeam() {
                   )}
                   <span className="text-label-caps flex-shrink-0 w-16 text-right flex items-center justify-end gap-1">
                     {isGameLocked(p) && (
-                      <span title="Locked — fixture started">🔒</span>
+                      <span title="Bloqueado — partido iniciado">🔒</span>
                     )}
                     {isCaptain ? (
-                      <span className="text-tertiary font-semibold">Captain</span>
+                      <span className="text-tertiary font-semibold">Capitán</span>
                     ) : isStarter ? (
-                      <span className="text-tertiary">Starting</span>
+                      <span className="text-tertiary">Titular</span>
                     ) : benchIdx >= 0 ? (
-                      <span className="text-info">Bench {benchIdx + 1}</span>
+                      <span className="text-info">Banca {benchIdx + 1}</span>
                     ) : (
                       <span className="text-warning">—</span>
                     )}
@@ -749,14 +749,14 @@ export default function MyTeam() {
       {completedMatchdays.length > 0 && (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-semibold text-secondary">Player History</h3>
-            <p className="text-xs text-muted mt-0.5">Points scored per matchday by your squad players</p>
+            <h3 className="text-sm font-semibold text-secondary">Historial del jugador</h3>
+            <p className="text-xs text-muted mt-0.5">Puntos por jornada de los jugadores de tu plantilla</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left border-b border-border">
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted min-w-[140px]">Player</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-muted min-w-[140px]">Jugador</th>
                   {completedMatchdays.map(md => (
                     <th key={md.id} className="px-3 py-2.5 text-xs font-medium text-muted text-center whitespace-nowrap">
                       {md.name.replace(/matchday\s*/i, 'MD').replace(/group stage /i, '')}
@@ -790,7 +790,7 @@ export default function MyTeam() {
                                 {pts === null ? (
                                   <span className="text-secondary">—</span>
                                 ) : s.minutes_played === 0 ? (
-                                  <span className="text-muted text-xs" title="Did not play">0</span>
+                                  <span className="text-muted text-xs" title="No jugó">0</span>
                                 ) : (
                                   <span className={`font-semibold text-xs ${pts > 0 ? 'text-tertiary' : 'text-error'}`}>
                                     {pts}
@@ -812,8 +812,8 @@ export default function MyTeam() {
             </table>
           </div>
           <p className="px-4 py-2 text-label-caps text-muted border-t border-border">
-            Points shown are base player points — captain ×2 is applied at team level during scoring.
-            "—" means no stats uploaded for that matchday for this player.
+            Los puntos mostrados son puntos base del jugador — el ×2 del capitán se aplica a nivel de equipo durante la puntuación.
+            "—" significa que no hay estadísticas cargadas para esa jornada de este jugador.
           </p>
         </div>
       )}
@@ -825,14 +825,14 @@ export default function MyTeam() {
           disabled={saving || !canSave}
           className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-tertiary hover:bg-tertiary text-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
         >
-          {saving ? 'Saving…' : 'Save Lineup'}
+          {saving ? 'Guardando…' : 'Guardar alineación'}
         </button>
 
         {!canSave && !saving && (
           <p className="text-xs text-muted">
-            {starters.length !== 11 && `Need exactly 11 starters (have ${starters.length}). `}
-            {starters.length === 11 && gkCount !== 1 && 'Need exactly 1 GK in starting XI. '}
-            {!captainIsStarter && 'Select a captain from your starters. '}
+            {starters.length !== 11 && `Se necesitan exactamente 11 titulares (hay ${starters.length}). `}
+            {starters.length === 11 && gkCount !== 1 && 'Se necesita exactamente 1 POR en el XI titular. '}
+            {!captainIsStarter && 'Selecciona un capitán entre tus titulares. '}
           </p>
         )}
 
@@ -841,7 +841,7 @@ export default function MyTeam() {
         )}
 
         {saveSuccess && (
-          <p className="text-xs text-tertiary font-medium" role="status">Lineup saved!</p>
+          <p className="text-xs text-tertiary font-medium" role="status">¡Alineación guardada!</p>
         )}
       </div>
 

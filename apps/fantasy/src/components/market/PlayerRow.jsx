@@ -23,34 +23,34 @@ export default function PlayerRow({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  let actionLabel = 'Pick player to swap out';
+  let actionLabel = 'Elige jugador para intercambiar';
   let disabled = true;
   let disabledReason = '';
   let actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
   let rowOpacity = '';
 
   if (isMine) {
-    actionLabel = '✓ In Squad';
+    actionLabel = '✓ En plantilla';
     actionStyle = 'bg-tertiary/10 text-tertiary cursor-default border border-tertiary/40';
     rowOpacity = 'opacity-70';
   } else if (owner) {
-    actionLabel = `Owned: ${owner.teamName}`;
-    disabledReason = `Owned by ${owner.teamName}`;
+    actionLabel = `Dueño: ${owner.teamName}`;
+    disabledReason = `Propiedad de ${owner.teamName}`;
     actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
     rowOpacity = 'opacity-60';
   } else if (isLocked) {
-    actionLabel = 'Locked';
-    disabledReason = 'Match kicked off';
+    actionLabel = 'Bloqueado';
+    disabledReason = 'Partido iniciado';
     actionStyle = 'bg-warning/10 text-warning cursor-not-allowed border border-warning/30';
   } else if (!windowOpen) {
-    actionLabel = 'No window open';
-    disabledReason = 'No transfer window is currently open';
+    actionLabel = 'Sin ventana abierta';
+    disabledReason = 'No hay ventana de fichajes abierta';
   } else if (offerOutName) {
     if (!canAfford) {
-      actionLabel = 'Over Budget';
-      disabledReason = 'Not enough budget for this swap';
+      actionLabel = 'Sin presupuesto';
+      disabledReason = 'Presupuesto insuficiente para este cambio';
     } else {
-      actionLabel = `Swap with ${offerOutName}`;
+      actionLabel = `Intercambiar con ${offerOutName}`;
       disabled = false;
       actionStyle = 'bg-tertiary hover:brightness-90 text-primary cursor-pointer';
     }
@@ -115,7 +115,7 @@ export default function PlayerRow({
           {hasStats && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              title={expanded ? 'Hide Opta stats' : 'Show Opta stats'}
+              title={expanded ? 'Ocultar estadísticas Opta' : 'Mostrar estadísticas Opta'}
               className="text-muted hover:text-secondary text-xs leading-none focus-visible:outline-none"
             >
               {expanded ? '▾' : '▸'}

@@ -236,8 +236,8 @@ export default function Admin() {
   async function handleCreateMatchday(e) {
     e.preventDefault();
     setMdError('');
-    if (!mdForm.name.trim()) { setMdError('Name is required.'); return; }
-    if (!mdForm.deadline)    { setMdError('Deadline is required.'); return; }
+    if (!mdForm.name.trim()) { setMdError('El nombre es obligatorio.'); return; }
+    if (!mdForm.deadline)    { setMdError('La fecha límite es obligatoria.'); return; }
     setMdSaving(true);
     const { error } = await supabase.from('matchdays').insert({
       name:       mdForm.name.trim(),
@@ -377,9 +377,9 @@ export default function Admin() {
 
   // ── Transfer Windows ──────────────────────────────────────────────────────
   const WINDOW_DEFAULTS = [
-    { window_number: 1, max_transfers: 5, label: 'Window 1 — Before R32 / fantasy QF (5 transfers)' },
-    { window_number: 2, max_transfers: 5, label: 'Window 2 — Before R16 / fantasy SF (5 transfers)' },
-    { window_number: 3, max_transfers: 5, label: 'Window 3 — Before WC QF / fantasy Final (5 transfers)' },
+    { window_number: 1, max_transfers: 5, label: 'Ventana 1 — Antes de R32 / CF fantasy (5 fichajes)' },
+    { window_number: 2, max_transfers: 5, label: 'Ventana 2 — Antes de R16 / SF fantasy (5 fichajes)' },
+    { window_number: 3, max_transfers: 5, label: 'Ventana 3 — Antes de CF Mundial / Final fantasy (5 fichajes)' },
   ];
   const EMPTY_TW_FORM = { window_number: '1', max_transfers: '5', opens_at: '', closes_at: '' };
   const [transferWindows, setTransferWindows] = useState([]);
@@ -427,8 +427,8 @@ export default function Admin() {
     setTwSaving(true);
     const num = preset ? preset.window_number : parseInt(twForm.window_number, 10);
     const max = preset ? preset.max_transfers : parseInt(twForm.max_transfers, 10);
-    if (!num || num < 1 || num > 3) { setTwError('Window number must be 1–3.'); setTwSaving(false); return; }
-    if (!max || max < 1)            { setTwError('Max transfers must be ≥ 1.'); setTwSaving(false); return; }
+    if (!num || num < 1 || num > 3) { setTwError('El número de ventana debe ser 1–3.'); setTwSaving(false); return; }
+    if (!max || max < 1)            { setTwError('Máx. fichajes debe ser ≥ 1.'); setTwSaving(false); return; }
     const { error } = await supabase.from('transfer_windows').insert({
       window_number: num,
       max_transfers: max,
@@ -478,7 +478,7 @@ export default function Admin() {
     setCalcResult(null);
     setStandingsPreview(null);
     setPreviewReady(false);
-    if (!calcMatchdayId) { setCalcResult({ errors: ['Select a matchday.'] }); return; }
+    if (!calcMatchdayId) { setCalcResult({ errors: ['Selecciona una jornada.'] }); return; }
     setCalcRunning(true);
 
     const matchdayIdInt = parseInt(calcMatchdayId, 10);
@@ -486,7 +486,7 @@ export default function Admin() {
 
     // 1. Fetch all teams
     const { data: teams } = await supabase.from('teams').select('id, name');
-    if (!teams?.length) { setCalcResult({ errors: ['No teams found.'] }); setCalcRunning(false); return; }
+    if (!teams?.length) { setCalcResult({ errors: ['No se encontraron equipos.'] }); setCalcRunning(false); return; }
 
     // 2. Fetch all player_stats — include all Opta columns so both scorers work
     const { data: allStats } = await supabase
@@ -642,7 +642,7 @@ export default function Admin() {
     for (const t of knockoutTeams) {
       byTeam[t.id] = {
         team_id: t.id,
-        display_name: t.users?.display_name ?? t.name ?? 'Unknown',
+        display_name: t.users?.display_name ?? t.name ?? 'Desconocido',
         total_points: 0,
         goals_scored: 0,
       };
@@ -699,7 +699,7 @@ export default function Admin() {
 
   async function handleCalculateKnockoutRound(round) {
     if (!knockoutCalcMatchdayId) {
-      setKnockoutCalcResult({ errors: ['Select a matchday first.'] });
+      setKnockoutCalcResult({ errors: ['Selecciona una jornada primero.'] });
       return;
     }
     setKnockoutCalcRunning(true);
@@ -714,7 +714,7 @@ export default function Admin() {
     });
 
     if (toResolve.length === 0) {
-      setKnockoutCalcResult({ errors: ['No unresolved matches for this round.'] });
+      setKnockoutCalcResult({ errors: ['No hay partidos sin resolver para esta ronda.'] });
       setKnockoutCalcRunning(false);
       return;
     }
@@ -781,7 +781,7 @@ export default function Admin() {
 
       let placement;
       if (round === 3 && match.match_label === 'Final') {
-        placement = '1st Place';
+        placement = '1er Lugar';
       }
 
       updates.push({
@@ -820,13 +820,13 @@ export default function Admin() {
   async function handleCsvPlayerImport(e) {
     e.preventDefault();
     setCsvImportResult(null);
-    if (!csvImportFile) { setCsvImportResult({ errors: ['Select a CSV file.'] }); return; }
+    if (!csvImportFile) { setCsvImportResult({ errors: ['Selecciona un archivo CSV.'] }); return; }
 
     setCsvImportRunning(true);
     const text = await csvImportFile.text();
     const rows = parseCsv(text);
     if (rows.length === 0) {
-      setCsvImportResult({ errors: ['CSV is empty or has no data rows.'] });
+      setCsvImportResult({ errors: ['El CSV está vacío o no tiene filas de datos.'] });
       setCsvImportRunning(false);
       return;
     }
@@ -893,8 +893,8 @@ export default function Admin() {
   async function handleOptaUpload(e) {
     e.preventDefault();
     setOptaResult(null);
-    if (!optaMatchdayId) { setOptaResult({ errors: ['Select a matchday first.'] }); return; }
-    if (!optaFile)        { setOptaResult({ errors: ['Select a JSON file.'] }); return; }
+    if (!optaMatchdayId) { setOptaResult({ errors: ['Selecciona una jornada primero.'] }); return; }
+    if (!optaFile)        { setOptaResult({ errors: ['Selecciona un archivo JSON.'] }); return; }
 
     setOptaUploading(true);
     let json;
@@ -902,13 +902,13 @@ export default function Admin() {
       const text = await optaFile.text();
       json = JSON.parse(text);
     } catch {
-      setOptaResult({ errors: ['Invalid JSON file.'] });
+      setOptaResult({ errors: ['Archivo JSON inválido.'] });
       setOptaUploading(false);
       return;
     }
 
     if (!json.match || !Array.isArray(json.players) || json.players.length === 0) {
-      setOptaResult({ errors: ['JSON missing required "match" or "players" fields.'] });
+      setOptaResult({ errors: ['JSON no tiene los campos requeridos "match" o "players".'] });
       setOptaUploading(false);
       return;
     }
@@ -1022,12 +1022,12 @@ export default function Admin() {
   // ──────────────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="text-secondary p-6">Loading auction state…</div>;
+    return <div className="text-secondary p-6">Cargando estado de subasta…</div>;
   }
   if (!auctionState) {
     return (
       <div className="text-error p-6">
-        No auction state found. Run the seed SQL in Supabase.
+        No se encontró estado de subasta. Ejecuta el seed SQL en Supabase.
       </div>
     );
   }
@@ -1082,7 +1082,7 @@ export default function Admin() {
     <div className="space-y-6 max-w-5xl">
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
+        <h1 className="text-2xl font-bold text-primary">Panel de admin</h1>
         <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_BADGE[status]}`}>
           {status}
         </span>
@@ -1091,34 +1091,34 @@ export default function Admin() {
       {/* ── League Participants ──────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-4">
         <div className="flex items-baseline gap-3">
-          <h2 className="text-lg font-semibold text-primary">League Participants</h2>
+          <h2 className="text-lg font-semibold text-primary">Participantes de la liga</h2>
           {!participantsLoading && (
             <span className="text-sm text-muted">
-              {participants.filter((u) => u.teams).length} of {participants.length} users enrolled
+              {participants.filter((u) => u.teams).length} de {participants.length} usuarios inscritos
             </span>
           )}
         </div>
 
         {isCompleted && (
           <p className="text-xs text-muted bg-surface-hover rounded-lg px-3 py-2">
-            Auction complete. New enrollments will access unwon players via the free market.
+            Subasta completada. Los nuevos inscritos accederán a jugadores no ganados vía el mercado libre.
           </p>
         )}
 
         {participantsLoading ? (
-          <p className="text-muted text-sm">Loading users…</p>
+          <p className="text-muted text-sm">Cargando usuarios…</p>
         ) : participants.length === 0 ? (
-          <p className="text-muted text-sm">No registered users found.</p>
+          <p className="text-muted text-sm">No se encontraron usuarios registrados.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted border-b border-border">
-                  <th className="pb-3 pr-4 font-medium">User</th>
-                  <th className="pb-3 pr-4 font-medium">Email</th>
-                  <th className="pb-3 pr-4 font-medium">Status</th>
-                  <th className="pb-3 pr-4 font-medium">Budget</th>
-                  <th className="pb-3 font-medium">Action</th>
+                  <th className="pb-3 pr-4 font-medium">Usuario</th>
+                  <th className="pb-3 pr-4 font-medium">Correo</th>
+                  <th className="pb-3 pr-4 font-medium">Estado</th>
+                  <th className="pb-3 pr-4 font-medium">Presupuesto</th>
+                  <th className="pb-3 font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -1129,11 +1129,11 @@ export default function Admin() {
                     <td className="py-2.5 pr-4">
                       {u.teams ? (
                         <span className="px-2 py-0.5 rounded text-xs font-semibold bg-tertiary/15 text-tertiary">
-                          Enrolled
+                          Inscrito
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded text-xs font-semibold bg-border text-secondary">
-                          No team
+                          Sin equipo
                         </span>
                       )}
                     </td>
@@ -1146,7 +1146,7 @@ export default function Admin() {
                           onClick={() => handleRemoveFromLeague(u.id)}
                           className="text-xs text-error hover:text-error transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                         >
-                          Remove
+                          Eliminar
                         </button>
                       ) : (
                         <button
@@ -1154,7 +1154,7 @@ export default function Admin() {
                           disabled={addingTeamFor === u.id}
                           className="px-3 py-1 rounded bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                         >
-                          {addingTeamFor === u.id ? 'Adding…' : 'Add to League'}
+                          {addingTeamFor === u.id ? 'Agregando…' : 'Agregar a la liga'}
                         </button>
                       )}
                     </td>
@@ -1168,19 +1168,19 @@ export default function Admin() {
 
       {/* ── Auction Controls ─────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-primary">Auction Controls</h2>
+        <h2 className="text-lg font-semibold text-primary">Control de subasta</h2>
 
         <div className="grid grid-cols-3 gap-6 text-sm">
           <div>
-            <p className="text-muted mb-1">Round</p>
+            <p className="text-muted mb-1">Ronda</p>
             <p className="text-primary text-2xl font-bold">{current_round || '—'}</p>
           </div>
           <div>
-            <p className="text-muted mb-1">Round Duration</p>
+            <p className="text-muted mb-1">Duración de ronda</p>
             <p className="text-primary text-2xl font-bold">{round_duration_seconds}s</p>
           </div>
           <div>
-            <p className="text-muted mb-1">{isActive ? 'Time Remaining' : 'Round Started'}</p>
+            <p className="text-muted mb-1">{isActive ? 'Tiempo restante' : 'Ronda iniciada'}</p>
             {isActive ? (
               <AuctionTimer
                 roundStartedAt={round_started_at}
@@ -1202,7 +1202,7 @@ export default function Admin() {
               onClick={startAuction}
               className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
-              Start Auction
+              Iniciar subasta
             </button>
           )}
 
@@ -1212,35 +1212,35 @@ export default function Admin() {
                 onClick={pauseAuction}
                 className="px-5 py-2 rounded-lg bg-warning hover:bg-tertiary text-on-warning font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Pause
+                Pausar
               </button>
               <button
                 onClick={endRound}
                 className="px-5 py-2 rounded-lg bg-surface-hover hover:brightness-95 text-primary font-semibold border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                title="End the round early (stops bidding now). Then Resolve & Next Round."
+                title="Termina la ronda anticipadamente (detiene las pujas ahora). Luego Resolver y siguiente ronda."
               >
-                End Round
+                Terminar ronda
               </button>
               <button
                 onClick={handleRunAutoBids}
                 disabled={autoBidRunning}
                 className="px-5 py-2 rounded-lg bg-surface-hover hover:brightness-95 disabled:opacity-50 text-secondary font-semibold border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                title="Manually fire the proxy-bid pass for this round (auto-fires at 1:30)."
+                title="Ejecutar manualmente el pase de pujas proxy para esta ronda (se activa automáticamente a 1:30)."
               >
-                {autoBidRunning ? 'Auto-pujando…' : 'Run Auto-Bids'}
+                {autoBidRunning ? 'Auto-pujando…' : 'Ejecutar auto-pujas'}
               </button>
               <button
                 onClick={() => { setConfirming(true); setResolveErrors([]); }}
                 disabled={confirming}
                 className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Resolve & Next Round →
+                Resolver y siguiente ronda →
               </button>
               <button
                 onClick={handleCompleteAuction}
                 className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-on-error font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Complete Auction
+                Completar subasta
               </button>
             </>
           )}
@@ -1251,32 +1251,32 @@ export default function Admin() {
                 onClick={resumeAuction}
                 className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Resume
+                Reanudar
               </button>
               <button
                 onClick={handleCompleteAuction}
                 className="px-5 py-2 rounded-lg bg-error hover:brightness-90 text-on-error font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Complete Auction
+                Completar subasta
               </button>
             </>
           )}
 
           {isCompleted && (
-            <p className="text-muted text-sm italic">Auction is complete. No further actions available.</p>
+            <p className="text-muted text-sm italic">Subasta completada. No hay más acciones disponibles.</p>
           )}
         </div>
 
         {autoBidResult && (
           <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info">
-            Auto-bids: <span className="font-semibold">{autoBidResult.bids_placed ?? 0} placed</span>
+            Auto-pujas: <span className="font-semibold">{autoBidResult.bids_placed ?? 0} realizadas</span>
             {autoBidResult.note && <span className="ml-2 text-muted">({autoBidResult.note})</span>}
           </div>
         )}
 
         {lineupWarnings.length > 0 && (
           <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-1">
-            <p className="text-warning text-sm font-semibold">Default lineup warnings:</p>
+            <p className="text-warning text-sm font-semibold">Advertencias de alineación predeterminada:</p>
             {lineupWarnings.map((w, i) => (
               <p key={i} className="text-warning text-xs">{w}</p>
             ))}
@@ -1289,20 +1289,20 @@ export default function Admin() {
         <section className="bg-surface rounded-xl p-6 space-y-4 border border-tertiary/40/50">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold text-primary">
-              Resolve Round {current_round} &amp; Advance
+              Resolver ronda {current_round} y avanzar
             </h2>
             <button
               onClick={() => { setConfirming(false); setResolveErrors([]); }}
               disabled={resolving}
               className="text-sm text-muted hover:text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
-              Cancel
+              Cancelar
             </button>
           </div>
 
           {winnersPreview.length === 0 && contestedPreview.length === 0 ? (
             <p className="text-muted text-sm">
-              No bids were placed this round. Advancing will skip resolution.
+              No se realizaron pujas esta ronda. Avanzar omitirá la resolución.
             </p>
           ) : (
             <div className="space-y-4">
@@ -1310,16 +1310,16 @@ export default function Admin() {
               {winnersPreview.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
-                    Awarded ({winnersPreview.length}) — only one bidder
+                    Adjudicados ({winnersPreview.length}) — un solo postor
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-muted border-b border-border">
-                          <th className="pb-2 pr-4 font-medium">Player</th>
+                          <th className="pb-2 pr-4 font-medium">Jugador</th>
                           <th className="pb-2 pr-4 font-medium">Pos</th>
-                          <th className="pb-2 pr-4 font-medium">Bid</th>
-                          <th className="pb-2 font-medium">Winner</th>
+                          <th className="pb-2 pr-4 font-medium">Puja</th>
+                          <th className="pb-2 font-medium">Ganador</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -1345,16 +1345,16 @@ export default function Admin() {
               {contestedPreview.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
-                    Contested ({contestedPreview.length}) — multiple bidders, carry to next round
+                    Disputados ({contestedPreview.length}) — múltiples postores, pasan a siguiente ronda
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-muted border-b border-border">
-                          <th className="pb-2 pr-4 font-medium">Player</th>
+                          <th className="pb-2 pr-4 font-medium">Jugador</th>
                           <th className="pb-2 pr-4 font-medium">Pos</th>
-                          <th className="pb-2 pr-4 font-medium">High Bid (floor)</th>
-                          <th className="pb-2 font-medium">Leading</th>
+                          <th className="pb-2 pr-4 font-medium">Mejor puja (piso)</th>
+                          <th className="pb-2 font-medium">Liderando</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -1367,14 +1367,14 @@ export default function Admin() {
                               </span>
                             </td>
                             <td className="py-2 pr-4 font-bold text-tertiary">£{row.amount.toFixed(1)}</td>
-                            <td className="py-2 text-secondary text-xs">{row.winnerName} (outbid to win)</td>
+                            <td className="py-2 text-secondary text-xs">{row.winnerName} (supera para ganar)</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                   <p className="text-xs text-muted mt-2">
-                    These players are NOT awarded yet. Next round opens with a bid floor above £{Math.max(...contestedPreview.map(r => r.amount)).toFixed(1)}.
+                    Estos jugadores NO se adjudican aún. La siguiente ronda abre con piso de puja superior a £{Math.max(...contestedPreview.map(r => r.amount)).toFixed(1)}.
                   </p>
                 </div>
               )}
@@ -1383,7 +1383,7 @@ export default function Admin() {
 
           {resolveErrors.length > 0 && (
                 <div className="bg-error/10/40 border border-error/30/50 rounded-lg p-4 space-y-1" role="alert">
-              <p className="text-error text-sm font-semibold">Resolution errors — round not advanced:</p>
+              <p className="text-error text-sm font-semibold">Errores de resolución — ronda no avanzada:</p>
               {resolveErrors.map((e, i) => (
                 <p key={i} className="text-error text-xs">
                   Player #{e.playerId}: {e.reason}
@@ -1398,14 +1398,14 @@ export default function Admin() {
               disabled={resolving}
               className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-on-tertiary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
-              {resolving ? 'Resolving…' : `Confirm & Advance to Round ${current_round + 1}`}
+              {resolving ? 'Resolviendo…' : `Confirmar y avanzar a ronda ${current_round + 1}`}
             </button>
             <button
               onClick={() => { setConfirming(false); setResolveErrors([]); }}
               disabled={resolving}
               className="px-5 py-2 rounded-lg bg-surface-hover hover:bg-border disabled:opacity-50 text-secondary font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
             >
-              Cancel
+              Cancelar
             </button>
           </div>
         </section>
@@ -1416,27 +1416,27 @@ export default function Admin() {
         <section className="bg-surface rounded-xl p-6 space-y-4">
           <div className="flex items-baseline gap-3">
             <h2 className="text-lg font-semibold text-primary">
-              Round {current_round} — Live Bids
+              Ronda {current_round} — Pujas en vivo
             </h2>
             <span className="text-sm text-muted">
-              {currentRoundBids.length} bid{currentRoundBids.length !== 1 ? 's' : ''} across {biddedPlayerIds.length} player{biddedPlayerIds.length !== 1 ? 's' : ''}
+              {currentRoundBids.length} puja{currentRoundBids.length !== 1 ? 's' : ''} en {biddedPlayerIds.length} jugador{biddedPlayerIds.length !== 1 ? 'es' : ''}
             </span>
           </div>
 
           {biddedPlayerIds.length === 0 ? (
-            <p className="text-muted text-sm">No bids placed yet this round.</p>
+            <p className="text-muted text-sm">Aún no hay pujas en esta ronda.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
-                    <th className="pb-3 pr-4 font-medium">Player</th>
+                    <th className="pb-3 pr-4 font-medium">Jugador</th>
                     <th className="pb-3 pr-4 font-medium">Pos</th>
-                    <th className="pb-3 pr-4 font-medium">Listed</th>
-                    <th className="pb-3 pr-4 font-medium">Top Bid</th>
-                    <th className="pb-3 pr-4 font-medium">Leading</th>
-                    <th className="pb-3 pr-4 font-medium">Bids</th>
-                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 pr-4 font-medium">Listado</th>
+                    <th className="pb-3 pr-4 font-medium">Mejor puja</th>
+                    <th className="pb-3 pr-4 font-medium">Liderando</th>
+                    <th className="pb-3 pr-4 font-medium">Pujas</th>
+                    <th className="pb-3 font-medium">Estado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1470,7 +1470,7 @@ export default function Admin() {
                         <td className="py-3">
                           {uniqueBidders > 1 && (
                             <span className="px-2 py-0.5 rounded text-xs font-semibold bg-warning/15 text-warning">
-                              ⚡ Contested
+                              ⚡ Disputado
                             </span>
                           )}
                         </td>
@@ -1486,24 +1486,24 @@ export default function Admin() {
 
       {/* ── Matchday Management ─────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-6">
-        <h2 className="text-lg font-semibold text-primary">Matchday Management</h2>
+        <h2 className="text-lg font-semibold text-primary">Gestión de jornadas</h2>
 
         {/* Create form */}
         <form onSubmit={handleCreateMatchday} className="space-y-4">
-          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wide">Create Matchday</h3>
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wide">Crear jornada</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-muted mb-1">Name</label>
+              <label className="block text-xs text-muted mb-1">Nombre</label>
               <input
                 type="text"
                 value={mdForm.name}
                 onChange={e => setMdForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Matchday 1"
+                placeholder="ej. Jornada 1"
                 className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               />
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">WC Stage</label>
+              <label className="block text-xs text-muted mb-1">Fase del Mundial</label>
               <select
                 value={mdForm.wc_stage}
                 onChange={e => setMdForm(f => ({ ...f, wc_stage: e.target.value }))}
@@ -1513,7 +1513,7 @@ export default function Admin() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Start Date (optional)</label>
+              <label className="block text-xs text-muted mb-1">Fecha inicio (opcional)</label>
               <input
                 type="date"
                 value={mdForm.start_date}
@@ -1522,7 +1522,7 @@ export default function Admin() {
               />
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Lineup Deadline</label>
+              <label className="block text-xs text-muted mb-1">Fecha límite de alineación</label>
               <input
                 type="datetime-local"
                 value={mdForm.deadline}
@@ -1537,27 +1537,27 @@ export default function Admin() {
             disabled={mdSaving}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {mdSaving ? 'Creating…' : 'Create Matchday'}
+            {mdSaving ? 'Creando…' : 'Crear jornada'}
           </button>
         </form>
 
         {/* Matchday list */}
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wide">All Matchdays</h3>
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wide">Todas las jornadas</h3>
           {matchdaysLoading ? (
-            <p className="text-muted text-sm">Loading…</p>
+            <p className="text-muted text-sm">Cargando…</p>
           ) : matchdays.length === 0 ? (
-            <p className="text-muted text-sm">No matchdays yet.</p>
+            <p className="text-muted text-sm">Aún no hay jornadas.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
-                    <th className="pb-3 pr-4 font-medium">Name</th>
-                    <th className="pb-3 pr-4 font-medium">Stage</th>
-                    <th className="pb-3 pr-4 font-medium">Deadline</th>
-                    <th className="pb-3 pr-4 font-medium">Active</th>
-                    <th className="pb-3 font-medium">Completed</th>
+                    <th className="pb-3 pr-4 font-medium">Nombre</th>
+                    <th className="pb-3 pr-4 font-medium">Fase</th>
+                    <th className="pb-3 pr-4 font-medium">Fecha límite</th>
+                    <th className="pb-3 pr-4 font-medium">Activo</th>
+                    <th className="pb-3 font-medium">Completado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1578,7 +1578,7 @@ export default function Admin() {
                               : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
                         >
-                          {md.is_active ? 'Active' : 'Inactive'}
+                          {md.is_active ? 'Activo' : 'Inactivo'}
                         </button>
                       </td>
                       <td className="py-2.5">
@@ -1590,7 +1590,7 @@ export default function Admin() {
                               : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
                         >
-                          {md.is_completed ? 'Completed' : 'Mark Complete'}
+                          {md.is_completed ? 'Completado' : 'Marcar completado'}
                         </button>
                       </td>
                     </tr>
@@ -1605,25 +1605,25 @@ export default function Admin() {
       {/* ── Matchday Fixtures ────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-primary">Matchday Fixtures</h2>
+          <h2 className="text-lg font-semibold text-primary">Partidos de la jornada</h2>
           <p className="text-xs text-muted mt-1">
-            Assign polla matches to fantasy matchdays. Player lock times are derived from kickoff times —
-            team names must exactly match <code className="text-secondary">players.country</code>.
+            Asigna partidos de la polla a las jornadas fantasy. Los tiempos de bloqueo de jugadores se derivan de los horarios de inicio —
+            los nombres de equipos deben coincidir exactamente con <code className="text-secondary">players.country</code>.
           </p>
         </div>
 
         {fixtureLoading ? (
-          <p className="text-muted text-sm">Loading matches…</p>
+          <p className="text-muted text-sm">Cargando partidos…</p>
         ) : fixtureMatches.length === 0 ? (
-          <p className="text-muted text-sm">No matches found. Add matches via the polla app first.</p>
+          <p className="text-muted text-sm">No se encontraron partidos. Agrega partidos primero desde la app polla.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted border-b border-border">
-                  <th className="pb-3 pr-4 font-medium">Match</th>
-                  <th className="pb-3 pr-4 font-medium">Kickoff</th>
-                  <th className="pb-3 font-medium">Fantasy Matchday</th>
+                  <th className="pb-3 pr-4 font-medium">Partido</th>
+                  <th className="pb-3 pr-4 font-medium">Inicio</th>
+                  <th className="pb-3 font-medium">Jornada Fantasy</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -1642,7 +1642,7 @@ export default function Admin() {
                         disabled={fixtureSavingIds.has(match.id)}
                         className="bg-surface-hover border border-border rounded-lg px-2 py-1 text-primary text-xs focus:outline-none focus:border-tertiary disabled:opacity-50"
                       >
-                        <option value="">— unassigned —</option>
+                        <option value="">— sin asignar —</option>
                         {matchdays.map(md => (
                           <option key={md.id} value={md.id}>{md.name}</option>
                         ))}
@@ -1658,7 +1658,7 @@ export default function Admin() {
 
       {/* ── Stats CSV Upload ─────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-primary">Stats CSV Upload</h2>
+        <h2 className="text-lg font-semibold text-primary">Carga de estadísticas CSV</h2>
         <p className="text-xs text-muted">
           CSV columns: <code className="text-secondary">player_name, minutes, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow, red, own_goals, goals_conceded, game_time</code>
         </p>
@@ -1666,20 +1666,20 @@ export default function Admin() {
         <form onSubmit={handleStatsUpload} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-muted mb-1">Matchday</label>
+              <label className="block text-xs text-muted mb-1">Jornada</label>
               <select
                 value={statsMatchdayId}
                 onChange={e => setStatsMatchdayId(e.target.value)}
                 className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               >
-                <option value="">Select matchday…</option>
+                <option value="">Seleccionar jornada…</option>
                 {matchdays.map(md => (
                   <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">CSV File</label>
+              <label className="block text-xs text-muted mb-1">Archivo CSV</label>
               <input
                 type="file"
                 accept=".csv,text/csv"
@@ -1694,7 +1694,7 @@ export default function Admin() {
             disabled={statsUploading}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {statsUploading ? 'Uploading…' : 'Upload Stats'}
+            {statsUploading ? 'Subiendo…' : 'Subir estadísticas'}
           </button>
         </form>
 
@@ -1702,7 +1702,7 @@ export default function Admin() {
           <div className={`rounded-lg p-4 space-y-1 ${statsResult.errors?.length > 0 && !statsResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
             {statsResult.inserted > 0 && (
               <p className="text-tertiary text-sm font-semibold">
-                ✓ {statsResult.inserted} player stat row{statsResult.inserted !== 1 ? 's' : ''} saved.
+                ✓ {statsResult.inserted} fila{statsResult.inserted !== 1 ? 's' : ''} de estadísticas guardada{statsResult.inserted !== 1 ? 's' : ''}.
               </p>
             )}
             {statsResult.errors?.map((err, i) => (
@@ -1715,29 +1715,29 @@ export default function Admin() {
       {/* ── Opta JSON Stats Upload ───────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-primary">Opta JSON Stats Upload</h2>
+          <h2 className="text-lg font-semibold text-primary">Carga de estadísticas Opta JSON</h2>
           <p className="text-xs text-muted mt-1">
-            Upload an Opta Points JSON file to store per-player stats (tackles, shots, passes, etc.) and Opta PTS. Idempotent — re-uploading overwrites existing rows for the same matchday.
+            Sube un archivo JSON de puntos Opta para almacenar estadísticas por jugador (entradas, tiros, pases, etc.) y PTS Opta. Idempotente — volver a subir sobrescribe las filas existentes para la misma jornada.
           </p>
         </div>
 
         <form onSubmit={handleOptaUpload} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-muted mb-1">Matchday</label>
+              <label className="block text-xs text-muted mb-1">Jornada</label>
               <select
                 value={optaMatchdayId}
                 onChange={e => setOptaMatchdayId(e.target.value)}
                 className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               >
-                <option value="">Select matchday…</option>
+                <option value="">Seleccionar jornada…</option>
                 {matchdays.map(md => (
                   <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Opta Points JSON File</label>
+              <label className="block text-xs text-muted mb-1">Archivo JSON de puntos Opta</label>
               <input
                 type="file"
                 accept=".json,application/json"
@@ -1752,7 +1752,7 @@ export default function Admin() {
             disabled={optaUploading}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {optaUploading ? 'Uploading…' : 'Upload Opta Stats'}
+            {optaUploading ? 'Subiendo…' : 'Subir estadísticas Opta'}
           </button>
         </form>
 
@@ -1760,7 +1760,7 @@ export default function Admin() {
           <div className={`rounded-lg p-4 space-y-1 ${optaResult.errors?.length > 0 && !optaResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
             {optaResult.inserted > 0 && (
               <p className="text-tertiary text-sm font-semibold">
-                ✓ {optaResult.inserted} stat row{optaResult.inserted !== 1 ? 's' : ''} saved.
+                ✓ {optaResult.inserted} fila{optaResult.inserted !== 1 ? 's' : ''} de estadísticas guardada{optaResult.inserted !== 1 ? 's' : ''}.
               </p>
             )}
             {optaResult.errors?.map((err, i) => (
@@ -1773,19 +1773,19 @@ export default function Admin() {
       {/* ── Standings Calculation ───────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-primary">Calculate Standings</h2>
+          <h2 className="text-lg font-semibold text-primary">Calcular posiciones</h2>
           <p className="text-xs text-muted mt-1">
-            Run after uploading stats. Scores all teams for the matchday (with auto-subs) and writes to fantasy_standings.
+            Ejecuta después de subir estadísticas. Puntúa todos los equipos para la jornada (con sustituciones automáticas) y escribe en fantasy_standings.
           </p>
         </div>
 
         {/* ── 5b. Scoring System Selector ─────────────────────────────── */}
         <div>
-          <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">Scoring System</p>
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">Sistema de puntuación</p>
           <div className="flex items-center gap-2">
             {['current', 'opta'].map((system) => {
               const isActive = (auctionState.scoring_system ?? 'current') === system;
-              const label = system === 'current' ? 'Current (FPL-style)' : 'Opta';
+              const label = system === 'current' ? 'Actual (estilo FPL)' : 'Opta';
               return (
                 <button
                   key={system}
@@ -1801,19 +1801,19 @@ export default function Admin() {
                 </button>
               );
             })}
-            {savingSystem && <span className="text-xs text-muted">Saving…</span>}
+            {savingSystem && <span className="text-xs text-muted">Guardando…</span>}
           </div>
         </div>
 
-        <form onSubmit={handleCalculateStandings} className="flex items-end gap-4 flex-wrap">
+          <form onSubmit={handleCalculateStandings} className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-48">
-            <label className="block text-xs text-muted mb-1">Matchday</label>
+            <label className="block text-xs text-muted mb-1">Jornada</label>
             <select
               value={calcMatchdayId}
               onChange={e => { setCalcMatchdayId(e.target.value); setStandingsPreview(null); setPreviewReady(false); setCalcResult(null); }}
               className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
             >
-              <option value="">Select matchday…</option>
+              <option value="">Seleccionar jornada…</option>
               {matchdays.map(md => (
                 <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
               ))}
@@ -1824,7 +1824,7 @@ export default function Admin() {
             disabled={calcRunning || previewReady}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {calcRunning ? 'Calculating…' : 'Preview Standings'}
+            {calcRunning ? 'Calculando…' : 'Vista previa'}
           </button>
         </form>
 
@@ -1832,19 +1832,19 @@ export default function Admin() {
         {previewReady && standingsPreview && (
           <div className="space-y-3">
             <p className="text-xs font-semibold text-secondary uppercase tracking-wide">
-              Preview — Active system:{' '}
+              Vista previa — Sistema activo:{' '}
               <span className={(auctionState.scoring_system ?? 'current') === 'opta' ? 'text-tertiary' : 'text-info'}>
-                {(auctionState.scoring_system ?? 'current') === 'opta' ? 'Opta' : 'Current (FPL-style)'}
+                {(auctionState.scoring_system ?? 'current') === 'opta' ? 'Opta' : 'Actual (estilo FPL)'}
               </span>
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
-                    <th className="pb-2 pr-4 font-medium">Team</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Current pts</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Opta pts</th>
-                    <th className="pb-2 font-medium text-right">Will save</th>
+                    <th className="pb-2 pr-4 font-medium">Equipo</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Puntos actuales</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Puntos Opta</th>
+                    <th className="pb-2 font-medium text-right">Se guardará</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1878,14 +1878,14 @@ export default function Admin() {
                 disabled={confirmingSave}
                 className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-60 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                {confirmingSave ? 'Saving…' : 'Confirm & Save'}
+                {confirmingSave ? 'Guardando…' : 'Confirmar y guardar'}
               </button>
               <button
                 onClick={() => { setPreviewReady(false); setStandingsPreview(null); }}
                 disabled={confirmingSave}
                 className="px-5 py-2 rounded-lg bg-surface-hover hover:bg-border disabled:opacity-50 text-secondary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Cancel
+                Cancelar
               </button>
             </div>
           </div>
@@ -1895,7 +1895,7 @@ export default function Admin() {
           <div className={`rounded-lg p-4 space-y-1 ${calcResult.errors?.length && !calcResult.teamsScored ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
             {calcResult.teamsScored > 0 && (
               <p className="text-tertiary text-sm font-semibold">
-                ✓ Standings calculated for {calcResult.teamsScored} team{calcResult.teamsScored !== 1 ? 's' : ''}.
+                ✓ Posiciones calculadas para {calcResult.teamsScored} equipo{calcResult.teamsScored !== 1 ? 's' : ''}.
               </p>
             )}
             {calcResult.errors?.map((err, i) => (
@@ -1909,14 +1909,14 @@ export default function Admin() {
       {isCompleted && (
         <section className="bg-surface rounded-xl p-6 space-y-5">
           <div>
-            <h2 className="text-lg font-semibold text-primary">Knockout Bracket</h2>
+            <h2 className="text-lg font-semibold text-primary">Cuadro eliminatorio</h2>
             <p className="text-xs text-muted mt-1">
-              Seed after league stage (3 matchdays) is complete. Then calculate each round using that round's matchday.
+              Configura después de completar la fase de liga (3 jornadas). Luego calcula cada ronda usando la jornada correspondiente.
             </p>
           </div>
 
           {knockoutLoading ? (
-            <p className="text-muted text-sm">Loading…</p>
+            <p className="text-muted text-sm">Cargando…</p>
           ) : knockoutMatches.length === 0 ? (
             // ── Not seeded ──
             (() => {
@@ -1926,11 +1926,11 @@ export default function Admin() {
                 <div className="space-y-4">
                   {standings.length < 8 ? (
                     <p className="text-tertiary text-sm">
-                      Need standings for at least 8 teams. Run Calculate Standings first.
+                      Se necesitan posiciones de al menos 8 equipos. Ejecuta Calcular posiciones primero.
                     </p>
                   ) : (
                     <div>
-                      <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Quarter-finals (Top 8)</p>
+                      <p className="text-label-caps text-muted uppercase tracking-wide mb-2">Cuartos de final (Mejores 8)</p>
                       <div className="grid grid-cols-2 gap-2">
                         {champSeed.map(m => (
                           <div key={m.label} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
@@ -1946,7 +1946,7 @@ export default function Admin() {
 
                   {bracketSeedResult && (
                     <div className={`rounded-lg px-3 py-2 text-sm ${bracketSeedResult.error ? 'bg-error/10/40 text-error' : 'bg-tertiary/10 text-tertiary'}`}>
-                      {bracketSeedResult.error ?? `✓ Bracket seeded — ${bracketSeedResult.count} matches created.`}
+                      {bracketSeedResult.error ?? `✓ Cuadro configurado — ${bracketSeedResult.count} partidos creados.`}
                     </div>
                   )}
 
@@ -1955,7 +1955,7 @@ export default function Admin() {
                     disabled={bracketSeeding || standings.length < 8}
                     className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                   >
-                    {bracketSeeding ? 'Seeding…' : 'Seed Bracket'}
+                    {bracketSeeding ? 'Configurando…' : 'Configurar cuadro'}
                   </button>
                 </div>
               );
@@ -1985,7 +1985,7 @@ export default function Admin() {
                             Round {r}
                           </p>
                           <p className="text-label-caps text-muted mt-0.5">
-                            {done ? 'Complete' : pending ? 'Pending' : 'Not started'}
+                            {done ? 'Completado' : pending ? 'Pendiente' : 'No iniciado'}
                           </p>
                         </div>
                       );
@@ -2001,9 +2001,9 @@ export default function Admin() {
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="text-left text-muted border-b border-border">
-                                <th className="pb-2 pr-4 font-medium text-xs">Match</th>
-                                <th className="pb-2 pr-4 font-medium text-xs">Team A</th>
-                                <th className="pb-2 pr-4 font-medium text-xs">Team B</th>
+                                <th className="pb-2 pr-4 font-medium text-xs">Partido</th>
+                                <th className="pb-2 pr-4 font-medium text-xs">Equipo A</th>
+                                <th className="pb-2 pr-4 font-medium text-xs">Equipo B</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -2023,13 +2023,13 @@ export default function Admin() {
 
                         <div className="flex items-end gap-4 flex-wrap pt-1">
                           <div className="flex-1 min-w-48">
-                            <label className="block text-xs text-muted mb-1">Matchday for Round {activeRound}</label>
+                            <label className="block text-xs text-muted mb-1">Jornada para ronda {activeRound}</label>
                             <select
                               value={knockoutCalcMatchdayId}
                               onChange={e => { setKnockoutCalcMatchdayId(e.target.value); setKnockoutCalcResult(null); }}
                               className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
                             >
-                              <option value="">Select matchday…</option>
+                              <option value="">Seleccionar jornada…</option>
                               {matchdays.map(md => (
                                 <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
                               ))}
@@ -2040,7 +2040,7 @@ export default function Admin() {
                             disabled={knockoutCalcRunning || !knockoutCalcMatchdayId}
                             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                           >
-                            {knockoutCalcRunning ? 'Calculating…' : `Calculate Round ${activeRound}`}
+                            {knockoutCalcRunning ? 'Calculando…' : `Calcular ronda ${activeRound}`}
                           </button>
                         </div>
                       </div>
@@ -2049,7 +2049,7 @@ export default function Admin() {
 
                   {activeRound === null && (
                     <p className="text-tertiary text-sm font-semibold">
-                      ✓ All rounds complete. View final standings on the Bracket page.
+                      ✓ Todas las rondas completadas. Ve las posiciones finales en la página del Cuadro.
                     </p>
                   )}
 
@@ -2057,7 +2057,7 @@ export default function Admin() {
                     <div className={`rounded-lg p-4 space-y-1 ${knockoutCalcResult.errors?.length && !knockoutCalcResult.resolved ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
                       {knockoutCalcResult.resolved > 0 && (
                         <p className="text-tertiary text-sm font-semibold">
-                          ✓ {knockoutCalcResult.resolved} match{knockoutCalcResult.resolved !== 1 ? 'es' : ''} resolved.
+                          ✓ {knockoutCalcResult.resolved} partido{knockoutCalcResult.resolved !== 1 ? 's' : ''} resuelto{knockoutCalcResult.resolved !== 1 ? 's' : ''}.
                         </p>
                       )}
                       {knockoutCalcResult.errors?.map((err, i) => (
@@ -2075,12 +2075,12 @@ export default function Admin() {
       {/* ── Player Pool ──────────────────────────────────────────────────── */}
       {/* ── Transfer Windows ─────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-primary">Transfer Windows</h2>
+        <h2 className="text-lg font-semibold text-primary">Ventanas de fichajes</h2>
 
         {/* Quick-create preset buttons */}
         <div>
           <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">
-            Quick Create
+            Creación rápida
           </p>
           <div className="flex flex-wrap gap-2">
             {WINDOW_DEFAULTS.map((preset) => (
@@ -2099,11 +2099,11 @@ export default function Admin() {
         {/* Custom create form */}
         <div>
           <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">
-            Custom Window
+            Ventana personalizada
           </p>
           <div className="flex flex-wrap gap-3 items-end">
             <div>
-              <label className="text-xs text-muted block mb-1">Window #</label>
+              <label className="text-xs text-muted block mb-1">Ventana #</label>
               <select
                 value={twForm.window_number}
                 onChange={(e) => setTwForm((f) => ({ ...f, window_number: e.target.value }))}
@@ -2115,7 +2115,7 @@ export default function Admin() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-muted block mb-1">Max Transfers</label>
+              <label className="text-xs text-muted block mb-1">Máx. fichajes</label>
               <input
                 type="number"
                 min="1"
@@ -2125,7 +2125,7 @@ export default function Admin() {
               />
             </div>
             <div>
-              <label className="text-xs text-muted block mb-1">Opens At (optional)</label>
+              <label className="text-xs text-muted block mb-1">Abre (opcional)</label>
               <input
                 type="datetime-local"
                 value={twForm.opens_at}
@@ -2134,7 +2134,7 @@ export default function Admin() {
               />
             </div>
             <div>
-              <label className="text-xs text-muted block mb-1">Closes At (optional)</label>
+              <label className="text-xs text-muted block mb-1">Cierra (opcional)</label>
               <input
                 type="datetime-local"
                 value={twForm.closes_at}
@@ -2147,7 +2147,7 @@ export default function Admin() {
               disabled={twSaving}
               className="px-4 py-1.5 rounded-lg text-sm bg-tertiary hover:bg-tertiary text-on-tertiary transition-colors disabled:opacity-50"
             >
-              {twSaving ? 'Creating…' : 'Create'}
+              {twSaving ? 'Creando…' : 'Crear'}
             </button>
           </div>
           {twError && <p className="text-error text-sm mt-2">{twError}</p>}
@@ -2155,27 +2155,27 @@ export default function Admin() {
 
         {/* Windows list */}
         {twLoading ? (
-          <p className="text-muted text-sm">Loading windows…</p>
+          <p className="text-muted text-sm">Cargando ventanas…</p>
         ) : transferWindows.length === 0 ? (
-          <p className="text-muted text-sm">No transfer windows created yet.</p>
+          <p className="text-muted text-sm">Aún no hay ventanas de fichajes.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted border-b border-border">
-                  <th className="pb-2 pr-4 font-medium">Window</th>
-                  <th className="pb-2 pr-4 font-medium">Max</th>
-                  <th className="pb-2 pr-4 font-medium">Opens</th>
-                  <th className="pb-2 pr-4 font-medium">Closes</th>
-                  <th className="pb-2 pr-4 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Actions</th>
+                  <th className="pb-2 pr-4 font-medium">Ventana</th>
+                  <th className="pb-2 pr-4 font-medium">Máx</th>
+                  <th className="pb-2 pr-4 font-medium">Abre</th>
+                  <th className="pb-2 pr-4 font-medium">Cierra</th>
+                  <th className="pb-2 pr-4 font-medium">Estado</th>
+                  <th className="pb-2 font-medium">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {transferWindows.map((tw) => (
                   <tr key={tw.id} className="text-secondary">
-                    <td className="py-2.5 pr-4 font-semibold text-primary">Window {tw.window_number}</td>
-                    <td className="py-2.5 pr-4">{tw.max_transfers} transfers</td>
+                    <td className="py-2.5 pr-4 font-semibold text-primary">Ventana {tw.window_number}</td>
+                    <td className="py-2.5 pr-4">{tw.max_transfers} fichajes</td>
                     <td className="py-2.5 pr-4 text-muted text-xs">
                       {tw.opens_at ? new Date(tw.opens_at).toLocaleString() : '—'}
                     </td>
@@ -2188,7 +2188,7 @@ export default function Admin() {
                           ? 'bg-tertiary/15 text-tertiary'
                           : 'bg-border text-secondary'
                       }`}>
-                        {tw.is_active ? 'Open' : 'Closed'}
+                        {tw.is_active ? 'Abierta' : 'Cerrada'}
                       </span>
                     </td>
                     <td className="py-2.5">
@@ -2201,7 +2201,7 @@ export default function Admin() {
                               : 'bg-tertiary/15 hover:brightness-90 text-tertiary'
                           }`}
                         >
-                          {tw.is_active ? 'Close' : 'Open'}
+                          {tw.is_active ? 'Cerrar' : 'Abrir'}
                         </button>
                         {tw.is_active && (
                           <button
@@ -2209,14 +2209,14 @@ export default function Admin() {
                             disabled={activityLoading}
                             className="px-3 py-1 rounded text-xs font-semibold bg-info hover:brightness-90 text-on-info transition-colors"
                           >
-                            {activityLoading ? 'Loading…' : 'View Activity'}
+                            {activityLoading ? 'Cargando…' : 'Ver actividad'}
                           </button>
                         )}
                         <button
                           onClick={() => handleDeleteTransferWindow(tw)}
                           className="px-3 py-1 rounded text-xs font-semibold bg-border hover:bg-border-strong text-secondary transition-colors"
                         >
-                          Delete
+                          Eliminar
                         </button>
                       </div>
                     </td>
@@ -2231,17 +2231,17 @@ export default function Admin() {
         {windowActivity.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">
-              Transfer Activity — Window {windowActivity[0]?.window_number}
+              Actividad de fichajes — Ventana {windowActivity[0]?.window_number}
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
                     <th className="pb-2 pr-4 font-medium">Manager</th>
-                    <th className="pb-2 pr-4 font-medium">Out</th>
-                    <th className="pb-2 pr-4 font-medium">In</th>
-                    <th className="pb-2 pr-4 font-medium">Δ Budget</th>
-                    <th className="pb-2 font-medium">Time</th>
+                    <th className="pb-2 pr-4 font-medium">Sale</th>
+                    <th className="pb-2 pr-4 font-medium">Entra</th>
+                    <th className="pb-2 pr-4 font-medium">Δ Presupuesto</th>
+                    <th className="pb-2 font-medium">Hora</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -2288,17 +2288,17 @@ export default function Admin() {
       {/* ── CSV Player Import ───────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-primary">CSV Player Import</h2>
+          <h2 className="text-lg font-semibold text-primary">Importar jugadores CSV</h2>
           <p className="text-xs text-muted mt-1">
-            Upload a CSV to populate the player pool before the auction. Players are deduplicated by name + country.
-            Required columns: <code className="text-secondary">name, country, position, price</code>.
-            Optional: <code className="text-secondary">country_code, photo_url</code>.
+            Sube un CSV para poblar la lista de jugadores antes de la subasta. Los jugadores se deduplican por nombre + país.
+            Columnas requeridas: <code className="text-secondary">name, country, position, price</code>.
+            Opcionales: <code className="text-secondary">country_code, photo_url</code>.
           </p>
         </div>
 
         <form onSubmit={handleCsvPlayerImport} className="space-y-4">
           <div>
-            <label className="block text-xs text-muted mb-1">CSV File</label>
+            <label className="block text-xs text-muted mb-1">Archivo CSV</label>
             <input
               type="file"
               accept=".csv,text/csv"
@@ -2312,7 +2312,7 @@ export default function Admin() {
             disabled={csvImportRunning}
             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
           >
-            {csvImportRunning ? 'Importing…' : 'Import Players'}
+            {csvImportRunning ? 'Importando…' : 'Importar jugadores'}
           </button>
         </form>
 
@@ -2320,11 +2320,11 @@ export default function Admin() {
           <div className={`rounded-lg p-4 space-y-2 ${csvImportResult.errors?.length && !csvImportResult.created ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
             {csvImportResult.created > 0 && (
               <p className="text-tertiary text-sm font-semibold">
-                ✓ {csvImportResult.created} player{csvImportResult.created !== 1 ? 's' : ''} created.
+                ✓ {csvImportResult.created} jugador{csvImportResult.created !== 1 ? 'es' : ''} creado{csvImportResult.created !== 1 ? 's' : ''}.
               </p>
             )}
             {csvImportResult.created === 0 && !csvImportResult.errors?.length && (
-              <p className="text-secondary text-sm">No new players to import (all already in DB or all skipped).</p>
+              <p className="text-secondary text-sm">No hay jugadores nuevos para importar (todos ya están en la BD o fueron omitidos).</p>
             )}
             {csvImportResult.errors?.map((err, i) => (
               <p key={i} className="text-error text-xs">{err}</p>
@@ -2332,7 +2332,7 @@ export default function Admin() {
             {csvImportResult.skipped?.length > 0 && (
               <details className="mt-1">
                 <summary className="text-xs text-muted cursor-pointer hover:text-secondary">
-                  {csvImportResult.skipped.length} skipped (already in DB) — click to expand
+                  {csvImportResult.skipped.length} omitidos (ya en la BD) — clic para expandir
                 </summary>
                 <ul className="mt-2 space-y-0.5 pl-3">
                   {csvImportResult.skipped.map((name, i) => (
@@ -2347,25 +2347,25 @@ export default function Admin() {
 
       <section className="bg-surface rounded-xl p-6 space-y-4">
         <div className="flex items-baseline gap-3">
-          <h2 className="text-lg font-semibold text-primary">Player Pool</h2>
+          <h2 className="text-lg font-semibold text-primary">Lista de jugadores</h2>
           {!playersLoading && (
-            <span className="text-sm text-muted">{players.length} players</span>
+            <span className="text-sm text-muted">{players.length} jugadores</span>
           )}
         </div>
 
         {playersLoading ? (
-          <p className="text-muted text-sm">Loading players…</p>
+          <p className="text-muted text-sm">Cargando jugadores…</p>
         ) : players.length === 0 ? (
-          <p className="text-muted text-sm">No players found. Run the seed SQL.</p>
+          <p className="text-muted text-sm">No se encontraron jugadores. Ejecuta el seed SQL.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted border-b border-border">
-                  <th className="pb-3 pr-4 font-medium">Name</th>
+                  <th className="pb-3 pr-4 font-medium">Nombre</th>
                   <th className="pb-3 pr-4 font-medium">Pos</th>
-                  <th className="pb-3 pr-4 font-medium">Country</th>
-                  <th className="pb-3 font-medium">Price</th>
+                  <th className="pb-3 pr-4 font-medium">País</th>
+                  <th className="pb-3 font-medium">Precio</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
