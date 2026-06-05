@@ -34,8 +34,8 @@ export default function RegisterForm() {
   if (success) {
     return (
       <div className="rounded-md border border-border bg-surface p-5 text-center">
-        <p className="text-body-md text-primary">Check your email to confirm your account.</p>
-        <a href="/login" className="mt-4 inline-block text-body-sm text-tertiary hover:underline">Back to login</a>
+        <p className="text-body-md text-primary">Revisa tu correo para confirmar tu cuenta.</p>
+        <a href="/login" className="mt-4 inline-block text-body-sm text-tertiary hover:underline">Volver al inicio de sesión</a>
       </div>
     );
   }
@@ -48,27 +48,27 @@ export default function RegisterForm() {
       <Input
         id="displayName"
         type="text"
-        label="Display name"
+        label="Nombre visible"
         value={displayName}
         onChange={(e) => setDisplayName(e.target.value)}
-        placeholder="Your name"
+        placeholder="Tu nombre"
         required
         disabled={loading}
       />
       <Input
         id="email"
         type="email"
-        label="Email"
+        label="Correo electrónico"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
+        placeholder="tu@ejemplo.com"
         required
         disabled={loading}
       />
       <Input
         id="password"
         type="password"
-        label="Password"
+        label="Contraseña"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="••••••••"
@@ -77,7 +77,7 @@ export default function RegisterForm() {
         disabled={loading}
       />
       <Button type="submit" disabled={loading}>
-        {loading ? 'Creating account…' : 'Create account'}
+        {loading ? 'Creando cuenta…' : 'Crear cuenta'}
       </Button>
     </form>
   );
