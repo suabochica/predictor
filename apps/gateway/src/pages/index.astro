@@ -1,26 +1,40 @@
 ---
-import { BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
-import pollaIcon from '@predictor/ui/icons/polla.svg';
-import fantasyIcon from '@predictor/ui/icons/fantasy.svg';
+import { BUTTON_PRIMARY_CLASSES } from "@predictor/ui";
+import pollaIcon from "@predictor/ui/icons/polla.svg";
+import fantasyIcon from "@predictor/ui/icons/fantasy.svg";
 
-import Layout from '../layouts/Layout.astro';
-import AppCard from '../components/AppCard';
+import Layout from "../layouts/Layout.astro";
+import AppCard from "../components/AppCard";
 
 const displayName = Astro.locals.displayName;
 ---
 
 <Layout title="Inicio">
-  <main class="flex min-h-screen flex-col items-center justify-center gap-10 p-6">
+  <main
+    class="flex min-h-screen flex-col items-center justify-center gap-10 p-6"
+  >
     <div class="text-center">
       <h1 class="font-heading text-h2 font-semibold text-primary">
-        Bienvenido {displayName ? `, ${displayName}` : ''}
+        Bienvenido {displayName ? `, ${displayName}` : ""}
       </h1>
-      <p class="mt-2 text-secondary text-body-sm">Elige una modalidad de predicción para continuar</p>
+      <p class="mt-2 text-secondary text-body-sm">
+        Elige una modalidad de predicción para continuar
+      </p>
     </div>
 
     <div class="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
-      <AppCard name="Polla" description="Predice los resultados del Mundial y sube en la clasificación" href="/polla/" icon={pollaIcon.src} />
-      <AppCard name="Fantasy" description="Ficha jugadores, gestiona tu plantilla y domina la clasificación" href="/fantasy/" icon={fantasyIcon.src} />
+      <AppCard
+        name="Polla"
+        description="Predice los resultados del Mundial y sube en la clasificación"
+        href="/polla/"
+        icon={pollaIcon.src}
+      />
+      <AppCard
+        name="Fantasy"
+        description="Ficha jugadores, gestiona tu plantilla y domina la clasificación"
+        href="/fantasy/"
+        icon={fantasyIcon.src}
+      />
     </div>
 
     <div class="max-w-[520px]">
@@ -28,16 +42,27 @@ const displayName = Astro.locals.displayName;
         Premiación
       </h2>
       <p class="mt-2 text-secondary text-body-sm">
-        La inscripción para participar en la competición es de <b>50.000 COP</b>,
-        que serán transferidos al administrador de la aplicación.
+        La inscripción para participar en la competición es de <b>50.000 COP</b
+        >, que serán transferidos al administrador de la aplicación.
       </p>
       <p class="mt-2 text-secondary text-body-sm">
-        La repartición del monto será; <b>30.000 COP</b> para el modo Polla y <b>20.000 COP</b> para el modo Fantasy.
+        La repartición del monto será; <b>30.000 COP</b> para el modo Polla y <b
+          >20.000 COP</b
+        > para el modo Fantasy.
       </p>
       <p class="mt-2 text-secondary text-body-sm">
-        Cada aplicación tendrá su tabla de posiciones y el dinero se repartirá en premios
-        para el primer y segundo puesto de la siguiente manera: el segundo puesto recibirá
-        el costo de la inscripción por modalidad y el primer puesto recibirá el resto del monto.
+        Cada aplicación tendrá su tabla de posiciones y el dinero se repartirá
+        en premios para el primer y segundo puesto de cada modalidad de la
+        siguiente manera: el segundo puesto recibirá el costo de la inscripción
+        por modalidad y el primer puesto recibirá el resto del monto.
+      </p>
+      <p class="mt-2 text-secondary text-body-sm">
+        <i>Ejemplo:</i> Si el total de participantes es <b>10</b>, el monto total recaudado
+        sería de <b>500.000 COP</b>, de los cuales <b>300.000 COP</b> serían para el modo
+        Polla y <b>200.000 COP</b> para el modo Fantasy. En este caso, el primer puesto
+        del modo Polla recibiría <b>270.000 COP</b> y el segundo puesto recibiría
+        <b>30.000 COP</b>, mientras que el primer puesto del modo Fantasy recibiría
+        <b>180.000 COP</b> y el segundo puesto recibiría <b>20.000 COP</b>  .
       </p>
     </div>
 
