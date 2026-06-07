@@ -66,8 +66,8 @@ export default function Auction() {
   const isActive  = status === AUCTION_STATUSES.ACTIVE;
   const isPending = status === AUCTION_STATUSES.PENDING;
 
-  const pistaPlayerIds = useMemo(() => new Set(targets.map((t) => t.player_id)), [targets]);
-  const pistaFull = targets.length >= MAX_PROXY_TARGETS;
+  const listPlayerIds = useMemo(() => new Set(targets.map((t) => t.player_id)), [targets]);
+  const listFull = targets.length >= MAX_PROXY_TARGETS;
 
   const currentRoundBids = bids.filter((b) => b.round_number === current_round);
   const myBids           = currentRoundBids.filter((b) => b.user_id === user?.id);
@@ -95,7 +95,7 @@ export default function Auction() {
     const floor = getContestFloor(player.id);
     if (floor !== null) return +(floor + MIN_BID_INCREMENT).toFixed(1);
     const high = getHighestBid(player.id);
-    if (!high) return player.price;
+    if (!high) return player.current_price ?? player.price;
     return +(high.bid_amount + MIN_BID_INCREMENT).toFixed(1);
   }
 
@@ -298,11 +298,11 @@ export default function Auction() {
         <section className="bg-surface rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h2 className="text-base font-semibold text-primary">Pista de Subasta</h2>
+              <h2 className="text-base font-semibold text-primary">Lista de Pujas Automáticas</h2>
               <p className="text-xs text-muted mt-0.5">
                 {isPending
                   ? `Elige hasta ${MAX_PROXY_TARGETS} jugadores con un precio máximo. El sistema pujará automáticamente en el minuto 1:30 de cada ronda.`
-                  : 'Subasta en progreso — la pista está bloqueada.'}
+                  : 'Subasta en progreso — la lista está bloqueada.'}
               </p>
             </div>
 
@@ -326,7 +326,7 @@ export default function Auction() {
 
           {targets.length === 0 ? (
             <p className="text-muted text-sm italic">
-              {isPending ? 'Ningún jugador añadido aún. Usa "+ Pista" en la tabla.' : 'No configuraste pista antes de la subasta.'}
+              {isPending ? 'Ningún jugador añadido aún. Usa "+ Lista" en la tabla.' : 'No configuraste tu lista antes de la subasta.'}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -690,9 +690,9 @@ export default function Auction() {
                   myBidCount={myBidCount}
                   freeSlots={freeSlots}
                   isPending={isPending}
-                  isInPista={pistaPlayerIds.has(player.id)}
-                  pistaFull={pistaFull}
-                  onAddToPista={() => addTarget(player.id, player.current_price ?? player.price)}
+                  isInList={listPlayerIds.has(player.id)}
+                  listFull={listFull}
+                  onAddToList={() => addTarget(player.id, player.current_price ?? player.price)}
                 />
               );
             })}

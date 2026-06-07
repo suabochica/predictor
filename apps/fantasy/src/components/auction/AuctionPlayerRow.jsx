@@ -28,9 +28,9 @@ export default function AuctionPlayerRow({
   myBidCount,
   freeSlots,
   isPending,
-  isInPista,
-  pistaFull,
-  onAddToPista,
+  isInList,
+  listFull,
+  onAddToList,
 }) {
   let statusPill = null;
   if (ownerLabel) {
@@ -71,19 +71,19 @@ export default function AuctionPlayerRow({
 
   let bidCell = null;
   if (isPending && !ownerLabel) {
-    if (isInPista) {
+    if (isInList) {
       bidCell = (
         <span className="text-xs font-medium px-2 py-0.5 rounded bg-tertiary/10 text-tertiary border border-tertiary/40 whitespace-nowrap">
-          ✓ En pista
+          ✓ En lista
         </span>
       );
-    } else if (!pistaFull) {
+    } else if (!listFull) {
       bidCell = (
         <button
-          onClick={onAddToPista}
+          onClick={onAddToList}
           className="px-3 py-1 rounded bg-surface-hover hover:bg-border text-secondary text-xs font-medium border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary whitespace-nowrap"
         >
-          + Pista
+          + Lista
         </button>
       );
     }
@@ -137,7 +137,7 @@ export default function AuctionPlayerRow({
         </Td>
         <Td className="py-2 text-secondary text-xs whitespace-nowrap">{player.country}</Td>
         <Td className="py-2 text-right text-xs text-secondary whitespace-nowrap">
-          £{player.price.toFixed(1)}M
+          £{(player.current_price ?? player.price).toFixed(1)}M
         </Td>
         <Td className="py-2 text-right text-xs whitespace-nowrap">
           {highBid ? (

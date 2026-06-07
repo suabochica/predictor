@@ -102,7 +102,7 @@ export default function PlayerRow({
 
         {/* Price */}
         <Td className="py-2 text-right text-sm font-bold text-tertiary whitespace-nowrap">
-          {formatPrice(player.price)}
+          {formatPrice(player.current_price ?? player.price)}
         </Td>
 
         {/* Owner (hidden on mobile) */}

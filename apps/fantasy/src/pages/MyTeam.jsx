@@ -17,7 +17,7 @@ function normalizeSquad(teamPlayers) {
     country: tp.players?.country ?? '',
     country_code: tp.players?.country_code ?? null,
     position: tp.players?.position ?? 'FWD',
-    price: tp.players?.price ?? 0,
+    price: tp.players?.current_price ?? tp.players?.price ?? 0,
     acquisition_price: tp.acquisition_price,
   }));
 }

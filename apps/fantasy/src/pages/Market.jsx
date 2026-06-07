@@ -40,6 +40,7 @@ export default function Market() {
         country_code: tp.players?.country_code ?? null,
         position: tp.players?.position ?? 'FWD',
         price: tp.players?.price ?? 0,
+        current_price: tp.players?.current_price ?? tp.acquisition_price ?? 0,
         acquisition_price: tp.acquisition_price,
       })),
     [squadRows]
@@ -66,7 +67,7 @@ export default function Market() {
   const filteredPlayers = useMemo(() => {
     return allPlayers.filter((p) => {
       if (filters.position && p.position !== filters.position) return false;
-      if (filters.maxPrice !== '' && filters.maxPrice != null && p.price > filters.maxPrice)
+      if (filters.maxPrice !== '' && filters.maxPrice != null && p.current_price > filters.maxPrice)
         return false;
       if (filters.search) {
         const q = filters.search.toLowerCase();
@@ -75,8 +76,8 @@ export default function Market() {
       }
       if (filters.affordableOnly) {
         const effective = offerOut
-          ? budget + offerOut.acquisition_price - p.price >= 0
-          : p.price <= budget;
+          ? budget + offerOut.current_price - p.current_price >= 0
+          : p.current_price <= budget;
         if (!effective) return false;
       }
       if (filters.freeAgentsOnly && p.owner !== null) return false;
@@ -101,7 +102,7 @@ export default function Market() {
   // ── Budget math ──────────────────────────────────────────────────────────
   const budgetAfterSwap =
     offerOut && confirmSwapIn
-      ? Number((budget + offerOut.acquisition_price - confirmSwapIn.price).toFixed(1))
+      ? Number((budget + offerOut.current_price - confirmSwapIn.current_price).toFixed(1))
       : null;
 
   // ── Transfer execution ──────────────────────────────────────────────────
@@ -157,7 +158,7 @@ export default function Market() {
     const { error: insertError } = await supabase.from('team_players').insert({
       team_id: team.id,
       player_id: playerIn.id,
-      acquisition_price: playerIn.price,
+      acquisition_price: playerIn.current_price,
     });
     if (insertError) { setSwapError(insertError.message); setSwapping(false); return; }
 
@@ -175,7 +176,7 @@ export default function Market() {
       matchday_id: activeTransferWindow.is_preseason ? null : activeTransferWindow.matchday_id,
       player_out_id: playerOut.id,
       player_in_id: playerIn.id,
-      price_difference: Number((playerOut.acquisition_price - playerIn.price).toFixed(1)),
+      price_difference: Number((playerOut.current_price - playerIn.current_price).toFixed(1)),
     });
 
     // 5. Repoint lineup
@@ -348,7 +349,7 @@ export default function Market() {
                       <span className="text-label-caps text-warning font-semibold text-xs flex-shrink-0">BLOQUEADO</span>
                     )}
                     <span className="text-xs text-tertiary flex-shrink-0">
-                      {formatPrice(p.acquisition_price)}
+                      {formatPrice(p.current_price)}
                     </span>
                   </button>
                 );
@@ -402,8 +403,8 @@ export default function Market() {
             {filteredPlayers.map((player) => {
               const isMine = player.owner?.userId === team?.user_id;
               const canAfford = offerOut
-                ? budget + offerOut.acquisition_price - player.price >= 0
-                : player.price <= budget;
+                ? budget + offerOut.current_price - player.current_price >= 0
+                : player.current_price <= budget;
               return (
                 <PlayerRow
                   key={player.id}
@@ -445,7 +446,7 @@ export default function Market() {
                   <p className="text-sm font-semibold text-primary truncate">{offerOut.name}</p>
                 </div>
                 <span className="text-sm font-bold text-secondary flex-shrink-0">
-                  {formatPrice(offerOut.acquisition_price)}
+                  {formatPrice(offerOut.current_price)}
                 </span>
               </div>
 
@@ -463,7 +464,7 @@ export default function Market() {
                   <p className="text-sm font-semibold text-primary truncate">{confirmSwapIn.name}</p>
                 </div>
                 <span className="text-sm font-bold text-tertiary flex-shrink-0">
-                  {formatPrice(confirmSwapIn.price)}
+                  {formatPrice(confirmSwapIn.current_price)}
                 </span>
               </div>
             </div>
@@ -475,11 +476,11 @@ export default function Market() {
               </div>
               <div className="flex justify-between text-secondary">
                 <span>Recibido por {offerOut.name}</span>
-                <span className="text-tertiary">+{formatPrice(offerOut.acquisition_price)}</span>
+                <span className="text-tertiary">+{formatPrice(offerOut.current_price)}</span>
               </div>
               <div className="flex justify-between text-secondary">
                 <span>Costo de {confirmSwapIn.name}</span>
-                <span className="text-error">−{formatPrice(confirmSwapIn.price)}</span>
+                <span className="text-error">−{formatPrice(confirmSwapIn.current_price)}</span>
               </div>
               <div className="flex justify-between font-semibold border-t border-border pt-1.5">
                 <span className="text-secondary">Presupuesto después</span>

@@ -72,7 +72,7 @@ export default function HowToPlay() {
       </Section>
 
       {/* Subasta */}
-      <Section title="Subasta ciega (pretemporada)">
+      <Section title="Subasta por rondas (pretemporada)">
         <p className="text-secondary mb-3">
           Antes del inicio del Mundial, todos los participantes se reúnen en una subasta en tiempo
           real para pujar por los mejores jugadores.
@@ -80,10 +80,23 @@ export default function HowToPlay() {
         <ul className="space-y-2 text-secondary">
           <li><Bullet />La subasta funciona por <strong className="text-primary">rondas de 3 minutos</strong>. Durante cada ronda puedes colocar pujas sobre varios jugadores a la vez.</li>
           <li><Bullet />Al final de cada ronda se revelan las pujas más altas y quién las hizo. Si te superan, puedes subir tu puja en la siguiente ronda.</li>
-          <li><Bullet /><strong className="text-primary">Puja mínima:</strong> precio base del jugador. <strong className="text-primary">Incremento mínimo:</strong> 0,3 M.</li>
+          <li><Bullet /><strong className="text-primary">Puja mínima:</strong> precio actual del jugador. <strong className="text-primary">Incremento mínimo:</strong> 0,3 M.</li>
           <li><Bullet />El jugador que ganas pasa a ser <strong className="text-primary">exclusivamente tuyo</strong> y desaparece del resto de listas.</li>
           <li><Bullet />La subasta termina cuando pasa una ronda entera sin nuevas pujas, o cuando el administrador la cierra.</li>
           <li><Bullet /><strong className="text-primary">En caso de empate en la puja</strong>: gana quien pujó primero (por marca de tiempo).</li>
+        </ul>
+      </Section>
+
+      {/* Lista de Pujas Automáticas */}
+      <Section title="Lista de Pujas Automáticas">
+        <p className="text-secondary mb-3">
+          Antes de que comience la subasta puedes configurar tu lista de hasta {' '}
+          <strong className="text-primary">30 jugadores</strong> ordenados por prioridad, cada uno con un precio máximo.
+        </p>
+        <ul className="space-y-2 text-secondary">
+          <li><Bullet />Cada jugador de la lista lleva un <strong className="text-primary">precio máximo</strong>: el sistema nunca pujará por encima de ese importe.</li>
+          <li><Bullet />Si activas <strong className="text-primary">Subasta Automática</strong>, el sistema puja automáticamente en el minuto 1:30 de cada ronda, siguiendo el orden de prioridad de tu lista.</li>
+          <li><Bullet />La lista es <strong className="text-primary">editable</strong> mientras la subasta esté en estado «pendiente»; queda bloqueada en cuanto la subasta se inicia.</li>
         </ul>
       </Section>
 
@@ -175,7 +188,7 @@ export default function HowToPlay() {
       {/* Clasificación de liga */}
       <Section title="Fase de liga">
         <ul className="space-y-2 text-secondary">
-          <li><Bullet />Los 12 participantes acumulan puntos durante <strong className="text-primary">4 jornadas</strong> (JJ1-JJ3 de grupos + octavos de final del Mundial).</li>
+          <li><Bullet />Los 12 participantes acumulan puntos durante <strong className="text-primary">3 jornadas</strong> (JJ1-JJ3, fase de grupos).</li>
           <li><Bullet />Clasificación por puntos totales. En caso de empate: número de goles anotados por los jugadores propios en el torneo.</li>
           <li><Bullet />Los <strong className="text-primary">8 primeros</strong> pasan a la eliminatoria. Los 4 últimos quedan eliminados de la competición.</li>
         </ul>
