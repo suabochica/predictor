@@ -10,11 +10,7 @@ export function usePlayers(filters = {}) {
   }, [JSON.stringify(filters)]);
 
   async function fetchPlayers() {
-    const selectFields = filters.withOwner
-      ? '*, team_players(team_id, teams(id, name, user_id))'
-      : '*';
-
-    let query = supabase.from('players').select(selectFields).order('current_price', { ascending: false });
+    let query = supabase.from('players').select('*').order('current_price', { ascending: false });
     if (filters.position) query = query.eq('position', filters.position);
     if (filters.maxPrice) query = query.lte('current_price', filters.maxPrice);
     if (filters.search) query = query.ilike('name', `%${filters.search}%`);
@@ -30,15 +26,23 @@ export function usePlayers(filters = {}) {
     let result = data ?? [];
 
     if (filters.withOwner) {
-      result = result.map((p) => {
-        const tp = p.team_players?.[0];
-        return {
-          ...p,
-          owner: tp?.teams
-            ? { teamId: tp.teams.id, teamName: tp.teams.name, userId: tp.teams.user_id }
-            : null,
-        };
+      // Fetch ownership with a separate query rather than an embedded join:
+      // PostgREST's nested embed returns empty for cross-team rosters here,
+      // so we mirror the auction's working pattern (see AuctionContext).
+      const { data: rosters } = await supabase
+        .from('team_players')
+        .select('player_id, teams(id, name, user_id)');
+      const ownerByPlayer = new Map();
+      (rosters ?? []).forEach((r) => {
+        if (r.teams) {
+          ownerByPlayer.set(r.player_id, {
+            teamId: r.teams.id,
+            teamName: r.teams.name,
+            userId: r.teams.user_id,
+          });
+        }
       });
+      result = result.map((p) => ({ ...p, owner: ownerByPlayer.get(p.id) ?? null }));
     }
 
     setPlayers(result);
