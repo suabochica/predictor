@@ -327,6 +327,66 @@ export default function Admin() {
     });
   }
 
+  // ── Stats CSV Upload ──────────────────────────────────────────────────────
+  const [statsMatchdayId, setStatsMatchdayId] = useState('');
+  const [statsFile, setStatsFile]             = useState(null);
+  const [statsUploading, setStatsUploading]   = useState(false);
+  const [statsResult, setStatsResult]         = useState(null);
+
+  async function handleStatsUpload(e) {
+    e.preventDefault();
+    setStatsResult(null);
+    if (!statsMatchdayId) { setStatsResult({ errors: ['Select a matchday.'] }); return; }
+    if (!statsFile)        { setStatsResult({ errors: ['Select a CSV file.'] }); return; }
+
+    setStatsUploading(true);
+    const text = await statsFile.text();
+    const rows = parseCsv(text);
+    if (rows.length === 0) { setStatsResult({ errors: ['CSV is empty or has no data rows.'] }); setStatsUploading(false); return; }
+
+    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
+    const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
+
+    const matchdayId = parseInt(statsMatchdayId, 10);
+    const toUpsert = [];
+    const errors = [];
+
+    for (const row of rows) {
+      const player = playerMap[normName(row['player_name'] ?? '')];
+      if (!player) { errors.push(`Player not found: "${row['player_name']}"`); continue; }
+
+      const minutes_played = parseInt(row['minutes'] ?? row['game_time'] ?? 0, 10) || 0;
+      const goals          = parseInt(row['goals']          ?? 0, 10) || 0;
+      const assists        = parseInt(row['assists']        ?? 0, 10) || 0;
+      const clean_sheet    = String(row['clean_sheet']).toLowerCase() === 'true' || row['clean_sheet'] === '1';
+      const saves          = parseInt(row['saves']          ?? 0, 10) || 0;
+      const penalty_saves  = parseInt(row['penalty_saves']  ?? 0, 10) || 0;
+      const penalty_misses = parseInt(row['penalty_misses'] ?? 0, 10) || 0;
+      const yellow_cards   = parseInt(row['yellow']         ?? 0, 10) || 0;
+      const red_cards      = parseInt(row['red']            ?? 0, 10) || 0;
+      const own_goals      = parseInt(row['own_goals']      ?? 0, 10) || 0;
+      const goals_conceded = parseInt(row['goals_conceded'] ?? 0, 10) || 0;
+
+      const stats = { minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded };
+      const total_points = calculatePlayerPoints(stats, player.position);
+
+      toUpsert.push({ player_id: player.id, matchday_id: matchdayId, ...stats, total_points });
+    }
+
+    let inserted = 0;
+    if (toUpsert.length > 0) {
+      const { error } = await supabase.from('player_stats').upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
+      if (error) errors.push(`DB error: ${error.message}`);
+      else inserted = toUpsert.length;
+    }
+
+    setStatsResult({ inserted, errors });
+    setStatsFile(null);
+    setStatsUploading(false);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   // ── Standings Calculation ─────────────────────────────────────────────────
   const [calcMatchdayId, setCalcMatchdayId] = useState('');
   const [calcRunning, setCalcRunning] = useState(false);
