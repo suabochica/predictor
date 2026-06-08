@@ -47,6 +47,7 @@ export default function Auction() {
 
   const [posFilter, setPosFilter]         = useState('All');
   const [countryFilter, setCountryFilter] = useState('All');
+  const [searchQuery, setSearchQuery]     = useState('');
   const [bidAmounts, setBidAmounts]       = useState({});
   const [submitting, setSubmitting]       = useState(new Set());
   const [errors, setErrors]              = useState({});
@@ -88,6 +89,7 @@ export default function Auction() {
   const filteredPlayers = players.filter((p) => {
     if (posFilter !== 'All' && p.position !== posFilter) return false;
     if (countryFilter !== 'All' && p.country !== countryFilter) return false;
+    if (searchQuery.trim() && !p.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) return false;
     return true;
   });
 
@@ -592,6 +594,15 @@ export default function Auction() {
           )}
         </section>
       )}
+
+      {/* ── Player search ────────────────────────────────────────────── */}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Buscar jugador…"
+        className="w-full max-w-xs bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-tertiary"
+      />
 
       {/* ── Position filter tabs ──────────────────────────────────────── */}
       <div className="flex gap-2 flex-wrap">
