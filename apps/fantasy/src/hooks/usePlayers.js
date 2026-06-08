@@ -10,20 +10,33 @@ export function usePlayers(filters = {}) {
   }, [JSON.stringify(filters)]);
 
   async function fetchPlayers() {
-    let query = supabase.from('players').select('*').order('current_price', { ascending: false });
-    if (filters.position) query = query.eq('position', filters.position);
-    if (filters.maxPrice) query = query.lte('current_price', filters.maxPrice);
-    if (filters.search) query = query.ilike('name', `%${filters.search}%`);
+    let ownedIds = [];
     if (filters.available) {
       const { data: owned } = await supabase.from('team_players').select('player_id');
-      const ownedIds = (owned ?? []).map((tp) => tp.player_id);
-      if (ownedIds.length > 0) {
-        query = query.not('id', 'in', `(${ownedIds.join(',')})`);
-      }
+      ownedIds = (owned ?? []).map((tp) => tp.player_id);
     }
 
-    const { data } = await query;
-    let result = data ?? [];
+    function buildQuery() {
+      let q = supabase.from('players').select('*').order('current_price', { ascending: false });
+      if (filters.position) q = q.eq('position', filters.position);
+      if (filters.maxPrice) q = q.lte('current_price', filters.maxPrice);
+      if (filters.search) q = q.ilike('name', `%${filters.search}%`);
+      if (filters.available && ownedIds.length > 0) {
+        q = q.not('id', 'in', `(${ownedIds.join(',')})`);
+      }
+      return q;
+    }
+
+    const PAGE = 1000;
+    let from = 0;
+    let result = [];
+    while (true) {
+      const { data, error } = await buildQuery().range(from, from + PAGE - 1);
+      if (error || !data) break;
+      result = result.concat(data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
 
     if (filters.withOwner) {
       // Fetch ownership with a separate query rather than an embedded join:
