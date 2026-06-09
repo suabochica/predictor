@@ -112,6 +112,8 @@ The project is deployed to **Netlify** using a single-site architecture with a p
 | **Polla** | `predictor-polla.netlify.app` | `apps/polla` | Astro SSR (proxy backend) |
 | **Fantasy** | *(served from gateway)* | — | Vite React SPA (built into gateway dist) |
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/b7ceba57-01c6-4aae-9266-71f2ff50e452/deploy-status)](https://app.netlify.com/projects/predictor-gateway/deploys)
+
 ### Build
 
 ```bash
