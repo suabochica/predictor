@@ -252,44 +252,10 @@ export default function Admin() {
   }
 
   async function handleToggleActive(md) {
-    const activating = !md.is_active;
     await supabase
       .from('matchdays')
-      .update({ is_active: activating })
+      .update({ is_active: !md.is_active })
       .eq('id', md.id);
-
-    // On activation: stamp every team's current pre-tournament (null) lineup
-    // with this matchday_id. This ensures every team has a matchday-specific
-    // record from the moment the matchday goes live, even if they set their
-    // lineup before the matchday existed. Teams that already saved a lineup
-    // specifically for this matchday are left untouched.
-    if (activating) {
-      const [{ data: existing }, { data: nullLineups }] = await Promise.all([
-        supabase.from('lineups').select('team_id').eq('matchday_id', md.id),
-        supabase.from('lineups')
-          .select('team_id, player_id, is_starting, is_captain, bench_order')
-          .is('matchday_id', null),
-      ]);
-
-      const alreadyStamped = new Set((existing ?? []).map(r => r.team_id));
-      const toStamp = (nullLineups ?? [])
-        .filter(r => !alreadyStamped.has(r.team_id))
-        .map(r => ({
-          team_id:    r.team_id,
-          player_id:  r.player_id,
-          matchday_id: md.id,
-          is_starting: r.is_starting,
-          is_captain:  r.is_captain,
-          bench_order: r.bench_order,
-        }));
-
-      if (toStamp.length > 0) {
-        await supabase
-          .from('lineups')
-          .upsert(toStamp, { onConflict: 'team_id,matchday_id,player_id' });
-      }
-    }
-
     await fetchMatchdays();
   }
 
@@ -1617,7 +1583,7 @@ export default function Admin() {
                     <th className="pb-3 pr-4 font-medium">Fase</th>
                     <th className="pb-3 pr-4 font-medium">Fecha límite</th>
                     <th className="pb-3 pr-4 font-medium">Activo</th>
-                    <th className="pb-3 font-medium">Completado</th>
+                    <th className="pb-3 font-medium" title="Finalizar marca la puntuación como definitiva. No afecta bloqueos, ventanas de fichajes ni la jornada siguiente.">Finalizar</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1649,8 +1615,9 @@ export default function Admin() {
                               ? 'bg-info text-on-info hover:brightness-90'
                               : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
+                          title="Solo afecta la puntuación (provisional → final). No toca bloqueos ni ventanas de fichajes."
                         >
-                          {md.is_completed ? 'Completado' : 'Marcar completado'}
+                          {md.is_completed ? 'Final ✓' : 'Finalizar'}
                         </button>
                       </td>
                     </tr>
@@ -1835,7 +1802,7 @@ export default function Admin() {
         <div>
           <h2 className="text-lg font-semibold text-primary">Calcular posiciones</h2>
           <p className="text-xs text-muted mt-1">
-            Ejecuta después de subir estadísticas. Puntúa todos los equipos para la jornada (con sustituciones automáticas) y escribe en fantasy_standings.
+            Ejecuta después de subir estadísticas. Puntúa todos los equipos para la jornada (XI titulares guardados, sin sustituciones automáticas) y escribe en fantasy_standings. Provisional hasta marcar completado.
           </p>
         </div>
 

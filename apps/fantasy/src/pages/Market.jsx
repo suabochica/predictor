@@ -16,7 +16,7 @@ import PlayerRow from '../components/market/PlayerRow';
 
 export default function Market() {
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
-  const { activeTransferWindow, refreshTeam } = useLeague();
+  const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
   const { players: allPlayers, loading: playersLoading, refresh: refreshPlayers } = usePlayers({ withOwner: true });
   const { totals: playerTotals } = usePlayerTotals();
@@ -179,8 +179,8 @@ export default function Market() {
       price_difference: Number((playerOut.current_price - playerIn.current_price).toFixed(1)),
     });
 
-    // 5. Repoint lineup
-    await repointLineupPlayer(team.id, playerOut.id, playerIn.id);
+    // 5. Repoint lineup — pass time-active matchday id (play clock, not score clock)
+    await repointLineupPlayer(team.id, playerOut.id, playerIn.id, activeMatchday?.id ?? null);
 
     // 6. Refresh everything
     await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers(), refreshPlayers()]);

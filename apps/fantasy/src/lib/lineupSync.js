@@ -1,23 +1,14 @@
 import { supabase } from '@predictor/supabase';
 
 /**
- * After a squad swap (transfer or market), repoint the next not-completed matchday's
- * lineup rows and the null default from playerOutId → playerInId in the same slot.
- * Captaincy is carried automatically (is_captain is preserved from the outgoing row).
- * Completed matchdays are never touched.
+ * After a squad swap, repoint the time-active matchday's lineup rows and the
+ * null default from playerOutId → playerInId in the same slot.
+ * Captaincy is preserved from the outgoing row. Pass the time-active matchday id
+ * from LeagueContext.activeMatchday — do NOT derive it from is_completed (score clock).
  */
-export async function repointLineupPlayer(teamId, playerOutId, playerInId) {
-  const { data: nextMds } = await supabase
-    .from('matchdays')
-    .select('id')
-    .eq('is_completed', false)
-    .order('id', { ascending: true })
-    .limit(1);
-
-  const nextMatchdayId = nextMds?.[0]?.id ?? null;
-
-  // Deduplicate: if nextMatchdayId is null we only update null once
-  const targets = [...new Set([nextMatchdayId, null])];
+export async function repointLineupPlayer(teamId, playerOutId, playerInId, targetMatchdayId) {
+  // Deduplicate: if targetMatchdayId is null we only update null once
+  const targets = [...new Set([targetMatchdayId ?? null, null])];
 
   for (const matchdayId of targets) {
     let selectQuery = supabase

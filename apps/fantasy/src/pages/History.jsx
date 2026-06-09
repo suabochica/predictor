@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useTeam } from '../hooks/useTeam';
 import { calculatePlayerPoints } from '../lib/scoring';
-import { applyAutoSubs } from '../lib/matchday';
 
 const POSITION_COLOR = {
   GK:  'bg-warning/15 text-warning',
@@ -88,51 +87,26 @@ export default function History() {
     const bench = benchRows.map(r => ({ id: r.player_id, position: playerMap[r.player_id]?.position ?? 'FWD' }));
     const captainId = lineupRows.find(r => r.is_captain)?.player_id ?? null;
 
-    const defCount = starters.filter(p => p.position === 'DEF').length;
-    const midCount = starters.filter(p => p.position === 'MID').length;
-    const fwdCount = starters.filter(p => p.position === 'FWD').length;
-    const formation = `${defCount}-${midCount}-${fwdCount}`;
-
-    const { starters: finalStarters, subsApplied } = applyAutoSubs(
-      { starters, bench, captainId, formation },
-      statsMap,
-    );
-
-    const subbedInIds  = new Set(subsApplied.map(s => s.playerIn.id));
-    const subbedOutIds = new Set(subsApplied.map(s => s.playerOut.id));
-
+    // Manual subs only — score the saved starting XI directly; bench is never promoted
     const rows = [];
     let total = 0;
 
-    for (const p of finalStarters) {
-      const player  = playerMap[p.id];
-      const stats   = statsMap[p.id] ?? {};
-      const base    = calculatePlayerPoints(stats, p.position);
-      const isCap   = p.id === captainId;
-      const final   = isCap ? base * 2 : base;
+    for (const p of starters) {
+      const player = playerMap[p.id];
+      const stats  = statsMap[p.id] ?? {};
+      const base   = calculatePlayerPoints(stats, p.position);
+      const isCap  = p.id === captainId;
+      const final  = isCap ? base * 2 : base;
       total += final;
-      rows.push({ player, stats, base, final, isCap, subbedIn: subbedInIds.has(p.id), subbedOut: false });
+      rows.push({ player, stats, base, final, isCap, subbedIn: false, subbedOut: false });
     }
 
-    for (const { playerOut } of subsApplied) {
-      const player = playerMap[playerOut.id];
-      rows.push({ player, stats: statsMap[playerOut.id] ?? {}, base: 0, final: 0, isCap: false, subbedIn: false, subbedOut: true });
-    }
-
-    // Put bench players not involved in subs at the end
-    const involvedIds = new Set([...subbedInIds, ...subbedOutIds, ...finalStarters.map(p => p.id)]);
     for (const bp of bench) {
-      if (!involvedIds.has(bp.id)) {
-        const player = playerMap[bp.id];
-        rows.push({ player, stats: {}, base: 0, final: 0, isCap: false, subbedIn: false, subbedOut: false, onBench: true });
-      }
+      const player = playerMap[bp.id];
+      rows.push({ player, stats: {}, base: 0, final: 0, isCap: false, subbedIn: false, subbedOut: false, onBench: true });
     }
 
-    const namedSubs = subsApplied.map((s) => ({
-      playerOut: { ...s.playerOut, name: playerMap[s.playerOut.id]?.name ?? `#${s.playerOut.id}` },
-      playerIn:  { ...s.playerIn,  name: playerMap[s.playerIn.id]?.name  ?? `#${s.playerIn.id}` },
-    }));
-    setBreakdown({ rows, total, subsApplied: namedSubs, captainId });
+    setBreakdown({ rows, total, captainId });
     setBreakdownLoading(false);
   }
 
@@ -173,9 +147,13 @@ export default function History() {
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <h2 className="text-lg font-semibold text-primary">{md.name}</h2>
                   <span className="text-xs text-muted">{md.wc_stage}</span>
-                  {md.is_active && !md.is_completed && (
-                        <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-tertiary/15 text-tertiary border border-tertiary/40">
-                      En vivo
+                  {md.is_completed ? (
+                    <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-info/15 text-info border border-info/40">
+                      Final
+                    </span>
+                  ) : (
+                    <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/40">
+                      Provisional
                     </span>
                   )}
                 </div>
@@ -270,17 +248,6 @@ export default function History() {
                     <span className="text-secondary text-sm font-medium">Total</span>
                     <span className="text-tertiary text-xl font-bold">{breakdown.total} pts</span>
                   </div>
-
-                  {breakdown.subsApplied.length > 0 && (
-                    <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info space-y-1">
-                      <p className="font-semibold">Sustituciones automáticas</p>
-                      {breakdown.subsApplied.map((s, i) => (
-                        <p key={i}>
-                          {s.playerOut.name} → {s.playerIn.name} (no jugó)
-                        </p>
-                      ))}
-                    </div>
-                  )}
                 </>
               ) : null}
             </div>
@@ -292,7 +259,7 @@ export default function History() {
 }
 
 function BreakdownRow({ row }) {
-  const { player, stats, base, final, isCap, subbedIn, subbedOut, onBench } = row;
+  const { player, stats, base, final, isCap, onBench } = row;
   const name = player?.name ?? `Player #${row.player?.id}`;
   const pos  = player?.position ?? '?';
 
@@ -301,19 +268,8 @@ function BreakdownRow({ row }) {
       <div className="flex items-center gap-3 py-2 opacity-40">
         <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
         <span className="flex-1 text-secondary text-sm">{name}</span>
-        <span className="text-xs text-muted">Banca (no usado)</span>
+        <span className="text-xs text-muted">Banca</span>
         <span className="w-10 text-right text-muted text-sm">—</span>
-      </div>
-    );
-  }
-
-  if (subbedOut) {
-    return (
-      <div className="flex items-center gap-3 py-2 opacity-50">
-        <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
-        <span className="flex-1 text-secondary text-sm line-through">{name}</span>
-        <span className="text-xs text-muted italic">Sustituido (0 min)</span>
-        <span className="w-10 text-right text-muted text-sm font-bold">0</span>
       </div>
     );
   }
@@ -326,7 +282,6 @@ function BreakdownRow({ row }) {
         <div className="flex items-center gap-1.5">
           <span className="text-primary text-sm truncate">{name}</span>
           {isCap && <span className="text-label-caps bg-tertiary text-primary font-bold px-1.5 py-0.5 rounded">C</span>}
-          {subbedIn && <span className="text-label-caps bg-info text-info px-1.5 py-0.5 rounded">Sup</span>}
         </div>
         <StatLine stats={stats} />
       </div>
