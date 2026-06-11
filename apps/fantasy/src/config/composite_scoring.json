@@ -1,0 +1,16 @@
+{
+  "bonuses": {
+    "shots_on_target":  { "GK": 0.6, "DEF": 0.6, "MID": 0.6, "FWD": 0.6 },
+    "shots_off_target": { "GK": 0.2, "DEF": 0.2, "MID": 0.2, "FWD": 0.2 },
+    "blocked_shots":    { "GK": 0.5, "DEF": 0.5, "MID": 0.5, "FWD": 0.5 },
+    "tackles":          { "GK": 0.4, "DEF": 0.8, "MID": 0.6, "FWD": 0.4 },
+    "interceptions":    { "GK": 0.4, "DEF": 0.8, "MID": 0.6, "FWD": 0.4 },
+    "passes":           { "GK": 0.02, "DEF": 0.02, "MID": 0.02, "FWD": 0.02 },
+    "crosses":          { "GK": 0.1, "DEF": 0.1, "MID": 0.1, "FWD": 0.1 },
+    "fouls_won":        { "GK": 0.2, "DEF": 0.2, "MID": 0.2, "FWD": 0.2 },
+    "fouls_conceded":   { "GK": -0.2, "DEF": -0.2, "MID": -0.2, "FWD": -0.2 },
+    "offsides":         { "GK": -0.2, "DEF": -0.2, "MID": -0.2, "FWD": -0.2 },
+    "penalties_won":    { "GK": 2, "DEF": 2, "MID": 2, "FWD": 2 }
+  },
+  "captain_multiplier": 2
+}

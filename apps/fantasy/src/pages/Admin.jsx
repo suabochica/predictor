@@ -4,7 +4,7 @@ import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
 import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
-import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
+import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
@@ -527,7 +527,7 @@ export default function Admin() {
     // 2. Fetch all player_stats — include all Opta columns so both scorers work
     const { data: allStats } = await supabase
       .from('player_stats')
-      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won, opta_points')
+      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won')
       .eq('matchday_id', matchdayIdInt);
     const statsMap = Object.fromEntries((allStats ?? []).map(s => [s.player_id, s]));
 
@@ -565,9 +565,7 @@ export default function Admin() {
       prevByTeam[s.team_id].goals += s.goals_scored    ?? 0;
     }
 
-    // Opta scorer: prefers stored opta_points, falls back to computed
-    const optaScorer = (stats, position) =>
-      stats.opta_points != null ? stats.opta_points : calculateOptaPoints(stats, position);
+    const optaScorer = (stats, position) => calculateCompositePoints(stats, position);
 
     // 6. Compute both scoring systems for every team
     const previewRows = [];
@@ -605,7 +603,7 @@ export default function Admin() {
         teamId: team.id,
         teamName: team.name,
         currentPts,     // integer (FPL)
-        optaPts,        // float (Opta, with captain ×2)
+        optaPts,        // float (Composite, with captain ×2)
         prevPts: prev.pts,
         prevGoals: prev.goals,
         goalsScored,
@@ -630,7 +628,7 @@ export default function Admin() {
   // Writes computed standings + lineup stamps. Shared by confirm flow and Finalize.
   async function writeStandings(matchdayId, rows, toStamp) {
     const errors = [];
-    const isOpta = (auctionState.scoring_system ?? 'current') === 'opta';
+    const isOpta = (auctionState.scoring_system ?? 'opta') === 'opta';
 
     const upsertRows = rows.map(r => {
       const rawPts = isOpta ? r.optaPts : r.currentPts;
@@ -1845,8 +1843,8 @@ export default function Admin() {
           <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">Sistema de puntuación</p>
           <div className="flex items-center gap-2">
             {['current', 'opta'].map((system) => {
-              const isActive = (auctionState.scoring_system ?? 'current') === system;
-              const label = system === 'current' ? 'Actual (estilo FPL)' : 'Opta';
+              const isActive = (auctionState.scoring_system ?? 'opta') === system;
+              const label = system === 'current' ? 'FPL' : 'Compuesto (FPL+)';
               return (
                 <button
                   key={system}
@@ -1894,8 +1892,8 @@ export default function Admin() {
           <div className="space-y-3">
             <p className="text-xs font-semibold text-secondary uppercase tracking-wide">
               Vista previa — Sistema activo:{' '}
-              <span className={(auctionState.scoring_system ?? 'current') === 'opta' ? 'text-tertiary' : 'text-info'}>
-                {(auctionState.scoring_system ?? 'current') === 'opta' ? 'Opta' : 'Actual (estilo FPL)'}
+              <span className={(auctionState.scoring_system ?? 'opta') === 'opta' ? 'text-tertiary' : 'text-info'}>
+                {(auctionState.scoring_system ?? 'opta') === 'opta' ? 'Compuesto (FPL+)' : 'FPL'}
               </span>
             </p>
             <div className="overflow-x-auto">
@@ -1903,14 +1901,14 @@ export default function Admin() {
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
                     <th className="pb-2 pr-4 font-medium">Equipo</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Puntos actuales</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Puntos Opta</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Puntos FPL</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Puntos Compuesto</th>
                     <th className="pb-2 font-medium text-right">Se guardará</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {standingsPreview.rows.map(r => {
-                    const isOpta = (auctionState.scoring_system ?? 'current') === 'opta';
+                    const isOpta = (auctionState.scoring_system ?? 'opta') === 'opta';
                     const willSave = Math.round(isOpta ? r.optaPts : r.currentPts);
                     return (
                       <tr key={r.teamId} className="text-secondary">
