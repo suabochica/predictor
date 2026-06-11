@@ -34,6 +34,13 @@ function dateKey(dateStr: string): string {
   return dateStr.slice(0, 10);
 }
 
+function isMatchLocked(match: Match): boolean {
+  if (match.status !== 'upcoming') return true;
+  const matchTime = new Date(match.match_date).getTime();
+  const lockTime = matchTime - 30 * 60 * 1000;
+  return Date.now() >= lockTime;
+}
+
 function groupMatchesByDate(matchList: Match[]): Record<string, Match[]> {
   return matchList.reduce((acc, match) => {
     const dk = dateKey(match.match_date);
@@ -128,6 +135,9 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       const numValue = value === '' ? null : parseInt(value, 10);
       if (numValue !== null && (numValue < 0 || numValue > 9)) return;
 
+      const match = matches.find((m) => m.match_id === matchCode);
+      if (!match || isMatchLocked(match)) return;
+
       setPredictions((prev) => ({
         ...prev,
         [matchCode]: {
@@ -137,7 +147,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       }));
       setSaved(false);
     },
-    [],
+    [matches],
   );
 
   async function handleSave() {
@@ -145,7 +155,11 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
     setSaving(true);
 
     const rows = Object.entries(predictions)
-      .filter(([, p]) => p.score_a !== null && p.score_b !== null)
+      .filter(([matchCode, p]) => {
+        if (p.score_a === null || p.score_b === null) return false;
+        const match = matches.find((m) => m.match_id === matchCode);
+        return match && !isMatchLocked(match);
+      })
       .map(([matchCode, p]) => ({
         user_id: currentUser,
         match_id: matchUuidMap[matchCode],
@@ -242,7 +256,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                   const teamA = countries[match.team_a];
                   const teamB = countries[match.team_b];
                   const pred = predictions[match.match_id] || {};
-                  const isLocked = match.status !== 'upcoming';
+                  const isLocked = isMatchLocked(match);
 
                   return (
                     <tr
@@ -270,6 +284,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                           onChange={(e) => handleScoreChange(match.match_id, 'a', e.target.value)}
                           className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
                           placeholder="-"
+                          title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
                           aria-label={`Marcador de ${teamA?.name || match.team_a}`}
                         />
                       </td>
@@ -288,6 +303,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                           onChange={(e) => handleScoreChange(match.match_id, 'b', e.target.value)}
                           className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
                           placeholder="-"
+                          title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
                           aria-label={`Marcador de ${teamB?.name || match.team_b}`}
                         />
                       </td>
