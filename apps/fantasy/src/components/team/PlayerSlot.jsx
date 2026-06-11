@@ -1,6 +1,6 @@
 import { getPositionColor } from '../../lib/utils';
 
-export default function PlayerSlot({ player, isCaptain, isSelected, onClick }) {
+export default function PlayerSlot({ player, isCaptain, isSelected, onClick, points }) {
   // Shorten name to last name for display
   const displayName = player.name.split(' ').slice(-1)[0];
   const countryCode =
@@ -15,6 +15,13 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick }) {
           : 'bg-surface/80 hover:bg-surface-hover border border-border/50'
       }`}
     >
+      {/* Points badge */}
+      {points !== null && points !== undefined && (
+        <span className="absolute -top-2 -left-1.5 bg-surface border border-tertiary/60 text-tertiary text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow">
+          {points}
+        </span>
+      )}
+
       {/* Captain badge */}
       {isCaptain && (
         <span className="absolute -top-2 -right-1.5 bg-tertiary text-primary text-label-caps font-extrabold w-4 h-4 rounded-full flex items-center justify-center z-10 shadow">

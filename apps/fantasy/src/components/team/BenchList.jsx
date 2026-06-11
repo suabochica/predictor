@@ -21,7 +21,7 @@ function EmptyBenchSlot({ order, onClick, isTargetable }) {
   );
 }
 
-export default function BenchList({ bench, selectedId, onPlayerClick, onReorder, onEmptyBenchSlotClick, hasSelected, readOnly = false }) {
+export default function BenchList({ bench, selectedId, onPlayerClick, onReorder, onEmptyBenchSlotClick, hasSelected, readOnly = false, pointsById }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-4">
       <h3 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
@@ -36,6 +36,7 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
               isCaptain={false}
               isSelected={player.id === selectedId}
               onClick={onPlayerClick}
+              points={pointsById?.[player.id] ?? null}
             />
             {!readOnly && (
               <div className="flex gap-0.5">

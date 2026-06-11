@@ -5,6 +5,7 @@ import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { buildDefaultLineup } from '../lib/defaultLineup';
+import { getActivePoints } from '../lib/scoring.js';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 
@@ -42,6 +43,8 @@ export default function MyTeam() {
   // Matchday selector: which matchday the user is currently editing
   const [selectedMatchday, setSelectedMatchday] = useState(null);
   const [allMatchdays, setAllMatchdays] = useState([]);
+
+  const [scoringSystem, setScoringSystem] = useState('opta');
 
   // Live stats for the active matchday (display only, not used for locking)
   const [playerMatchdayStats, setPlayerMatchdayStats] = useState({});
@@ -90,20 +93,26 @@ export default function MyTeam() {
     }
   }, [activeMatchday?.id]); // eslint-disable-line
 
+  // ── Fetch active scoring system ──────────────────────────────────────────
+  useEffect(() => {
+    supabase
+      .from('auction_state')
+      .select('scoring_system')
+      .single()
+      .then(({ data }) => setScoringSystem(data?.scoring_system ?? 'opta'));
+  }, []);
+
   // ── Load live stats for the active matchday (display only) ─────────────
   useEffect(() => {
     if (!activeMatchday) { setPlayerMatchdayStats({}); return; }
     supabase
       .from('player_stats')
-      .select('player_id, total_points, minutes_played')
+      .select('*')
       .eq('matchday_id', activeMatchday.id)
       .then(({ data }) => {
         const stats = {};
         for (const row of data ?? []) {
-          stats[row.player_id] = {
-            total_points: row.total_points ?? 0,
-            minutes_played: row.minutes_played ?? 0,
-          };
+          stats[row.player_id] = row;
         }
         setPlayerMatchdayStats(stats);
       });
@@ -125,7 +134,7 @@ export default function MyTeam() {
 
         const { data: stats } = await supabase
           .from('player_stats')
-          .select('player_id, matchday_id, total_points, minutes_played, goals, assists')
+          .select('*')
           .in('player_id', playerIds)
           .in('matchday_id', mds.map(m => m.id));
 
@@ -435,6 +444,16 @@ export default function MyTeam() {
     (p) => !starters.some((s) => s.id === p.id) && !bench.some((b) => b.id === p.id)
   );
 
+  const ptsFor = (statsRow, position) => getActivePoints(statsRow, position, scoringSystem);
+
+  const pointsById = {};
+  for (const p of squad) {
+    const stats = playerMatchdayStats[p.id];
+    if (!stats) continue;
+    const raw = ptsFor(stats, p.position);
+    pointsById[p.id] = p.id === captainId ? Math.round(raw * 2 * 10) / 10 : raw;
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────
   if (teamLoading || lineupLoading) {
     return (
@@ -522,17 +541,14 @@ export default function MyTeam() {
 
       {/* ── Live matchday stats panel (always shows active matchday) ── */}
       {activeMatchday && Object.keys(playerMatchdayStats).length > 0 && (() => {
-        const livePts = starters.reduce((sum, p) => {
-          const pts = playerMatchdayStats[p.id]?.total_points ?? 0;
-          return sum + (p.id === captainId ? pts * 2 : pts);
-        }, 0);
+        const livePts = starters.reduce((sum, p) => sum + (pointsById[p.id] ?? 0), 0);
         const played    = starters.filter(p => (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0);
         const notPlayed = starters.filter(p => !playerMatchdayStats[p.id] || playerMatchdayStats[p.id].minutes_played === 0);
         return (
           <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-6 flex-wrap">
             <div>
               <p className="text-label-caps text-muted uppercase tracking-wider">Pts en vivo</p>
-              <p className="text-xl font-bold text-tertiary">{livePts}</p>
+              <p className="text-xl font-bold text-tertiary">{Math.round(livePts * 10) / 10}</p>
             </div>
             <div>
               <p className="text-label-caps text-muted uppercase tracking-wider">Jugaron</p>
@@ -580,6 +596,7 @@ export default function MyTeam() {
         onPlayerClick={handlePlayerClick}
         onEmptySlotClick={handleEmptySlotClick}
         hasSelected={!!selectedPlayer}
+        pointsById={pointsById}
       />
 
       {/* ── Bench ── */}
@@ -590,6 +607,7 @@ export default function MyTeam() {
         onReorder={handleBenchReorder}
         onEmptyBenchSlotClick={handleEmptyBenchSlotClick}
         hasSelected={!!selectedPlayer}
+        pointsById={pointsById}
       />
 
       {/* ── Action panel (shown when a player is selected) ── */}
@@ -695,9 +713,7 @@ export default function MyTeam() {
               const benchIdx = bench.findIndex((b) => b.id === p.id);
               const isCaptain = p.id === captainId;
               const mdStats = playerMatchdayStats[p.id];
-              const liveCapPts = mdStats
-                ? (p.id === captainId ? mdStats.total_points * 2 : mdStats.total_points)
-                : null;
+              const liveCapPts = mdStats ? (pointsById[p.id] ?? 0) : null;
               return (
                 <div
                   key={p.id}
@@ -790,7 +806,7 @@ export default function MyTeam() {
                           </td>
                           {completedMatchdays.map(md => {
                             const s = historicalStats[md.id]?.[p.id];
-                            const pts = s?.total_points ?? null;
+                            const pts = s ? ptsFor(s, p.position) : null;
                             if (pts !== null) total += pts;
                             return (
                               <td key={md.id} className="px-3 py-2.5 text-center">
@@ -808,7 +824,7 @@ export default function MyTeam() {
                           })}
                           <td className="px-3 py-2.5 text-center">
                             <span className={`font-bold text-xs ${total > 0 ? 'text-primary' : 'text-muted'}`}>
-                              {total > 0 ? total : '—'}
+                              {total > 0 ? Math.round(total * 10) / 10 : '—'}
                             </span>
                           </td>
                         </tr>
