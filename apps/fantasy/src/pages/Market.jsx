@@ -46,6 +46,12 @@ export default function Market() {
     [squadRows]
   );
 
+  // Unique country list for the filter pills (same as Auction)
+  const countries = useMemo(
+    () => [...new Set(allPlayers.map((p) => p.country).filter(Boolean))].sort(),
+    [allPlayers]
+  );
+
   const budget = team?.budget_remaining ?? 0;
 
   function isPlayerLocked(player) {
@@ -67,6 +73,7 @@ export default function Market() {
   const filteredPlayers = useMemo(() => {
     return allPlayers.filter((p) => {
       if (filters.position && p.position !== filters.position) return false;
+      if (filters.country && p.country !== filters.country) return false;
       if (filters.maxPrice !== '' && filters.maxPrice != null && p.current_price > filters.maxPrice)
         return false;
       if (filters.search) {
@@ -375,6 +382,7 @@ export default function Market() {
         filters={filters}
         onChange={setFilters}
         resultCount={filteredPlayers.length}
+        countries={countries}
       />
 
       {/* ── Player table ── */}

@@ -1,0 +1,119 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@predictor/supabase';
+import LineupGrid from '../team/LineupGrid';
+import BenchList from '../team/BenchList';
+
+const LINEUP_SELECT =
+  'is_starting, is_captain, bench_order, players(id, name, country, country_code, position)';
+
+const noop = () => {};
+
+export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
+  const [rows, setRows] = useState(null); // null = loading, [] = none found
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Same cascade as MyTeam.loadLineup: active matchday → most recent saved → preseason default
+    async function load() {
+      let data = null;
+
+      if (activeMatchdayId != null) {
+        ({ data } = await supabase
+          .from('lineups')
+          .select(LINEUP_SELECT)
+          .eq('team_id', entry.team_id)
+          .eq('matchday_id', activeMatchdayId));
+      }
+
+      if (!data || data.length === 0) {
+        const { data: recent } = await supabase
+          .from('lineups')
+          .select('matchday_id')
+          .eq('team_id', entry.team_id)
+          .not('matchday_id', 'is', null)
+          .order('matchday_id', { ascending: false })
+          .limit(1);
+        if (recent && recent.length > 0) {
+          ({ data } = await supabase
+            .from('lineups')
+            .select(LINEUP_SELECT)
+            .eq('team_id', entry.team_id)
+            .eq('matchday_id', recent[0].matchday_id));
+        }
+      }
+
+      if (!data || data.length === 0) {
+        ({ data } = await supabase
+          .from('lineups')
+          .select(LINEUP_SELECT)
+          .eq('team_id', entry.team_id)
+          .is('matchday_id', null));
+      }
+
+      if (!cancelled) setRows(data ?? []);
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [entry.team_id, activeMatchdayId]);
+
+  const players = (rows ?? [])
+    .filter((r) => r.players)
+    .map((r) => ({
+      ...r.players,
+      is_starting: r.is_starting,
+      is_captain: r.is_captain,
+      bench_order: r.bench_order,
+    }));
+  const starters = players.filter((p) => p.is_starting);
+  const bench = players
+    .filter((p) => !p.is_starting)
+    .sort((a, b) => (a.bench_order ?? 99) - (b.bench_order ?? 99));
+  const captainId = players.find((p) => p.is_captain)?.id ?? null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-primary truncate">{entry.display_name}</h2>
+            {entry.team_name && entry.team_name !== entry.display_name && (
+              <p className="text-sm text-secondary truncate">{entry.team_name}</p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="text-muted hover:text-primary text-xl leading-none px-2 -mr-2"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </div>
+
+        {rows === null ? (
+          <p className="text-secondary text-sm py-8 text-center">Cargando alineación…</p>
+        ) : players.length === 0 ? (
+          <p className="text-secondary text-sm py-8 text-center">
+            Este equipo aún no ha guardado una alineación.
+          </p>
+        ) : (
+          <>
+            <LineupGrid
+              starters={starters}
+              captainId={captainId}
+              selectedId={null}
+              onPlayerClick={noop}
+              onEmptySlotClick={noop}
+              hasSelected={false}
+            />
+            <BenchList bench={bench} selectedId={null} onPlayerClick={noop} readOnly />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
