@@ -101,9 +101,9 @@ export function LeagueProvider({ children }) {
       maxTransfers = isGroup ? TRANSFER_CAP_ROUND_ROBIN : TRANSFER_CAP_KNOCKOUT;
     }
 
-    // Window closes 10 min before this matchday's final kickoff.
-    const closesAt =
-      lastKickoffActive != null ? new Date(lastKickoffActive - lead).toISOString() : null;
+    // Preseason closes before the first game ever; regular windows close before the last game of the matchday.
+    const windowCloseTs = isPreseason ? firstKickoffOverall : lastKickoffActive;
+    const closesAt = windowCloseTs != null ? new Date(windowCloseTs - lead).toISOString() : null;
 
     setActiveTransferWindow({
       matchday_id: activeMd.id,
