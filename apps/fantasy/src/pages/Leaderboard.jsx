@@ -47,6 +47,10 @@ export default function Leaderboard() {
   const hasScores = standings.some((s) => s.total_points > 0);
   const totalParticipants = standings.length;
 
+  // Mid-matchday totals are provisional until the admin finalizes the matchday
+  const provisionalActive =
+    !!activeMatchday && !matchdays.find((md) => md.id === activeMatchday.id)?.is_completed;
+
   // League stage = the 3 group round-robin matchdays (MD1/MD2/MD3).
   const leagueMatchdays = matchdays.filter((md) => md.wc_stage?.toLowerCase().includes('group'));
   const leagueComplete = leagueMatchdays.length >= 3 && leagueMatchdays.every((md) => md.is_completed);
@@ -73,6 +77,11 @@ export default function Leaderboard() {
             ? 'Fase de liga completada — cuadros bloqueados'
             : 'Pretemporada'}
         </p>
+        {provisionalActive && hasScores && (
+          <p className="text-xs text-muted mt-1">
+            Los puntos de la jornada en curso son provisionales y pueden cambiar hasta que se finalice la jornada.
+          </p>
+        )}
       </div>
 
       {/* ── Summary cards ── */}
