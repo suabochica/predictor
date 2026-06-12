@@ -76,3 +76,4 @@ Middleware (`src/middleware.ts`) guards all routes except `/polla/register` and 
 3. Redirects to `PUBLIC_GATEWAY_URL/login` if unauthenticated
 4. Populates `Astro.locals` with `user`, `displayName`, `isAdmin`, `leaderboardRank`, `totalPoints`
 5. Leaderboard rank is fetched via `get_leaderboard()` RPC on each request
+

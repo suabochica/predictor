@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "import-matches": "node scripts/import-matches.mjs",
     "sync-schedule": "node scripts/sync-schedule.mjs",
-    "sync-schedule:sql": "node scripts/sync-schedule.mjs --sql"
+    "sync-schedule:sql": "node scripts/sync-schedule.mjs --sql",
+    "score-matches": "node scripts/score-matches.mjs"
   },
   "dependencies": {
     "@astrojs/netlify": "^6.6.5",

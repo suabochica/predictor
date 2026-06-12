@@ -1,7 +1,11 @@
 # Manual SQL
 
 Tracked SQL that is **applied by hand** in the Supabase SQL editor — *not* auto-run by
-`supabase db push`. These operate on the `matches` table, which is populated by the
+`supabase db push`. 
+
+## Import Matches
+
+These operate on the `matches` table, which is populated by the
 `import-matches.mjs` / `sync-schedule.mjs` script pipeline (matches are **not** seeded by
 migrations or `seed.sql`), so running them as auto-migrations would execute before matches
 exist and could duplicate rows on a fresh DB.
@@ -15,7 +19,7 @@ pnpm sync-schedule:sql                       # -> 01_sync_schedule.sql
 node scripts/sync-schedule.mjs --insert-groups=C,D,G,I   # -> 02_insert_missing_group_matches.sql
 ```
 
-## Apply order (one-time, against an existing DB)
+### Apply order (one-time, against an existing DB)
 
 1. **`02_insert_missing_group_matches.sql`** — inserts group-stage matches that were never
    seeded (groups C/D/G/I). Idempotent: each INSERT is guarded by `NOT EXISTS` on the
@@ -32,3 +36,17 @@ select group_name, count(*) from matches where stage = 'group'
 ```
 
 Off-season knockouts (semis / third place / final) intentionally keep `matchday_id = NULL`.
+
+## Calculate Scores
+
+#### How scoring works
+
+The `polla_calculate_prediction_points()` function (`039_polla_calculate_match_points.sql:6`) implements exactly the rules from the rules page:
+- Group stage: correct result = 5pts, correct goals (per team) = 2pts, correct diff = 1pt → max 10
+- Knockout: correct result = 10pts, correct goals (per team) = 4pts, correct diff = 2pts → max 20
+It checks matches.stage to decide which multipliers to use.
+
+Two ways scoring runs
+
+1. **Trigger (migration 040)**: Whenever `actual_score_a/actual_score_b` are updated on a match, scoring fires automatically
+2. **Manual/fallback script**: `pnpm score-matches` calls the same RPC via the service_role key

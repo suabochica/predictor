@@ -1,7 +1,7 @@
 -- Leaderboard RPC function — runs with SECURITY DEFINER so it can
 -- aggregate across all predictions regardless of RLS on the predictions table.
 
-CREATE OR REPLACE FUNCTION get_leaderboard()
+CREATE OR REPLACE FUNCTION polla_get_leaderboard()
 RETURNS TABLE (
   user_id uuid,
   display_name text,
