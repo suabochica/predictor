@@ -55,7 +55,7 @@ export default function MyTeam() {
   const squad = normalizeSquad(players);
 
   // Per-country kickoff times for the selected matchday — drives player locks
-  const { lockTimeFor, kickoffByCountry } = useMatchdayLocks(selectedMatchday?.id ?? null);
+  const { lockTimeFor, kickoffByCode } = useMatchdayLocks(selectedMatchday?.id ?? null);
 
   // Ticks every 30s so isGameLocked re-evaluates as matches kick off
   const [now, setNow] = useState(Date.now());
@@ -66,7 +66,7 @@ export default function MyTeam() {
 
   // Lock = kickoff time (from polla matches) minus 10 min lead
   function isGameLocked(player) {
-    const lockMs = lockTimeFor(player.country);
+    const lockMs = lockTimeFor(player.country_code);
     return lockMs !== null ? now >= lockMs : false;
   }
 
@@ -575,7 +575,7 @@ export default function MyTeam() {
       )}
 
       {/* ── Rolling lockout notice ── */}
-      {selectedMatchday && Object.keys(kickoffByCountry).length > 0 && (
+      {selectedMatchday && Object.keys(kickoffByCode).length > 0 && (
         <div className="bg-surface-hover/60 border border-border rounded-xl p-3 text-xs text-secondary" role="alert">
           Bloqueo progresivo activo — los jugadores se bloquean 10 min antes de su partido. Un titular bloqueado puede salir al banquillo (un jugador desbloqueado entra en su lugar); los bloqueados no pueden entrar al XI.
         </div>

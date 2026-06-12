@@ -18,6 +18,7 @@ export default function PlayerRow({
   windowOpen,
   offerOutName,
   isLocked,
+  noTransfersLeft,
   onSwap,
   stats,
 }) {
@@ -42,6 +43,10 @@ export default function PlayerRow({
     actionLabel = 'Bloqueado';
     disabledReason = 'Partido iniciado';
     actionStyle = 'bg-warning/10 text-warning cursor-not-allowed border border-warning/30';
+  } else if (noTransfersLeft) {
+    actionLabel = 'Sin fichajes';
+    disabledReason = 'Sin fichajes restantes en esta ventana';
+    actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
   } else if (!windowOpen) {
     actionLabel = 'Sin ventana abierta';
     disabledReason = 'No hay ventana de fichajes abierta';
