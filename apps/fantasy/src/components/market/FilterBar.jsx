@@ -1,6 +1,6 @@
 import { POSITIONS } from '../../config/constants';
 
-export default function FilterBar({ filters, onChange, resultCount }) {
+export default function FilterBar({ filters, onChange, resultCount, countries = [] }) {
   function set(key, value) {
     onChange({ ...filters, [key]: value });
   }
@@ -23,6 +23,25 @@ export default function FilterBar({ filters, onChange, resultCount }) {
           </button>
         ))}
       </div>
+
+      {/* Country pills */}
+      {countries.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {['Todos', ...countries].map((c) => (
+            <button
+              key={c}
+              onClick={() => set('country', c === 'Todos' ? '' : c)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                (c === 'Todos' && !filters.country) || filters.country === c
+                  ? 'bg-info text-on-info'
+                  : 'bg-surface-hover text-secondary hover:bg-border'
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Search + price + toggles */}
       <div className="flex flex-wrap gap-3 items-center">

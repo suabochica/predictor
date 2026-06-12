@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useStandings } from '../hooks/useStandings';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../context/LeagueContext';
+import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
 
 const CHAMPIONSHIP_SPOTS = 8;
 const RELEGATION_SPOTS = 4;
@@ -44,8 +46,14 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const { activeMatchday } = useLeague();
 
+  const [viewingEntry, setViewingEntry] = useState(null);
+
   const hasScores = standings.some((s) => s.total_points > 0);
   const totalParticipants = standings.length;
+
+  // Mid-matchday totals are provisional until the admin finalizes the matchday
+  const provisionalActive =
+    !!activeMatchday && !matchdays.find((md) => md.id === activeMatchday.id)?.is_completed;
 
   // League stage = the 3 group round-robin matchdays (MD1/MD2/MD3).
   const leagueMatchdays = matchdays.filter((md) => md.wc_stage?.toLowerCase().includes('group'));
@@ -73,6 +81,11 @@ export default function Leaderboard() {
             ? 'Fase de liga completada — cuadros bloqueados'
             : 'Pretemporada'}
         </p>
+        {provisionalActive && hasScores && (
+          <p className="text-xs text-muted mt-1">
+            Los puntos de la jornada en curso son provisionales y pueden cambiar hasta que se finalice la jornada.
+          </p>
+        )}
       </div>
 
       {/* ── Summary cards ── */}
@@ -169,9 +182,8 @@ export default function Leaderboard() {
               return (
                 <div
                   key={entry.team_id}
-                  className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-3 items-center ${leftBorder} ${
-                    rank <= 3 ? 'bg-surface' : 'bg-surface'
-                  }`}
+                  onClick={() => setViewingEntry(entry)}
+                  className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-3 items-center cursor-pointer hover:bg-surface-hover transition-colors ${leftBorder}`}
                 >
                   {/* Rank */}
                   <RankBadge rank={rank} bracket={bracket} />
@@ -238,6 +250,14 @@ export default function Leaderboard() {
             {RELEGATION_SPOTS} entran al cuadro de descenso. Ventana de fichajes 1 abierta.
           </p>
         </div>
+      )}
+
+      {viewingEntry && (
+        <TeamLineupModal
+          entry={viewingEntry}
+          activeMatchdayId={activeMatchday?.id ?? null}
+          onClose={() => setViewingEntry(null)}
+        />
       )}
     </div>
   );

@@ -1,3 +1,19 @@
+import compositeScoringConfig from '../config/composite_scoring.json';
+
+const COMPOSITE_STAT_LABELS = {
+  shots_on_target:  'Tiros a puerta',
+  shots_off_target: 'Tiros fuera',
+  blocked_shots:    'Tiros bloqueados',
+  tackles:          'Entradas',
+  interceptions:    'Interceptaciones',
+  passes:           'Pases',
+  crosses:          'Centros',
+  fouls_won:        'Faltas recibidas',
+  fouls_conceded:   'Faltas cometidas',
+  offsides:         'Fuera de juego',
+  penalties_won:    'Penaltis ganados',
+};
+
 export default function HowToPlay() {
   return (
     <div className="space-y-8 max-w-3xl pb-8">
@@ -126,9 +142,10 @@ export default function HowToPlay() {
       {/* Puntos */}
       <Section title="Sistema de puntos">
         <p className="text-secondary mb-3">
-          El administrador puede usar el sistema <strong className="text-primary">FPL</strong> o el sistema <strong className="text-primary">Opta</strong>. El sistema activo se anuncia antes de calcular cada jornada.
+          El sistema por defecto es <strong className="text-primary">Compuesto (FPL+)</strong>. El administrador también puede activar el sistema <strong className="text-primary">FPL</strong> clásico. El sistema activo se anuncia antes de calcular cada jornada.
         </p>
-        <p className="text-xs text-muted uppercase tracking-wider mb-2">Sistema FPL</p>
+
+        <p className="text-xs text-muted uppercase tracking-wider mb-2">Sistema FPL (base)</p>
         <table className="w-full text-sm border-collapse mb-4">
           <thead>
             <tr className="border-b border-border">
@@ -154,9 +171,36 @@ export default function HowToPlay() {
             <tr><td className="py-1.5 pr-4">Cada 2 goles encajados (PT / DEF)</td><td>−1</td></tr>
           </tbody>
         </table>
-        <p className="text-xs text-secondary">
-          El sistema Opta usa estadísticas más detalladas (remates, entradas, pases, regates, etc.) — puntuación granular que premia la participación general en el juego.
+
+        <p className="text-xs text-muted uppercase tracking-wider mb-2 mt-4">Sistema Compuesto (FPL+) — por defecto</p>
+        <p className="text-secondary text-sm mb-3">
+          El sistema Compuesto suma la puntuación FPL base más bonos por estadísticas de rendimiento que el FPL no contempla (sin doble conteo con goles, asistencias, portería a cero, tarjetas ni paradas). El penalti fallado <em>no aplica</em> en este sistema (los datos Opta no lo incluyen).
         </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse mb-2">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-1.5 pr-4 text-muted font-medium">Estadística</th>
+                <th className="text-right py-1.5 px-2 text-muted font-medium">PT</th>
+                <th className="text-right py-1.5 px-2 text-muted font-medium">DEF</th>
+                <th className="text-right py-1.5 px-2 text-muted font-medium">MED</th>
+                <th className="text-right py-1.5 px-2 text-muted font-medium">DEL</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border text-secondary">
+              {Object.entries(compositeScoringConfig.bonuses).map(([col, weights]) => (
+                <tr key={col}>
+                  <td className="py-1.5 pr-4">{COMPOSITE_STAT_LABELS[col] ?? col}</td>
+                  <td className="py-1.5 px-2 text-right">{weights.GK > 0 ? `+${weights.GK}` : weights.GK}</td>
+                  <td className="py-1.5 px-2 text-right">{weights.DEF > 0 ? `+${weights.DEF}` : weights.DEF}</td>
+                  <td className="py-1.5 px-2 text-right">{weights.MID > 0 ? `+${weights.MID}` : weights.MID}</td>
+                  <td className="py-1.5 px-2 text-right">{weights.FWD > 0 ? `+${weights.FWD}` : weights.FWD}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted mt-1">Puntos por ocurrencia (p. ej. un DEF con portería a cero, 48 pases, 1 entrada e 1 interceptación gana ≈ 8.6 pts en total).</p>
       </Section>
 
       {/* Transferencias */}

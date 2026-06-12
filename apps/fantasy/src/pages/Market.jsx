@@ -9,14 +9,13 @@ import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { formatPrice, getPositionColor } from '../lib/utils';
 import { MAX_SQUAD_SIZE } from '../config/constants';
-import { repointLineupPlayer } from '../lib/lineupSync';
 import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import FilterBar from '../components/market/FilterBar';
 import PlayerRow from '../components/market/PlayerRow';
 
 export default function Market() {
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
-  const { activeTransferWindow, refreshTeam } = useLeague();
+  const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
   const { players: allPlayers, loading: playersLoading, refresh: refreshPlayers } = usePlayers({ withOwner: true });
   const { totals: playerTotals } = usePlayerTotals();
@@ -46,27 +45,39 @@ export default function Market() {
     [squadRows]
   );
 
+  // Unique country list for the filter pills (same as Auction)
+  const countries = useMemo(
+    () => [...new Set(allPlayers.map((p) => p.country).filter(Boolean))].sort(),
+    [allPlayers]
+  );
+
   const budget = team?.budget_remaining ?? 0;
 
   function isPlayerLocked(player) {
     if (!player) return false;
-    const lockMs = lockTimeFor(player.country);
+    const lockMs = lockTimeFor(player.country_code);
     return lockMs !== null && Date.now() >= lockMs;
   }
 
-  // Clear swap selection when no window is open
+  const noTransfersLeft =
+    !activeTransferWindow?.is_preseason &&
+    transfersRemaining !== null &&
+    transfersRemaining <= 0;
+
+  // Clear swap selection when no window is open or cap is reached
   useEffect(() => {
-    if (!activeTransferWindow) {
+    if (!activeTransferWindow || noTransfersLeft) {
       setOfferOut(null);
       setConfirmSwapIn(null);
     }
-  }, [activeTransferWindow]);
+  }, [activeTransferWindow, noTransfersLeft]);
 
   const marketOpen = !auctionState || auctionState.status === 'completed';
 
   const filteredPlayers = useMemo(() => {
     return allPlayers.filter((p) => {
       if (filters.position && p.position !== filters.position) return false;
+      if (filters.country && p.country !== filters.country) return false;
       if (filters.maxPrice !== '' && filters.maxPrice != null && p.current_price > filters.maxPrice)
         return false;
       if (filters.search) {
@@ -85,7 +96,7 @@ export default function Market() {
     });
   }, [allPlayers, filters, budget, offerOut]);
 
-  // Realtime: refresh on any team_players change
+  // Realtime: refresh on any team_players or transfers change
   useEffect(() => {
     if (!team) return;
     const channel = supabase
@@ -94,6 +105,9 @@ export default function Market() {
         refreshSquad();
         refreshTeam();
         refreshPlayers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transfers', filter: `team_id=eq.${team.id}` }, () => {
+        refreshTransfers();
       })
       .subscribe();
     return () => supabase.removeChannel(channel);
@@ -110,13 +124,12 @@ export default function Market() {
     if (!offerOut || !confirmSwapIn || !team || !activeTransferWindow) return;
     const playerOut = offerOut;
     const playerIn = confirmSwapIn;
-    const newBudget = budgetAfterSwap;
 
     setSwapping(true);
     setSwapError(null);
 
-    // Guards
-    if (transfersRemaining !== null && transfersRemaining <= 0) {
+    // Fast client-side pre-checks (UX only — server enforces authoritatively)
+    if (noTransfersLeft) {
       setSwapError('Sin fichajes restantes en esta ventana.');
       setSwapping(false);
       return;
@@ -131,7 +144,7 @@ export default function Market() {
       setSwapping(false);
       return;
     }
-    if (newBudget < 0) {
+    if (budgetAfterSwap < 0) {
       setSwapError('Presupuesto insuficiente para este cambio.');
       setSwapping(false);
       return;
@@ -146,43 +159,18 @@ export default function Market() {
       return;
     }
 
-    // 1. Remove outgoing player
-    const { error: deleteError } = await supabase
-      .from('team_players')
-      .delete()
-      .eq('team_id', team.id)
-      .eq('player_id', playerOut.id);
-    if (deleteError) { setSwapError(deleteError.message); setSwapping(false); return; }
-
-    // 2. Add incoming player
-    const { error: insertError } = await supabase.from('team_players').insert({
-      team_id: team.id,
-      player_id: playerIn.id,
-      acquisition_price: playerIn.current_price,
-    });
-    if (insertError) { setSwapError(insertError.message); setSwapping(false); return; }
-
-    // 3. Update budget
-    const { error: budgetError } = await supabase
-      .from('teams')
-      .update({ budget_remaining: newBudget })
-      .eq('id', team.id);
-    if (budgetError) { setSwapError(budgetError.message); setSwapping(false); return; }
-
-    // 4. Log transfer
-    await supabase.from('transfers').insert({
-      team_id: team.id,
-      window_number: activeTransferWindow.window_number,
-      matchday_id: activeTransferWindow.is_preseason ? null : activeTransferWindow.matchday_id,
-      player_out_id: playerOut.id,
-      player_in_id: playerIn.id,
-      price_difference: Number((playerOut.current_price - playerIn.current_price).toFixed(1)),
+    const { data, error } = await supabase.rpc('execute_transfer', {
+      p_player_out_id: playerOut.id,
+      p_player_in_id: playerIn.id,
     });
 
-    // 5. Repoint lineup
-    await repointLineupPlayer(team.id, playerOut.id, playerIn.id);
+    const rpcError = error?.message ?? data?.error;
+    if (rpcError) {
+      setSwapError(rpcError);
+      setSwapping(false);
+      return;
+    }
 
-    // 6. Refresh everything
     await Promise.all([refreshSquad(), refreshTeam(), refreshTransfers(), refreshPlayers()]);
 
     setConfirmSwapIn(null);
@@ -258,15 +246,19 @@ export default function Market() {
           <p className="text-muted text-sm mt-1">No hay más ventanas de fichajes abiertas.</p>
         </div>
       ) : (
-        <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className={`border rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap ${noTransfersLeft ? 'bg-warning/5 border-warning/30' : 'bg-info/10 border-info/30'}`}>
           <div>
-            <p className="text-info font-semibold">
-              {activeTransferWindow.is_preseason
+            <p className={`font-semibold ${noTransfersLeft ? 'text-warning' : 'text-info'}`}>
+              {noTransfersLeft
+                ? 'Sin fichajes restantes'
+                : activeTransferWindow.is_preseason
                 ? 'Pretemporada — Fichajes ilimitados'
                 : `Ventana ${activeTransferWindow.matchday_name}`}
             </p>
             <p className="text-secondary text-sm mt-0.5">
-              {activeTransferWindow.closes_at
+              {noTransfersLeft
+                ? 'Tendrás fichajes nuevos en la próxima ventana'
+                : activeTransferWindow.closes_at
                 ? `La ventana cierra ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
                 : 'Los jugadores se bloquean al iniciar su partido'}
             </p>
@@ -325,7 +317,7 @@ export default function Market() {
           <div className="p-2 max-h-48 overflow-y-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
               {squad.map((p) => {
-                const locked = isPlayerLocked(p);
+                const locked = isPlayerLocked(p) || noTransfersLeft;
                 return (
                   <button
                     key={p.id}
@@ -375,6 +367,7 @@ export default function Market() {
         filters={filters}
         onChange={setFilters}
         resultCount={filteredPlayers.length}
+        countries={countries}
       />
 
       {/* ── Player table ── */}
@@ -415,6 +408,7 @@ export default function Market() {
                   windowOpen={!!activeTransferWindow}
                   offerOutName={offerOut?.name ?? null}
                   isLocked={isPlayerLocked(player)}
+                  noTransfersLeft={noTransfersLeft}
                   onSwap={setConfirmSwapIn}
                   stats={playerTotals[player.id] ?? null}
                 />

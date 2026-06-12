@@ -21,7 +21,7 @@ function EmptyBenchSlot({ order, onClick, isTargetable }) {
   );
 }
 
-export default function BenchList({ bench, selectedId, onPlayerClick, onReorder, onEmptyBenchSlotClick, hasSelected }) {
+export default function BenchList({ bench, selectedId, onPlayerClick, onReorder, onEmptyBenchSlotClick, hasSelected, readOnly = false, pointsById }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-4">
       <h3 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
@@ -36,32 +36,35 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
               isCaptain={false}
               isSelected={player.id === selectedId}
               onClick={onPlayerClick}
+              points={pointsById?.[player.id] ?? null}
             />
-            <div className="flex gap-0.5">
-              <button
-                onClick={() => onReorder(i, i - 1)}
-                disabled={i === 0}
-                className="text-muted hover:text-secondary disabled:opacity-25 text-xs px-1.5 py-0.5 rounded hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                title="Subir prioridad"
-                aria-label="Subir prioridad"
-              >
-                ←
-              </button>
-              <button
-                onClick={() => onReorder(i, i + 1)}
-                disabled={i === bench.length - 1}
-                className="text-muted hover:text-secondary disabled:opacity-25 text-xs px-1.5 py-0.5 rounded hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                title="Bajar prioridad"
-                aria-label="Bajar prioridad"
-              >
-                →
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="flex gap-0.5">
+                <button
+                  onClick={() => onReorder(i, i - 1)}
+                  disabled={i === 0}
+                  className="text-muted hover:text-secondary disabled:opacity-25 text-xs px-1.5 py-0.5 rounded hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                  title="Subir prioridad"
+                  aria-label="Subir prioridad"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => onReorder(i, i + 1)}
+                  disabled={i === bench.length - 1}
+                  className="text-muted hover:text-secondary disabled:opacity-25 text-xs px-1.5 py-0.5 rounded hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                  title="Bajar prioridad"
+                  aria-label="Bajar prioridad"
+                >
+                  →
+                </button>
+              </div>
+            )}
           </div>
         ))}
 
         {/* Empty bench slots */}
-        {Array.from({ length: Math.max(0, 4 - bench.length) }).map((_, i) => (
+        {!readOnly && Array.from({ length: Math.max(0, 4 - bench.length) }).map((_, i) => (
           <EmptyBenchSlot
             key={`empty-${i}`}
             order={bench.length + i + 1}
@@ -70,9 +73,11 @@ export default function BenchList({ bench, selectedId, onPlayerClick, onReorder,
           />
         ))}
       </div>
-      <p className="text-label-caps text-muted mt-3">
-        Prioridad de auto-cambio: 1 (primera opción) → 4 (último recurso)
-      </p>
+      {!readOnly && (
+        <p className="text-label-caps text-muted mt-3">
+          Prioridad de auto-cambio: 1 (primera opción) → 4 (último recurso)
+        </p>
+      )}
     </div>
   );
 }

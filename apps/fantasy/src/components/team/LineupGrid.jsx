@@ -18,7 +18,7 @@ function EmptySlot({ onClick, isTargetable }) {
   );
 }
 
-function PositionRow({ players, captainId, selectedId, onPlayerClick }) {
+function PositionRow({ players, captainId, selectedId, onPlayerClick, pointsById }) {
   if (players.length === 0) return null;
   return (
     <div className="flex justify-center items-end gap-2 flex-wrap">
@@ -29,13 +29,14 @@ function PositionRow({ players, captainId, selectedId, onPlayerClick }) {
           isCaptain={player.id === captainId}
           isSelected={player.id === selectedId}
           onClick={onPlayerClick}
+          points={pointsById?.[player.id] ?? null}
         />
       ))}
     </div>
   );
 }
 
-export default function LineupGrid({ starters, captainId, selectedId, onPlayerClick, onEmptySlotClick, hasSelected }) {
+export default function LineupGrid({ starters, captainId, selectedId, onPlayerClick, onEmptySlotClick, hasSelected, pointsById }) {
   const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
   for (const p of starters) {
     byPos[p.position]?.push(p);
@@ -52,10 +53,10 @@ export default function LineupGrid({ starters, captainId, selectedId, onPlayerCl
 
       {/* Rows: attack → defense (top to bottom) */}
       <div className="relative z-10 px-4 py-5 space-y-4">
-        <PositionRow players={byPos.FWD} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} />
-        <PositionRow players={byPos.MID} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} />
-        <PositionRow players={byPos.DEF} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} />
-        <PositionRow players={byPos.GK} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} />
+        <PositionRow players={byPos.FWD} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} />
+        <PositionRow players={byPos.MID} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} />
+        <PositionRow players={byPos.DEF} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} />
+        <PositionRow players={byPos.GK} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} />
 
         {showEmptySlot && (
           <div className="flex justify-center">

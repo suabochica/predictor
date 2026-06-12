@@ -4,7 +4,7 @@ import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
 import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
-import { calculatePlayerPoints, calculateOptaPoints } from '../lib/scoring';
+import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
@@ -252,68 +252,51 @@ export default function Admin() {
   }
 
   async function handleToggleActive(md) {
-    const activating = !md.is_active;
     await supabase
       .from('matchdays')
-      .update({ is_active: activating })
+      .update({ is_active: !md.is_active })
       .eq('id', md.id);
-
-    // On activation: stamp every team's current pre-tournament (null) lineup
-    // with this matchday_id. This ensures every team has a matchday-specific
-    // record from the moment the matchday goes live, even if they set their
-    // lineup before the matchday existed. Teams that already saved a lineup
-    // specifically for this matchday are left untouched.
-    if (activating) {
-      const [{ data: existing }, { data: nullLineups }] = await Promise.all([
-        supabase.from('lineups').select('team_id').eq('matchday_id', md.id),
-        supabase.from('lineups')
-          .select('team_id, player_id, is_starting, is_captain, bench_order')
-          .is('matchday_id', null),
-      ]);
-
-      const alreadyStamped = new Set((existing ?? []).map(r => r.team_id));
-      const toStamp = (nullLineups ?? [])
-        .filter(r => !alreadyStamped.has(r.team_id))
-        .map(r => ({
-          team_id:    r.team_id,
-          player_id:  r.player_id,
-          matchday_id: md.id,
-          is_starting: r.is_starting,
-          is_captain:  r.is_captain,
-          bench_order: r.bench_order,
-        }));
-
-      if (toStamp.length > 0) {
-        await supabase
-          .from('lineups')
-          .upsert(toStamp, { onConflict: 'team_id,matchday_id,player_id' });
-      }
-    }
-
     await fetchMatchdays();
   }
 
+  const [finalizingId, setFinalizingId] = useState(null);
+
   async function handleToggleCompleted(md) {
     const completing = !md.is_completed;
-    await supabase
-      .from('matchdays')
-      .update({ is_completed: completing, is_active: completing ? false : md.is_active })
-      .eq('id', md.id);
-
-    // When marking a matchday complete, auto-activate the next one (by ID).
-    if (completing) {
-      const { data: fresh } = await supabase
-        .from('matchdays')
-        .select('*')
-        .order('id', { ascending: true });
-      const nextMd = (fresh ?? []).find((m) => m.id > md.id && !m.is_completed && !m.is_active);
-      if (nextMd) {
-        await handleToggleActive(nextMd);
-        return; // handleToggleActive calls fetchMatchdays()
+    setFinalizingId(md.id);
+    try {
+      if (completing) {
+        // Re-run the standings calc so the final write reflects current stats,
+        // not a stale provisional run. Skipped when no stats exist for this
+        // matchday — finalizing must never overwrite standings with zeros.
+        const computed = await computeStandingsForMatchday(md.id);
+        if (computed?.hasStats) {
+          await writeStandings(md.id, computed.rows, computed.toStamp);
+        }
       }
-    }
 
-    await fetchMatchdays();
+      await supabase
+        .from('matchdays')
+        .update({ is_completed: completing, is_active: completing ? false : md.is_active })
+        .eq('id', md.id);
+
+      // When marking a matchday complete, auto-activate the next one (by ID).
+      if (completing) {
+        const { data: fresh } = await supabase
+          .from('matchdays')
+          .select('*')
+          .order('id', { ascending: true });
+        const nextMd = (fresh ?? []).find((m) => m.id > md.id && !m.is_completed && !m.is_active);
+        if (nextMd) {
+          await handleToggleActive(nextMd);
+          return; // handleToggleActive calls fetchMatchdays()
+        }
+      }
+
+      await fetchMatchdays();
+    } finally {
+      setFinalizingId(null);
+    }
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -532,26 +515,19 @@ export default function Admin() {
     setSavingSystem(false);
   }
 
-  // ── 5c. Calculate Standings — step 1: preview (no DB write) ──────────────
-  async function handleCalculateStandings(e) {
-    e.preventDefault();
-    setCalcResult(null);
-    setStandingsPreview(null);
-    setPreviewReady(false);
-    if (!calcMatchdayId) { setCalcResult({ errors: ['Selecciona una jornada.'] }); return; }
-    setCalcRunning(true);
-
-    const matchdayIdInt = parseInt(calcMatchdayId, 10);
+  // ── 5b. Standings computation — shared by preview flow and Finalize ──────
+  // Returns { rows, toStamp, errors, hasStats } or null if no teams exist.
+  async function computeStandingsForMatchday(matchdayIdInt) {
     const errors = [];
 
     // 1. Fetch all teams
     const { data: teams } = await supabase.from('teams').select('id, name');
-    if (!teams?.length) { setCalcResult({ errors: ['No se encontraron equipos.'] }); setCalcRunning(false); return; }
+    if (!teams?.length) return null;
 
     // 2. Fetch all player_stats — include all Opta columns so both scorers work
     const { data: allStats } = await supabase
       .from('player_stats')
-      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won, opta_points')
+      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won')
       .eq('matchday_id', matchdayIdInt);
     const statsMap = Object.fromEntries((allStats ?? []).map(s => [s.player_id, s]));
 
@@ -589,9 +565,7 @@ export default function Admin() {
       prevByTeam[s.team_id].goals += s.goals_scored    ?? 0;
     }
 
-    // Opta scorer: prefers stored opta_points, falls back to computed
-    const optaScorer = (stats, position) =>
-      stats.opta_points != null ? stats.opta_points : calculateOptaPoints(stats, position);
+    const optaScorer = (stats, position) => calculateCompositePoints(stats, position);
 
     // 6. Compute both scoring systems for every team
     const previewRows = [];
@@ -629,14 +603,14 @@ export default function Admin() {
         teamId: team.id,
         teamName: team.name,
         currentPts,     // integer (FPL)
-        optaPts,        // float (Opta, with captain ×2)
+        optaPts,        // float (Composite, with captain ×2)
         prevPts: prev.pts,
         prevGoals: prev.goals,
         goalsScored,
       });
     }
 
-    // Lineup stamp rows — deferred to confirm step
+    // Lineup stamp rows — deferred to the write step
     const toStamp = (nullLineups ?? [])
       .filter(r => !matchdayTeamIds.has(r.team_id))
       .map(r => ({
@@ -648,19 +622,13 @@ export default function Admin() {
         bench_order: r.bench_order,
       }));
 
-    setStandingsPreview({ matchdayId: matchdayIdInt, rows: previewRows, toStamp, errors });
-    setPreviewReady(true);
-    setCalcRunning(false);
+    return { rows: previewRows, toStamp, errors, hasStats: Object.keys(statsMap).length > 0 };
   }
 
-  // ── 5c. Calculate Standings — step 2: confirm & write ────────────────────
-  async function handleConfirmStandings() {
-    if (!standingsPreview) return;
-    setConfirmingSave(true);
-
-    const { matchdayId, rows, toStamp, errors: previewErrors } = standingsPreview;
-    const errors = [...previewErrors];
-    const isOpta = (auctionState.scoring_system ?? 'current') === 'opta';
+  // Writes computed standings + lineup stamps. Shared by confirm flow and Finalize.
+  async function writeStandings(matchdayId, rows, toStamp) {
+    const errors = [];
+    const isOpta = (auctionState.scoring_system ?? 'opta') === 'opta';
 
     const upsertRows = rows.map(r => {
       const rawPts = isOpta ? r.optaPts : r.currentPts;
@@ -688,7 +656,36 @@ export default function Admin() {
       if (stampErr) errors.push(`Lineup stamp error: ${stampErr.message}`);
     }
 
-    setCalcResult({ teamsScored: upsertRows.length, errors });
+    return { teamsScored: upsertRows.length, errors };
+  }
+
+  // ── 5c. Calculate Standings — step 1: preview (no DB write) ──────────────
+  async function handleCalculateStandings(e) {
+    e.preventDefault();
+    setCalcResult(null);
+    setStandingsPreview(null);
+    setPreviewReady(false);
+    if (!calcMatchdayId) { setCalcResult({ errors: ['Selecciona una jornada.'] }); return; }
+    setCalcRunning(true);
+
+    const matchdayIdInt = parseInt(calcMatchdayId, 10);
+    const computed = await computeStandingsForMatchday(matchdayIdInt);
+    if (!computed) { setCalcResult({ errors: ['No se encontraron equipos.'] }); setCalcRunning(false); return; }
+
+    setStandingsPreview({ matchdayId: matchdayIdInt, rows: computed.rows, toStamp: computed.toStamp, errors: computed.errors });
+    setPreviewReady(true);
+    setCalcRunning(false);
+  }
+
+  // ── 5c. Calculate Standings — step 2: confirm & write ────────────────────
+  async function handleConfirmStandings() {
+    if (!standingsPreview) return;
+    setConfirmingSave(true);
+
+    const { matchdayId, rows, toStamp, errors: previewErrors } = standingsPreview;
+    const { teamsScored, errors: writeErrors } = await writeStandings(matchdayId, rows, toStamp);
+
+    setCalcResult({ teamsScored, errors: [...previewErrors, ...writeErrors] });
     setPreviewReady(false);
     setStandingsPreview(null);
     setConfirmingSave(false);
@@ -1617,7 +1614,7 @@ export default function Admin() {
                     <th className="pb-3 pr-4 font-medium">Fase</th>
                     <th className="pb-3 pr-4 font-medium">Fecha límite</th>
                     <th className="pb-3 pr-4 font-medium">Activo</th>
-                    <th className="pb-3 font-medium">Completado</th>
+                    <th className="pb-3 font-medium" title="Finalizar marca la puntuación como definitiva. No afecta bloqueos, ventanas de fichajes ni la jornada siguiente.">Finalizar</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1644,13 +1641,15 @@ export default function Admin() {
                       <td className="py-2.5">
                         <button
                           onClick={() => handleToggleCompleted(md)}
-                          className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                          disabled={finalizingId !== null}
+                          className={`px-3 py-1 rounded text-xs font-semibold transition-colors disabled:opacity-40 ${
                             md.is_completed
                               ? 'bg-info text-on-info hover:brightness-90'
                               : 'bg-border text-secondary hover:bg-border-strong'
                           }`}
+                          title="Recalcula la puntuación con las estadísticas actuales y la marca como definitiva. No toca bloqueos ni ventanas de fichajes."
                         >
-                          {md.is_completed ? 'Completado' : 'Marcar completado'}
+                          {finalizingId === md.id ? 'Finalizando…' : md.is_completed ? 'Final ✓' : 'Finalizar'}
                         </button>
                       </td>
                     </tr>
@@ -1835,7 +1834,7 @@ export default function Admin() {
         <div>
           <h2 className="text-lg font-semibold text-primary">Calcular posiciones</h2>
           <p className="text-xs text-muted mt-1">
-            Ejecuta después de subir estadísticas. Puntúa todos los equipos para la jornada (con sustituciones automáticas) y escribe en fantasy_standings.
+            Ejecuta después de subir estadísticas. Puntúa todos los equipos para la jornada (XI titulares guardados, sin sustituciones automáticas) y escribe en fantasy_standings. Provisional hasta marcar completado.
           </p>
         </div>
 
@@ -1844,8 +1843,8 @@ export default function Admin() {
           <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2">Sistema de puntuación</p>
           <div className="flex items-center gap-2">
             {['current', 'opta'].map((system) => {
-              const isActive = (auctionState.scoring_system ?? 'current') === system;
-              const label = system === 'current' ? 'Actual (estilo FPL)' : 'Opta';
+              const isActive = (auctionState.scoring_system ?? 'opta') === system;
+              const label = system === 'current' ? 'FPL' : 'Compuesto (FPL+)';
               return (
                 <button
                   key={system}
@@ -1893,8 +1892,8 @@ export default function Admin() {
           <div className="space-y-3">
             <p className="text-xs font-semibold text-secondary uppercase tracking-wide">
               Vista previa — Sistema activo:{' '}
-              <span className={(auctionState.scoring_system ?? 'current') === 'opta' ? 'text-tertiary' : 'text-info'}>
-                {(auctionState.scoring_system ?? 'current') === 'opta' ? 'Opta' : 'Actual (estilo FPL)'}
+              <span className={(auctionState.scoring_system ?? 'opta') === 'opta' ? 'text-tertiary' : 'text-info'}>
+                {(auctionState.scoring_system ?? 'opta') === 'opta' ? 'Compuesto (FPL+)' : 'FPL'}
               </span>
             </p>
             <div className="overflow-x-auto">
@@ -1902,14 +1901,14 @@ export default function Admin() {
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
                     <th className="pb-2 pr-4 font-medium">Equipo</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Puntos actuales</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Puntos Opta</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Puntos FPL</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Puntos Compuesto</th>
                     <th className="pb-2 font-medium text-right">Se guardará</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {standingsPreview.rows.map(r => {
-                    const isOpta = (auctionState.scoring_system ?? 'current') === 'opta';
+                    const isOpta = (auctionState.scoring_system ?? 'opta') === 'opta';
                     const willSave = Math.round(isOpta ? r.optaPts : r.currentPts);
                     return (
                       <tr key={r.teamId} className="text-secondary">

@@ -5,6 +5,7 @@ import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice } from '../lib/utils';
 import { buildDefaultLineup } from '../lib/defaultLineup';
+import { getActivePoints } from '../lib/scoring.js';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 
@@ -43,6 +44,8 @@ export default function MyTeam() {
   const [selectedMatchday, setSelectedMatchday] = useState(null);
   const [allMatchdays, setAllMatchdays] = useState([]);
 
+  const [scoringSystem, setScoringSystem] = useState('opta');
+
   // Live stats for the active matchday (display only, not used for locking)
   const [playerMatchdayStats, setPlayerMatchdayStats] = useState({});
   // Historical: completed matchdays + per-player stats across them
@@ -52,7 +55,7 @@ export default function MyTeam() {
   const squad = normalizeSquad(players);
 
   // Per-country kickoff times for the selected matchday — drives player locks
-  const { lockTimeFor, kickoffByCountry } = useMatchdayLocks(selectedMatchday?.id ?? null);
+  const { lockTimeFor, kickoffByCode } = useMatchdayLocks(selectedMatchday?.id ?? null);
 
   // Ticks every 30s so isGameLocked re-evaluates as matches kick off
   const [now, setNow] = useState(Date.now());
@@ -63,19 +66,25 @@ export default function MyTeam() {
 
   // Lock = kickoff time (from polla matches) minus 10 min lead
   function isGameLocked(player) {
-    const lockMs = lockTimeFor(player.country);
+    const lockMs = lockTimeFor(player.country_code);
     return lockMs !== null ? now >= lockMs : false;
   }
 
-  // ── Load non-completed matchdays for selector ──────────────────────────
+  // ── Load matchdays for selector — time-driven: active matchday and forward ─
   useEffect(() => {
     supabase
       .from('matchdays')
-      .select('id, name, wc_stage, is_active')
-      .eq('is_completed', false)
+      .select('id, name, wc_stage, is_active, is_completed')
       .order('id', { ascending: true })
-      .then(({ data }) => setAllMatchdays(data ?? []));
-  }, []);
+      .then(({ data }) => {
+        const all = data ?? [];
+        // Show active matchday onwards — play-clock driven, not is_completed-driven
+        const fromActive = activeMatchday
+          ? all.filter(md => md.id >= activeMatchday.id && !md.is_completed)
+          : all.filter(md => !md.is_completed);
+        setAllMatchdays(fromActive);
+      });
+  }, [activeMatchday?.id]); // eslint-disable-line
 
   // ── Initialize selectedMatchday to the active matchday once it loads ───
   useEffect(() => {
@@ -84,20 +93,26 @@ export default function MyTeam() {
     }
   }, [activeMatchday?.id]); // eslint-disable-line
 
+  // ── Fetch active scoring system ──────────────────────────────────────────
+  useEffect(() => {
+    supabase
+      .from('auction_state')
+      .select('scoring_system')
+      .single()
+      .then(({ data }) => setScoringSystem(data?.scoring_system ?? 'opta'));
+  }, []);
+
   // ── Load live stats for the active matchday (display only) ─────────────
   useEffect(() => {
     if (!activeMatchday) { setPlayerMatchdayStats({}); return; }
     supabase
       .from('player_stats')
-      .select('player_id, total_points, minutes_played')
+      .select('*')
       .eq('matchday_id', activeMatchday.id)
       .then(({ data }) => {
         const stats = {};
         for (const row of data ?? []) {
-          stats[row.player_id] = {
-            total_points: row.total_points ?? 0,
-            minutes_played: row.minutes_played ?? 0,
-          };
+          stats[row.player_id] = row;
         }
         setPlayerMatchdayStats(stats);
       });
@@ -119,7 +134,7 @@ export default function MyTeam() {
 
         const { data: stats } = await supabase
           .from('player_stats')
-          .select('player_id, matchday_id, total_points, minutes_played, goals, assists')
+          .select('*')
           .in('player_id', playerIds)
           .in('matchday_id', mds.map(m => m.id));
 
@@ -234,18 +249,12 @@ export default function MyTeam() {
   }
 
   function doSwap(p1, p2) {
-    if (isGameLocked(p1)) {
-      setSwapError(`El partido de ${p1.name} ya inició — no se puede mover.`);
-      return;
-    }
-    if (isGameLocked(p2)) {
-      setSwapError(`El partido de ${p2.name} ya inició — no se puede mover.`);
-      return;
-    }
+    // Invariant: a locked player may never ENTER the XI; any player may LEAVE the XI.
     const p1IsStarter = starters.some((s) => s.id === p1.id);
     const p2IsStarter = starters.some((s) => s.id === p2.id);
 
     if (p1IsStarter && p2IsStarter) {
+      // Starter ↔ Starter: no one enters/leaves the XI — no lock check needed
       const newStarters = starters.map((s) =>
         s.id === p1.id ? p2 : s.id === p2.id ? p1 : s
       );
@@ -257,6 +266,11 @@ export default function MyTeam() {
     let newStarters, newBench;
 
     if (p1IsStarter && !p2IsStarter) {
+      // p2 (bench) enters the XI — block if locked
+      if (isGameLocked(p2)) {
+        setSwapError(`El partido de ${p2.name} ya inició — no puede entrar al XI.`);
+        return;
+      }
       const remainingStarters = starters.filter((s) => s.id !== p1.id);
       if (p2.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
         setSwapError(`No se puede mover a ${p2.name} al XI — solo 1 POR permitido en el XI titular.`);
@@ -270,6 +284,11 @@ export default function MyTeam() {
       newBench = bench.filter((b) => b.id !== p2.id).concat(p1);
       if (captainId === p1.id) setCaptainId(null);
     } else if (!p1IsStarter && p2IsStarter) {
+      // p1 (bench) enters the XI — block if locked
+      if (isGameLocked(p1)) {
+        setSwapError(`El partido de ${p1.name} ya inició — no puede entrar al XI.`);
+        return;
+      }
       const remainingStarters = starters.filter((s) => s.id !== p2.id);
       if (p1.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
         setSwapError(`No se puede mover a ${p1.name} al XI — solo 1 POR permitido en el XI titular.`);
@@ -283,7 +302,7 @@ export default function MyTeam() {
       newBench = bench.filter((b) => b.id !== p1.id).concat(p2);
       if (captainId === p2.id) setCaptainId(null);
     } else {
-      // Bench ↔ Bench: swap order
+      // Bench ↔ Bench: swap order — no lock check needed
       const i1 = bench.findIndex((b) => b.id === p1.id);
       const i2 = bench.findIndex((b) => b.id === p2.id);
       if (i1 < 0 || i2 < 0) return;
@@ -321,15 +340,12 @@ export default function MyTeam() {
 
   function handleEmptyBenchSlotClick() {
     if (!selectedPlayer) return;
-    if (isGameLocked(selectedPlayer)) {
-      setSwapError(`El partido de ${selectedPlayer.name} ya inició — no se puede mover.`);
-      return;
-    }
     if (bench.some((b) => b.id === selectedPlayer.id)) {
       setSelectedPlayer(null);
       return;
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
+      // Leaving the XI is always allowed — even if the player is locked
       if (selectedPlayer.position === 'GK') {
         setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
         setSelectedPlayer(null);
@@ -428,6 +444,16 @@ export default function MyTeam() {
     (p) => !starters.some((s) => s.id === p.id) && !bench.some((b) => b.id === p.id)
   );
 
+  const ptsFor = (statsRow, position) => getActivePoints(statsRow, position, scoringSystem);
+
+  const pointsById = {};
+  for (const p of squad) {
+    const stats = playerMatchdayStats[p.id];
+    if (!stats) continue;
+    const raw = ptsFor(stats, p.position);
+    pointsById[p.id] = p.id === captainId ? Math.round(raw * 2 * 10) / 10 : raw;
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────
   if (teamLoading || lineupLoading) {
     return (
@@ -515,17 +541,14 @@ export default function MyTeam() {
 
       {/* ── Live matchday stats panel (always shows active matchday) ── */}
       {activeMatchday && Object.keys(playerMatchdayStats).length > 0 && (() => {
-        const livePts = starters.reduce((sum, p) => {
-          const pts = playerMatchdayStats[p.id]?.total_points ?? 0;
-          return sum + (p.id === captainId ? pts * 2 : pts);
-        }, 0);
+        const livePts = starters.reduce((sum, p) => sum + (pointsById[p.id] ?? 0), 0);
         const played    = starters.filter(p => (playerMatchdayStats[p.id]?.minutes_played ?? 0) > 0);
         const notPlayed = starters.filter(p => !playerMatchdayStats[p.id] || playerMatchdayStats[p.id].minutes_played === 0);
         return (
           <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-6 flex-wrap">
             <div>
               <p className="text-label-caps text-muted uppercase tracking-wider">Pts en vivo</p>
-              <p className="text-xl font-bold text-tertiary">{livePts}</p>
+              <p className="text-xl font-bold text-tertiary">{Math.round(livePts * 10) / 10}</p>
             </div>
             <div>
               <p className="text-label-caps text-muted uppercase tracking-wider">Jugaron</p>
@@ -552,9 +575,9 @@ export default function MyTeam() {
       )}
 
       {/* ── Rolling lockout notice ── */}
-      {selectedMatchday && Object.keys(kickoffByCountry).length > 0 && (
+      {selectedMatchday && Object.keys(kickoffByCode).length > 0 && (
         <div className="bg-surface-hover/60 border border-border rounded-xl p-3 text-xs text-secondary" role="alert">
-          Bloqueo progresivo activo — los jugadores se bloquean 10 min antes de su partido. Los de partidos posteriores siguen siendo editables.
+          Bloqueo progresivo activo — los jugadores se bloquean 10 min antes de su partido. Un titular bloqueado puede salir al banquillo (un jugador desbloqueado entra en su lugar); los bloqueados no pueden entrar al XI.
         </div>
       )}
 
@@ -573,6 +596,7 @@ export default function MyTeam() {
         onPlayerClick={handlePlayerClick}
         onEmptySlotClick={handleEmptySlotClick}
         hasSelected={!!selectedPlayer}
+        pointsById={pointsById}
       />
 
       {/* ── Bench ── */}
@@ -583,6 +607,7 @@ export default function MyTeam() {
         onReorder={handleBenchReorder}
         onEmptyBenchSlotClick={handleEmptyBenchSlotClick}
         hasSelected={!!selectedPlayer}
+        pointsById={pointsById}
       />
 
       {/* ── Action panel (shown when a player is selected) ── */}
@@ -688,9 +713,7 @@ export default function MyTeam() {
               const benchIdx = bench.findIndex((b) => b.id === p.id);
               const isCaptain = p.id === captainId;
               const mdStats = playerMatchdayStats[p.id];
-              const liveCapPts = mdStats
-                ? (p.id === captainId ? mdStats.total_points * 2 : mdStats.total_points)
-                : null;
+              const liveCapPts = mdStats ? (pointsById[p.id] ?? 0) : null;
               return (
                 <div
                   key={p.id}
@@ -783,7 +806,7 @@ export default function MyTeam() {
                           </td>
                           {completedMatchdays.map(md => {
                             const s = historicalStats[md.id]?.[p.id];
-                            const pts = s?.total_points ?? null;
+                            const pts = s ? ptsFor(s, p.position) : null;
                             if (pts !== null) total += pts;
                             return (
                               <td key={md.id} className="px-3 py-2.5 text-center">
@@ -801,7 +824,7 @@ export default function MyTeam() {
                           })}
                           <td className="px-3 py-2.5 text-center">
                             <span className={`font-bold text-xs ${total > 0 ? 'text-primary' : 'text-muted'}`}>
-                              {total > 0 ? total : '—'}
+                              {total > 0 ? Math.round(total * 10) / 10 : '—'}
                             </span>
                           </td>
                         </tr>
