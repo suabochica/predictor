@@ -15,7 +15,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
 
   async function fetchLeaderboard() {
     try {
-      const { data, error } = await supabase.rpc('get_leaderboard');
+      const { data, error } = await supabase.rpc('polla_get_leaderboard');
 
       if (error) throw error;
 
