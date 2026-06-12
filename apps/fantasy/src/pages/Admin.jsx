@@ -642,8 +642,8 @@ export default function Admin() {
       return {
         team_id: r.teamId,
         matchday_id: matchdayId,
-        matchday_points: Math.round(rawPts),
-        total_points: Math.round(r.prevPts + rawPts),
+        matchday_points: Math.round(rawPts * 10) / 10,
+        total_points: Math.round((r.prevPts + rawPts) * 10) / 10,
         goals_scored: r.goalsScored,
       };
     });
@@ -1924,7 +1924,7 @@ export default function Admin() {
                 <tbody className="divide-y divide-border">
                   {standingsPreview.rows.map(r => {
                     const isOpta = (auctionState.scoring_system ?? 'opta') === 'opta';
-                    const willSave = Math.round(isOpta ? r.optaPts : r.currentPts);
+                    const willSave = Math.round((isOpta ? r.optaPts : r.currentPts) * 10) / 10;
                     return (
                       <tr key={r.teamId} className="text-secondary">
                         <td className="py-2 pr-4 text-primary font-medium">{r.teamName}</td>
@@ -1932,7 +1932,7 @@ export default function Admin() {
                         <td className="py-2 pr-4 text-right">
                           {typeof r.optaPts === 'number' ? r.optaPts.toFixed(1) : '—'}
                         </td>
-                        <td className="py-2 text-right font-bold text-tertiary">{willSave}</td>
+                        <td className="py-2 text-right font-bold text-tertiary">{willSave.toFixed(1)}</td>
                       </tr>
                     );
                   })}

@@ -29,3 +29,7 @@ SELECT
   COUNT(*) FILTER (WHERE clean_sheet = true)::int AS clean_sheets
 FROM player_stats
 GROUP BY player_id;
+
+-- DROP VIEW destroys the view's ACL, so re-grant SELECT to authenticated
+-- (matches the grant from 028_tournament_totals_view.sql).
+GRANT SELECT ON player_tournament_totals TO authenticated;

@@ -3,6 +3,7 @@ import { useStandings } from '../hooks/useStandings';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../context/LeagueContext';
 import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
+import { fmtPts } from '../lib/utils';
 
 const CHAMPIONSHIP_SPOTS = 8;
 const RELEGATION_SPOTS = 4;
@@ -203,9 +204,7 @@ export default function Leaderboard() {
                           key={md.id}
                           className="hidden sm:block text-center text-sm text-secondary"
                         >
-                          {entry.matchday_points[md.id] != null
-                            ? entry.matchday_points[md.id]
-                            : '—'}
+                          {fmtPts(entry.matchday_points[md.id])}
                         </span>
                       ))
                     : [1, 2, 3].map((n) => (
@@ -220,7 +219,7 @@ export default function Leaderboard() {
                       hasScores ? 'text-tertiary' : 'text-muted'
                     }`}
                   >
-                    {entry.total_points}
+                    {fmtPts(entry.total_points)}
                   </span>
 
                   {/* Goals scored (tiebreaker) */}
