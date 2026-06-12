@@ -8,6 +8,7 @@ import { useTransfers } from '../hooks/useTransfers';
 import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
 import { formatPrice, getPositionColor } from '../lib/utils';
+import { statColumns } from '../lib/statColumns';
 import { MAX_SQUAD_SIZE } from '../config/constants';
 import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import FilterBar from '../components/market/FilterBar';
@@ -388,8 +389,12 @@ export default function Market() {
               <Th className="hidden sm:table-cell text-center">Pts</Th>
               <Th className="text-right">Precio</Th>
               <Th className="hidden sm:table-cell">Dueño</Th>
-              <Th className="hidden sm:table-cell w-6" />
               <Th>Acción</Th>
+              {statColumns.map((col) => (
+                <Th key={col.field} className="text-center whitespace-nowrap" title={col.label}>
+                  {col.abbrev}
+                </Th>
+              ))}
             </tr>
           </Thead>
           <Tbody>

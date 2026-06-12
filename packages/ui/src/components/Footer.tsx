@@ -1,3 +1,5 @@
+const LAST_UPDATED = '12 de junio de 2026';
+
 export function Footer() {
   return (
     <footer className="mt-auto py-4 text-center text-body-sm text-muted border-t border-border">
@@ -17,6 +19,7 @@ export function Footer() {
       <p className="mt-2 text-muted">
         Mundial 2026 • 11 de junio – 19 de julio de 2026
       </p>
+      <p className="text-muted">Última actualización: {LAST_UPDATED}</p>
       <p className="text-muted">
         Hecho con ❤️ por{" "}
         <a

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import LineupGrid from '../team/LineupGrid';
 import BenchList from '../team/BenchList';
+import { getActivePoints } from '../../lib/scoring';
 
 const LINEUP_SELECT =
   'is_starting, is_captain, bench_order, players(id, name, country, country_code, position)';
@@ -10,6 +11,9 @@ const noop = () => {};
 
 export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
   const [rows, setRows] = useState(null); // null = loading, [] = none found
+  const [scoringSystem, setScoringSystem] = useState('opta');
+  const [liveStats, setLiveStats] = useState({});
+  const [allStats, setAllStats] = useState([]);
 
   const [error, setError] = useState(null);
 
@@ -76,6 +80,37 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
     return () => { cancelled = true; };
   }, [entry.team_id, activeMatchdayId]);
 
+  // Fetch scoring system + player stats once rows are loaded
+  useEffect(() => {
+    if (!rows || rows.length === 0) return;
+    const playerIds = rows.filter(r => r.players).map(r => r.players.id);
+    if (playerIds.length === 0) return;
+    let cancelled = false;
+
+    async function loadStats() {
+      const [
+        { data: sysData },
+        { data: liveData },
+        { data: allData },
+      ] = await Promise.all([
+        supabase.from('auction_state').select('scoring_system').single(),
+        activeMatchdayId
+          ? supabase.from('player_stats').select('*').eq('matchday_id', activeMatchdayId).in('player_id', playerIds)
+          : Promise.resolve({ data: [] }),
+        supabase.from('player_stats').select('*').in('player_id', playerIds),
+      ]);
+      if (cancelled) return;
+      setScoringSystem(sysData?.scoring_system ?? 'opta');
+      const liveMap = {};
+      for (const s of liveData ?? []) liveMap[s.player_id] = s;
+      setLiveStats(liveMap);
+      setAllStats(allData ?? []);
+    }
+
+    loadStats();
+    return () => { cancelled = true; };
+  }, [rows, activeMatchdayId]); // eslint-disable-line
+
   const players = (rows ?? [])
     .filter((r) => r.players)
     .map((r) => ({
@@ -89,6 +124,27 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
     .filter((p) => !p.is_starting)
     .sort((a, b) => (a.bench_order ?? 99) - (b.bench_order ?? 99));
   const captainId = players.find((p) => p.is_captain)?.id ?? null;
+
+  // Live matchday points (with captain ×2)
+  const pointsById = {};
+  for (const p of players) {
+    const s = liveStats[p.id];
+    if (!s) continue;
+    const raw = getActivePoints(s, p.position, scoringSystem);
+    pointsById[p.id] = p.id === captainId ? Math.round(raw * 2 * 10) / 10 : raw;
+  }
+
+  // Cumulative tournament total (base, no captain ×2)
+  const totalPointsById = {};
+  const totalMap = {};
+  for (const s of allStats) {
+    const p = players.find(pl => pl.id === s.player_id);
+    if (!p) continue;
+    totalMap[s.player_id] = (totalMap[s.player_id] ?? 0) + getActivePoints(s, p.position, scoringSystem);
+  }
+  for (const [id, total] of Object.entries(totalMap)) {
+    totalPointsById[id] = Math.round(total * 10) / 10;
+  }
 
   return (
     <div
@@ -131,8 +187,17 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
               onPlayerClick={noop}
               onEmptySlotClick={noop}
               hasSelected={false}
+              pointsById={pointsById}
+              totalPointsById={totalPointsById}
             />
-            <BenchList bench={bench} selectedId={null} onPlayerClick={noop} readOnly />
+            <BenchList
+              bench={bench}
+              selectedId={null}
+              onPlayerClick={noop}
+              readOnly
+              pointsById={pointsById}
+              totalPointsById={totalPointsById}
+            />
           </>
         )}
       </div>

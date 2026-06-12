@@ -96,7 +96,7 @@ export default function Dashboard() {
             <span className="text-xs font-medium text-secondary group-hover:text-primary">Sala de subasta</span>
           </Link>
           <Link
-            to="/standings"
+            to="/leaderboard"
             className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
           >
             <img src={standingsIcon} className="w-6 h-6" alt="" />

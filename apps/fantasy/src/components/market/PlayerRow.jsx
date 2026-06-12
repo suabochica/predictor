@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Td } from '@predictor/ui';
-import { getPositionColor, formatPrice } from '../../lib/utils';
+import { getPositionColor, formatPrice, fmtPts } from '../../lib/utils';
+import { statColumns } from '../../lib/statColumns';
 
 function StatTd({ value, className = '' }) {
   return (
@@ -22,8 +22,6 @@ export default function PlayerRow({
   onSwap,
   stats,
 }) {
-  const [expanded, setExpanded] = useState(false);
-
   let actionLabel = 'Elige jugador para intercambiar';
   let disabled = true;
   let disabledReason = '';
@@ -67,8 +65,6 @@ export default function PlayerRow({
     onSwap(player);
   }
 
-  const hasStats = stats && stats.gp > 0;
-
   return (
     <>
       <tr className={`hover:bg-surface-hover/50 ${rowOpacity}`}>
@@ -101,7 +97,7 @@ export default function PlayerRow({
 
         {/* Pts */}
         <StatTd
-          value={stats?.total_points}
+          value={fmtPts(stats?.total_points)}
           className="font-semibold text-tertiary hidden sm:table-cell"
         />
 
@@ -115,19 +111,6 @@ export default function PlayerRow({
           {owner && !isMine ? owner.teamName : null}
         </Td>
 
-        {/* Opta expand toggle (hidden on mobile) */}
-        <Td className="py-2 w-6 text-center hidden sm:table-cell">
-          {hasStats && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              title={expanded ? 'Ocultar estadísticas Opta' : 'Mostrar estadísticas Opta'}
-              className="text-muted hover:text-secondary text-xs leading-none focus-visible:outline-none"
-            >
-              {expanded ? '▾' : '▸'}
-            </button>
-          )}
-        </Td>
-
         {/* Action */}
         <Td className="py-2 w-36 shrink-0">
           <button
@@ -139,32 +122,14 @@ export default function PlayerRow({
             {actionLabel}
           </button>
         </Td>
-      </tr>
 
-      {/* Opta tail — expanded detail row */}
-      {expanded && hasStats && (
-        <tr className="bg-surface-hover/20">
-          <td colSpan={11} className="px-4 py-2 text-xs text-secondary border-b border-border/50">
-            <div className="flex flex-wrap gap-x-5 gap-y-1">
-              <span><span className="text-muted">Min</span> {stats.minutes}</span>
-              <span><span className="text-muted">SoT</span> {stats.shots_on_target}</span>
-              <span><span className="text-muted">Blk</span> {stats.blocked_shots}</span>
-              <span><span className="text-muted">Tkl</span> {stats.tackles}</span>
-              <span><span className="text-muted">Int</span> {stats.interceptions}</span>
-              <span><span className="text-muted">FW</span> {stats.fouls_won}</span>
-              <span><span className="text-muted">PW</span> {stats.penalties_won}</span>
-              <span><span className="text-muted">Sv</span> {stats.saves}</span>
-              <span><span className="text-muted">PS</span> {stats.penalty_saves}</span>
-              <span><span className="text-muted">CS</span> {stats.clean_sheets}</span>
-              {stats.opta_points != null && (
-                <span className="text-tertiary font-semibold">
-                  Opta {Number(stats.opta_points).toFixed(1)}
-                </span>
-              )}
-            </div>
-          </td>
-        </tr>
-      )}
+        {/* Per-stat columns */}
+        {statColumns.map((col) => (
+          <Td key={col.field} className="py-2 text-center text-xs tabular-nums text-secondary">
+            {stats?.[col.field] ?? '—'}
+          </Td>
+        ))}
+      </tr>
     </>
   );
 }

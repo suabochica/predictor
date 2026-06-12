@@ -1,6 +1,6 @@
-import { getPositionColor } from '../../lib/utils';
+import { getPositionColor, fmtPts } from '../../lib/utils';
 
-export default function PlayerSlot({ player, isCaptain, isSelected, onClick, points }) {
+export default function PlayerSlot({ player, isCaptain, isSelected, onClick, points, totalPoints }) {
   // Shorten name to last name for display
   const displayName = player.name.split(' ').slice(-1)[0];
   const countryCode =
@@ -15,10 +15,20 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
           : 'bg-surface/80 hover:bg-surface-hover border border-border/50'
       }`}
     >
-      {/* Points badge */}
+      {/* Points badge — live matchday (top-left) */}
       {points !== null && points !== undefined && (
         <span className="absolute -top-2 -left-1.5 bg-surface border border-tertiary/60 text-tertiary text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow">
-          {points}
+          {fmtPts(points)}
+        </span>
+      )}
+
+      {/* Total points badge — cumulative tournament (bottom-left) */}
+      {totalPoints != null && (
+        <span
+          className="absolute -bottom-2 -left-1.5 bg-surface border border-info/60 text-info text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow"
+          title="Puntos totales (todas las jornadas)"
+        >
+          {fmtPts(totalPoints)}
         </span>
       )}
 

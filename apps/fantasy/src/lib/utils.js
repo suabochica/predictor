@@ -1,3 +1,5 @@
+export const fmtPts = (n) => (n == null ? '—' : Number(n).toFixed(1));
+
 export function formatPrice(price) {
   return `${Number(price).toFixed(1)}M`;
 }

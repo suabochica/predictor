@@ -3,7 +3,9 @@ import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
-import { getPositionColor, formatPrice } from '../lib/utils';
+import { getPositionColor, formatPrice, fmtPts } from '../lib/utils';
+import { statColumns } from '../lib/statColumns';
+import { usePlayerTotals } from '../hooks/usePlayerTotals';
 import { buildDefaultLineup } from '../lib/defaultLineup';
 import { getActivePoints } from '../lib/scoring.js';
 import LineupGrid from '../components/team/LineupGrid';
@@ -26,6 +28,7 @@ function normalizeSquad(teamPlayers) {
 
 export default function MyTeam() {
   const { team, players, loading: teamLoading, refresh: refreshSquad } = useTeam();
+  const { totals: totalsById } = usePlayerTotals();
   const { activeMatchday, refreshTeam } = useLeague();
 
   const [starters, setStarters] = useState([]);
@@ -454,6 +457,20 @@ export default function MyTeam() {
     pointsById[p.id] = p.id === captainId ? Math.round(raw * 2 * 10) / 10 : raw;
   }
 
+  // Cumulative tournament total points (base, no captain ×2)
+  const totalPointsById = {};
+  for (const p of squad) {
+    let total = 0;
+    let hasStat = false;
+    for (const md of completedMatchdays) {
+      const s = historicalStats[md.id]?.[p.id];
+      if (s) { total += ptsFor(s, p.position); hasStat = true; }
+    }
+    const liveS = playerMatchdayStats[p.id];
+    if (liveS) { total += ptsFor(liveS, p.position); hasStat = true; }
+    if (hasStat) totalPointsById[p.id] = Math.round(total * 10) / 10;
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────
   if (teamLoading || lineupLoading) {
     return (
@@ -548,7 +565,7 @@ export default function MyTeam() {
           <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-6 flex-wrap">
             <div>
               <p className="text-label-caps text-muted uppercase tracking-wider">Pts en vivo</p>
-              <p className="text-xl font-bold text-tertiary">{Math.round(livePts * 10) / 10}</p>
+              <p className="text-xl font-bold text-tertiary">{fmtPts(livePts)}</p>
             </div>
             <div>
               <p className="text-label-caps text-muted uppercase tracking-wider">Jugaron</p>
@@ -597,6 +614,7 @@ export default function MyTeam() {
         onEmptySlotClick={handleEmptySlotClick}
         hasSelected={!!selectedPlayer}
         pointsById={pointsById}
+        totalPointsById={totalPointsById}
       />
 
       {/* ── Bench ── */}
@@ -608,6 +626,7 @@ export default function MyTeam() {
         onEmptyBenchSlotClick={handleEmptyBenchSlotClick}
         hasSelected={!!selectedPlayer}
         pointsById={pointsById}
+        totalPointsById={totalPointsById}
       />
 
       {/* ── Action panel (shown when a player is selected) ── */}
@@ -699,10 +718,24 @@ export default function MyTeam() {
       )}
 
       {/* ── Squad overview table ── */}
-      <div className="bg-surface border border-border rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+      <div className="bg-surface border border-border rounded-xl overflow-x-auto">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between min-w-max">
           <h3 className="text-sm font-semibold text-secondary">Plantilla completa</h3>
           <span className="text-xs text-muted">{squad.length} jugadores</span>
+        </div>
+        {/* Stat header row */}
+        <div className="flex items-center gap-3 px-4 py-1.5 border-b border-border/50 min-w-max">
+          <span className="w-8 flex-shrink-0" />
+          <span className="text-xs text-muted flex-shrink-0 w-[140px]">Jugador</span>
+          <span className="text-xs text-muted flex-shrink-0 w-8">País</span>
+          <span className="text-xs text-muted flex-shrink-0 w-12 text-right">Precio</span>
+          {activeMatchday && <span className="text-xs text-muted flex-shrink-0 w-14 text-right">En vivo</span>}
+          <span className="text-xs text-muted flex-shrink-0 w-16 text-right">Estado</span>
+          {statColumns.map((col) => (
+            <span key={col.field} className="text-xs text-muted flex-shrink-0 w-10 text-right" title={col.label}>
+              {col.abbrev}
+            </span>
+          ))}
         </div>
         <div className="divide-y divide-border">
           {['GK', 'DEF', 'MID', 'FWD'].map((pos) => {
@@ -714,10 +747,11 @@ export default function MyTeam() {
               const isCaptain = p.id === captainId;
               const mdStats = playerMatchdayStats[p.id];
               const liveCapPts = mdStats ? (pointsById[p.id] ?? 0) : null;
+              const pTotals = totalsById[p.id];
               return (
                 <div
                   key={p.id}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-hover cursor-pointer ${
+                  className={`flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-hover cursor-pointer min-w-max ${
                     selectedPlayer?.id === p.id ? 'bg-tertiary/5' : ''
                   }`}
                   onClick={() => handlePlayerClick(p)}
@@ -727,13 +761,13 @@ export default function MyTeam() {
                   >
                     {pos}
                   </span>
-                  <span className="text-sm text-primary flex-1 min-w-0 truncate">{p.name}</span>
-                  <span className="text-xs text-muted flex-shrink-0">{p.country_code}</span>
+                  <span className="text-sm text-primary flex-shrink-0 w-[140px] truncate">{p.name}</span>
+                  <span className="text-xs text-muted flex-shrink-0 w-8">{p.country_code}</span>
                   <span className="text-xs text-secondary flex-shrink-0 w-12 text-right">
                     {formatPrice(p.price)}
                   </span>
                   {activeMatchday && (
-                    <span className={`text-xs flex-shrink-0 w-12 text-right font-semibold ${
+                    <span className={`text-xs flex-shrink-0 w-14 text-right font-semibold ${
                       liveCapPts === null
                         ? 'text-secondary'
                         : mdStats.minutes_played > 0
@@ -743,8 +777,8 @@ export default function MyTeam() {
                       {liveCapPts === null
                         ? '—'
                         : mdStats.minutes_played > 0
-                        ? `${liveCapPts > 0 ? '+' : ''}${liveCapPts} pts`
-                        : '0 pts'}
+                        ? `${fmtPts(liveCapPts)} pts`
+                        : '0.0 pts'}
                     </span>
                   )}
                   <span className="text-label-caps flex-shrink-0 w-16 text-right flex items-center justify-end gap-1">
@@ -761,6 +795,11 @@ export default function MyTeam() {
                       <span className="text-warning">—</span>
                     )}
                   </span>
+                  {statColumns.map((col) => (
+                    <span key={col.field} className="text-xs tabular-nums text-secondary flex-shrink-0 w-10 text-right">
+                      {pTotals?.[col.field] ?? '—'}
+                    </span>
+                  ))}
                 </div>
               );
             });
@@ -816,7 +855,7 @@ export default function MyTeam() {
                                   <span className="text-muted text-xs" title="No jugó">0</span>
                                 ) : (
                                   <span className={`font-semibold text-xs ${pts > 0 ? 'text-tertiary' : 'text-error'}`}>
-                                    {pts}
+                                    {fmtPts(pts)}
                                   </span>
                                 )}
                               </td>
@@ -824,7 +863,7 @@ export default function MyTeam() {
                           })}
                           <td className="px-3 py-2.5 text-center">
                             <span className={`font-bold text-xs ${total > 0 ? 'text-primary' : 'text-muted'}`}>
-                              {total > 0 ? Math.round(total * 10) / 10 : '—'}
+                              {total > 0 ? fmtPts(total) : '—'}
                             </span>
                           </td>
                         </tr>

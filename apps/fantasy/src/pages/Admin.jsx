@@ -394,14 +394,21 @@ export default function Admin() {
   const [fixtureMatches, setFixtureMatches] = useState([]);
   const [fixtureLoading, setFixtureLoading] = useState(false);
   const [fixtureSavingIds, setFixtureSavingIds] = useState(new Set());
+  const [matchdaysWithStats, setMatchdaysWithStats] = useState(new Set());
 
   const fetchFixtureMatches = useCallback(async () => {
     setFixtureLoading(true);
-    const { data } = await supabase
-      .from('matches')
-      .select('id, match_code, team_a, team_b, match_date, matchday_id')
-      .order('match_date', { ascending: true });
-    setFixtureMatches(data ?? []);
+    const [{ data: matchData }, { data: metaData }] = await Promise.all([
+      supabase
+        .from('matches')
+        .select('id, match_code, team_a, team_b, match_date, matchday_id')
+        .order('match_date', { ascending: true }),
+      supabase
+        .from('match_metadata')
+        .select('matchday_id'),
+    ]);
+    setFixtureMatches(matchData ?? []);
+    setMatchdaysWithStats(new Set((metaData ?? []).map(r => r.matchday_id).filter(Boolean)));
     setFixtureLoading(false);
   }, []);
 
@@ -1682,7 +1689,8 @@ export default function Admin() {
                 <tr className="text-left text-muted border-b border-border">
                   <th className="pb-3 pr-4 font-medium">Partido</th>
                   <th className="pb-3 pr-4 font-medium">Inicio</th>
-                  <th className="pb-3 font-medium">Jornada Fantasy</th>
+                  <th className="pb-3 pr-4 font-medium">Jornada Fantasy</th>
+                  <th className="pb-3 font-medium">Stats</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -1694,7 +1702,7 @@ export default function Admin() {
                     <td className="py-2.5 pr-4 text-xs text-secondary">
                       {new Date(match.match_date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                     </td>
-                    <td className="py-2.5">
+                    <td className="py-2.5 pr-4">
                       <select
                         value={match.matchday_id ?? ''}
                         onChange={e => handleFixtureMatchdayChange(match.id, e.target.value)}
@@ -1706,6 +1714,13 @@ export default function Admin() {
                           <option key={md.id} value={md.id}>{md.name}</option>
                         ))}
                       </select>
+                    </td>
+                    <td className="py-2.5">
+                      {match.matchday_id && matchdaysWithStats.has(match.matchday_id) ? (
+                        <span className="text-label-caps font-semibold text-tertiary bg-tertiary/10 border border-tertiary/30 rounded px-1.5 py-0.5">
+                          ✓ Stats subidas
+                        </span>
+                      ) : '—'}
                     </td>
                   </tr>
                 ))}

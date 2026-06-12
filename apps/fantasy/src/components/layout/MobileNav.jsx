@@ -11,7 +11,7 @@ import rulesIcon from '@predictor/ui/icons/rules.svg';
 const mobileNavItems = [
   { to: '/dashboard', icon: homeIcon, label: 'Inicio' },
   { to: '/my-team', icon: teamIcon, label: 'Equipo' },
-  { to: '/standings', icon: standingsIcon, label: 'Tabla' },
+  { to: '/leaderboard', icon: standingsIcon, label: 'Tabla' },
   { to: '/market', icon: marketIcon, label: 'Mercado' },
   { to: '/como-jugar', icon: rulesIcon, label: 'Reglas' },
 ];
