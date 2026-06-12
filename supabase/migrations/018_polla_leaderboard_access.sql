@@ -22,4 +22,4 @@ AS $$
   ORDER BY total_points DESC;
 $$;
 
-GRANT EXECUTE ON FUNCTION get_leaderboard() TO authenticated;
+GRANT EXECUTE ON FUNCTION polla_get_leaderboard() TO authenticated;

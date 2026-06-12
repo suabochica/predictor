@@ -60,6 +60,7 @@ $$;
 CREATE OR REPLACE FUNCTION polla_score_match(match_uuid UUID)
 RETURNS void
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 BEGIN
   WITH match_data AS (
@@ -87,6 +88,7 @@ $$;
 CREATE OR REPLACE FUNCTION polla_score_all_finished_matches()
 RETURNS SETOF uuid
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 DECLARE
   m RECORD;
