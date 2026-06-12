@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm --filter @predictor/fantasy build && pnpm build && cp -r ../fantasy/dist dist/fantasy"
+  command = "pnpm --filter @predictor/fantasy build && pnpm build && rm -rf dist/fantasy && cp -r ../fantasy/dist dist/fantasy && ls dist/fantasy/assets/*.js"
   publish = "dist"
 
 [build.environment]

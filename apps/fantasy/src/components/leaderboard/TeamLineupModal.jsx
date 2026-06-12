@@ -11,49 +11,67 @@ const noop = () => {};
 export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
   const [rows, setRows] = useState(null); // null = loading, [] = none found
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     let cancelled = false;
 
-    // Same cascade as MyTeam.loadLineup: active matchday → most recent saved → preseason default
     async function load() {
-      let data = null;
+      try {
+        let data = null;
 
-      if (activeMatchdayId != null) {
-        ({ data } = await supabase
-          .from('lineups')
-          .select(LINEUP_SELECT)
-          .eq('team_id', entry.team_id)
-          .eq('matchday_id', activeMatchdayId));
-      }
-
-      if (!data || data.length === 0) {
-        const { data: recent } = await supabase
-          .from('lineups')
-          .select('matchday_id')
-          .eq('team_id', entry.team_id)
-          .not('matchday_id', 'is', null)
-          .order('matchday_id', { ascending: false })
-          .limit(1);
-        if (recent && recent.length > 0) {
-          ({ data } = await supabase
+        if (activeMatchdayId != null) {
+          const res = await supabase
             .from('lineups')
             .select(LINEUP_SELECT)
             .eq('team_id', entry.team_id)
-            .eq('matchday_id', recent[0].matchday_id));
+            .eq('matchday_id', activeMatchdayId);
+          if (res.error) throw res.error;
+          data = res.data;
         }
-      }
 
-      if (!data || data.length === 0) {
-        ({ data } = await supabase
-          .from('lineups')
-          .select(LINEUP_SELECT)
-          .eq('team_id', entry.team_id)
-          .is('matchday_id', null));
-      }
+        if (!data || data.length === 0) {
+          const { data: recent, error: recentErr } = await supabase
+            .from('lineups')
+            .select('matchday_id')
+            .eq('team_id', entry.team_id)
+            .not('matchday_id', 'is', null)
+            .order('matchday_id', { ascending: false })
+            .limit(1);
+          if (recentErr) throw recentErr;
+          if (recent && recent.length > 0) {
+            const res = await supabase
+              .from('lineups')
+              .select(LINEUP_SELECT)
+              .eq('team_id', entry.team_id)
+              .eq('matchday_id', recent[0].matchday_id);
+            if (res.error) throw res.error;
+            data = res.data;
+          }
+        }
 
-      if (!cancelled) setRows(data ?? []);
+        if (!data || data.length === 0) {
+          const res = await supabase
+            .from('lineups')
+            .select(LINEUP_SELECT)
+            .eq('team_id', entry.team_id)
+            .is('matchday_id', null);
+          if (res.error) throw res.error;
+          data = res.data;
+        }
+
+        if (!cancelled) {
+          setRows(data ?? []);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('TeamLineupModal load error:', err);
+        if (!cancelled) setError(err.message ?? 'Error desconocido');
+      }
     }
 
+    setRows(null);
+    setError(null);
     load();
     return () => { cancelled = true; };
   }, [entry.team_id, activeMatchdayId]);
@@ -94,8 +112,12 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
           </button>
         </div>
 
-        {rows === null ? (
+        {rows === null && !error ? (
           <p className="text-secondary text-sm py-8 text-center">Cargando alineación…</p>
+        ) : error ? (
+          <p className="text-error text-sm py-8 text-center">
+            Error al cargar la alineación: {error}
+          </p>
         ) : players.length === 0 ? (
           <p className="text-secondary text-sm py-8 text-center">
             Este equipo aún no ha guardado una alineación.
