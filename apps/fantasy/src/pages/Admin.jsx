@@ -394,21 +394,39 @@ export default function Admin() {
   const [fixtureMatches, setFixtureMatches] = useState([]);
   const [fixtureLoading, setFixtureLoading] = useState(false);
   const [fixtureSavingIds, setFixtureSavingIds] = useState(new Set());
-  const [matchdaysWithStats, setMatchdaysWithStats] = useState(new Set());
+  const [matchesWithStats, setMatchesWithStats] = useState(new Set());
+
+  const matchSig = (mdId, a, b) => `${mdId}:${[a, b].sort().join('-')}`;
+  const normName = (s) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
   const fetchFixtureMatches = useCallback(async () => {
     setFixtureLoading(true);
-    const [{ data: matchData }, { data: metaData }] = await Promise.all([
+    const [{ data: matchData }, { data: metaData }, { data: playersData }] = await Promise.all([
       supabase
         .from('matches')
         .select('id, match_code, team_a, team_b, match_date, matchday_id')
         .order('match_date', { ascending: true }),
       supabase
         .from('match_metadata')
-        .select('matchday_id'),
+        .select('matchday_id, home_team, away_team'),
+      supabase
+        .from('players')
+        .select('country, country_code'),
     ]);
     setFixtureMatches(matchData ?? []);
-    setMatchdaysWithStats(new Set((metaData ?? []).map(r => r.matchday_id).filter(Boolean)));
+
+    const nameToCode = {};
+    for (const p of playersData ?? []) {
+      if (p.country && p.country_code) nameToCode[normName(p.country)] = p.country_code;
+    }
+    const statsSet = new Set();
+    for (const m of metaData ?? []) {
+      const a = nameToCode[normName(m.home_team)];
+      const b = nameToCode[normName(m.away_team)];
+      if (m.matchday_id && a && b) statsSet.add(matchSig(m.matchday_id, a, b));
+    }
+    setMatchesWithStats(statsSet);
+
     setFixtureLoading(false);
   }, []);
 
@@ -1716,7 +1734,7 @@ export default function Admin() {
                       </select>
                     </td>
                     <td className="py-2.5">
-                      {match.matchday_id && matchdaysWithStats.has(match.matchday_id) ? (
+                      {match.matchday_id && matchesWithStats.has(matchSig(match.matchday_id, match.team_a, match.team_b)) ? (
                         <span className="text-label-caps font-semibold text-tertiary bg-tertiary/10 border border-tertiary/30 rounded px-1.5 py-0.5">
                           ✓ Stats subidas
                         </span>

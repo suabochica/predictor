@@ -138,23 +138,24 @@ export default function Leaderboard() {
         </div>
       ) : (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           {/* Table header */}
-          <div className="grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-2.5 border-b border-border text-label-caps font-semibold text-muted uppercase tracking-wider">
+          <div className="grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] min-w-[34rem] gap-x-2 px-4 py-2.5 border-b border-border text-label-caps font-semibold text-muted uppercase tracking-wider">
             <span>#</span>
             <span>Manager</span>
             {groupMatchdays.length > 0
               ? groupMatchdays.map((md) => (
-                  <span key={md.id} className="hidden sm:block text-center truncate" title={md.name}>
+                  <span key={md.id} className="text-center truncate" title={md.name}>
                     {md.name.replace(/matchday\s*/i, 'JD').replace(/group stage /i, '')}
                   </span>
                 ))
               : [1, 2, 3].map((n) => (
-                  <span key={n} className="hidden sm:block text-center text-secondary">
+                  <span key={n} className="text-center text-secondary">
                     JD{n}
                   </span>
                 ))}
             <span className="text-center">Pts</span>
-            <span className="hidden sm:block text-center" title="Goals scored (tiebreaker)">
+            <span className="text-center" title="Goals scored (tiebreaker)">
               GS
             </span>
           </div>
@@ -184,7 +185,7 @@ export default function Leaderboard() {
                 <div
                   key={entry.team_id}
                   onClick={() => setViewingEntry(entry)}
-                  className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] gap-x-2 px-4 py-3 items-center cursor-pointer hover:bg-surface-hover transition-colors ${leftBorder}`}
+                  className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] min-w-[34rem] gap-x-2 px-4 py-3 items-center cursor-pointer hover:bg-surface-hover transition-colors ${leftBorder}`}
                 >
                   {/* Rank */}
                   <RankBadge rank={rank} bracket={bracket} />
@@ -202,13 +203,13 @@ export default function Leaderboard() {
                     ? groupMatchdays.map((md) => (
                         <span
                           key={md.id}
-                          className="hidden sm:block text-center text-sm text-secondary"
+                          className="text-center text-sm text-secondary"
                         >
                           {fmtPts(entry.matchday_points[md.id])}
                         </span>
                       ))
                     : [1, 2, 3].map((n) => (
-                        <span key={n} className="hidden sm:block text-center text-sm text-secondary">
+                        <span key={n} className="text-center text-sm text-secondary">
                           —
                         </span>
                       ))}
@@ -223,12 +224,13 @@ export default function Leaderboard() {
                   </span>
 
                   {/* Goals scored (tiebreaker) */}
-                  <span className="hidden sm:block text-center text-xs text-muted">
+                  <span className="text-center text-xs text-muted">
                     {entry.goals_scored}
                   </span>
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       )}
