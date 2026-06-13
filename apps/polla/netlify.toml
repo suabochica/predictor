@@ -1,6 +1,9 @@
 [build]
   command = "pnpm build && mkdir -p dist/polla && cp -r dist/_astro dist/polla/_astro"
   publish = "dist"
+  # Polla imports shared packages, so rebuild when those change too —
+  # not just apps/polla (Netlify's default).
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../../packages ../../pnpm-lock.yaml ../../pnpm-workspace.yaml"
 
 [build.environment]
   NODE_VERSION = "22"

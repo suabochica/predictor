@@ -1,6 +1,9 @@
 [build]
   command = "pnpm --filter @predictor/fantasy build && pnpm build && rm -rf dist/fantasy && cp -r ../fantasy/dist dist/fantasy && ls dist/fantasy/assets/*.js"
   publish = "dist"
+  # This site also bundles the fantasy app and shared packages, so rebuild
+  # when any of those change — not just apps/gateway (Netlify's default).
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../fantasy ../../packages ../../pnpm-lock.yaml ../../pnpm-workspace.yaml"
 
 [build.environment]
   NODE_VERSION = "22"
