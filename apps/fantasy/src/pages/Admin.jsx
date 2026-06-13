@@ -327,7 +327,19 @@ export default function Admin() {
     const rows = parseCsv(text);
     if (rows.length === 0) { setStatsResult({ errors: ['CSV is empty or has no data rows.'] }); setStatsUploading(false); return; }
 
-    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
+    // Paginate: a plain .select() caps at 1000 rows, dropping players from the
+    // lookup and causing false "Player not found" errors (roster exceeds 1000).
+    const STATS_PAGE = 1000;
+    let allPlayers = [];
+    for (let from = 0; ; from += STATS_PAGE) {
+      const { data, error } = await supabase
+        .from('players')
+        .select('id, name, position')
+        .range(from, from + STATS_PAGE - 1);
+      if (error || !data) break;
+      allPlayers = allPlayers.concat(data);
+      if (data.length < STATS_PAGE) break;
+    }
     const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
     const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
 
@@ -1013,8 +1025,20 @@ export default function Admin() {
 
     if (metaError) errors.push(`match_metadata error: ${metaError.message}`);
 
-    // Fetch all players for name-normalization lookup
-    const { data: allPlayers } = await supabase.from('players').select('id, name, position');
+    // Fetch all players for name-normalization lookup.
+    // Paginate: a plain .select() caps at 1000 rows, silently dropping players
+    // and producing false "Player not found" errors (the roster exceeds 1000).
+    const PAGE = 1000;
+    let allPlayers = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from('players')
+        .select('id, name, position')
+        .range(from, from + PAGE - 1);
+      if (error || !data) break;
+      allPlayers = allPlayers.concat(data);
+      if (data.length < PAGE) break;
+    }
     const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
     const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
 
