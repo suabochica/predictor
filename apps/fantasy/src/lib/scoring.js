@@ -62,3 +62,14 @@ export function getActivePoints(stats, position, system) {
     ? (stats.total_points ?? calculatePlayerPoints(stats, position))
     : calculateCompositePoints(stats, position);
 }
+
+export function sumSeasonPointsByPlayer(rows, positionById, system) {
+  const map = {};
+  for (const s of rows) {
+    const pos = positionById[s.player_id];
+    if (!pos) continue;
+    map[s.player_id] = (map[s.player_id] ?? 0) + getActivePoints(s, pos, system);
+  }
+  for (const id of Object.keys(map)) map[id] = Math.round(map[id] * 10) / 10;
+  return map;
+}

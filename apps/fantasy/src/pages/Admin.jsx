@@ -984,8 +984,8 @@ export default function Admin() {
   const [optaUploading, setOptaUploading] = useState(false);
   const [optaResult, setOptaResult] = useState(null);
 
-  async function handleOptaUpload(e) {
-    e.preventDefault();
+  async function handleOptaUpload(e, force = false) {
+    if (e?.preventDefault) e.preventDefault();
     setOptaResult(null);
     if (!optaMatchdayId) { setOptaResult({ errors: ['Selecciona una jornada primero.'] }); return; }
     if (!optaFile)        { setOptaResult({ errors: ['Selecciona un archivo JSON.'] }); return; }
@@ -1005,6 +1005,24 @@ export default function Admin() {
       setOptaResult({ errors: ['JSON no tiene los campos requeridos "match" o "players".'] });
       setOptaUploading(false);
       return;
+    }
+
+    // GC sanity check: if goals were scored but every player has GC=0, the extraction missed goals_conceded
+    if (!force && json.match.score) {
+      const totalGoals = (json.match.score.home ?? 0) + (json.match.score.away ?? 0);
+      if (totalGoals > 0 && json.players.every((p) => (p.GC ?? 0) === 0)) {
+        const scoreStr = `${json.match.score.home}–${json.match.score.away}`;
+        setOptaResult({
+          gcWarning: true,
+          errors: [
+            `Todos los jugadores tienen GC=0 pero el marcador es ${scoreStr}. ` +
+            `Esto asignará portería imbatida incorrecta a porteros y defensas del equipo que encajó goles. ` +
+            `Corrige los valores GC en el JSON antes de subir, o usa "Subir de todos modos" para continuar.`,
+          ],
+        });
+        setOptaUploading(false);
+        return;
+      }
     }
 
     const matchdayId = parseInt(optaMatchdayId, 10);
@@ -1873,15 +1891,29 @@ export default function Admin() {
         </form>
 
         {optaResult && (
-          <div className={`rounded-lg p-4 space-y-1 ${optaResult.errors?.length > 0 && !optaResult.inserted ? 'bg-error/10/40 border border-error/30/50' : 'bg-surface-hover'}`}>
+          <div className={`rounded-lg p-4 space-y-2 ${
+            optaResult.gcWarning
+              ? 'bg-warning/10 border border-warning/40'
+              : optaResult.errors?.length > 0 && !optaResult.inserted
+              ? 'bg-error/10 border border-error/30'
+              : 'bg-surface-hover'
+          }`}>
             {optaResult.inserted > 0 && (
               <p className="text-tertiary text-sm font-semibold">
                 ✓ {optaResult.inserted} fila{optaResult.inserted !== 1 ? 's' : ''} de estadísticas guardada{optaResult.inserted !== 1 ? 's' : ''}.
               </p>
             )}
             {optaResult.errors?.map((err, i) => (
-              <p key={i} className="text-error text-xs">{err}</p>
+              <p key={i} className={`text-xs ${optaResult.gcWarning ? 'text-warning' : 'text-error'}`}>{err}</p>
             ))}
+            {optaResult.gcWarning && (
+              <button
+                onClick={() => handleOptaUpload(null, true)}
+                className="mt-2 px-4 py-1.5 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 font-semibold text-xs transition-colors"
+              >
+                Subir de todos modos
+              </button>
+            )}
           </div>
         )}
       </section>

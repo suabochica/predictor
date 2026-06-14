@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import LineupGrid from '../team/LineupGrid';
 import BenchList from '../team/BenchList';
-import { getActivePoints } from '../../lib/scoring';
+import { getActivePoints, sumSeasonPointsByPlayer } from '../../lib/scoring';
 
 const LINEUP_SELECT =
   'is_starting, is_captain, bench_order, players(id, name, country, country_code, position)';
@@ -135,16 +135,8 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
   }
 
   // Cumulative tournament total (base, no captain ×2)
-  const totalPointsById = {};
-  const totalMap = {};
-  for (const s of allStats) {
-    const p = players.find(pl => pl.id === s.player_id);
-    if (!p) continue;
-    totalMap[s.player_id] = (totalMap[s.player_id] ?? 0) + getActivePoints(s, p.position, scoringSystem);
-  }
-  for (const [id, total] of Object.entries(totalMap)) {
-    totalPointsById[id] = Math.round(total * 10) / 10;
-  }
+  const positionById = Object.fromEntries(players.map((p) => [p.id, p.position]));
+  const totalPointsById = sumSeasonPointsByPlayer(allStats, positionById, scoringSystem);
 
   return (
     <div

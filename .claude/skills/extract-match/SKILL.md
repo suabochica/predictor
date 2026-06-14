@@ -72,6 +72,22 @@ After resolving all names, build the final player list using DB full names.
 
 ---
 
+## Step 4b — Validate GC (goals conceded)
+
+This check catches the most common extraction error: GC extracted as 0 for all players even when the opponent scored.
+
+For each team:
+- Expected GC = goals scored by the **opponent** (from `match.score`).
+- If expected GC > 0 AND every player on this team has GC=0 → **stop and alert the user**:
+
+  > ⚠️ GC validation failed for [Team]: score shows the opponent scored [N] but all [Team] players have GC=0. This likely means the GC column was not captured from the screenshots. Please re-check the GC column for [Team] and provide the correct values before I write the file.
+
+Do NOT write the file or proceed until the user confirms the GC values or explicitly says the Opta table genuinely shows GC=0 for all players (rare edge case where the stat is unavailable).
+
+If the match score shows 0–0, skip this check.
+
+---
+
 ## Step 5 — Emit JSON
 
 Write the output file to:

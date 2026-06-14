@@ -19,7 +19,7 @@ export default function Market() {
   const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
   const { players: allPlayers, loading: playersLoading, refresh: refreshPlayers } = usePlayers({ withOwner: true });
-  const { totals: playerTotals } = usePlayerTotals();
+  const { totals: playerTotals, activePointsById } = usePlayerTotals();
   const { transfers, transfersUsedThisWindow, transfersRemaining, refresh: refreshTransfers } = useTransfers();
   const { lockTimeFor } = useMatchdayLocks(activeTransferWindow?.matchday_id);
 
@@ -415,7 +415,7 @@ export default function Market() {
                   isLocked={isPlayerLocked(player)}
                   noTransfersLeft={noTransfersLeft}
                   onSwap={setConfirmSwapIn}
-                  stats={playerTotals[player.id] ?? null}
+                  stats={{ ...(playerTotals[player.id] ?? {}), total_points: activePointsById[player.id] }}
                 />
               );
             })}
