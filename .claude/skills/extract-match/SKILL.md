@@ -36,7 +36,7 @@ Run the roster script for both countries (reads `apps/fantasy/data/players_rows.
 node apps/fantasy/data/scripts/fetch_roster.mjs "Country1" "Country2"
 ```
 
-This prints a JSON array of `{ id, name, position, country }` objects. Keep this roster in memory — you will resolve Opta short names against it in Step 4.
+This prints a JSON array of `{ id, name, position, country }` objects **and** writes a filtered CSV of only these two teams' players to `apps/fantasy/data/.roster_tmp.csv`. Keep the JSON roster in memory and use `.roster_tmp.csv` as the reference file for name resolution in Step 4.
 
 ---
 
