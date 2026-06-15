@@ -221,10 +221,23 @@ export default function AdminTable() {
       )}
 
       {Object.entries(matchesByDate)
-        .sort(([a], [b]) => a.localeCompare(b))
+        .sort(([a], [b]) => {
+          const today = new Date().toISOString().slice(0, 10);
+          const aPast = a < today;
+          const bPast = b < today;
+          if (aPast && !bPast) return 1;
+          if (!aPast && bPast) return -1;
+          return a.localeCompare(b);
+        })
         .map(([date, datePreds]) => {
           const byMatch = groupByMatch(datePreds);
-          const matchCodes = Object.keys(byMatch).sort();
+          const matchCodes = Object.keys(byMatch).sort((a, b) => {
+            const aFinished = byMatch[a][0]?.status === 'finished';
+            const bFinished = byMatch[b][0]?.status === 'finished';
+            if (aFinished && !bFinished) return 1;
+            if (!aFinished && bFinished) return -1;
+            return a.localeCompare(b);
+          });
 
           return (
             <div key={date} className="space-y-4">

@@ -2,12 +2,14 @@
 import predictionsIcon from "@predictor/ui/icons/predictions.svg";
 import standingsIcon from "@predictor/ui/icons/standings.svg";
 import rulesIcon from "@predictor/ui/icons/rules.svg";
+import adminIcon from "@predictor/ui/icons/admin.svg";
 
 import Layout from "../layouts/Layout.astro";
 
 // Server-side session check (middleware also guards this route)
 const user = Astro.locals.user;
 const displayName = Astro.locals.displayName;
+const isAdmin = Astro.locals.isAdmin as boolean;
 ---
 
 <Layout title="Inicio">
@@ -27,7 +29,7 @@ const displayName = Astro.locals.displayName;
       )
     }
 
-    <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+    <nav class={`grid grid-cols-1 gap-4 max-w-3xl ${isAdmin ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
       <a
         href="/polla/predictions"
         class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
@@ -51,6 +53,17 @@ const displayName = Astro.locals.displayName;
         <img src={rulesIcon.src} class="w-8 h-8" alt="" />
         <span class="font-label text-label-md font-medium">Reglas de puntuación</span>
       </a>
+      {
+        isAdmin && (
+          <a
+            href="/polla/admin"
+            class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
+          >
+            <img src={adminIcon.src} class="w-8 h-8" alt="" />
+            <span class="font-label text-label-md font-medium">Admin</span>
+          </a>
+        )
+      }
     </nav>
   </div>
 </Layout>

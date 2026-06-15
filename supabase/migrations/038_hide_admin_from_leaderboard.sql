@@ -1,6 +1,6 @@
 -- Exclude admin users from the leaderboard
 
-CREATE OR REPLACE FUNCTION get_leaderboard()
+CREATE OR REPLACE FUNCTION polla_get_leaderboard()
 RETURNS TABLE (
   user_id uuid,
   display_name text,
