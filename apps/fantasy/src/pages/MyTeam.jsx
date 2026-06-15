@@ -269,6 +269,11 @@ export default function MyTeam() {
     let newStarters, newBench;
 
     if (p1IsStarter && !p2IsStarter) {
+      // Locked captain cannot leave the XI
+      if (captainId === p1.id && isGameLocked(p1)) {
+        setSwapError(`Tu capitán (${p1.name}) ya jugó — no puede salir del XI.`);
+        return;
+      }
       // p2 (bench) enters the XI — block if locked
       if (isGameLocked(p2)) {
         setSwapError(`El partido de ${p2.name} ya inició — no puede entrar al XI.`);
@@ -287,6 +292,11 @@ export default function MyTeam() {
       newBench = bench.filter((b) => b.id !== p2.id).concat(p1);
       if (captainId === p1.id) setCaptainId(null);
     } else if (!p1IsStarter && p2IsStarter) {
+      // Locked captain cannot leave the XI
+      if (captainId === p2.id && isGameLocked(p2)) {
+        setSwapError(`Tu capitán (${p2.name}) ya jugó — no puede salir del XI.`);
+        return;
+      }
       // p1 (bench) enters the XI — block if locked
       if (isGameLocked(p1)) {
         setSwapError(`El partido de ${p1.name} ya inició — no puede entrar al XI.`);
@@ -348,7 +358,11 @@ export default function MyTeam() {
       return;
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
-      // Leaving the XI is always allowed — even if the player is locked
+      if (captainId === selectedPlayer.id && isGameLocked(selectedPlayer)) {
+        setSwapError(`Tu capitán ya jugó — no se puede sacar del XI.`);
+        setSelectedPlayer(null);
+        return;
+      }
       if (selectedPlayer.position === 'GK') {
         setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
         setSelectedPlayer(null);
@@ -364,9 +378,18 @@ export default function MyTeam() {
 
   // ── Captain selection ────────────────────────────────────────────────────
   function handleSetCaptain(player) {
-    if (starters.some((s) => s.id === player.id)) {
-      setCaptainId(player.id);
+    const currentCaptain = captainId ? starters.find((s) => s.id === captainId) : null;
+    if (currentCaptain && currentCaptain.id !== player.id && isGameLocked(currentCaptain)) {
+      setSwapError(`El partido de tu capitán (${currentCaptain.name}) ya inició — no se puede cambiar el capitán.`);
+      setSelectedPlayer(null);
+      return;
     }
+    if (isGameLocked(player) && captainId !== player.id) {
+      setSwapError(`El partido de ${player.name} ya inició — no puede ser nombrado capitán.`);
+      setSelectedPlayer(null);
+      return;
+    }
+    if (starters.some((s) => s.id === player.id)) setCaptainId(player.id);
     setSelectedPlayer(null);
   }
 
@@ -385,27 +408,15 @@ export default function MyTeam() {
     setSaving(true);
     setSaveError(null);
 
-    const matchdayId = selectedMatchday?.id ?? null;
-
-    // Delete existing rows for this team+matchday
-    let delQuery = supabase.from('lineups').delete().eq('team_id', team.id);
-    delQuery = matchdayId
-      ? delQuery.eq('matchday_id', matchdayId)
-      : delQuery.is('matchday_id', null);
-    await delQuery;
-
-    const rows = [
+    const p_matchday_id = selectedMatchday?.id ?? null;
+    const p_rows = [
       ...starters.map((p) => ({
-        team_id: team.id,
-        matchday_id: matchdayId,
         player_id: p.id,
         is_starting: true,
         is_captain: p.id === captainId,
         bench_order: null,
       })),
       ...bench.map((p, i) => ({
-        team_id: team.id,
-        matchday_id: matchdayId,
         player_id: p.id,
         is_starting: false,
         is_captain: false,
@@ -413,11 +424,16 @@ export default function MyTeam() {
       })),
     ];
 
-    const { error } = await supabase.from('lineups').insert(rows);
+    const { data, error } = await supabase.rpc('save_lineup', {
+      p_team_id: team.id,
+      p_matchday_id,
+      p_rows,
+    });
     setSaving(false);
 
-    if (error) {
-      setSaveError(error.message);
+    const serverError = data?.error ?? error?.message ?? null;
+    if (serverError) {
+      setSaveError(serverError);
     } else {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -604,6 +620,33 @@ export default function MyTeam() {
           {swapError}
         </div>
       )}
+
+      {/* ── Save button ── */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <button
+          onClick={saveLineup}
+          disabled={saving || !canSave}
+          className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-tertiary hover:bg-tertiary text-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+        >
+          {saving ? 'Guardando…' : 'Guardar alineación'}
+        </button>
+
+        {!canSave && !saving && (
+          <p className="text-xs text-muted">
+            {starters.length !== 11 && `Se necesitan exactamente 11 titulares (hay ${starters.length}). `}
+            {starters.length === 11 && gkCount !== 1 && 'Se necesita exactamente 1 POR en el XI titular. '}
+            {!captainIsStarter && 'Selecciona un capitán entre tus titulares. '}
+          </p>
+        )}
+
+        {saveError && (
+          <p className="text-xs text-error" role="alert">{saveError}</p>
+        )}
+
+        {saveSuccess && (
+          <p className="text-xs text-tertiary font-medium" role="status">¡Alineación guardada!</p>
+        )}
+      </div>
 
       {/* ── Pitch ── */}
       <LineupGrid
@@ -879,33 +922,6 @@ export default function MyTeam() {
           </p>
         </div>
       )}
-
-      {/* ── Save button ── */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <button
-          onClick={saveLineup}
-          disabled={saving || !canSave}
-          className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-tertiary hover:bg-tertiary text-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-        >
-          {saving ? 'Guardando…' : 'Guardar alineación'}
-        </button>
-
-        {!canSave && !saving && (
-          <p className="text-xs text-muted">
-            {starters.length !== 11 && `Se necesitan exactamente 11 titulares (hay ${starters.length}). `}
-            {starters.length === 11 && gkCount !== 1 && 'Se necesita exactamente 1 POR en el XI titular. '}
-            {!captainIsStarter && 'Selecciona un capitán entre tus titulares. '}
-          </p>
-        )}
-
-        {saveError && (
-          <p className="text-xs text-error" role="alert">{saveError}</p>
-        )}
-
-        {saveSuccess && (
-          <p className="text-xs text-tertiary font-medium" role="status">¡Alineación guardada!</p>
-        )}
-      </div>
 
     </div>
   );
