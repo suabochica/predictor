@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@predictor/supabase';
-import { Button, BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@predictor/supabase";
+import { Button, BUTTON_PRIMARY_CLASSES } from "@predictor/ui";
 
-import type { Match } from '../types';
-import { countries } from '../data/matches';
+import type { Match } from "../types";
+import { countries } from "../data/matches";
 
 interface DbMatch {
   id: string;
@@ -22,23 +22,24 @@ interface PredictionState {
   [matchCode: string]: {
     score_a: number | null;
     score_b: number | null;
+    points_earned?: number;
   };
 }
 
 function formatDateLabel(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return new Date(dateStr).toLocaleDateString("es-ES", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('es-ES', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZoneName: 'short',
+  return new Date(dateStr).toLocaleTimeString("es-ES", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
   });
 }
 
@@ -48,18 +49,21 @@ function dateKey(dateStr: string): string {
 }
 
 function isMatchLocked(match: Match): boolean {
-  if (match.status !== 'upcoming') return true;
+  if (match.status !== "upcoming") return true;
   const matchTime = new Date(match.match_date).getTime();
   const lockTime = matchTime - 30 * 60 * 1000;
   return Date.now() >= lockTime;
 }
 
 function groupMatchesByDate(matchList: Match[]): Record<string, Match[]> {
-  return matchList.reduce((acc, match) => {
-    const dk = dateKey(match.match_date);
-    (acc[dk] ??= []).push(match);
-    return acc;
-  }, {} as Record<string, Match[]>);
+  return matchList.reduce(
+    (acc, match) => {
+      const dk = dateKey(match.match_date);
+      (acc[dk] ??= []).push(match);
+      return acc;
+    },
+    {} as Record<string, Match[]>,
+  );
 }
 
 function dbToMatch(row: DbMatch): Match {
@@ -70,13 +74,17 @@ function dbToMatch(row: DbMatch): Match {
     match_date: row.match_date,
     group: row.group_name ?? undefined,
     stadium: row.stadium ?? undefined,
-    status: row.status as Match['status'],
+    status: row.status as Match["status"],
     actual_score_a: row.actual_score_a ?? undefined,
     actual_score_b: row.actual_score_b ?? undefined,
   };
 }
 
-export default function PredictionForm({ currentUser }: { currentUser?: string }) {
+export default function PredictionForm({
+  currentUser,
+}: {
+  currentUser?: string;
+}) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchUuidMap, setMatchUuidMap] = useState<Record<string, string>>({});
   const [predictions, setPredictions] = useState<PredictionState>({});
@@ -96,10 +104,12 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
     try {
       // ── Fetch matches ──────────────────────────────────────
       const { data: dbMatches, error: matchErr } = await supabase
-        .from('matches')
-        .select('id, match_code, team_a, team_b, match_date, group_name, stadium, status, actual_score_a, actual_score_b')
-        .eq('stage', 'group')
-        .order('match_code')
+        .from("matches")
+        .select(
+          "id, match_code, team_a, team_b, match_date, group_name, stadium, status, actual_score_a, actual_score_b",
+        )
+        .eq("stage", "group")
+        .order("match_code")
         .abortSignal(controller.signal);
 
       if (matchErr) throw matchErr;
@@ -114,20 +124,27 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
         // ── Fetch existing predictions ───────────────────────
         if (currentUser) {
           const { data: dbPreds, error: predErr } = await supabase
-            .from('predictions')
-            .select('match_id, predicted_score_a, predicted_score_b')
-            .eq('user_id', currentUser)
+            .from("predictions")
+            .select(
+              "match_id, predicted_score_a, predicted_score_b, points_earned",
+            )
+            .eq("user_id", currentUser)
             .abortSignal(controller.signal);
 
           if (!predErr && dbPreds) {
             const codeByUuid: Record<string, string> = {};
-            for (const [code, uuid] of Object.entries(uuids)) codeByUuid[uuid] = code;
+            for (const [code, uuid] of Object.entries(uuids))
+              codeByUuid[uuid] = code;
 
             const initial: PredictionState = {};
             for (const p of dbPreds) {
               const code = codeByUuid[p.match_id];
               if (code) {
-                initial[code] = { score_a: p.predicted_score_a, score_b: p.predicted_score_b };
+                initial[code] = {
+                  score_a: p.predicted_score_a,
+                  score_b: p.predicted_score_b,
+                  points_earned: p.points_earned,
+                };
               }
             }
             setPredictions(initial);
@@ -137,7 +154,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
 
       setUsingFallback(false);
     } catch (err: any) {
-      console.error('PredictionForm loadData error:', err?.message ?? err);
+      console.error("PredictionForm loadData error:", err?.message ?? err);
       setUsingFallback(true);
     } finally {
       clearTimeout(timeout);
@@ -146,8 +163,8 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
   }
 
   const handleScoreChange = useCallback(
-    (matchCode: string, team: 'a' | 'b', value: string) => {
-      const numValue = value === '' ? null : parseInt(value, 10);
+    (matchCode: string, team: "a" | "b", value: string) => {
+      const numValue = value === "" ? null : parseInt(value, 10);
       if (numValue !== null && (numValue < 0 || numValue > 9)) return;
 
       const match = matches.find((m) => m.match_id === matchCode);
@@ -156,8 +173,8 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       setPredictions((prev) => ({
         ...prev,
         [matchCode]: {
-          score_a: team === 'a' ? numValue : prev[matchCode]?.score_a ?? null,
-          score_b: team === 'b' ? numValue : prev[matchCode]?.score_b ?? null,
+          score_a: team === "a" ? numValue : (prev[matchCode]?.score_a ?? null),
+          score_b: team === "b" ? numValue : (prev[matchCode]?.score_b ?? null),
         },
       }));
       setSaved(false);
@@ -188,14 +205,14 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
     }
 
     try {
-      const { error } = await supabase.from('predictions').upsert(rows, {
-        onConflict: 'user_id,match_id',
+      const { error } = await supabase.from("predictions").upsert(rows, {
+        onConflict: "user_id,match_id",
       });
       if (error) throw error;
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error('Failed to save predictions:', err);
+      console.error("Failed to save predictions:", err);
     } finally {
       setSaving(false);
     }
@@ -219,8 +236,8 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       <div className="rounded-sm border border-warning/30 bg-warning/10 px-6 py-8 text-center">
         <p className="text-warning text-body-md">
           {usingFallback
-            ? 'No se puede conectar a la base de datos. Ejecuta el script de importación o verifica tu conexión.'
-            : 'No hay partidos de fase de grupos en la base de datos todavía. Ejecuta el script de importación para cargarlos:'}
+            ? "No se puede conectar a la base de datos. Ejecuta el script de importación o verifica tu conexión."
+            : "No hay partidos de fase de grupos en la base de datos todavía. Ejecuta el script de importación para cargarlos:"}
         </p>
         {!usingFallback && (
           <code className="mt-3 block text-body-sm text-warning font-label">
@@ -247,7 +264,10 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                   <th className="px-2 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                     Hora
                   </th>
-                  <th colSpan={2} className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                  <th
+                    colSpan={2}
+                    className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider"
+                  >
                     Local
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
@@ -257,11 +277,17 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                     Marcador
                   </th>
-                  <th colSpan={2} className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                  <th
+                    colSpan={2}
+                    className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider"
+                  >
                     Visitante
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                     Grupo
+                  </th>
+                  <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                    Puntos
                   </th>
                 </tr>
               </thead>
@@ -274,12 +300,13 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                   const isLocked = isMatchLocked(match);
 
                   const hasActualScore =
-                    match.actual_score_a != null && match.actual_score_b != null;
+                    match.actual_score_a != null &&
+                    match.actual_score_b != null;
 
                   return (
                     <tr
                       key={match.match_id}
-                      className={`${isLocked ? 'opacity-50' : 'hover:bg-surface-hover'}`}
+                      className={`${isLocked ? "opacity-50" : "hover:bg-surface-hover"}`}
                     >
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
                         {formatTime(match.match_date)}
@@ -299,15 +326,25 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                             min="0"
                             max="9"
                             disabled={isLocked}
-                            value={pred.score_a ?? ''}
-                            onChange={(e) => handleScoreChange(match.match_id, 'a', e.target.value)}
+                            value={pred.score_a ?? ""}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                match.match_id,
+                                "a",
+                                e.target.value,
+                              )
+                            }
                             className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
                             placeholder="-"
-                            title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
+                            title={
+                              isLocked
+                                ? "Las predicciones se bloquean 30 minutos antes del partido"
+                                : undefined
+                            }
                             aria-label={`Marcador de ${teamA?.name || match.team_a}`}
                           />
                           {hasActualScore && (
-                            <span className="text-[10px] font-label font-semibold text-success leading-none">
+                            <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
                               {match.actual_score_a}
                             </span>
                           )}
@@ -325,15 +362,25 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                             min="0"
                             max="9"
                             disabled={isLocked}
-                            value={pred.score_b ?? ''}
-                            onChange={(e) => handleScoreChange(match.match_id, 'b', e.target.value)}
+                            value={pred.score_b ?? ""}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                match.match_id,
+                                "b",
+                                e.target.value,
+                              )
+                            }
                             className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
                             placeholder="-"
-                            title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
+                            title={
+                              isLocked
+                                ? "Las predicciones se bloquean 30 minutos antes del partido"
+                                : undefined
+                            }
                             aria-label={`Marcador de ${teamB?.name || match.team_b}`}
                           />
                           {hasActualScore && (
-                            <span className="text-[10px] font-label font-semibold text-success leading-none">
+                            <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
                               {match.actual_score_b}
                             </span>
                           )}
@@ -349,6 +396,15 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
 
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
                         {match.group}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm font-semibold">
+                        {pred.points_earned != null ? (
+                          <span className="text-tertiary">
+                            {pred.points_earned}
+                          </span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -367,7 +423,11 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
           onClick={handleSave}
           disabled={saving || !currentUser}
         >
-          {saving ? 'Guardando...' : saved ? '✓ ¡Guardado!' : 'Guardar predicciones'}
+          {saving
+            ? "Guardando..."
+            : saved
+              ? "✓ ¡Guardado!"
+              : "Guardar predicciones"}
         </Button>
       </div>
     </div>
