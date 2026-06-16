@@ -2,8 +2,21 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@predictor/supabase';
 import { Button, BUTTON_PRIMARY_CLASSES } from '@predictor/ui';
 
-import type { Match, DbMatch } from '../types';
+import type { Match } from '../types';
 import { countries } from '../data/matches';
+
+interface DbMatch {
+  id: string;
+  match_code: string;
+  team_a: string;
+  team_b: string;
+  match_date: string;
+  group_name: string | null;
+  stadium: string | null;
+  status: string;
+  actual_score_a: number | null;
+  actual_score_b: number | null;
+}
 
 interface PredictionState {
   [matchCode: string]: {
@@ -58,6 +71,8 @@ function dbToMatch(row: DbMatch): Match {
     group: row.group_name ?? undefined,
     stadium: row.stadium ?? undefined,
     status: row.status as Match['status'],
+    actual_score_a: row.actual_score_a ?? undefined,
+    actual_score_b: row.actual_score_b ?? undefined,
   };
 }
 
@@ -82,7 +97,7 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
       // ── Fetch matches ──────────────────────────────────────
       const { data: dbMatches, error: matchErr } = await supabase
         .from('matches')
-        .select('id, match_code, team_a, team_b, match_date, group_name, stadium, status')
+        .select('id, match_code, team_a, team_b, match_date, group_name, stadium, status, actual_score_a, actual_score_b')
         .eq('stage', 'group')
         .order('match_code')
         .abortSignal(controller.signal);
@@ -258,6 +273,9 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                   const pred = predictions[match.match_id] || {};
                   const isLocked = isMatchLocked(match);
 
+                  const hasActualScore =
+                    match.actual_score_a != null && match.actual_score_b != null;
+
                   return (
                     <tr
                       key={match.match_id}
@@ -275,18 +293,25 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                       </td>
 
                       <td className="whitespace-nowrap px-2 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          max="9"
-                          disabled={isLocked}
-                          value={pred.score_a ?? ''}
-                          onChange={(e) => handleScoreChange(match.match_id, 'a', e.target.value)}
-                          className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
-                          placeholder="-"
-                          title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
-                          aria-label={`Marcador de ${teamA?.name || match.team_a}`}
-                        />
+                        <div className="flex flex-col items-center gap-0.5">
+                          <input
+                            type="number"
+                            min="0"
+                            max="9"
+                            disabled={isLocked}
+                            value={pred.score_a ?? ''}
+                            onChange={(e) => handleScoreChange(match.match_id, 'a', e.target.value)}
+                            className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
+                            placeholder="-"
+                            title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
+                            aria-label={`Marcador de ${teamA?.name || match.team_a}`}
+                          />
+                          {hasActualScore && (
+                            <span className="text-[10px] font-label font-semibold text-success leading-none">
+                              {match.actual_score_a}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="whitespace-nowrap px-1 py-2 text-center text-body-sm text-muted">
@@ -294,18 +319,25 @@ export default function PredictionForm({ currentUser }: { currentUser?: string }
                       </td>
 
                       <td className="whitespace-nowrap px-2 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          max="9"
-                          disabled={isLocked}
-                          value={pred.score_b ?? ''}
-                          onChange={(e) => handleScoreChange(match.match_id, 'b', e.target.value)}
-                          className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
-                          placeholder="-"
-                          title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
-                          aria-label={`Marcador de ${teamB?.name || match.team_b}`}
-                        />
+                        <div className="flex flex-col items-center gap-0.5">
+                          <input
+                            type="number"
+                            min="0"
+                            max="9"
+                            disabled={isLocked}
+                            value={pred.score_b ?? ''}
+                            onChange={(e) => handleScoreChange(match.match_id, 'b', e.target.value)}
+                            className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
+                            placeholder="-"
+                            title={isLocked ? 'Las predicciones se bloquean 30 minutos antes del partido' : undefined}
+                            aria-label={`Marcador de ${teamB?.name || match.team_b}`}
+                          />
+                          {hasActualScore && (
+                            <span className="text-[10px] font-label font-semibold text-success leading-none">
+                              {match.actual_score_b}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="whitespace-nowrap px-1 py-2">
