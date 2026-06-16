@@ -10,6 +10,7 @@ import { buildDefaultLineup } from '../lib/defaultLineup';
 import { getActivePoints } from '../lib/scoring.js';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
+import PointsBreakdownModal from '../components/team/PointsBreakdownModal';
 
 // Flatten team_players rows into usable player objects
 function normalizeSquad(teamPlayers) {
@@ -37,6 +38,7 @@ export default function MyTeam() {
 
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [swapError, setSwapError] = useState(null);
+  const [breakdownPlayer, setBreakdownPlayer] = useState(null);
 
   const [lineupLoading, setLineupLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -658,6 +660,7 @@ export default function MyTeam() {
         hasSelected={!!selectedPlayer}
         pointsById={pointsById}
         totalPointsById={totalPointsById}
+        onInfoClick={setBreakdownPlayer}
       />
 
       {/* ── Bench ── */}
@@ -670,7 +673,18 @@ export default function MyTeam() {
         hasSelected={!!selectedPlayer}
         pointsById={pointsById}
         totalPointsById={totalPointsById}
+        onInfoClick={setBreakdownPlayer}
       />
+
+      {/* ── Points breakdown modal ── */}
+      {breakdownPlayer && (
+        <PointsBreakdownModal
+          player={breakdownPlayer}
+          activeMatchdayId={activeMatchday?.id ?? null}
+          isCaptain={breakdownPlayer.id === captainId}
+          onClose={() => setBreakdownPlayer(null)}
+        />
+      )}
 
       {/* ── Action panel (shown when a player is selected) ── */}
       {selectedPlayer && (

@@ -1,15 +1,17 @@
 import { getPositionColor, fmtPts } from '../../lib/utils';
 
-export default function PlayerSlot({ player, isCaptain, isSelected, onClick, points, totalPoints }) {
-  // Shorten name to last name for display
+export default function PlayerSlot({ player, isCaptain, isSelected, onClick, points, totalPoints, onInfoClick }) {
   const displayName = player.name.split(' ').slice(-1)[0];
   const countryCode =
     player.country_code ?? player.country?.slice(0, 3).toUpperCase() ?? '???';
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onClick(player)}
-      className={`relative flex flex-col items-center gap-0.5 px-1.5 py-2 rounded-lg text-center transition-all w-[68px] min-h-[68px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(player); } }}
+      className={`relative flex flex-col items-center gap-0.5 px-1.5 py-2 rounded-lg text-center transition-all w-[68px] min-h-[68px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
         isSelected
           ? 'ring-2 ring-tertiary bg-tertiary/15 shadow-lg shadow-tertiary/15'
           : 'bg-surface/80 hover:bg-surface-hover border border-border/50'
@@ -32,11 +34,24 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
         </span>
       )}
 
-      {/* Captain badge */}
+      {/* Captain badge (top-right) */}
       {isCaptain && (
         <span className="absolute -top-2 -right-1.5 bg-tertiary text-primary text-label-caps font-extrabold w-4 h-4 rounded-full flex items-center justify-center z-10 shadow">
           C
         </span>
+      )}
+
+      {/* Info button (bottom-right) — only when caller provides onInfoClick */}
+      {onInfoClick && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onInfoClick(player); }}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="absolute -bottom-2 -right-1.5 bg-surface border border-border/70 text-muted hover:text-secondary text-[9px] w-4 h-4 rounded-full flex items-center justify-center z-10 shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-tertiary"
+          aria-label="Ver desglose de puntos"
+          title="Ver desglose de puntos"
+        >
+          ⓘ
+        </button>
       )}
 
       {/* Position badge */}
@@ -53,6 +68,6 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
 
       {/* Country code */}
       <span className="text-label-caps text-secondary">{countryCode}</span>
-    </button>
+    </div>
   );
 }

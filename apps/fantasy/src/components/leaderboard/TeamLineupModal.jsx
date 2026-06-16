@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import LineupGrid from '../team/LineupGrid';
 import BenchList from '../team/BenchList';
+import PointsBreakdownModal from '../team/PointsBreakdownModal';
 import { getActivePoints, sumSeasonPointsByPlayer } from '../../lib/scoring';
 
 const LINEUP_SELECT =
@@ -16,6 +17,7 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
   const [allStats, setAllStats] = useState([]);
 
   const [error, setError] = useState(null);
+  const [breakdownPlayer, setBreakdownPlayer] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -181,6 +183,7 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
               hasSelected={false}
               pointsById={pointsById}
               totalPointsById={totalPointsById}
+              onInfoClick={setBreakdownPlayer}
             />
             <BenchList
               bench={bench}
@@ -189,7 +192,16 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
               readOnly
               pointsById={pointsById}
               totalPointsById={totalPointsById}
+              onInfoClick={setBreakdownPlayer}
             />
+            {breakdownPlayer && (
+              <PointsBreakdownModal
+                player={breakdownPlayer}
+                activeMatchdayId={activeMatchdayId}
+                isCaptain={breakdownPlayer.id === captainId}
+                onClose={() => setBreakdownPlayer(null)}
+              />
+            )}
           </>
         )}
       </div>

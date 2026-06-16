@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useTeam } from '../hooks/useTeam';
 import { calculatePlayerPoints } from '../lib/scoring';
+import PointsBreakdownModal from '../components/team/PointsBreakdownModal';
 
 const POSITION_COLOR = {
   GK:  'bg-warning/15 text-warning',
@@ -21,6 +22,7 @@ export default function History() {
   const [modal, setModal] = useState(null); // { matchday, teamId, teamName }
   const [breakdown, setBreakdown] = useState(null);
   const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [playerBreakdown, setPlayerBreakdown] = useState(null); // { player, isCaptain }
 
   useEffect(() => {
     async function load() {
@@ -39,6 +41,7 @@ export default function History() {
     setModal({ matchday, teamId, teamName });
     setBreakdown(null);
     setBreakdownLoading(true);
+    setPlayerBreakdown(null);
 
     // Fetch lineup for this team + matchday; fall back to pre-tournament (null) lineup
     let { data: lineupRows } = await supabase
@@ -215,7 +218,10 @@ export default function History() {
 
       {/* ── Points Breakdown Modal ──────────────────────────────────────── */}
       {modal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={(e) => e.target === e.currentTarget && (setModal(null), setPlayerBreakdown(null))}
+        >
           <div className="bg-surface rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
             {/* Header */}
             <div className="flex items-baseline justify-between p-6 border-b border-border">
@@ -224,7 +230,7 @@ export default function History() {
                 <p className="text-xs text-secondary mt-0.5">{modal.matchday.name} — {modal.matchday.wc_stage}</p>
               </div>
               <button
-                onClick={() => setModal(null)}
+                onClick={() => { setModal(null); setPlayerBreakdown(null); }}
                 className="text-muted hover:text-primary text-xl transition-colors ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
                 aria-label="Cerrar"
               >
@@ -241,7 +247,12 @@ export default function History() {
               ) : breakdown ? (
                 <>
                   {breakdown.rows.map((row, i) => (
-                    <BreakdownRow key={i} row={row} captainId={breakdown.captainId} />
+                    <BreakdownRow
+                      key={i}
+                      row={row}
+                      captainId={breakdown.captainId}
+                      onInfoClick={(player, isCaptain) => setPlayerBreakdown({ player, isCaptain })}
+                    />
                   ))}
 
                   <div className="border-t border-border pt-3 flex items-center justify-between">
@@ -254,18 +265,31 @@ export default function History() {
           </div>
         </div>
       )}
+
+      {playerBreakdown && modal && (
+        <PointsBreakdownModal
+          player={playerBreakdown.player}
+          activeMatchdayId={modal.matchday.id}
+          isCaptain={playerBreakdown.isCaptain}
+          onClose={() => setPlayerBreakdown(null)}
+        />
+      )}
     </div>
   );
 }
 
-function BreakdownRow({ row }) {
+function BreakdownRow({ row, onInfoClick }) {
   const { player, stats, base, final, isCap, onBench } = row;
   const name = player?.name ?? `Player #${row.player?.id}`;
   const pos  = player?.position ?? '?';
 
   if (onBench) {
     return (
-      <div className="flex items-center gap-3 py-2 opacity-40">
+      <div
+        className="flex items-center gap-3 py-2 opacity-40 cursor-pointer hover:opacity-60 transition-opacity rounded-lg px-1 -mx-1"
+        onClick={() => player && onInfoClick?.(player, false)}
+        title="Ver desglose de puntos"
+      >
         <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
         <span className="flex-1 text-secondary text-sm">{name}</span>
         <span className="text-xs text-muted">Banca</span>
@@ -275,7 +299,11 @@ function BreakdownRow({ row }) {
   }
 
   return (
-    <div className="flex items-center gap-3 py-2">
+    <div
+      className="flex items-center gap-3 py-2 cursor-pointer hover:bg-surface-hover/40 rounded-lg px-1 -mx-1 transition-colors"
+      onClick={() => player && onInfoClick?.(player, isCap)}
+      title="Ver desglose de puntos"
+    >
       <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
 
       <div className="flex-1 min-w-0">

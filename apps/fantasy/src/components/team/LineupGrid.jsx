@@ -18,7 +18,7 @@ function EmptySlot({ onClick, isTargetable }) {
   );
 }
 
-function PositionRow({ players, captainId, selectedId, onPlayerClick, pointsById, totalPointsById }) {
+function PositionRow({ players, captainId, selectedId, onPlayerClick, pointsById, totalPointsById, onInfoClick }) {
   if (players.length === 0) return null;
   return (
     <div className="flex justify-center items-end gap-2 flex-wrap">
@@ -31,13 +31,14 @@ function PositionRow({ players, captainId, selectedId, onPlayerClick, pointsById
           onClick={onPlayerClick}
           points={pointsById?.[player.id] ?? null}
           totalPoints={totalPointsById?.[player.id] ?? null}
+          onInfoClick={onInfoClick}
         />
       ))}
     </div>
   );
 }
 
-export default function LineupGrid({ starters, captainId, selectedId, onPlayerClick, onEmptySlotClick, hasSelected, pointsById, totalPointsById }) {
+export default function LineupGrid({ starters, captainId, selectedId, onPlayerClick, onEmptySlotClick, hasSelected, pointsById, totalPointsById, onInfoClick }) {
   const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
   for (const p of starters) {
     byPos[p.position]?.push(p);
@@ -54,10 +55,10 @@ export default function LineupGrid({ starters, captainId, selectedId, onPlayerCl
 
       {/* Rows: attack → defense (top to bottom) */}
       <div className="relative z-10 px-4 py-5 space-y-4">
-        <PositionRow players={byPos.FWD} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} />
-        <PositionRow players={byPos.MID} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} />
-        <PositionRow players={byPos.DEF} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} />
-        <PositionRow players={byPos.GK} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} />
+        <PositionRow players={byPos.FWD} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} onInfoClick={onInfoClick} />
+        <PositionRow players={byPos.MID} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} onInfoClick={onInfoClick} />
+        <PositionRow players={byPos.DEF} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} onInfoClick={onInfoClick} />
+        <PositionRow players={byPos.GK} captainId={captainId} selectedId={selectedId} onPlayerClick={onPlayerClick} pointsById={pointsById} totalPointsById={totalPointsById} onInfoClick={onInfoClick} />
 
         {showEmptySlot && (
           <div className="flex justify-center">
