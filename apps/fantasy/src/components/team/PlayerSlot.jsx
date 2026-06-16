@@ -19,7 +19,11 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
     >
       {/* Points badge — live matchday (top-left) */}
       {points !== null && points !== undefined && (
-        <span className="absolute -top-2 -left-1.5 bg-surface border border-tertiary/60 text-tertiary text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow">
+        <span
+          className={`absolute -top-2 -left-1.5 bg-surface border border-tertiary/60 text-tertiary text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow${onInfoClick ? ' cursor-pointer hover:border-tertiary hover:bg-tertiary/10 transition-colors' : ''}`}
+          onClick={onInfoClick ? (e) => { e.stopPropagation(); onInfoClick(player); } : undefined}
+          title={onInfoClick ? 'Ver desglose de puntos' : undefined}
+        >
           {fmtPts(points)}
         </span>
       )}
@@ -27,8 +31,9 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
       {/* Total points badge — cumulative tournament (bottom-left) */}
       {totalPoints != null && (
         <span
-          className="absolute -bottom-2 -left-1.5 bg-surface border border-info/60 text-info text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow"
-          title="Puntos totales (todas las jornadas)"
+          className={`absolute -bottom-2 -left-1.5 bg-surface border border-info/60 text-info text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow${onInfoClick ? ' cursor-pointer hover:border-info hover:bg-info/10 transition-colors' : ''}`}
+          onClick={onInfoClick ? (e) => { e.stopPropagation(); onInfoClick(player); } : undefined}
+          title={onInfoClick ? 'Puntos totales (todas las jornadas) — clic para desglose' : 'Puntos totales (todas las jornadas)'}
         >
           {fmtPts(totalPoints)}
         </span>
@@ -39,19 +44,6 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
         <span className="absolute -top-2 -right-1.5 bg-tertiary text-primary text-label-caps font-extrabold w-4 h-4 rounded-full flex items-center justify-center z-10 shadow">
           C
         </span>
-      )}
-
-      {/* Info button (bottom-right) — only when caller provides onInfoClick */}
-      {onInfoClick && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onInfoClick(player); }}
-          onKeyDown={(e) => e.stopPropagation()}
-          className="absolute -bottom-2 -right-1.5 bg-surface border border-border/70 text-muted hover:text-secondary text-[9px] w-4 h-4 rounded-full flex items-center justify-center z-10 shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-tertiary"
-          aria-label="Ver desglose de puntos"
-          title="Ver desglose de puntos"
-        >
-          ⓘ
-        </button>
       )}
 
       {/* Position badge */}
