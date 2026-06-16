@@ -129,13 +129,14 @@ export default function HowToPlay() {
       <Section title="Alineación y jornadas">
         <ul className="space-y-2 text-secondary">
           <li><Bullet />Selecciona <strong className="text-primary">11 titulares</strong> de tu plantilla de 15 y elige un <strong className="text-primary">capitán</strong> (sus puntos se multiplican por 2).</li>
-          <li><Bullet />Los 4 suplentes se ordenan del 1 al 4; si un titular no juega ni un minuto, el sistema lo sustituye automáticamente por el primer suplente elegible de la misma posición.</li>
+          <li><Bullet /><strong className="text-primary">Solo puntúan tus 11 titulares.</strong> Los puntos de la jornada son la suma de los 11 titulares (el capitán cuenta ×2). Los suplentes <strong className="text-primary">no puntúan</strong>, aunque hayan jugado.</li>
+          <li><Bullet /><strong className="text-primary">No hay sustituciones automáticas.</strong> Si un titular no juega ni un minuto, suma <strong className="text-primary">0</strong> esa jornada — la banca no lo reemplaza. El orden de la banca (1–4) es solo organizativo.</li>
           <li><Bullet /><strong className="text-primary">Bloqueo por partido:</strong> un jugador se bloquea 10 minutos antes del inicio de su partido — a partir de entonces, no puedes cambiarlo ni elegirlo como capitán.</li>
           <li><Bullet />Los jugadores cuyo partido aún no ha comenzado pueden modificarse libremente (titulares, suplentes, capitán).</li>
           <li><Bullet />Si no guardas alineación, se usa la de la jornada anterior (o la mejor por precio si es la primera jornada).</li>
         </ul>
         <div className="mt-4 bg-info/10 border border-info/30 rounded-lg p-3 text-sm text-secondary">
-          <strong className="text-info">Consejo:</strong> si tu capitán no juega, sus puntos son 0 (y 0 × 2 = 0). El capitán <em>no</em> se sustituye automáticamente — ¡elige bien!
+          <strong className="text-info">Consejo:</strong> ningún jugador se sustituye automáticamente. Si un titular —o tu capitán— no juega, suma 0 esa jornada (y para el capitán, 0 × 2 = 0). Elige bien tu once y tu capitán.
         </div>
       </Section>
 
@@ -143,6 +144,9 @@ export default function HowToPlay() {
       <Section title="Sistema de puntos">
         <p className="text-secondary mb-3">
           El sistema por defecto es <strong className="text-primary">Compuesto (FPL+)</strong>. El administrador también puede activar el sistema <strong className="text-primary">FPL</strong> clásico. El sistema activo se anuncia antes de calcular cada jornada.
+        </p>
+        <p className="text-secondary mb-3">
+          El total de la jornada de tu equipo = suma de los puntos de los <strong className="text-primary">11 titulares</strong>, con el capitán ×2. La banca no aporta puntos.
         </p>
 
         <p className="text-xs text-muted uppercase tracking-wider mb-2">Sistema FPL (base)</p>
