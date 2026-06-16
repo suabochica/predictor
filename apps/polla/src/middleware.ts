@@ -47,7 +47,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.isAdmin = profile?.is_admin ?? false;
 
   // Fetch leaderboard rank
-  const { data: leaderboard } = await supabase.rpc('get_leaderboard');
+  const { data: leaderboard } = await supabase.rpc('polla_get_leaderboard');
   const userEntry = (leaderboard as any[])?.find((row) => row.user_id === user.id);
   context.locals.leaderboardRank = userEntry ? (leaderboard as any[]).indexOf(userEntry) + 1 : null;
   context.locals.totalPoints = userEntry?.total_points ?? null;

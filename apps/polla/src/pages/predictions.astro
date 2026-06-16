@@ -1,14 +1,18 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PredictionForm from '../components/PredictionForm';
+import Layout from "../layouts/Layout.astro";
+import PredictionForm from "../components/PredictionForm";
 
 const userId = Astro.locals.user?.id as string | undefined;
+const totalPoints = Astro.locals.totalPoints ?? 0;
 ---
 
 <Layout title="Predicciones">
   <div class="max-w-4xl">
     <h1 class="text-2xl font-bold text-primary">Predicciones</h1>
-    <p class="text-secondary text-body-sm mt-1 mb-6">Ingresa tus marcadores (0–9). Guarda antes de salir.</p>
+    <p class="text-secondary text-body-sm mt-1 mb-6">
+      Ingresa tus marcadores (0–9). Guarda antes de salir. Tu puntaje total son <span
+        class="font-bold text-tertiary">{totalPoints} puntos</span>
+    </p>
 
     <PredictionForm client:load currentUser={userId} />
   </div>
