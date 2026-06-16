@@ -13,7 +13,7 @@ const mobileNavItems = [
   { to: '/my-team', icon: teamIcon, label: 'Equipo' },
   { to: '/leaderboard', icon: standingsIcon, label: 'Tabla' },
   { to: '/market', icon: marketIcon, label: 'Mercado' },
-  { to: '/como-jugar', icon: rulesIcon, label: 'Reglas' },
+  { to: '/rules', icon: rulesIcon, label: 'Reglas' },
 ];
 
 export default function MobileNav() {
