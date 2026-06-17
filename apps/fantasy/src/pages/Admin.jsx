@@ -1051,19 +1051,40 @@ export default function Admin() {
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await supabase
         .from('players')
-        .select('id, name, position')
+        .select('id, name, position, country')
         .range(from, from + PAGE - 1);
       if (error || !data) break;
       allPlayers = allPlayers.concat(data);
       if (data.length < PAGE) break;
     }
     const normName = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-    const playerMap = Object.fromEntries((allPlayers ?? []).map(p => [normName(p.name), p]));
+
+    // Composite key: "name|country" — no cross-country collision possible
+    const playerMapByNameCountry = {};
+    for (const p of allPlayers) {
+      const key = `${normName(p.name)}|${normName(p.country)}`;
+      playerMapByNameCountry[key] = p;
+    }
+
+    // Name-only fallback (first occurrence wins — avoids clobber for unique names)
+    const playerMapByName = {};
+    for (const p of allPlayers) {
+      const key = normName(p.name);
+      if (!playerMapByName[key]) playerMapByName[key] = p;
+    }
 
     const toUpsert = [];
 
     for (const p of json.players) {
-      const player = playerMap[normName(p.name)];
+      const normHome = normName(json.match.home_team ?? '');
+      const normAway = normName(json.match.away_team ?? '');
+      const normN = normName(p.name);
+      const normT = normName(p.team ?? '');
+      const player =
+        (normT && playerMapByNameCountry[`${normN}|${normT}`]) ||
+        playerMapByNameCountry[`${normN}|${normHome}`] ||
+        playerMapByNameCountry[`${normN}|${normAway}`] ||
+        playerMapByName[normN];
       if (!player) { errors.push(`Player not found: "${p.name}"`); continue; }
 
       const minutes_played   = p.MP    ?? 0;
