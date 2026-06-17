@@ -5,3 +5,4 @@ export { Badge } from './components/Badge';
 export { Table, Thead, Tbody, Th, Td, Tr } from './components/Table';
 export { LoginForm } from './components/LoginForm';
 export { Footer } from './components/Footer';
+export { Header } from './components/Header';

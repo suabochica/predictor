@@ -1,4 +1,4 @@
-const LAST_UPDATED = '16 de junio de 2026';
+const LAST_UPDATED = '17 de junio de 2026';
 
 export function Footer() {
   return (
