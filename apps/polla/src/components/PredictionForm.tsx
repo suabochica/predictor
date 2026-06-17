@@ -26,6 +26,13 @@ interface PredictionState {
   };
 }
 
+interface ModalPrediction {
+  display_name: string;
+  predicted_score_a: number;
+  predicted_score_b: number;
+  points_earned: number;
+}
+
 function formatDateLabel(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("es-ES", {
     weekday: "long",
@@ -92,6 +99,9 @@ export default function PredictionForm({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [modalMatch, setModalMatch] = useState<Match | null>(null);
+  const [modalPredictions, setModalPredictions] = useState<ModalPrediction[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -218,6 +228,34 @@ export default function PredictionForm({
     }
   }
 
+  async function openPredictionsModal(match: Match) {
+    setModalMatch(match);
+    setModalLoading(true);
+    setModalPredictions([]);
+
+    const matchUuid = matchUuidMap[match.match_id];
+    if (!matchUuid) {
+      setModalLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "polla_get_match_predictions",
+        { p_match_id: matchUuid },
+      );
+      if (error) throw error;
+      setModalPredictions((data as ModalPrediction[]) ?? []);
+    } catch (err: any) {
+      console.error(
+        "Failed to fetch match predictions:",
+        err?.message ?? err,
+      );
+    } finally {
+      setModalLoading(false);
+    }
+  }
+
   const matchesByDate = groupMatchesByDate(matches);
   const sortedDates = Object.keys(matchesByDate).sort();
 
@@ -249,6 +287,9 @@ export default function PredictionForm({
   }
 
   // ── Table ─────────────────────────────────────────────────
+  const modalTeamA = modalMatch ? countries[modalMatch.team_a] : undefined;
+  const modalTeamB = modalMatch ? countries[modalMatch.team_b] : undefined;
+
   return (
     <div className="space-y-6">
       {sortedDates.map((date) => (
@@ -306,7 +347,17 @@ export default function PredictionForm({
                   return (
                     <tr
                       key={match.match_id}
-                      className={`${isLocked ? "opacity-50" : "hover:bg-surface-hover"}`}
+                      className={`${isLocked ? "opacity-50 cursor-pointer" : "hover:bg-surface-hover"}`}
+                      onClick={
+                        isLocked
+                          ? () => openPredictionsModal(match)
+                          : undefined
+                      }
+                      title={
+                        isLocked
+                          ? "Click para ver predicciones de todos los jugadores"
+                          : undefined
+                      }
                     >
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
                         {formatTime(match.match_date)}
@@ -414,6 +465,95 @@ export default function PredictionForm({
           </div>
         </div>
       ))}
+
+      {modalMatch && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={(e) => e.target === e.currentTarget && setModalMatch(null)}
+        >
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-start justify-between p-5 border-b border-border">
+              <div>
+                <h3 className="text-base font-semibold text-primary">
+                  {modalTeamA?.flag} {modalTeamA?.name || modalMatch.team_a}
+                  {" vs "}
+                  {modalTeamB?.flag} {modalTeamB?.name || modalMatch.team_b}
+                </h3>
+                <p className="text-xs text-muted mt-0.5">
+                  {formatTime(modalMatch.match_date)} · Grupo{" "}
+                  {modalMatch.group || "N/D"}
+                </p>
+              </div>
+              <button
+                onClick={() => setModalMatch(null)}
+                className="text-muted hover:text-primary text-xl leading-none px-2 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary"
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </div>
+
+            {modalLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-tertiary border-t-transparent" />
+              </div>
+            ) : modalPredictions.length === 0 ? (
+              <p className="text-center text-muted text-body-sm p-6">
+                No hay predicciones para este partido.
+              </p>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-neutral border-b border-border">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                      Jugador
+                    </th>
+                    <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                      {modalTeamA?.name || modalMatch.team_a}
+                    </th>
+                    <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                      {modalTeamB?.name || modalMatch.team_b}
+                    </th>
+                    <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                      Pts
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-surface">
+                  {modalPredictions.map((pred) => (
+                    <tr key={pred.display_name}>
+                      <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
+                        {pred.display_name}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                        {pred.predicted_score_a}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                        {pred.predicted_score_b}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm font-semibold text-tertiary">
+                        {pred.points_earned != null ? pred.points_earned : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {modalMatch.actual_score_a != null &&
+              modalMatch.actual_score_b != null && (
+                <div className="border-t border-border px-5 py-3">
+                  <span className="text-body-sm text-muted">
+                    Resultado real:{" "}
+                    <span className="font-semibold text-primary">
+                      {modalMatch.actual_score_a} - {modalMatch.actual_score_b}
+                    </span>
+                  </span>
+                </div>
+              )}
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button
