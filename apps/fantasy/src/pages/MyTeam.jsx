@@ -6,7 +6,7 @@ import { supabase } from '@predictor/supabase';
 import { getPositionColor, formatPrice, fmtPts } from '../lib/utils';
 import { statColumns } from '../lib/statColumns';
 import { usePlayerTotals } from '../hooks/usePlayerTotals';
-import { buildDefaultLineup } from '../lib/defaultLineup';
+import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { getActivePoints } from '../lib/scoring.js';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
@@ -83,10 +83,12 @@ export default function MyTeam() {
       .order('id', { ascending: true })
       .then(({ data }) => {
         const all = data ?? [];
-        // Show active matchday onwards — play-clock driven, not is_completed-driven
+        // Edit only the active matchday. Future MDs are not editable until they
+        // become active (their lineups are seeded from the prior MD on finalize).
+        // Preseason (no active MD) → empty selector, null-lineup editing path.
         const fromActive = activeMatchday
-          ? all.filter(md => md.id >= activeMatchday.id && !md.is_completed)
-          : all.filter(md => !md.is_completed);
+          ? all.filter(md => md.id === activeMatchday.id)
+          : [];
         setAllMatchdays(fromActive);
       });
   }, [activeMatchday?.id]); // eslint-disable-line
@@ -221,8 +223,14 @@ export default function MyTeam() {
         .map((r) => squad.find((p) => p.id === r.player_id))
         .filter(Boolean);
 
-      setStarters(savedStarters);
-      setBench(savedBench);
+      // Safety net: a carried/seeded XI with no GK auto-promotes a bench GK.
+      const { starters: fixedStarters, bench: fixedBench } = ensureStartingGk(
+        savedStarters,
+        savedBench
+      );
+
+      setStarters(fixedStarters);
+      setBench(fixedBench);
       setCaptainId(captainRow?.player_id ?? null);
     } else {
       const defaults = buildDefaultLineup(squad);

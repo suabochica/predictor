@@ -5,7 +5,7 @@ import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
 import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
 import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
-import { buildDefaultLineup } from '../lib/defaultLineup';
+import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
 
@@ -288,6 +288,10 @@ export default function Admin() {
           .order('id', { ascending: true });
         const nextMd = (fresh ?? []).find((m) => m.id > md.id && !m.is_completed && !m.is_active);
         if (nextMd) {
+          // Materialize the next MD's lineups from the just-finalized MD's final
+          // XI (with any already-made next-window transfers applied) before it
+          // goes active, so every team starts the new MD where it ended.
+          await supabase.rpc('seed_matchday_lineups', { p_source_md: md.id, p_target_md: nextMd.id });
           await handleToggleActive(nextMd);
           return; // handleToggleActive calls fetchMatchdays()
         }
@@ -568,26 +572,42 @@ export default function Admin() {
       .eq('matchday_id', matchdayIdInt);
     const statsMap = Object.fromEntries((allStats ?? []).map(s => [s.player_id, s]));
 
-    // 3. Fetch all players for position lookup
-    const { data: allPlayers } = await supabase.from('players').select('id, position');
+    // 3. Fetch all players for position + price lookup (price drives GK rebalance)
+    const { data: allPlayers } = await supabase.from('players').select('id, position, price');
     const positionMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.position]));
+    const priceMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.price]));
 
-    // 4. Fetch lineups — prefer matchday-specific, fall back to pre-tournament (null)
+    // 4. Fetch lineups — prefer matchday-specific; otherwise carry forward each
+    //    team's most recent PRIOR matchday lineup (falling back to preseason null).
     const { data: matchdayLineups } = await supabase
       .from('lineups')
       .select('team_id, player_id, is_starting, is_captain, bench_order')
       .eq('matchday_id', matchdayIdInt);
 
-    const { data: nullLineups } = await supabase
-      .from('lineups')
-      .select('team_id, player_id, is_starting, is_captain, bench_order')
-      .is('matchday_id', null);
-
     const matchdayTeamIds = new Set((matchdayLineups ?? []).map(r => r.team_id));
-    const allLineups = [
-      ...(matchdayLineups ?? []),
-      ...(nullLineups ?? []).filter(r => !matchdayTeamIds.has(r.team_id)),
-    ];
+
+    // Prior lineups: any matchday strictly before this one, plus preseason null.
+    const { data: priorLineups } = await supabase
+      .from('lineups')
+      .select('team_id, player_id, is_starting, is_captain, bench_order, matchday_id')
+      .or(`matchday_id.lt.${matchdayIdInt},matchday_id.is.null`);
+
+    // Per team lacking a matchday-specific lineup, keep rows from the highest
+    // available matchday_id (null ranks lowest, used only when no prior MD exists).
+    const carriedByTeam = {};
+    for (const r of priorLineups ?? []) {
+      if (matchdayTeamIds.has(r.team_id)) continue;
+      const rank = r.matchday_id ?? -Infinity;
+      const cur = carriedByTeam[r.team_id];
+      if (!cur || rank > cur.rank) {
+        carriedByTeam[r.team_id] = { rank, rows: [r] };
+      } else if (rank === cur.rank) {
+        cur.rows.push(r);
+      }
+    }
+    const carriedRows = Object.values(carriedByTeam).flatMap(c => c.rows);
+
+    const allLineups = [...(matchdayLineups ?? []), ...carriedRows];
 
     // 5. Fetch matchday_points from OTHER matchdays — idempotent on re-runs
     const { data: otherStandings } = await supabase
@@ -614,13 +634,17 @@ export default function Admin() {
         continue;
       }
 
-      const starters = teamLineupRows
+      const rawStarters = teamLineupRows
         .filter(r => r.is_starting)
-        .map(r => ({ id: r.player_id, position: positionMap[r.player_id] ?? 'FWD' }));
+        .map(r => ({ id: r.player_id, position: positionMap[r.player_id] ?? 'FWD', price: priceMap[r.player_id] ?? 0 }));
       const benchRows = teamLineupRows
         .filter(r => !r.is_starting)
         .sort((a, b) => (a.bench_order ?? 99) - (b.bench_order ?? 99));
-      const bench = benchRows.map(r => ({ id: r.player_id, position: positionMap[r.player_id] ?? 'FWD' }));
+      const rawBench = benchRows.map(r => ({ id: r.player_id, position: positionMap[r.player_id] ?? 'FWD', price: priceMap[r.player_id] ?? 0 }));
+
+      // Safety net: a carried/null 0-GK XI auto-promotes a bench GK before scoring.
+      const { starters, bench } = ensureStartingGk(rawStarters, rawBench);
+
       const captainRow = teamLineupRows.find(r => r.is_captain);
       const captainId = captainRow?.player_id ?? null;
 
@@ -647,17 +671,16 @@ export default function Admin() {
       });
     }
 
-    // Lineup stamp rows — deferred to the write step
-    const toStamp = (nullLineups ?? [])
-      .filter(r => !matchdayTeamIds.has(r.team_id))
-      .map(r => ({
-        team_id: r.team_id,
-        player_id: r.player_id,
-        matchday_id: matchdayIdInt,
-        is_starting: r.is_starting,
-        is_captain: r.is_captain,
-        bench_order: r.bench_order,
-      }));
+    // Lineup stamp rows — deferred to the write step. Carry each team's source
+    // (prior-MD or null) lineup forward, re-pointed to this matchday.
+    const toStamp = carriedRows.map(r => ({
+      team_id: r.team_id,
+      player_id: r.player_id,
+      matchday_id: matchdayIdInt,
+      is_starting: r.is_starting,
+      is_captain: r.is_captain,
+      bench_order: r.bench_order,
+    }));
 
     return { rows: previewRows, toStamp, errors, hasStats: Object.keys(statsMap).length > 0 };
   }
@@ -685,7 +708,7 @@ export default function Admin() {
       if (error) errors.push(`DB error: ${error.message}`);
     }
 
-    // Stamp null-matchday lineups as matchday-specific — permanent historical record
+    // Stamp carried lineups as matchday-specific — permanent historical record
     if (toStamp.length > 0) {
       const { error: stampErr } = await supabase
         .from('lineups')
