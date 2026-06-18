@@ -23,12 +23,14 @@ export function useTransfers() {
   }
 
   // Count transfers used in the current window (keyed by matchday_id for new model).
+  // Group stage pools across all group matchdays up to and including the active one.
   // Preseason transfers have matchday_id = null.
+  const counted = activeTransferWindow?.counted_matchday_ids;
   const transfersUsedThisWindow = activeTransferWindow
     ? transfers.filter((t) =>
         activeTransferWindow.is_preseason
           ? t.matchday_id == null
-          : t.matchday_id === activeTransferWindow.matchday_id
+          : counted?.includes(t.matchday_id)
       ).length
     : 0;
 

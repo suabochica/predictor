@@ -96,9 +96,18 @@ export function LeagueProvider({ children }) {
     const isPreseason = firstKickoffOverall == null || now < firstKickoffOverall - lead;
 
     let maxTransfers = null;
+    let countedMatchdayIds = null;
     if (!isPreseason) {
       const isGroup = activeMd.wc_stage?.toLowerCase().includes('group');
-      maxTransfers = isGroup ? TRANSFER_CAP_ROUND_ROBIN : TRANSFER_CAP_KNOCKOUT;
+      if (isGroup) {
+        countedMatchdayIds = ordered
+          .filter(md => md.wc_stage?.toLowerCase().includes('group') && md.id <= activeMd.id)
+          .map(md => md.id);
+        maxTransfers = TRANSFER_CAP_ROUND_ROBIN * countedMatchdayIds.length;
+      } else {
+        countedMatchdayIds = [activeMd.id];
+        maxTransfers = TRANSFER_CAP_KNOCKOUT;
+      }
     }
 
     // Preseason closes before the first game ever; regular windows close before the last game of the matchday.
@@ -113,6 +122,7 @@ export function LeagueProvider({ children }) {
       max_transfers: maxTransfers,
       is_preseason: isPreseason,
       closes_at: closesAt,
+      counted_matchday_ids: countedMatchdayIds,
     });
   }
 

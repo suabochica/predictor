@@ -24,6 +24,7 @@ export default function Market() {
   const { lockTimeFor } = useMatchdayLocks(activeTransferWindow?.matchday_id);
 
   const [filters, setFilters] = useState({});
+  const [sort, setSort] = useState({ key: 'current_price', dir: 'desc' });
   const [offerOut, setOfferOut] = useState(null);
   const [confirmSwapIn, setConfirmSwapIn] = useState(null);
   const [swapping, setSwapping] = useState(false);
@@ -96,6 +97,32 @@ export default function Market() {
       return true;
     });
   }, [allPlayers, filters, budget, offerOut]);
+
+  function sortValue(p, key) {
+    if (key === 'current_price') return p.current_price ?? p.price ?? 0;
+    if (key === 'total_points') return activePointsById[p.id] ?? 0;
+    if (['name', 'country', 'position'].includes(key)) return p[key] ?? '';
+    if (key === 'owner') return p.owner?.teamName ?? '';
+    return playerTotals[p.id]?.[key] ?? 0;
+  }
+
+  function toggleSort(key) {
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' }
+        : { key, dir: typeof sortValue({ id: -1 }, key) === 'string' ? 'asc' : 'desc' }
+    );
+  }
+
+  const sortedPlayers = useMemo(() => {
+    const arr = [...filteredPlayers];
+    arr.sort((a, b) => {
+      const va = sortValue(a, sort.key), vb = sortValue(b, sort.key);
+      const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+      return sort.dir === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+  }, [filteredPlayers, sort, playerTotals, activePointsById]);
 
   // Realtime: refresh on any team_players or transfers change
   useEffect(() => {
@@ -380,25 +407,48 @@ export default function Market() {
         <Table>
           <Thead className="sticky top-0 z-10">
             <tr>
-              <Th>Pos</Th>
-              <Th>Jugador</Th>
-              <Th className="hidden sm:table-cell">País</Th>
-              <Th className="hidden sm:table-cell text-center">PJ</Th>
-              <Th className="hidden sm:table-cell text-center">G</Th>
-              <Th className="hidden sm:table-cell text-center">A</Th>
-              <Th className="hidden sm:table-cell text-center">Pts</Th>
-              <Th className="text-right">Precio</Th>
-              <Th className="hidden sm:table-cell">Dueño</Th>
+              <Th onClick={() => toggleSort('position')} className="cursor-pointer select-none">
+                Pos {sort.key === 'position' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('name')} className="cursor-pointer select-none">
+                Jugador {sort.key === 'name' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('country')} className="hidden sm:table-cell cursor-pointer select-none">
+                País {sort.key === 'country' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('gp')} className="hidden sm:table-cell text-center cursor-pointer select-none">
+                PJ {sort.key === 'gp' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('goals')} className="hidden sm:table-cell text-center cursor-pointer select-none">
+                G {sort.key === 'goals' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('assists')} className="hidden sm:table-cell text-center cursor-pointer select-none">
+                A {sort.key === 'assists' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('total_points')} className="hidden sm:table-cell text-center cursor-pointer select-none">
+                Pts {sort.key === 'total_points' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('current_price')} className="text-right cursor-pointer select-none">
+                Precio {sort.key === 'current_price' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
+              <Th onClick={() => toggleSort('owner')} className="hidden sm:table-cell cursor-pointer select-none">
+                Dueño {sort.key === 'owner' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+              </Th>
               <Th>Acción</Th>
               {statColumns.map((col) => (
-                <Th key={col.field} className="text-center whitespace-nowrap" title={col.label}>
-                  {col.abbrev}
+                <Th
+                  key={col.field}
+                  onClick={() => toggleSort(col.field)}
+                  className="text-center whitespace-nowrap cursor-pointer select-none"
+                  title={col.label}
+                >
+                  {col.abbrev} {sort.key === col.field ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
                 </Th>
               ))}
             </tr>
           </Thead>
           <Tbody>
-            {filteredPlayers.map((player) => {
+            {sortedPlayers.map((player) => {
               const isMine = player.owner?.userId === team?.user_id;
               const canAfford = offerOut
                 ? budget + offerOut.current_price - player.current_price >= 0

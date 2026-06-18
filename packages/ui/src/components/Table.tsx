@@ -24,9 +24,13 @@ export function Tbody({ children }: { children: React.ReactNode }) {
   return <tbody className="divide-y divide-border">{children}</tbody>;
 }
 
-export function Th({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+export function Th({
+  children,
+  className = '',
+  ...rest
+}: { children: React.ReactNode; className?: string } & React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th scope="col" className={`px-4 py-3 text-left font-label text-label-caps text-secondary uppercase tracking-wider ${className}`}>
+    <th scope="col" className={`px-4 py-3 text-left font-label text-label-caps text-secondary uppercase tracking-wider ${className}`} {...rest}>
       {children}
     </th>
   );
