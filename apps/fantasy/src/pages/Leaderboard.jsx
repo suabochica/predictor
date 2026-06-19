@@ -47,7 +47,9 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const { activeMatchday } = useLeague();
 
-  const [viewingEntry, setViewingEntry] = useState(null);
+  const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
+  const openTeam = (entry, matchdayId, matchdayName) =>
+    setViewing({ entry, matchdayId, matchdayName });
 
   const hasScores = standings.some((s) => s.total_points > 0);
   const totalParticipants = standings.length;
@@ -184,7 +186,7 @@ export default function Leaderboard() {
               return (
                 <div
                   key={entry.team_id}
-                  onClick={() => setViewingEntry(entry)}
+                  onClick={() => openTeam(entry, activeMatchday?.id ?? null, activeMatchday?.name ?? null)}
                   className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] min-w-[34rem] gap-x-2 px-4 py-3 items-center cursor-pointer hover:bg-surface-hover transition-colors ${leftBorder}`}
                 >
                   {/* Rank */}
@@ -200,14 +202,24 @@ export default function Leaderboard() {
 
                   {/* Per-matchday points */}
                   {groupMatchdays.length > 0
-                    ? groupMatchdays.map((md) => (
-                        <span
-                          key={md.id}
-                          className="text-center text-sm text-secondary"
-                        >
-                          {fmtPts(entry.matchday_points[md.id])}
-                        </span>
-                      ))
+                    ? groupMatchdays.map((md) => {
+                        const pts = entry.matchday_points[md.id];
+                        const hasPts = pts != null;
+                        return (
+                          <span
+                            key={md.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (hasPts) openTeam(entry, md.id, md.name);
+                            }}
+                            className={`text-center text-sm text-secondary ${
+                              hasPts ? 'hover:text-primary cursor-pointer' : 'cursor-default'
+                            }`}
+                          >
+                            {fmtPts(pts)}
+                          </span>
+                        );
+                      })
                     : [1, 2, 3].map((n) => (
                         <span key={n} className="text-center text-sm text-secondary">
                           —
@@ -253,11 +265,12 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {viewingEntry && (
+      {viewing && (
         <TeamLineupModal
-          entry={viewingEntry}
-          activeMatchdayId={activeMatchday?.id ?? null}
-          onClose={() => setViewingEntry(null)}
+          entry={viewing.entry}
+          matchdayId={viewing.matchdayId}
+          matchdayName={viewing.matchdayName}
+          onClose={() => setViewing(null)}
         />
       )}
     </div>

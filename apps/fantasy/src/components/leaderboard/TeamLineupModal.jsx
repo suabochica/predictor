@@ -10,7 +10,7 @@ const LINEUP_SELECT =
 
 const noop = () => {};
 
-export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
+export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClose }) {
   const [rows, setRows] = useState(null); // null = loading, [] = none found
   const [scoringSystem, setScoringSystem] = useState('opta');
   const [liveStats, setLiveStats] = useState({});
@@ -26,12 +26,12 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
       try {
         let data = null;
 
-        if (activeMatchdayId != null) {
+        if (matchdayId != null) {
           const res = await supabase
             .from('lineups')
             .select(LINEUP_SELECT)
             .eq('team_id', entry.team_id)
-            .eq('matchday_id', activeMatchdayId);
+            .eq('matchday_id', matchdayId);
           if (res.error) throw res.error;
           data = res.data;
         }
@@ -80,7 +80,7 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
     setError(null);
     load();
     return () => { cancelled = true; };
-  }, [entry.team_id, activeMatchdayId]);
+  }, [entry.team_id, matchdayId]);
 
   // Fetch scoring system + player stats once rows are loaded
   useEffect(() => {
@@ -96,8 +96,8 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
         { data: allData },
       ] = await Promise.all([
         supabase.from('auction_state').select('scoring_system').single(),
-        activeMatchdayId
-          ? supabase.from('player_stats').select('*').eq('matchday_id', activeMatchdayId).in('player_id', playerIds)
+        matchdayId
+          ? supabase.from('player_stats').select('*').eq('matchday_id', matchdayId).in('player_id', playerIds)
           : Promise.resolve({ data: [] }),
         supabase.from('player_stats').select('*').in('player_id', playerIds),
       ]);
@@ -111,7 +111,7 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
 
     loadStats();
     return () => { cancelled = true; };
-  }, [rows, activeMatchdayId]); // eslint-disable-line
+  }, [rows, matchdayId]); // eslint-disable-line
 
   const players = (rows ?? [])
     .filter((r) => r.players)
@@ -151,6 +151,9 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
             <h2 className="text-lg font-bold text-primary truncate">{entry.display_name}</h2>
             {entry.team_name && entry.team_name !== entry.display_name && (
               <p className="text-sm text-secondary truncate">{entry.team_name}</p>
+            )}
+            {matchdayName && (
+              <p className="text-xs text-muted truncate">{matchdayName}</p>
             )}
           </div>
           <button
@@ -197,7 +200,7 @@ export default function TeamLineupModal({ entry, activeMatchdayId, onClose }) {
             {breakdownPlayer && (
               <PointsBreakdownModal
                 player={breakdownPlayer}
-                activeMatchdayId={activeMatchdayId}
+                activeMatchdayId={matchdayId}
                 isCaptain={breakdownPlayer.id === captainId}
                 onClose={() => setBreakdownPlayer(null)}
               />
