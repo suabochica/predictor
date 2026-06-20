@@ -1001,57 +1001,38 @@ export default function Admin() {
   }
   // ────────────────────────────────────────────────────────────────────────────
 
-  // ── Opta JSON Stats Upload ────────────────────────────────────────────────
+  // ── Opta Stats Upload (JSON + ODS) ───────────────────────────────────────
   const [optaMatchdayId, setOptaMatchdayId] = useState('');
   const [optaFile, setOptaFile] = useState(null);
   const [optaUploading, setOptaUploading] = useState(false);
   const [optaResult, setOptaResult] = useState(null);
 
-  async function handleOptaUpload(e, force = false) {
-    if (e?.preventDefault) e.preventDefault();
-    setOptaResult(null);
-    if (!optaMatchdayId) { setOptaResult({ errors: ['Selecciona una jornada primero.'] }); return; }
-    if (!optaFile)        { setOptaResult({ errors: ['Selecciona un archivo JSON.'] }); return; }
+  const [odsMatchdayId, setOdsMatchdayId] = useState('');
+  const [odsFile, setOdsFile] = useState(null);
+  const [odsDate, setOdsDate] = useState('');
+  const [odsUploading, setOdsUploading] = useState(false);
+  const [odsResult, setOdsResult] = useState(null);
 
-    setOptaUploading(true);
-    let json;
-    try {
-      const text = await optaFile.text();
-      json = JSON.parse(text);
-    } catch {
-      setOptaResult({ errors: ['Archivo JSON inválido.'] });
-      setOptaUploading(false);
-      return;
-    }
-
-    if (!json.match || !Array.isArray(json.players) || json.players.length === 0) {
-      setOptaResult({ errors: ['JSON no tiene los campos requeridos "match" o "players".'] });
-      setOptaUploading(false);
-      return;
-    }
-
-    // GC sanity check: if goals were scored but every player has GC=0, the extraction missed goals_conceded
+  // Shared core: upsert match_metadata + player_stats from a parsed json object.
+  // Returns { inserted, errors } or { gcWarning: true, errors } without touching state.
+  async function uploadResolvedStats(json, matchdayId, force) {
     if (!force && json.match.score) {
       const totalGoals = (json.match.score.home ?? 0) + (json.match.score.away ?? 0);
       if (totalGoals > 0 && json.players.every((p) => (p.GC ?? 0) === 0)) {
         const scoreStr = `${json.match.score.home}–${json.match.score.away}`;
-        setOptaResult({
+        return {
           gcWarning: true,
           errors: [
             `Todos los jugadores tienen GC=0 pero el marcador es ${scoreStr}. ` +
             `Esto asignará portería imbatida incorrecta a porteros y defensas del equipo que encajó goles. ` +
-            `Corrige los valores GC en el JSON antes de subir, o usa "Subir de todos modos" para continuar.`,
+            `Corrige los valores GC antes de subir, o usa "Subir de todos modos" para continuar.`,
           ],
-        });
-        setOptaUploading(false);
-        return;
+        };
       }
     }
 
-    const matchdayId = parseInt(optaMatchdayId, 10);
     const errors = [];
 
-    // Upsert match_metadata row
     const { error: metaError } = await supabase
       .from('match_metadata')
       .upsert({
@@ -1066,9 +1047,7 @@ export default function Admin() {
 
     if (metaError) errors.push(`match_metadata error: ${metaError.message}`);
 
-    // Fetch all players for name-normalization lookup.
-    // Paginate: a plain .select() caps at 1000 rows, silently dropping players
-    // and producing false "Player not found" errors (the roster exceeds 1000).
+    // Paginate: plain .select() caps at 1000 rows, silently dropping players
     const PAGE = 1000;
     let allPlayers = [];
     for (let from = 0; ; from += PAGE) {
@@ -1085,11 +1064,9 @@ export default function Admin() {
     // Composite key: "name|country" — no cross-country collision possible
     const playerMapByNameCountry = {};
     for (const p of allPlayers) {
-      const key = `${normName(p.name)}|${normName(p.country)}`;
-      playerMapByNameCountry[key] = p;
+      playerMapByNameCountry[`${normName(p.name)}|${normName(p.country)}`] = p;
     }
-
-    // Name-only fallback (first occurrence wins — avoids clobber for unique names)
+    // Name-only fallback (first occurrence wins)
     const playerMapByName = {};
     for (const p of allPlayers) {
       const key = normName(p.name);
@@ -1097,7 +1074,6 @@ export default function Admin() {
     }
 
     const toUpsert = [];
-
     for (const p of json.players) {
       const normHome = normName(json.match.home_team ?? '');
       const normAway = normName(json.match.away_team ?? '');
@@ -1131,7 +1107,7 @@ export default function Admin() {
       const crosses          = p.C     ?? 0;
       const penalties_won    = p.PW    ?? 0;
       const opta_points      = p.PTS   ?? null;
-      // Opta has no clean-sheet field — derive from GC + minutes
+      // Derive clean sheet from GC + minutes (Opta has no explicit CS field)
       const clean_sheet = goals_conceded === 0 && minutes_played >= 60;
 
       const stats = {
@@ -1144,30 +1120,11 @@ export default function Admin() {
       toUpsert.push({
         player_id: player.id,
         matchday_id: matchdayId,
-        minutes_played,
-        goals,
-        assists,
-        clean_sheet,
-        saves,
-        penalty_saves,
-        penalty_misses: 0,
-        yellow_cards,
-        red_cards,
-        own_goals,
-        goals_conceded,
-        shots_on_target,
-        shots_off_target,
-        blocked_shots,
-        tackles,
-        interceptions,
-        fouls_won,
-        fouls_conceded,
-        offsides,
-        passes,
-        crosses,
-        penalties_won,
-        opta_points,
-        total_points,
+        minutes_played, goals, assists, clean_sheet, saves,
+        penalty_saves, penalty_misses: 0, yellow_cards, red_cards,
+        own_goals, goals_conceded, shots_on_target, shots_off_target,
+        blocked_shots, tackles, interceptions, fouls_won, fouls_conceded,
+        offsides, passes, crosses, penalties_won, opta_points, total_points,
       });
     }
 
@@ -1176,16 +1133,157 @@ export default function Admin() {
       const { error } = await supabase
         .from('player_stats')
         .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
-      if (error) {
-        errors.push(`DB error: ${error.message}`);
-      } else {
-        inserted = toUpsert.length;
-      }
+      if (error) errors.push(`DB error: ${error.message}`);
+      else inserted = toUpsert.length;
     }
 
-    setOptaResult({ inserted, errors });
-    setOptaFile(null);
+    return { inserted, errors };
+  }
+
+  async function handleOptaUpload(e, force = false) {
+    if (e?.preventDefault) e.preventDefault();
+    setOptaResult(null);
+    if (!optaMatchdayId) { setOptaResult({ errors: ['Selecciona una jornada primero.'] }); return; }
+    if (!optaFile)        { setOptaResult({ errors: ['Selecciona un archivo JSON.'] }); return; }
+
+    setOptaUploading(true);
+    let json;
+    try {
+      const text = await optaFile.text();
+      json = JSON.parse(text);
+    } catch {
+      setOptaResult({ errors: ['Archivo JSON inválido.'] });
+      setOptaUploading(false);
+      return;
+    }
+
+    if (!json.match || !Array.isArray(json.players) || json.players.length === 0) {
+      setOptaResult({ errors: ['JSON no tiene los campos requeridos "match" o "players".'] });
+      setOptaUploading(false);
+      return;
+    }
+
+    const result = await uploadResolvedStats(json, parseInt(optaMatchdayId, 10), force);
+    setOptaResult(result);
+    if (!result.gcWarning) setOptaFile(null);
     setOptaUploading(false);
+  }
+
+  async function handleOdsUpload(e, force = false) {
+    if (e?.preventDefault) e.preventDefault();
+    setOdsResult(null);
+    if (!odsMatchdayId) { setOdsResult({ errors: ['Selecciona una jornada primero.'] }); return; }
+    if (!odsFile)       { setOdsResult({ errors: ['Selecciona un archivo .ods.'] }); return; }
+
+    setOdsUploading(true);
+    const parseErrors = [];
+    let json;
+
+    try {
+      const XLSX = await import('xlsx');
+      const buf = await odsFile.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+
+      if (!wb.SheetNames.includes('RES')) {
+        setOdsResult({ errors: ['Archivo sin hoja RES — usa la ruta JSON para archivos no estándar.'] });
+        setOdsUploading(false);
+        return;
+      }
+
+      const resRows = XLSX.utils.sheet_to_json(wb.Sheets['RES'], { header: 1, raw: true, defval: '' });
+      const resRow1 = resRows[1] ?? [];
+      const home_team = String(resRow1[0] ?? '').trim();
+      const away_team = String(resRow1[4] ?? '').trim();
+      const score_home = parseInt(String(resRow1[1]), 10);
+      const score_away = parseInt(String(resRow1[3]), 10);
+
+      if (!home_team || !away_team || isNaN(score_home) || isNaN(score_away)) {
+        setOdsResult({ errors: ['No se pudo leer el marcador de la hoja RES.'] });
+        setOdsUploading(false);
+        return;
+      }
+
+      const players = [];
+
+      for (const [sheetName, teamName] of [['T1', home_team], ['T2', away_team]]) {
+        if (!wb.SheetNames.includes(sheetName)) {
+          parseErrors.push(`Hoja ${sheetName} no encontrada.`);
+          continue;
+        }
+
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, raw: true, defval: '' });
+        if (rows.length < 2) { parseErrors.push(`Hoja ${sheetName} sin datos.`); continue; }
+
+        // Header map: lowercase+trim → column index
+        const hdr = {};
+        for (let i = 0; i < rows[0].length; i++) {
+          const h = String(rows[0][i] ?? '').trim().toLowerCase();
+          if (h && !(h in hdr)) hdr[h] = i;
+        }
+
+        // Reject if DB Name column absent — file was not processed by add_db_name_col.py
+        const dbIdx = hdr['db name'] ?? hdr['db_name'];
+        if (dbIdx === undefined) {
+          setOdsResult({ errors: [`Hoja ${sheetName} sin columna "DB Name" — ejecuta add_db_name_col.py antes de subir.`] });
+          setOdsUploading(false);
+          return;
+        }
+
+        const num = (row, key) => {
+          const idx = hdr[key.toLowerCase()];
+          if (idx === undefined) return 0;
+          const n = parseFloat(row[idx]);
+          return isNaN(n) ? 0 : n;
+        };
+
+        for (let ri = 1; ri < rows.length; ri++) {
+          const row = rows[ri];
+          const dbName = String(row[dbIdx] ?? '').trim();
+          if (!dbName) continue;
+          if (dbName.toUpperCase() === 'NOT FOUND') {
+            parseErrors.push(`[${sheetName}] Sin resolución: "${String(row[0] ?? '').trim()}"`);
+            continue;
+          }
+          const ptsRaw = parseFloat(row[hdr['pts']]);
+          players.push({
+            name: dbName, team: teamName,
+            MP: num(row,'MP'), G: num(row,'G'), SOnT: num(row,'SOnT'), SOffT: num(row,'SOffT'),
+            BS: num(row,'BS'), OG: num(row,'OG'), A: num(row,'A'), P: num(row,'P'),
+            C: num(row,'C'), Tk: num(row,'Tk'), INT: num(row,'INT'), FW: num(row,'FW'),
+            FC: num(row,'FC'), O: num(row,'O'), YC: num(row,'YC'), RC: num(row,'RC'),
+            GC: num(row,'GC'), PW: num(row,'PW'), SAV: num(row,'SAV'), PSAV: num(row,'PSAV'),
+            PTS: isNaN(ptsRaw) ? null : ptsRaw,
+          });
+        }
+      }
+
+      if (players.length === 0) {
+        setOdsResult({ errors: ['No se encontraron jugadores en el archivo.', ...parseErrors] });
+        setOdsUploading(false);
+        return;
+      }
+
+      json = {
+        match: {
+          competition: 'FIFA World Cup',
+          date: odsDate || null,
+          home_team,
+          away_team,
+          score: { home: score_home, away: score_away },
+        },
+        players,
+      };
+    } catch (err) {
+      setOdsResult({ errors: [`Error al procesar el archivo .ods: ${err.message}`] });
+      setOdsUploading(false);
+      return;
+    }
+
+    const result = await uploadResolvedStats(json, parseInt(odsMatchdayId, 10), force);
+    if (parseErrors.length > 0) result.errors = [...(result.errors ?? []), ...parseErrors];
+    setOdsResult(result);
+    if (!result.gcWarning) setOdsFile(null);
+    setOdsUploading(false);
   }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -1953,6 +2051,87 @@ export default function Admin() {
             {optaResult.gcWarning && (
               <button
                 onClick={() => handleOptaUpload(null, true)}
+                className="mt-2 px-4 py-1.5 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 font-semibold text-xs transition-colors"
+              >
+                Subir de todos modos
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ── Opta ODS Stats Upload ────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">Carga de estadísticas Opta ODS</h2>
+          <p className="text-xs text-muted mt-1">
+            Sube el archivo <code>.ods</code> curado (después de ejecutar <code>add_db_name_col.py</code>). Idempotente — volver a subir sobrescribe las filas existentes.
+          </p>
+        </div>
+
+        <form onSubmit={handleOdsUpload} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Jornada</label>
+              <select
+                value={odsMatchdayId}
+                onChange={e => setOdsMatchdayId(e.target.value)}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              >
+                <option value="">Seleccionar jornada…</option>
+                {matchdays.map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Archivo .ods (con columna DB Name)</label>
+              <input
+                type="file"
+                accept=".ods"
+                onChange={e => { setOdsFile(e.target.files?.[0] ?? null); setOdsResult(null); }}
+                className="w-full text-sm text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-border file:text-secondary hover:file:bg-border-strong"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Fecha del partido (opcional)</label>
+              <input
+                type="date"
+                value={odsDate}
+                onChange={e => setOdsDate(e.target.value)}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={odsUploading}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {odsUploading ? 'Subiendo…' : 'Subir estadísticas ODS'}
+          </button>
+        </form>
+
+        {odsResult && (
+          <div className={`rounded-lg p-4 space-y-2 ${
+            odsResult.gcWarning
+              ? 'bg-warning/10 border border-warning/40'
+              : odsResult.errors?.length > 0 && !odsResult.inserted
+              ? 'bg-error/10 border border-error/30'
+              : 'bg-surface-hover'
+          }`}>
+            {odsResult.inserted > 0 && (
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ {odsResult.inserted} fila{odsResult.inserted !== 1 ? 's' : ''} de estadísticas guardada{odsResult.inserted !== 1 ? 's' : ''}.
+              </p>
+            )}
+            {odsResult.errors?.map((err, i) => (
+              <p key={i} className={`text-xs ${odsResult.gcWarning ? 'text-warning' : 'text-error'}`}>{err}</p>
+            ))}
+            {odsResult.gcWarning && (
+              <button
+                onClick={() => handleOdsUpload(null, true)}
                 className="mt-2 px-4 py-1.5 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 font-semibold text-xs transition-colors"
               >
                 Subir de todos modos
