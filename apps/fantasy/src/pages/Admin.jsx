@@ -380,7 +380,8 @@ export default function Admin() {
       else inserted = toUpsert.length;
     }
 
-    setStatsResult({ inserted, errors });
+    const stdErrors = inserted > 0 ? await recomputeStandingsSilently(matchdayId) : [];
+    setStatsResult({ inserted, errors: [...errors, ...stdErrors] });
     setStatsFile(null);
     setStatsUploading(false);
   }
@@ -557,6 +558,21 @@ export default function Admin() {
   }
 
   // ── 5b. Standings computation — shared by preview flow and Finalize ──────
+
+  // Paginated fetch helper — plain .select() is silently capped at 1000 rows.
+  async function fetchAllPages(queryFn) {
+    const PAGE = 1000;
+    let from = 0, out = [];
+    while (true) {
+      const { data, error } = await queryFn(from, from + PAGE - 1);
+      if (error || !data) break;
+      out = out.concat(data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    return out;
+  }
+
   // Returns { rows, toStamp, errors, hasStats } or null if no teams exist.
   async function computeStandingsForMatchday(matchdayIdInt) {
     const errors = [];
@@ -565,37 +581,45 @@ export default function Admin() {
     const { data: teams } = await supabase.from('teams').select('id, name');
     if (!teams?.length) return null;
 
-    // 2. Fetch all player_stats — include all Opta columns so both scorers work
-    const { data: allStats } = await supabase
-      .from('player_stats')
-      .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won')
-      .eq('matchday_id', matchdayIdInt);
-    const statsMap = Object.fromEntries((allStats ?? []).map(s => [s.player_id, s]));
+    // 2. Fetch all player_stats — paginated so no starter's stats are ever dropped
+    const allStats = await fetchAllPages((f, t) =>
+      supabase
+        .from('player_stats')
+        .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won')
+        .eq('matchday_id', matchdayIdInt)
+        .range(f, t));
+    const statsMap = Object.fromEntries(allStats.map(s => [s.player_id, s]));
 
-    // 3. Fetch all players for position + price lookup (price drives GK rebalance)
-    const { data: allPlayers } = await supabase.from('players').select('id, position, price');
-    const positionMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.position]));
-    const priceMap = Object.fromEntries((allPlayers ?? []).map(p => [p.id, p.price]));
+    // 3. Fetch all players for position + price lookup — roster exceeds 1000 rows
+    const allPlayers = await fetchAllPages((f, t) =>
+      supabase.from('players').select('id, position, price').range(f, t));
+    const positionMap = Object.fromEntries(allPlayers.map(p => [p.id, p.position]));
+    const priceMap = Object.fromEntries(allPlayers.map(p => [p.id, p.price]));
 
     // 4. Fetch lineups — prefer matchday-specific; otherwise carry forward each
     //    team's most recent PRIOR matchday lineup (falling back to preseason null).
-    const { data: matchdayLineups } = await supabase
-      .from('lineups')
-      .select('team_id, player_id, is_starting, is_captain, bench_order')
-      .eq('matchday_id', matchdayIdInt);
+    const matchdayLineups = await fetchAllPages((f, t) =>
+      supabase
+        .from('lineups')
+        .select('team_id, player_id, is_starting, is_captain, bench_order')
+        .eq('matchday_id', matchdayIdInt)
+        .range(f, t));
 
-    const matchdayTeamIds = new Set((matchdayLineups ?? []).map(r => r.team_id));
+    const matchdayTeamIds = new Set(matchdayLineups.map(r => r.team_id));
 
     // Prior lineups: any matchday strictly before this one, plus preseason null.
-    const { data: priorLineups } = await supabase
-      .from('lineups')
-      .select('team_id, player_id, is_starting, is_captain, bench_order, matchday_id')
-      .or(`matchday_id.lt.${matchdayIdInt},matchday_id.is.null`);
+    // Paginated: spans all prior matchdays and will exceed 1000 once several MDs exist.
+    const priorLineups = await fetchAllPages((f, t) =>
+      supabase
+        .from('lineups')
+        .select('team_id, player_id, is_starting, is_captain, bench_order, matchday_id')
+        .or(`matchday_id.lt.${matchdayIdInt},matchday_id.is.null`)
+        .range(f, t));
 
     // Per team lacking a matchday-specific lineup, keep rows from the highest
     // available matchday_id (null ranks lowest, used only when no prior MD exists).
     const carriedByTeam = {};
-    for (const r of priorLineups ?? []) {
+    for (const r of priorLineups) {
       if (matchdayTeamIds.has(r.team_id)) continue;
       const rank = r.matchday_id ?? -Infinity;
       const cur = carriedByTeam[r.team_id];
@@ -607,7 +631,7 @@ export default function Admin() {
     }
     const carriedRows = Object.values(carriedByTeam).flatMap(c => c.rows);
 
-    const allLineups = [...(matchdayLineups ?? []), ...carriedRows];
+    const allLineups = [...matchdayLineups, ...carriedRows];
 
     // 5. Fetch matchday_points from OTHER matchdays — idempotent on re-runs
     const { data: otherStandings } = await supabase
@@ -628,7 +652,7 @@ export default function Admin() {
     const previewRows = [];
 
     for (const team of teams) {
-      const teamLineupRows = (allLineups ?? []).filter(r => r.team_id === team.id);
+      const teamLineupRows = allLineups.filter(r => r.team_id === team.id);
       if (teamLineupRows.length === 0) {
         errors.push(`${team.name}: no lineup found for this matchday — skipped.`);
         continue;
@@ -717,6 +741,16 @@ export default function Admin() {
     }
 
     return { teamsScored: upsertRows.length, errors };
+  }
+
+  // Silently re-stamp standings for a matchday after stats land. Returns extra
+  // error strings to merge into the upload result (empty array on success).
+  async function recomputeStandingsSilently(matchdayId) {
+    const computed = await computeStandingsForMatchday(matchdayId);
+    if (!computed) return ['No se pudo recalcular: no se encontraron equipos.'];
+    if (!computed.rows?.length) return computed.errors ?? [];
+    const { errors: writeErrors } = await writeStandings(matchdayId, computed.rows, computed.toStamp);
+    return [...(computed.errors ?? []), ...writeErrors];
   }
 
   // ── 5c. Calculate Standings — step 1: preview (no DB write) ──────────────
@@ -1164,6 +1198,10 @@ export default function Admin() {
     }
 
     const result = await uploadResolvedStats(json, parseInt(optaMatchdayId, 10), force);
+    if (result.inserted > 0 && !result.gcWarning) {
+      const stdErrors = await recomputeStandingsSilently(parseInt(optaMatchdayId, 10));
+      result.errors = [...(result.errors ?? []), ...stdErrors];
+    }
     setOptaResult(result);
     if (!result.gcWarning) setOptaFile(null);
     setOptaUploading(false);
@@ -1281,6 +1319,10 @@ export default function Admin() {
 
     const result = await uploadResolvedStats(json, parseInt(odsMatchdayId, 10), force);
     if (parseErrors.length > 0) result.errors = [...(result.errors ?? []), ...parseErrors];
+    if (result.inserted > 0 && !result.gcWarning) {
+      const stdErrors = await recomputeStandingsSilently(parseInt(odsMatchdayId, 10));
+      result.errors = [...(result.errors ?? []), ...stdErrors];
+    }
     setOdsResult(result);
     if (!result.gcWarning) setOdsFile(null);
     setOdsUploading(false);
