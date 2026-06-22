@@ -344,7 +344,7 @@ export default function PredictionForm({
                           {teamA?.name || match.team_a}
                         </span>
                       </div>
-                      <div className="flex flex-col items-center shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <input
                           type="number"
                           min="0"
@@ -368,7 +368,7 @@ export default function PredictionForm({
                           aria-label={`Marcador de ${teamA?.name || match.team_a}`}
                         />
                         {hasActualScore && (
-                          <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
+                          <span className="text-xs font-label font-semibold text-tertiary">
                             {match.actual_score_a}
                           </span>
                         )}
@@ -382,7 +382,7 @@ export default function PredictionForm({
                           {teamB?.name || match.team_b}
                         </span>
                       </div>
-                      <div className="flex flex-col items-center shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <input
                           type="number"
                           min="0"
@@ -406,7 +406,7 @@ export default function PredictionForm({
                           aria-label={`Marcador de ${teamB?.name || match.team_b}`}
                         />
                         {hasActualScore && (
-                          <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
+                          <span className="text-xs font-label font-semibold text-tertiary">
                             {match.actual_score_b}
                           </span>
                         )}
@@ -501,7 +501,7 @@ export default function PredictionForm({
                       </td>
 
                       <td className="whitespace-nowrap px-2 py-2">
-                        <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex justify-end">
                           <input
                             type="number"
                             min="0"
@@ -524,48 +524,48 @@ export default function PredictionForm({
                             }
                             aria-label={`Marcador de ${teamA?.name || match.team_a}`}
                           />
-                          {hasActualScore && (
-                            <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
-                              {match.actual_score_a}
-                            </span>
-                          )}
                         </div>
                       </td>
 
                       <td className="whitespace-nowrap px-1 py-2 text-center text-body-sm text-muted">
-                        -
+                        {hasActualScore ? (
+                          <>
+                            <span className="font-semibold text-tertiary">
+                              {match.actual_score_a}
+                            </span>
+                            {" - "}
+                            <span className="font-semibold text-tertiary">
+                              {match.actual_score_b}
+                            </span>
+                          </>
+                        ) : (
+                          "-"
+                        )}
                       </td>
 
                       <td className="whitespace-nowrap px-2 py-2">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <input
-                            type="number"
-                            min="0"
-                            max="9"
-                            disabled={isLocked}
-                            value={pred.score_b ?? ""}
-                            onChange={(e) =>
-                              handleScoreChange(
-                                match.match_id,
-                                "b",
-                                e.target.value,
-                              )
-                            }
-                            className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
-                            placeholder="-"
-                            title={
-                              isLocked
-                                ? "Las predicciones se bloquean 30 minutos antes del partido"
-                                : undefined
-                            }
-                            aria-label={`Marcador de ${teamB?.name || match.team_b}`}
-                          />
-                          {hasActualScore && (
-                            <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
-                              {match.actual_score_b}
-                            </span>
-                          )}
-                        </div>
+                        <input
+                          type="number"
+                          min="0"
+                          max="9"
+                          disabled={isLocked}
+                          value={pred.score_b ?? ""}
+                          onChange={(e) =>
+                            handleScoreChange(
+                              match.match_id,
+                              "b",
+                              e.target.value,
+                            )
+                          }
+                          className="w-14 rounded-sm border border-border px-2 py-1 text-center text-body-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
+                          placeholder="-"
+                          title={
+                            isLocked
+                              ? "Las predicciones se bloquean 30 minutos antes del partido"
+                              : undefined
+                          }
+                          aria-label={`Marcador de ${teamB?.name || match.team_b}`}
+                        />
                       </td>
 
                       <td className="whitespace-nowrap px-1 py-2">
