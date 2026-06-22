@@ -298,7 +298,137 @@ export default function PredictionForm({
             {formatDateLabel(date)}
           </h2>
 
-          <div className="overflow-hidden rounded-sm border border-border">
+          {/* Mobile cards */}
+
+          <div className="sm:hidden space-y-2">
+            {matchesByDate[date].map((match) => {
+              const teamA = countries[match.team_a];
+              const teamB = countries[match.team_b];
+              const pred = predictions[match.match_id] || {};
+              const isLocked = isMatchLocked(match);
+              const hasActualScore =
+                match.actual_score_a != null &&
+                match.actual_score_b != null;
+
+              return (
+                <div
+                  key={match.match_id}
+                  className={`rounded-sm border border-border bg-surface ${
+                    isLocked ? "opacity-50 cursor-pointer" : ""
+                  }`}
+                  onClick={
+                    isLocked
+                      ? () => openPredictionsModal(match)
+                      : undefined
+                  }
+                  title={
+                    isLocked
+                      ? "Click para ver predicciones de todos los jugadores"
+                      : undefined
+                  }
+                >
+                  <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
+                    <span className="text-xs text-muted">
+                      {formatTime(match.match_date)}
+                    </span>
+                    <span className="text-xs font-label text-muted">
+                      Grupo {match.group}
+                    </span>
+                  </div>
+
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span>{teamA?.flag}</span>
+                        <span className="text-sm font-medium text-primary truncate">
+                          {teamA?.name || match.team_a}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center shrink-0">
+                        <input
+                          type="number"
+                          min="0"
+                          max="9"
+                          disabled={isLocked}
+                          value={pred.score_a ?? ""}
+                          onChange={(e) =>
+                            handleScoreChange(
+                              match.match_id,
+                              "a",
+                              e.target.value,
+                            )
+                          }
+                          className="w-12 rounded-sm border border-border px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
+                          placeholder="-"
+                          title={
+                            isLocked
+                              ? "Las predicciones se bloquean 30 minutos antes del partido"
+                              : undefined
+                          }
+                          aria-label={`Marcador de ${teamA?.name || match.team_a}`}
+                        />
+                        {hasActualScore && (
+                          <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
+                            {match.actual_score_a}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span>{teamB?.flag}</span>
+                        <span className="text-sm font-medium text-primary truncate">
+                          {teamB?.name || match.team_b}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center shrink-0">
+                        <input
+                          type="number"
+                          min="0"
+                          max="9"
+                          disabled={isLocked}
+                          value={pred.score_b ?? ""}
+                          onChange={(e) =>
+                            handleScoreChange(
+                              match.match_id,
+                              "b",
+                              e.target.value,
+                            )
+                          }
+                          className="w-12 rounded-sm border border-border px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-tertiary disabled:cursor-not-allowed disabled:bg-neutral"
+                          placeholder="-"
+                          title={
+                            isLocked
+                              ? "Las predicciones se bloquean 30 minutos antes del partido"
+                              : undefined
+                          }
+                          aria-label={`Marcador de ${teamB?.name || match.team_b}`}
+                        />
+                        {hasActualScore && (
+                          <span className="text-[10px] font-label font-semibold text-tertiary leading-none">
+                            {match.actual_score_b}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {pred.points_earned != null && (
+                      <div className="text-right">
+                        <span className="text-xs font-semibold text-tertiary">
+                          +{pred.points_earned} pts
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+
+          <div className="overflow-hidden rounded-sm border border-border max-sm:hidden">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-neutral">
                 <tr>
