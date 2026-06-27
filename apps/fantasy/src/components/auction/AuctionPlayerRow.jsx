@@ -134,6 +134,11 @@ export default function AuctionPlayerRow({
         </Td>
         <Td className="min-w-[160px] py-2 max-w-[220px]">
           <span className="block truncate font-semibold text-primary">{player.name}</span>
+          {player.is_eliminated && (
+            <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-semibold bg-error/10 text-error border border-error/30 whitespace-nowrap">
+              Eliminado
+            </span>
+          )}
         </Td>
         <Td className="py-2 text-secondary text-xs whitespace-nowrap">{player.country}</Td>
         <Td className="py-2 text-right text-xs text-secondary whitespace-nowrap">

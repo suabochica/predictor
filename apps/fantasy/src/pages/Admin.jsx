@@ -115,6 +115,38 @@ export default function Admin() {
 
   const { players, loading: playersLoading } = usePlayers();
   const [confirming, setConfirming] = useState(false);
+
+  // ── Country Elimination ───────────────────────────────────────────────────
+  const [countries, setCountries] = useState([]);
+  const [togglingCountry, setTogglingCountry] = useState(null);
+
+  useEffect(() => { fetchCountries(); }, []);
+
+  async function fetchCountries() {
+    const { data } = await supabase
+      .from('players')
+      .select('country, country_code, is_eliminated')
+      .order('country', { ascending: true });
+    if (!data) return;
+    const seen = new Set();
+    const unique = [];
+    for (const p of data) {
+      const key = p.country_code ?? p.country;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push({ country: p.country, country_code: p.country_code, is_eliminated: p.is_eliminated });
+      }
+    }
+    setCountries(unique);
+  }
+
+  async function handleToggleCountryEliminated(country_code, currentlyEliminated) {
+    setTogglingCountry(country_code);
+    await supabase.rpc('set_country_eliminated', { p_country_code: country_code, p_eliminated: !currentlyEliminated });
+    setCountries(prev => prev.map(c => c.country_code === country_code ? { ...c, is_eliminated: !currentlyEliminated } : c));
+    setTogglingCountry(null);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
   const [resolving, setResolving]   = useState(false);
   const [resolveErrors, setResolveErrors] = useState([]);
   const [lineupWarnings, setLineupWarnings] = useState([]);
@@ -2754,6 +2786,37 @@ export default function Admin() {
                 </ul>
               </details>
             )}
+          </div>
+        )}
+      </section>
+
+      {/* ── Países eliminados ─────────────────────────────────────────────── */}
+      <section className="bg-surface rounded-xl p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">Países eliminados</h2>
+          <p className="text-xs text-muted mt-1">
+            Los jugadores de países eliminados seguirán en las plantillas pero no podrán sumar puntos. Se mostrará una advertencia al ficharlos.
+          </p>
+        </div>
+        {countries.length === 0 ? (
+          <p className="text-muted text-sm">Cargando países…</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {countries.map((c) => (
+              <button
+                key={c.country_code ?? c.country}
+                onClick={() => handleToggleCountryEliminated(c.country_code, c.is_eliminated)}
+                disabled={togglingCountry === c.country_code}
+                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2 ${
+                  c.is_eliminated
+                    ? 'bg-error/10 border-error/40 text-error'
+                    : 'bg-surface-hover border-border text-secondary hover:bg-border'
+                } disabled:opacity-50`}
+              >
+                <span className="truncate">{c.country_code ?? c.country}</span>
+                {c.is_eliminated ? <span className="shrink-0">✕</span> : <span className="shrink-0 text-muted">○</span>}
+              </button>
+            ))}
           </div>
         )}
       </section>

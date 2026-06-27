@@ -67,7 +67,7 @@ export default function PlayerRow({
 
   return (
     <>
-      <tr className={`hover:bg-surface-hover/50 ${rowOpacity}`}>
+      <tr className={`hover:bg-surface-hover/50 ${rowOpacity}${player.is_eliminated && !isMine ? ' opacity-60' : ''}`}>
         {/* Pos */}
         <Td className="py-2 px-3 w-12 shrink-0">
           <span className={`text-xs font-bold px-1.5 py-0.5 rounded whitespace-nowrap ${getPositionColor(player.position)}`}>
@@ -78,6 +78,11 @@ export default function PlayerRow({
         {/* Player */}
         <Td className="min-w-[140px] py-2 max-w-[200px]">
           <span className="block truncate font-semibold text-primary">{player.name}</span>
+          {player.is_eliminated && (
+            <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-semibold bg-error/10 text-error border border-error/30 whitespace-nowrap">
+              Eliminado
+            </span>
+          )}
         </Td>
 
         {/* Country (hidden on mobile) */}

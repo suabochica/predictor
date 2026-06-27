@@ -15,8 +15,15 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
         isSelected
           ? 'ring-2 ring-tertiary bg-tertiary/15 shadow-lg shadow-tertiary/15'
           : 'bg-surface/80 hover:bg-surface-hover border border-border/50'
-      }`}
+      }${player.is_eliminated ? ' opacity-50 grayscale' : ''}`}
     >
+      {/* Eliminated overlay */}
+      {player.is_eliminated && (
+        <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-error/20 text-error text-lg font-black z-20 pointer-events-none">
+          ✕
+        </span>
+      )}
+
       {/* Points badge — live matchday (top-left) */}
       {points !== null && points !== undefined && (
         <span

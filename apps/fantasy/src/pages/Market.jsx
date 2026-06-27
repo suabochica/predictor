@@ -518,6 +518,12 @@ export default function Market() {
               </div>
             </div>
 
+            {confirmSwapIn.is_eliminated && (
+              <div className="bg-error/10 border border-error/40 rounded-xl p-3 text-sm text-error font-medium">
+                ⚠ Estás fichando a un jugador de un país ELIMINADO — no sumará puntos en las próximas jornadas.
+              </div>
+            )}
+
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-secondary">
                 <span>Presupuesto antes</span>
