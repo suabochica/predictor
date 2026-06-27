@@ -142,8 +142,15 @@ export default function Admin() {
 
   async function handleToggleCountryEliminated(country_code, currentlyEliminated) {
     setTogglingCountry(country_code);
-    await supabase.rpc('set_country_eliminated', { p_country_code: country_code, p_eliminated: !currentlyEliminated });
-    setCountries(prev => prev.map(c => c.country_code === country_code ? { ...c, is_eliminated: !currentlyEliminated } : c));
+    const { error } = await supabase.rpc('set_country_eliminated', { p_country_code: country_code, p_eliminated: !currentlyEliminated });
+    if (error) {
+      alert(`No se pudo actualizar el país: ${error.message}`);
+      setTogglingCountry(null);
+      return;
+    }
+    // Re-read from the DB so the grid reflects what actually persisted (not an
+    // optimistic guess) — and so a silently-rejected write can't show as applied.
+    await fetchCountries();
     setTogglingCountry(null);
   }
   // ──────────────────────────────────────────────────────────────────────────

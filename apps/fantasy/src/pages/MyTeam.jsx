@@ -22,6 +22,7 @@ function normalizeSquad(teamPlayers) {
     country_code: tp.players?.country_code ?? null,
     position: tp.players?.position ?? 'FWD',
     price: tp.players?.current_price ?? tp.players?.price ?? 0,
+    is_eliminated: tp.players?.is_eliminated ?? false,
     acquisition_price: tp.acquisition_price,
   }));
 }
@@ -818,7 +819,7 @@ export default function MyTeam() {
                   key={p.id}
                   className={`flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-hover cursor-pointer min-w-max ${
                     selectedPlayer?.id === p.id ? 'bg-tertiary/5' : ''
-                  }`}
+                  }${p.is_eliminated ? ' opacity-60' : ''}`}
                   onClick={() => handlePlayerClick(p)}
                 >
                   <span
@@ -826,7 +827,10 @@ export default function MyTeam() {
                   >
                     {pos}
                   </span>
-                  <span className="text-sm text-primary flex-shrink-0 w-[140px] truncate">{p.name}</span>
+                  <span className="text-sm text-primary flex-shrink-0 w-[140px] truncate">
+                    {p.name}
+                    {p.is_eliminated && <span className="ml-1 text-error font-bold">✕</span>}
+                  </span>
                   <span className="text-xs text-muted flex-shrink-0 w-8">{p.country_code}</span>
                   <span className="text-xs text-secondary flex-shrink-0 w-12 text-right">
                     {formatPrice(p.price)}
