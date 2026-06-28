@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useKnockout } from '../hooks/useKnockout';
 import { useStandings } from '../hooks/useStandings';
 import { generateChampionshipBracket } from '../lib/brackets';
+import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
 
 // ── Match card ────────────────────────────────────────────────────────────
 
-function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, seed }) {
+function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, seed, onTeamClick }) {
   const hasResult = pointsA != null && pointsB != null;
   const aWon = winnerId && teamA && winnerId === teamA.id;
   const bWon = winnerId && teamB && winnerId === teamB.id;
@@ -14,6 +16,24 @@ function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, seed }) {
     return team.users?.display_name ?? team.name ?? 'TBD';
   }
 
+  const clickProps = (team) =>
+    onTeamClick && team
+      ? {
+          role: 'button',
+          tabIndex: 0,
+          onClick: () => onTeamClick(team),
+          onKeyDown: (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onTeamClick(team);
+            }
+          },
+        }
+      : {};
+
+  const interactive = (team) =>
+    onTeamClick && team ? ' cursor-pointer hover:bg-surface-hover rounded-md -mx-1 px-1' : '';
+
   return (
     <div className="bg-surface border border-border rounded-xl p-3 min-w-[180px]">
       {label && (
@@ -22,9 +42,10 @@ function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, seed }) {
 
       {/* Team A */}
       <div
+        {...clickProps(teamA)}
         className={`flex items-center justify-between py-1 gap-2 ${
           aWon ? 'text-primary' : hasResult ? 'text-muted' : 'text-secondary'
-        }`}
+        }${interactive(teamA)}`}
       >
         <div className="flex items-center gap-1.5 min-w-0">
           {seed?.a != null && (
@@ -44,9 +65,10 @@ function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, seed }) {
 
       {/* Team B */}
       <div
+        {...clickProps(teamB)}
         className={`flex items-center justify-between py-1 gap-2 ${
           bWon ? 'text-primary' : hasResult ? 'text-muted' : 'text-secondary'
-        }`}
+        }${interactive(teamB)}`}
       >
         <div className="flex items-center gap-1.5 min-w-0">
           {seed?.b != null && (
@@ -119,6 +141,20 @@ function Connector() {
 export default function Bracket() {
   const { matches, loading: matchesLoading } = useKnockout();
   const { standings, loading: standingsLoading } = useStandings();
+  const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
+
+  const openTeam = (team, m) => {
+    if (!team) return;
+    setViewing({
+      entry: {
+        team_id: team.id,
+        display_name: team.users?.display_name ?? team.name,
+        team_name: team.name,
+      },
+      matchdayId: m?.matchday_id ?? null,
+      matchdayName: m?.matchday?.name ?? null,
+    });
+  };
 
   if (matchesLoading || standingsLoading) {
     return (
@@ -213,6 +249,7 @@ export default function Bracket() {
                     key={key}
                     label={display}
                     seed={seeds[i]}
+                    onTeamClick={(team) => openTeam(team, m)}
                     {...matchProps(m)}
                   />
                 );
@@ -225,7 +262,14 @@ export default function Bracket() {
             <RoundColumn title="Semifinales" subtitle="Octavos de final del Mundial">
               {['Semi A', 'Semi B'].map((label) => {
                 const m = getMatch('championship', 2, label);
-                return <MatchCard key={label} label={label} {...matchProps(m)} />;
+                return (
+                  <MatchCard
+                    key={label}
+                    label={label}
+                    onTeamClick={(team) => openTeam(team, m)}
+                    {...matchProps(m)}
+                  />
+                );
               })}
             </RoundColumn>
 
@@ -235,7 +279,13 @@ export default function Bracket() {
             <RoundColumn title="Final" subtitle="Cuartos de final del Mundial">
               {(() => {
                 const m = getMatch('championship', 3, 'Final');
-                return <MatchCard label="Final" {...matchProps(m)} />;
+                return (
+                  <MatchCard
+                    label="Final"
+                    onTeamClick={(team) => openTeam(team, m)}
+                    {...matchProps(m)}
+                  />
+                );
               })()}
             </RoundColumn>
           </div>
@@ -281,6 +331,15 @@ export default function Bracket() {
         <p>Ganador = más puntos en la jornada. Desempate: puntos del capitán → goles marcados → puesto en liga.</p>
         <p>Solo cuentan los puntos de la jornada actual — no el total acumulado de la temporada.</p>
       </div>
+
+      {viewing && (
+        <TeamLineupModal
+          entry={viewing.entry}
+          matchdayId={viewing.matchdayId}
+          matchdayName={viewing.matchdayName}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </div>
   );
 }

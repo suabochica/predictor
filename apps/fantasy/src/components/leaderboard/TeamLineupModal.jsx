@@ -6,7 +6,7 @@ import PointsBreakdownModal from '../team/PointsBreakdownModal';
 import { getActivePoints, sumSeasonPointsByPlayer } from '../../lib/scoring';
 
 const LINEUP_SELECT =
-  'is_starting, is_captain, bench_order, players(id, name, country, country_code, position)';
+  'is_starting, is_captain, bench_order, players(id, name, country, country_code, position, is_eliminated)';
 
 const noop = () => {};
 
