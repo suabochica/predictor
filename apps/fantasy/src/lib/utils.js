@@ -12,6 +12,11 @@ export function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
+// Knockout = any wc_stage that is not a group/round-robin stage.
+export function isKnockoutStage(wcStage) {
+  return !!wcStage && !wcStage.toLowerCase().includes('group');
+}
+
 export function getPositionColor(position) {
   const colors = {
     GK: 'bg-tertiary text-on-tertiary',

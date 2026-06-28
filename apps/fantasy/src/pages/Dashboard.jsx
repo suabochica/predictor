@@ -4,15 +4,30 @@ import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import marketIcon from '@predictor/ui/icons/market.svg';
+import bracketsIcon from '@predictor/ui/icons/brackets.svg';
+import historyIcon from '@predictor/ui/icons/history.svg';
+import rulesIcon from '@predictor/ui/icons/rules.svg';
+import adminIcon from '@predictor/ui/icons/admin.svg';
 
 import { useLeague } from '../context/LeagueContext';
 import { useTeam } from '../hooks/useTeam';
 import { formatPrice } from '../lib/utils';
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const { activeMatchday, activeTransferWindow } = useLeague();
   const { team, players } = useTeam();
+
+  const quickActions = [
+    { to: '/my-team', icon: teamIcon, label: 'Alineación' },
+    { to: '/auction', icon: auctionIcon, label: 'Sala de subasta' },
+    { to: '/leaderboard', icon: standingsIcon, label: 'Tabla de posiciones' },
+    { to: '/market', icon: marketIcon, label: 'Mercado de jugadores' },
+    { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' },
+    { to: '/history', icon: historyIcon, label: 'Históricos' },
+    { to: '/rules', icon: rulesIcon, label: 'Reglas' },
+    ...(isAdmin ? [{ to: '/admin', icon: adminIcon, label: 'Panel de admin' }] : []),
+  ];
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -81,34 +96,16 @@ export default function Dashboard() {
       <div>
         <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">Acciones rápidas</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Link
-            to="/my-team"
-            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
-          >
-            <img src={teamIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Alineación</span>
-          </Link>
-          <Link
-            to="/auction"
-            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
-          >
-            <img src={auctionIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Sala de subasta</span>
-          </Link>
-          <Link
-            to="/leaderboard"
-            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
-          >
-            <img src={standingsIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Tabla de posiciones</span>
-          </Link>
-          <Link
-            to="/market"
-            className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
-          >
-            <img src={marketIcon} className="w-6 h-6" alt="" />
-            <span className="text-xs font-medium text-secondary group-hover:text-primary">Mercado de jugadores</span>
-          </Link>
+          {quickActions.map(({ to, icon, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className="bg-surface border border-border hover:border-tertiary rounded-xl p-4 flex flex-col items-center gap-2 transition-colors group"
+            >
+              <img src={icon} className="w-6 h-6" alt="" />
+              <span className="text-xs font-medium text-secondary group-hover:text-primary">{label}</span>
+            </Link>
+          ))}
         </div>
       </div>
     </div>
