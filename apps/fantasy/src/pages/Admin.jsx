@@ -123,14 +123,19 @@ export default function Admin() {
   useEffect(() => { fetchCountries(); }, []);
 
   async function fetchCountries() {
-    const { data } = await supabase
-      .from('players')
-      .select('country, country_code, is_eliminated')
-      .order('country', { ascending: true });
-    if (!data) return;
+    // Paginate: a plain .select() is silently capped at 1000 rows, and the
+    // roster exceeds that — ordering by country then dropped the alphabetical
+    // tail (Spain…Uzbekistan), so the grid only showed 40 of 48 teams.
+    const rows = await fetchAllPages((from, to) =>
+      supabase
+        .from('players')
+        .select('country, country_code, is_eliminated')
+        .order('country', { ascending: true })
+        .range(from, to)
+    );
     const seen = new Set();
     const unique = [];
-    for (const p of data) {
+    for (const p of rows) {
       const key = p.country_code ?? p.country;
       if (!seen.has(key)) {
         seen.add(key);
