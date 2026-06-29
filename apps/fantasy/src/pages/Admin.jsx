@@ -451,6 +451,22 @@ export default function Admin() {
   const [knockoutCalcRunning, setKnockoutCalcRunning] = useState(false);
   const [knockoutCalcResult, setKnockoutCalcResult] = useState(null);
 
+  // Pre-fill the round→jornada dropdown from the active round's existing link
+  // (set by either "Calcular ronda" or "Guardar jornada provisional"). Only when
+  // the admin hasn't already picked one, so this never fights a manual selection.
+  useEffect(() => {
+    if (knockoutCalcMatchdayId) return;
+    const champ = knockoutMatches.filter(m => m.bracket === 'championship');
+    const done = (round) => {
+      const rows = champ.filter(m => m.round === round);
+      return rows.length > 0 && rows.every(m => m.winner_id);
+    };
+    const active = !done(1) ? 1 : !done(2) ? 2 : !done(3) ? 3 : null;
+    if (!active) return;
+    const linked = champ.find(m => m.round === active && m.matchday_id != null);
+    if (linked) setKnockoutCalcMatchdayId(String(linked.matchday_id));
+  }, [knockoutMatches, knockoutCalcMatchdayId]);
+
   // ── Matchday Fixtures ─────────────────────────────────────────────────────
   const [fixtureMatches, setFixtureMatches] = useState([]);
   const [fixtureLoading, setFixtureLoading] = useState(false);
@@ -1002,6 +1018,30 @@ export default function Admin() {
     }
 
     setKnockoutCalcResult({ resolved: updates.length, errors });
+    await fetchKnockoutData();
+    setKnockoutCalcRunning(false);
+  }
+
+  // Link a round to its jornada WITHOUT resolving winners — lets the Cuadro show
+  // live provisional H2H points + working clickable lineups mid-round. Idempotent.
+  async function handleSaveRoundMatchday(round) {
+    if (!knockoutCalcMatchdayId) {
+      setKnockoutCalcResult({ errors: ['Selecciona una jornada primero.'] });
+      return;
+    }
+    setKnockoutCalcRunning(true);
+    setKnockoutCalcResult(null);
+    const matchdayIdInt = parseInt(knockoutCalcMatchdayId, 10);
+    const { error } = await supabase
+      .from('knockout_matches')
+      .update({ matchday_id: matchdayIdInt })
+      .eq('bracket', 'championship')
+      .eq('round', round);
+    if (error) {
+      setKnockoutCalcResult({ errors: [`Error al guardar jornada: ${error.message}`] });
+    } else {
+      setKnockoutCalcResult({ saved: true });
+    }
     await fetchKnockoutData();
     setKnockoutCalcRunning(false);
   }
@@ -2493,6 +2533,13 @@ export default function Admin() {
                             </select>
                           </div>
                           <button
+                            onClick={() => handleSaveRoundMatchday(activeRound)}
+                            disabled={knockoutCalcRunning || !knockoutCalcMatchdayId}
+                            className="px-5 py-2 rounded-lg border border-tertiary text-tertiary hover:bg-tertiary/10 disabled:opacity-50 font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                          >
+                            Guardar jornada (provisional)
+                          </button>
+                          <button
                             onClick={() => handleCalculateKnockoutRound(activeRound)}
                             disabled={knockoutCalcRunning || !knockoutCalcMatchdayId}
                             className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
@@ -2500,6 +2547,9 @@ export default function Admin() {
                             {knockoutCalcRunning ? 'Calculando…' : `Calcular ronda ${activeRound}`}
                           </button>
                         </div>
+                        <p className="text-xs text-muted">
+                          <strong>Guardar jornada (provisional)</strong> vincula la ronda a su jornada para mostrar puntos H2H en vivo en el Cuadro sin cerrar la ronda. <strong>Calcular ronda</strong> bloquea los ganadores (definitivo).
+                        </p>
                       </div>
                     );
                   })()}
@@ -2515,6 +2565,11 @@ export default function Admin() {
                       {knockoutCalcResult.resolved > 0 && (
                         <p className="text-tertiary text-sm font-semibold">
                           ✓ {knockoutCalcResult.resolved} partido{knockoutCalcResult.resolved !== 1 ? 's' : ''} resuelto{knockoutCalcResult.resolved !== 1 ? 's' : ''}.
+                        </p>
+                      )}
+                      {knockoutCalcResult.saved && (
+                        <p className="text-tertiary text-sm font-semibold">
+                          ✓ Jornada vinculada — el Cuadro mostrará puntos provisionales en vivo.
                         </p>
                       )}
                       {knockoutCalcResult.errors?.map((err, i) => (
