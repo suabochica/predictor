@@ -2311,9 +2311,11 @@ export default function Admin() {
               className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
             >
               <option value="">Seleccionar jornada…</option>
-              {matchdays.map(md => (
-                <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
-              ))}
+              {matchdays
+                .filter(md => md.wc_stage?.toLowerCase().includes('group'))
+                .map(md => (
+                  <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                ))}
             </select>
           </div>
           <button

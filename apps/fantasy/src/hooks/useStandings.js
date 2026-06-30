@@ -30,6 +30,17 @@ export function useStandings() {
 
     setMatchdays(matchdaysData);
 
+    // The leaderboard ranks teams by the 3 group-stage matchdays only.
+    // Knockout rounds are H2H-only and must never enter the group total.
+    // Same rule the Leaderboard uses: wc_stage includes "group", sort by id, first 3.
+    const groupIds = new Set(
+      matchdaysData
+        .filter((md) => md.wc_stage?.toLowerCase().includes('group'))
+        .sort((a, b) => a.id - b.id)
+        .slice(0, 3)
+        .map((md) => md.id)
+    );
+
     // Seed every enrolled team with 0 points
     const byTeam = {};
     for (const t of teams) {
@@ -46,13 +57,21 @@ export function useStandings() {
     // Overlay actual scores where available
     for (const row of standingsData) {
       if (!byTeam[row.team_id]) continue;
+      // Keep every matchday's points in the per-md map (columns/popups render
+      // only the 3 group columns; knockout entries are harmless here).
       byTeam[row.team_id].matchday_points[row.matchday_id] = row.matchday_points;
-      // goals_scored is stored per-matchday; sum across all rows for tiebreaker
+      // Only group rows feed the leaderboard total/goals. The stored
+      // total_points is cumulative AND polluted (computeStandingsForMatchday
+      // folds in every other matchday incl. knockout), so we sum the group
+      // matchday_points ourselves instead of trusting it.
+      if (!groupIds.has(row.matchday_id)) continue;
+      byTeam[row.team_id].total_points += row.matchday_points ?? 0;
       byTeam[row.team_id].goals_scored += row.goals_scored ?? 0;
-      // total_points is cumulative; highest row = running total
-      if (row.total_points > byTeam[row.team_id].total_points) {
-        byTeam[row.team_id].total_points = row.total_points;
-      }
+    }
+
+    // matchday_points is numeric(8,1); round the summed floats to 1 decimal.
+    for (const t of Object.values(byTeam)) {
+      t.total_points = Math.round(t.total_points * 10) / 10;
     }
 
     // Sort: total_points DESC, goals_scored DESC (tiebreaker)
