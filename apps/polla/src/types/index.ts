@@ -6,6 +6,7 @@ export interface Match {
   team_b: string;
   match_date: string;
   group?: string;
+  stage?: string;
   stadium?: string;
   actual_score_a?: number;
   actual_score_b?: number;
@@ -22,6 +23,7 @@ export interface DbMatch {
   group_name: string | null;
   stadium: string | null;
   status: string;
+  stage: string;
 }
 
 export interface Prediction {

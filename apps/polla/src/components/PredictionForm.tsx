@@ -14,6 +14,7 @@ interface DbMatch {
   group_name: string | null;
   stadium: string | null;
   status: string;
+  stage: string;
   actual_score_a: number | null;
   actual_score_b: number | null;
 }
@@ -80,11 +81,31 @@ function dbToMatch(row: DbMatch): Match {
     team_b: row.team_b,
     match_date: row.match_date,
     group: row.group_name ?? undefined,
+    stage: row.stage,
     stadium: row.stadium ?? undefined,
     status: row.status as Match["status"],
     actual_score_a: row.actual_score_a ?? undefined,
     actual_score_b: row.actual_score_b ?? undefined,
   };
+}
+
+const STAGE_LABELS: Record<string, string> = {
+  round_of_32: "Ronda de 32",
+  round_of_16: "Octavos de final",
+  quarterfinal: "Cuartos de final",
+  semifinal: "Semifinal",
+  third_place: "Tercer lugar",
+  final: "Final",
+};
+
+function stageLabel(match: Match): string | null {
+  if (match.group) return match.group;
+  if (match.stage && match.stage !== "group") return STAGE_LABELS[match.stage] ?? match.stage;
+  return null;
+}
+
+function isKnockout(match: Match): boolean {
+  return !match.group && !!match.stage && match.stage !== "group";
 }
 
 export default function PredictionForm({
@@ -116,11 +137,11 @@ export default function PredictionForm({
       const { data: dbMatches, error: matchErr } = await supabase
         .from("matches")
         .select(
-          "id, match_code, team_a, team_b, match_date, group_name, stadium, status, actual_score_a, actual_score_b",
+          "id, match_code, team_a, team_b, match_date, group_name, stadium, status, stage, actual_score_a, actual_score_b",
         )
         .neq("team_a", "TBD")
         .neq("team_b", "TBD")
-        .order("match_code")
+        .order("match_date", { ascending: false })
         .abortSignal(controller.signal);
 
       if (matchErr) throw matchErr;
@@ -258,7 +279,25 @@ export default function PredictionForm({
   }
 
   const matchesByDate = groupMatchesByDate(matches);
-  const sortedDates = Object.keys(matchesByDate).sort();
+  const sortedDates = Object.keys(matchesByDate).sort((a, b) => b.localeCompare(a));
+
+  const saveButton = (
+    <div className="flex justify-end">
+      <Button
+        type="button"
+        variant="primary"
+        class={BUTTON_PRIMARY_CLASSES}
+        onClick={handleSave}
+        disabled={saving || !currentUser}
+      >
+        {saving
+          ? "Guardando..."
+          : saved
+            ? "✓ ¡Guardado!"
+            : "Guardar predicciones"}
+      </Button>
+    </div>
+  );
 
   // ── Loading ───────────────────────────────────────────────
   if (loading) {
@@ -293,6 +332,8 @@ export default function PredictionForm({
 
   return (
     <div className="space-y-6">
+      {saveButton}
+
       {sortedDates.map((date) => (
         <div key={date} className="space-y-4">
           <h2 className="font-heading text-h2 font-semibold text-primary">
@@ -333,7 +374,7 @@ export default function PredictionForm({
                       {formatTime(match.match_date)}
                     </span>
                     <span className="text-xs font-label text-muted">
-                      Grupo {match.group}
+                      {isKnockout(match) ? `Fase · ${stageLabel(match)}` : `Grupo ${match.group}`}
                     </span>
                   </div>
 
@@ -456,7 +497,7 @@ export default function PredictionForm({
                     Visitante
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Grupo
+                    {matchesByDate[date].some(isKnockout) ? "Fase" : "Grupo"}
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                     Puntos
@@ -577,7 +618,7 @@ export default function PredictionForm({
                       </td>
 
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
-                        {match.group}
+                        {stageLabel(match)}
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm font-semibold">
                         {pred.points_earned != null ? (
@@ -611,8 +652,10 @@ export default function PredictionForm({
                   {modalTeamB?.flag} {modalTeamB?.name || modalMatch.team_b}
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  {formatTime(modalMatch.match_date)} · Grupo{" "}
-                  {modalMatch.group || "N/D"}
+                  {formatTime(modalMatch.match_date)} ·{" "}
+                  {isKnockout(modalMatch)
+                    ? `Fase · ${stageLabel(modalMatch)}`
+                    : `Grupo ${modalMatch.group || "N/D"}`}
                 </p>
               </div>
               <button
@@ -686,21 +729,7 @@ export default function PredictionForm({
         </div>
       )}
 
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="primary"
-          class={BUTTON_PRIMARY_CLASSES}
-          onClick={handleSave}
-          disabled={saving || !currentUser}
-        >
-          {saving
-            ? "Guardando..."
-            : saved
-              ? "✓ ¡Guardado!"
-              : "Guardar predicciones"}
-        </Button>
-      </div>
+      {saveButton}
     </div>
   );
 }
