@@ -14,6 +14,7 @@
     "import-matches": "node scripts/import-matches.mjs",
     "sync-schedule": "node scripts/sync-schedule.mjs",
     "sync-schedule:sql": "node scripts/sync-schedule.mjs --sql",
+    "sync-schedule:insert-knockout": "node scripts/sync-schedule.mjs --insert-knockout",
     "score-matches": "node scripts/score-matches.mjs"
   },
   "dependencies": {
