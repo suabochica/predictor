@@ -1,5 +1,3 @@
-import { Button } from "./Button";
-
 interface HeaderProps {
   appName: string;
   appIcon: string;
@@ -26,7 +24,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-50 bg-surface border-b border-border text-primary">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="mx-auto px-4 h-12 flex items-center justify-between">
         <a
           href={basePath}
           className="flex items-center gap-2 font-atomic font-bold text-lg text-tertiary hover:text-tertiary"
@@ -56,14 +54,17 @@ export function Header({
           )}
           {isAuthenticated ? (
             <form method="POST" action="/auth/signout">
-              <Button type="submit" variant="primary">
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center font-medium rounded-md bg-tertiary text-on-tertiary hover:brightness-95 px-5 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              >
                 Cerrar sesión
-              </Button>
+              </button>
             </form>
           ) : showLogin ? (
             <a
               href="/login"
-              className="inline-flex items-center justify-center font-medium rounded-sm bg-tertiary text-on-tertiary hover:brightness-95 px-5 py-3 transition-colors"
+              className="inline-flex items-center justify-center font-medium rounded-md bg-tertiary text-on-tertiary hover:brightness-95 px-5 py-3 transition-colors"
             >
               Iniciar sesión
             </a>

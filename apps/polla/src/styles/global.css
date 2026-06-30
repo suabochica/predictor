@@ -2,3 +2,10 @@
 @source "../../../../packages/ui/src/";
 @import 'tailwindcss';
 @import '@predictor/ui/styles';
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

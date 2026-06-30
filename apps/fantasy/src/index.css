@@ -3,6 +3,20 @@
 @import "tailwindcss";
 @import "@predictor/ui/styles";
 
+@layer utilities {
+  .font-atomic {
+    font-family: 'Atomic', 'Space Grotesk', sans-serif;
+  }
+
+  .font-heading {
+    font-family: 'Public Sans', sans-serif;
+  }
+
+  .font-label {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-body);

@@ -10,6 +10,7 @@ export interface Props {
 }
 
 const { title } = Astro.props;
+const user = Astro.locals.user;
 ---
 
 <!doctype html>
@@ -20,18 +21,20 @@ const { title } = Astro.props;
     <link rel="icon" href="/favicon.ico" />
     <title>{title} | Predictor</title>
   </head>
-  <body class="min-h-screen bg-neutral text-primary font-body flex flex-col">
+  <body class="min-h-screen bg-neutral text-primary flex flex-col">
     <Header
       appName="Polla"
       appIcon={pollaIcon.src}
       basePath="/polla/"
       isAdmin={Astro.locals.isAdmin ?? false}
+      isAuthenticated={!!user}
+      showLogin
       otherAppIcon={fantasyIcon.src}
       otherAppPath="/fantasy/"
     />
     <div class="flex flex-1">
-      <Sidebar />
-      <main class="flex-1 p-4 md:p-6">
+      {user && <Sidebar />}
+      <main class={`flex-1 p-4 md:p-6 ${user ? 'max-w-full' : ''}`}>
         <slot />
       </main>
     </div>
