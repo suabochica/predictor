@@ -10,6 +10,7 @@ interface AdminPrediction {
   team_b: string;
   match_date: string;
   group_name: string | null;
+  stage: string;
   actual_score_a: number | null;
   actual_score_b: number | null;
   status: string;
@@ -37,7 +38,6 @@ function formatDateLabel(dateStr: string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    timeZone: 'UTC',
   });
 }
 
@@ -50,7 +50,10 @@ function formatTime(dateStr: string): string {
 }
 
 function dateKey(dateStr: string): string {
-  return dateStr.slice(0, 10);
+  const d = new Date(dateStr);
+  return [d.getFullYear(), d.getMonth() + 1, d.getDate()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join('-');
 }
 
 function groupByDate(preds: AdminPrediction[]): Record<string, AdminPrediction[]> {
@@ -77,6 +80,7 @@ export default function AdminTable() {
   const [saving, setSaving] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showGroups, setShowGroups] = useState(false);
 
   useEffect(() => {
     fetchPredictions();
@@ -91,7 +95,7 @@ export default function AdminTable() {
           predicted_score_a,
           predicted_score_b,
           users!inner(display_name),
-          matches!inner(id, match_code, team_a, team_b, match_date, group_name, actual_score_a, actual_score_b, status)
+          matches!inner(id, match_code, team_a, team_b, match_date, group_name, stage, actual_score_a, actual_score_b, status)
         `)
         .order('match_code', { foreignTable: 'matches' })
         .order('display_name', { foreignTable: 'users' });
@@ -126,6 +130,7 @@ export default function AdminTable() {
             team_b: row.matches.team_b,
             match_date: row.matches.match_date,
             group_name: row.matches.group_name,
+            stage: row.matches.stage,
             actual_score_a: row.matches.actual_score_a,
             actual_score_b: row.matches.actual_score_b,
             status: row.matches.status,
@@ -232,7 +237,7 @@ export default function AdminTable() {
         })
         .map(([date, datePreds]) => {
           const byMatch = groupByMatch(datePreds);
-          const matchCodes = Object.keys(byMatch).sort((a, b) => {
+          const allCodes = Object.keys(byMatch).sort((a, b) => {
             const aFinished = byMatch[a][0]?.status === 'finished';
             const bFinished = byMatch[b][0]?.status === 'finished';
             if (aFinished && !bFinished) return 1;
@@ -240,130 +245,149 @@ export default function AdminTable() {
             return a.localeCompare(b);
           });
 
+          const groupCodes = allCodes.filter(
+            (c) => byMatch[c][0]?.stage === 'group'
+          );
+          const knockoutCodes = allCodes.filter(
+            (c) => byMatch[c][0]?.stage !== 'group'
+          );
+
+          function renderMatch(code: string) {
+            const matchPreds = byMatch[code];
+            const first = matchPreds[0];
+            const teamA = countries[first.team_a];
+            const teamB = countries[first.team_b];
+            const alreadyScored = hasScore(code);
+            const mi = matchInfo[code];
+            const form = scoreForms[code];
+            const isSaving = saving === code;
+            const canSubmit = !alreadyScored && !isSaving && form != null
+              && form.scoreA.trim() !== '' && form.scoreB.trim() !== '';
+
+            return (
+              <div key={code} className="mb-4">
+                <h3 className="font-heading text-body-md font-semibold text-primary mb-2">
+                  {teamA?.flag} {teamA?.name || first.team_a}
+                  {' vs '}
+                  {teamB?.flag} {teamB?.name || first.team_b}
+                    <span className="text-muted font-normal text-body-sm ml-2">
+                      {code} · {formatTime(first.match_date)} · {first.group_name || first.stage || 'N/D'}
+                    </span>
+                </h3>
+
+                <div className="mb-3 rounded-sm border border-border bg-neutral/30 p-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="font-label text-label-caps text-muted uppercase tracking-wider">
+                      Resultado real:
+                    </span>
+
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="0"
+                      value={form?.scoreA ?? ''}
+                      onChange={(e) => handleScoreChange(code, 'scoreA', e.target.value)}
+                      disabled={alreadyScored || isSaving}
+                      className="w-14 rounded-sm border border-border bg-surface px-2 py-1 text-center text-body-sm text-primary disabled:opacity-50"
+                    />
+
+                    <span className="text-muted text-body-sm font-semibold">-</span>
+
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="0"
+                      value={form?.scoreB ?? ''}
+                      onChange={(e) => handleScoreChange(code, 'scoreB', e.target.value)}
+                      disabled={alreadyScored || isSaving}
+                      className="w-14 rounded-sm border border-border bg-surface px-2 py-1 text-center text-body-sm text-primary disabled:opacity-50"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => handleScoreSubmit(code, mi!.id)}
+                      disabled={!canSubmit}
+                      className="rounded-sm bg-success/15 px-3 py-1 font-label text-label-caps text-success transition-colors hover:bg-success/25 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {isSaving ? 'Guardando...' : 'Guardar'}
+                    </button>
+
+                    {alreadyScored && (
+                      <span className="text-body-sm text-success font-medium">
+                        Guardado
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-sm border border-border">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-neutral">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                          Usuario
+                        </th>
+                        <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                          {teamA?.name || first.team_a}
+                        </th>
+                        <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
+                        <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                          {teamB?.name || first.team_b}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-surface">
+                      {matchPreds.map((pred, i) => (
+                        <tr
+                          key={`${code}-${pred.display_name}`}
+                          className={i % 2 === 0 ? 'bg-surface' : 'bg-neutral/50'}
+                        >
+                          <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
+                            {pred.display_name}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                            {pred.predicted_score_a}
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
+                            -
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                            {pred.predicted_score_b}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div key={date} className="space-y-4">
               <h2 className="font-heading text-h2 font-semibold text-primary">
-                {formatDateLabel(date)}
+                {formatDateLabel(datePreds[0].match_date)}
               </h2>
 
-              {matchCodes.map((code) => {
-                const matchPreds = byMatch[code];
-                const first = matchPreds[0];
-                const teamA = countries[first.team_a];
-                const teamB = countries[first.team_b];
-                const alreadyScored = hasScore(code);
-                const mi = matchInfo[code];
-                const form = scoreForms[code];
-                const isSaving = saving === code;
-                const canSubmit = !alreadyScored && !isSaving && form != null
-                  && form.scoreA.trim() !== '' && form.scoreB.trim() !== '';
+              {knockoutCodes.map(renderMatch)}
 
-                return (
-                  <div key={code} className="mb-4">
-                    <h3 className="font-heading text-body-md font-semibold text-primary mb-2">
-                      {teamA?.flag} {teamA?.name || first.team_a}
-                      {' vs '}
-                      {teamB?.flag} {teamB?.name || first.team_b}
-                        <span className="text-muted font-normal text-body-sm ml-2">
-                          {code} · {formatTime(first.match_date)} · {first.group_name || 'N/D'}
-                        </span>
-                    </h3>
-
-                    <div className="mb-3 rounded-sm border border-border bg-neutral/30 p-3">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="font-label text-label-caps text-muted uppercase tracking-wider">
-                          Resultado real:
-                        </span>
-
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          placeholder="0"
-                          value={form?.scoreA ?? ''}
-                          onChange={(e) => handleScoreChange(code, 'scoreA', e.target.value)}
-                          disabled={alreadyScored || isSaving}
-                          className="w-14 rounded-sm border border-border bg-surface px-2 py-1 text-center text-body-sm text-primary disabled:opacity-50"
-                        />
-
-                        <span className="text-muted text-body-sm font-semibold">-</span>
-
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          placeholder="0"
-                          value={form?.scoreB ?? ''}
-                          onChange={(e) => handleScoreChange(code, 'scoreB', e.target.value)}
-                          disabled={alreadyScored || isSaving}
-                          className="w-14 rounded-sm border border-border bg-surface px-2 py-1 text-center text-body-sm text-primary disabled:opacity-50"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() => handleScoreSubmit(code, mi!.id)}
-                          disabled={!canSubmit}
-                          className="rounded-sm bg-success/15 px-3 py-1 font-label text-label-caps text-success transition-colors hover:bg-success/25 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {isSaving ? 'Guardando...' : 'Guardar'}
-                        </button>
-
-                        {alreadyScored && (
-                          <span className="text-body-sm text-success font-medium">
-                            Guardado
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="overflow-hidden rounded-sm border border-border">
-                      <table className="min-w-full divide-y divide-border">
-                        <thead className="bg-neutral">
-                          <tr>
-                            <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                              Partido
-                            </th>
-                            <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                              Usuario
-                            </th>
-                            <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                              {teamA?.name || first.team_a}
-                            </th>
-                            <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
-                            <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                              {teamB?.name || first.team_b}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border bg-surface">
-                          {matchPreds.map((pred, i) => (
-                            <tr
-                              key={`${code}-${pred.display_name}`}
-                              className={i % 2 === 0 ? 'bg-surface' : 'bg-neutral/50'}
-                            >
-                              <td className="whitespace-nowrap px-4 py-2 text-body-sm font-mono text-muted">
-                                {code}
-                              </td>
-                              <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
-                                {pred.display_name}
-                              </td>
-                              <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
-                                {pred.predicted_score_a}
-                              </td>
-                              <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
-                                -
-                              </td>
-                              <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
-                                {pred.predicted_score_b}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
+              {groupCodes.length > 0 && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowGroups((prev) => !prev)}
+                    className="flex items-center gap-2 rounded-sm border border-border px-3 py-1.5 text-body-sm font-label text-muted hover:text-primary transition-colors mb-3"
+                  >
+                    <span className="text-lg leading-none">
+                      {showGroups ? '−' : '+'}
+                    </span>
+                    Fase de grupos ({groupCodes.length} partidos)
+                  </button>
+                  {showGroups && groupCodes.map(renderMatch)}
+                </div>
+              )}
             </div>
           );
         })}

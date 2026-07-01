@@ -40,7 +40,6 @@ function formatDateLabel(dateStr: string): string {
     year: "numeric",
     month: "long",
     day: "numeric",
-    timeZone: "UTC",
   });
 }
 
@@ -52,9 +51,11 @@ function formatTime(dateStr: string): string {
   });
 }
 
-/** Strip timezone suffix and keep just the date portion for grouping. */
 function dateKey(dateStr: string): string {
-  return dateStr.slice(0, 10);
+  const d = new Date(dateStr);
+  return [d.getFullYear(), d.getMonth() + 1, d.getDate()]
+    .map((n) => String(n).padStart(2, "0"))
+    .join("-");
 }
 
 function isMatchLocked(match: Match): boolean {
@@ -338,7 +339,7 @@ export default function PredictionForm({
       {sortedDates.map((date) => (
         <div key={date} className="space-y-4">
           <h2 className="font-heading text-h2 font-semibold text-primary">
-            {formatDateLabel(date)}
+            {formatDateLabel(matchesByDate[date][0].match_date)}
           </h2>
 
           {/* Mobile cards */}
