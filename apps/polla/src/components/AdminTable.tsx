@@ -37,6 +37,7 @@ function formatDateLabel(dateStr: string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'UTC',
   });
 }
 
@@ -263,9 +264,9 @@ export default function AdminTable() {
                       {teamA?.flag} {teamA?.name || first.team_a}
                       {' vs '}
                       {teamB?.flag} {teamB?.name || first.team_b}
-                      <span className="text-muted font-normal text-body-sm ml-2">
-                        {formatTime(first.match_date)} · {first.group_name || 'N/D'}
-                      </span>
+                        <span className="text-muted font-normal text-body-sm ml-2">
+                          {code} · {formatTime(first.match_date)} · {first.group_name || 'N/D'}
+                        </span>
                     </h3>
 
                     <div className="mb-3 rounded-sm border border-border bg-neutral/30 p-3">
@@ -320,6 +321,9 @@ export default function AdminTable() {
                         <thead className="bg-neutral">
                           <tr>
                             <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                              Partido
+                            </th>
+                            <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
                               Usuario
                             </th>
                             <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
@@ -337,6 +341,9 @@ export default function AdminTable() {
                               key={`${code}-${pred.display_name}`}
                               className={i % 2 === 0 ? 'bg-surface' : 'bg-neutral/50'}
                             >
+                              <td className="whitespace-nowrap px-4 py-2 text-body-sm font-mono text-muted">
+                                {code}
+                              </td>
                               <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
                                 {pred.display_name}
                               </td>
