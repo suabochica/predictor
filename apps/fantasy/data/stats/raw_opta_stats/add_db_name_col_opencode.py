@@ -154,36 +154,69 @@ def get_val(cell) -> str:
     return ''.join(str(p) for p in ps) if ps else ''
 
 
+def find_padding_cell(row_cells) -> int:
+    """Return the index of the large trailing padding cell, or -1 if not found."""
+    for ci, c in enumerate(row_cells):
+        rpt = int(c.getAttribute('numbercolumnsrepeated') or 1)
+        if rpt > 100:
+            return ci
+    return -1
+
+
 def process_sheet(sheet, players: list, sheet_label: str) -> tuple[list, dict]:
     """Add 'DB Name' column to sheet. Returns (unmatched, {db_name: opta_name})."""
     rows = sheet.getElementsByType(TableRow)
     unmatched = []
     matched_pairs = {}
 
-    # Remove any existing DB Name column from a previous run (otherwise re-run adds a duplicate).
-    # The DB Name cell sits right before the large trailing padding cell.
-    if rows:
-        header_cells = rows[0].getElementsByType(TableCell)
-        if any(get_val(c) == 'DB Name' for c in header_cells):
-            for row in rows:
-                r_cells = row.getElementsByType(TableCell)
-                # Collect indexes to remove (must do this before modifying the row)
-                to_remove = set()
-                for ci, c in enumerate(r_cells):
-                    rpt = int(c.getAttribute('numbercolumnsrepeated') or 1)
-                    if rpt > 100 and ci > 0:
-                        to_remove.add(ci - 1)
-                    if get_val(c) == 'DB Name':
-                        to_remove.add(ci)
-                for ci in sorted(to_remove, reverse=True):
-                    row.removeChild(r_cells[ci])
+    # Step 1: Remove any existing DB Name cells from previous runs.
+    # Strategy: find the padding cell, remove everything after it (old
+    # DB Name cells appended by add_db_name_col.py), and also remove any
+    # cell whose text is 'DB Name' (header cells from previous _opencode
+    # runs that were inserted before the padding).
+    # Must collect references in one pass, then remove in a second pass
+    # because removing nodes invalidates enumerate positions.
+    rows_to_clean = list(rows)
+    for row in rows_to_clean:
+        cells = row.getElementsByType(TableCell)
+        pad_idx = find_padding_cell(cells)
+        to_remove = set()
 
+        for ci, c in enumerate(cells):
+            val = get_val(c)
+            if pad_idx >= 0 and ci > pad_idx:
+                to_remove.add(ci)
+            if val == 'DB Name':
+                to_remove.add(ci)
+
+        # Re-fetch cells after each removal to avoid stale references
+        for ri, remove_ci in enumerate(sorted(to_remove, reverse=True)):
+            fresh_cells = row.getElementsByType(TableCell)
+            if remove_ci < len(fresh_cells):
+                row.removeChild(fresh_cells[remove_ci])
+
+        # Restore padding count: the original DB Name cells stole columns
+        # from the padding, so add them back.
+        fresh_cells = row.getElementsByType(TableCell)
+        pad_idx = find_padding_cell(fresh_cells)
+        if pad_idx >= 0:
+            pc = fresh_cells[pad_idx]
+            cur_rpt = int(pc.getAttribute('numbercolumnsrepeated') or 1)
+            # Each removed cell needed one padded column; restore that many.
+            # Actually, ODS doesn't need exact column counts — just keep
+            # the padding large enough. We use a generous restore.
+            pc.setAttribute('numbercolumnsrepeated', str(cur_rpt + len(to_remove)))
+
+    # Step 2: Add fresh DB Name column to each row, positioned right
+    # before the padding cell.
     for i, row in enumerate(rows):
         cells = row.getElementsByType(TableCell)
         if not cells:
             continue
 
-        # Collect all values (respecting repeat counts) to check if row is empty
+        pad_idx = find_padding_cell(cells)
+
+        # Collect all values to check if row is empty
         all_vals = []
         for c in cells:
             repeat = int(c.getAttribute('numbercolumnsrepeated') or 1)
@@ -193,7 +226,6 @@ def process_sheet(sheet, players: list, sheet_label: str) -> tuple[list, dict]:
             continue
 
         if i == 0:
-            # Header row
             db_cell = TableCell()
             db_cell.addElement(P(text='DB Name'))
         else:
@@ -208,16 +240,13 @@ def process_sheet(sheet, players: list, sheet_label: str) -> tuple[list, dict]:
             elif db_name != 'NOT FOUND':
                 matched_pairs[db_name] = opta_name.strip()
 
-        # Insert DB Name before the large trailing padding cell so it appears
-        # next to the data columns instead of at the 16384-column limit.
-        if cells:
-            last = cells[-1]
-            repeat = int(last.getAttribute('numbercolumnsrepeated') or 1)
-            if repeat > 100:
-                last.setAttribute('numbercolumnsrepeated', str(repeat - 1))
-                row.insertBefore(db_cell, last)
-            else:
-                row.addElement(db_cell)
+        # Insert DB Name before the padding cell (the "after last data"
+        # position), and shrink padding by one column.
+        if pad_idx >= 0:
+            pc = cells[pad_idx]
+            rpt = int(pc.getAttribute('numbercolumnsrepeated') or 1)
+            pc.setAttribute('numbercolumnsrepeated', str(rpt - 1))
+            row.insertBefore(db_cell, pc)
         else:
             row.addElement(db_cell)
 

@@ -113,7 +113,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 112,Koni De Winter,Belgium,BEL,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
 113,Charles De Ketelaere,Belgium,BEL,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,C. De Ketelaere
 114,Joaquin Seys,Belgium,BEL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
-115,Diego Moreira,Belgium,BEL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+115,Diego Moreira,Belgium,BEL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,D. Moreira
 116,Hans Vanaken,Belgium,BEL,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,H. Vanaken
 117,Timothy Castagne,Belgium,BEL,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,T. Castagne
 118,Alexis Saelemaekers,Belgium,BEL,MID,5.7,false,,2026-06-07 20:08:13.783269,5.7,A. Saelemaekers
@@ -938,7 +938,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 937,Moussa Niakhaté,Senegal,SEN,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,M. Niakhaté
 938,Ibrahim Mbaye,Senegal,SEN,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,I. Mbaye
 939,Habib Diarra,Senegal,SEN,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,H. Diarra
-940,Bara Sapoko Ndiaye,Senegal,SEN,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+940,Bara Sapoko Ndiaye,Senegal,SEN,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,B. Ndiaye
 941,Mory Diaw,Senegal,SEN,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,M. Diaw
 942,Antoine Mendy,Senegal,SEN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
 943,El Hadji Malick Diouf,Senegal,SEN,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,E. Diouf
