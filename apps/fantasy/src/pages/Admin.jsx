@@ -467,6 +467,89 @@ export default function Admin() {
     if (linked) setKnockoutCalcMatchdayId(String(linked.matchday_id));
   }, [knockoutMatches, knockoutCalcMatchdayId]);
 
+  // ── Negotiation window (closed-door traspasos of eliminated squads) ────────
+  const [negWindow, setNegWindow] = useState(null);
+  const [negPool, setNegPool] = useState([]);
+  const [negCounts, setNegCounts] = useState({});
+  const [negMatchdayId, setNegMatchdayId] = useState('');
+  const [negLoading, setNegLoading] = useState(true);
+  const [negOpening, setNegOpening] = useState(false);
+  const [negResolving, setNegResolving] = useState(false);
+  const [negResult, setNegResult] = useState(null);
+
+  const fetchNegotiationData = useCallback(async () => {
+    setNegLoading(true);
+    const { data: windows } = await supabase
+      .from('negotiation_windows')
+      .select('*')
+      .order('id', { ascending: false })
+      .limit(1);
+    const w = windows?.[0] ?? null;
+    setNegWindow(w);
+
+    if (w && w.status === 'open') {
+      const [{ data: elimTeams }, { data: counts }] = await Promise.all([
+        supabase.from('teams').select('id, name').eq('status', 'eliminated'),
+        supabase.rpc('get_negotiation_offer_counts', { p_window_id: w.id }),
+      ]);
+      const countsMap = {};
+      for (const row of counts ?? []) countsMap[row.target_player_id] = Number(row.offer_count);
+      setNegCounts(countsMap);
+
+      const teamIds = (elimTeams ?? []).map(t => t.id);
+      if (teamIds.length > 0) {
+        const { data: rows } = await supabase
+          .from('team_players')
+          .select('team_id, player_id, players(*)')
+          .in('team_id', teamIds);
+        const byTeam = new Map((elimTeams ?? []).map(t => [t.id, { teamId: t.id, teamName: t.name, players: [] }]));
+        for (const row of rows ?? []) {
+          if (!row.players || row.players.is_eliminated) continue;
+          byTeam.get(row.team_id)?.players.push(row.players);
+        }
+        setNegPool([...byTeam.values()].filter(g => g.players.length > 0));
+      } else {
+        setNegPool([]);
+      }
+    } else {
+      setNegPool([]);
+      setNegCounts({});
+    }
+    setNegLoading(false);
+  }, []);
+
+  useEffect(() => { fetchNegotiationData(); }, [fetchNegotiationData]);
+
+  async function handleOpenNegotiationWindow(fantasyRound) {
+    if (!negMatchdayId) {
+      setNegResult({ errors: ['Selecciona una jornada primero.'] });
+      return;
+    }
+    setNegOpening(true);
+    setNegResult(null);
+    const { data, error } = await supabase.rpc('open_negotiation_window', {
+      p_fantasy_round: fantasyRound,
+      p_matchday_id: parseInt(negMatchdayId, 10),
+    });
+    const rpcError = error?.message ?? data?.error;
+    setNegResult(rpcError ? { errors: [rpcError] } : { opened: true });
+    await fetchNegotiationData();
+    setNegOpening(false);
+  }
+
+  async function handleResolveNegotiationWindow() {
+    if (!negWindow) return;
+    const early = new Date(negWindow.closes_at) > new Date();
+    if (early && !window.confirm('La ventana todavía no cierra. ¿Resolver de todas formas?')) return;
+    setNegResolving(true);
+    setNegResult(null);
+    const { data, error } = await supabase.rpc('resolve_negotiation_window', { p_window_id: negWindow.id });
+    const rpcError = error?.message ?? data?.error;
+    setNegResult(rpcError ? { errors: [rpcError] } : { summary: data });
+    await fetchNegotiationData();
+    setNegResolving(false);
+  }
+
   // ── Matchday Fixtures ─────────────────────────────────────────────────────
   const [fixtureMatches, setFixtureMatches] = useState([]);
   const [fixtureLoading, setFixtureLoading] = useState(false);
@@ -2592,6 +2675,122 @@ export default function Admin() {
         </section>
       )}
 
+      {/* ── Negociación de traspasos ─────────────────────────────────────── */}
+      {isCompleted && (
+        <section className="bg-surface rounded-xl p-6 space-y-5">
+          <div>
+            <h2 className="text-lg font-semibold text-primary">Negociación de traspasos</h2>
+            <p className="text-xs text-muted mt-1">
+              Ventana cerrada para repartir las plantillas de los equipos eliminados. Ábrela después de calcular una ronda.
+            </p>
+          </div>
+
+          {negLoading ? (
+            <p className="text-muted text-sm">Cargando…</p>
+          ) : !negWindow || negWindow.status !== 'open' ? (
+            (() => {
+              const champ = knockoutMatches.filter(m => m.bracket === 'championship');
+              const roundDone = (r) => {
+                const rows = champ.filter(m => m.round === r);
+                return rows.length > 0 && rows.every(m => m.winner_id);
+              };
+              const lastCompletedRound = roundDone(3) ? 3 : roundDone(2) ? 2 : roundDone(1) ? 1 : null;
+              return (
+                <div className="space-y-3">
+                  {!lastCompletedRound ? (
+                    <p className="text-muted text-sm">Calcula una ronda primero para tener equipos eliminados.</p>
+                  ) : (
+                    <div className="flex items-end gap-4 flex-wrap">
+                      <div className="flex-1 min-w-48">
+                        <label className="block text-xs text-muted mb-1">Jornada de cierre (próxima ronda)</label>
+                        <select
+                          value={negMatchdayId}
+                          onChange={e => { setNegMatchdayId(e.target.value); setNegResult(null); }}
+                          className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+                        >
+                          <option value="">Seleccionar jornada…</option>
+                          {matchdays.map(md => (
+                            <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        onClick={() => handleOpenNegotiationWindow(lastCompletedRound)}
+                        disabled={negOpening || !negMatchdayId}
+                        className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                      >
+                        {negOpening ? 'Abriendo…' : 'Abrir ventana'}
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted">
+                    Cierra 1 hora antes del primer partido de la jornada elegida. Solo puede haber una ventana abierta a la vez.
+                  </p>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="space-y-4">
+              <NegotiationWindowCountdown closesAt={negWindow.closes_at} />
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted border-b border-border">
+                      <th className="pb-2 pr-4 font-medium text-xs">Equipo eliminado</th>
+                      <th className="pb-2 pr-4 font-medium text-xs">Jugador</th>
+                      <th className="pb-2 font-medium text-xs">Ofertas</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {negPool.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="py-4 text-center text-muted text-xs">No hay jugadores disponibles.</td>
+                      </tr>
+                    ) : (
+                      negPool.flatMap(group => group.players.map(p => (
+                        <tr key={p.id} className="text-secondary">
+                          <td className="py-2 pr-4 text-xs">{group.teamName}</td>
+                          <td className="py-2 pr-4 text-xs text-primary">{p.name}</td>
+                          <td className="py-2 text-xs font-semibold text-tertiary">{negCounts[p.id] ?? 0}</td>
+                        </tr>
+                      )))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted">Los montos y los postores están sellados — solo se muestra el conteo de ofertas.</p>
+
+              <button
+                onClick={handleResolveNegotiationWindow}
+                disabled={negResolving}
+                className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+              >
+                {negResolving ? 'Resolviendo…' : 'Resolver ventana'}
+              </button>
+            </div>
+          )}
+
+          {negResult?.errors?.length > 0 && (
+            <div className="rounded-lg p-4 space-y-1 bg-error/10/40 border border-error/30/50">
+              {negResult.errors.map((err, i) => (
+                <p key={i} className="text-tertiary text-xs">{err}</p>
+              ))}
+            </div>
+          )}
+          {negResult?.opened && (
+            <p className="text-tertiary text-sm font-semibold">✓ Ventana abierta.</p>
+          )}
+          {negResult?.summary && (
+            <div className="rounded-lg p-4 space-y-1 bg-surface-hover">
+              <p className="text-tertiary text-sm font-semibold">
+                ✓ Ventana resuelta — {negResult.summary.sales?.length ?? 0} traspaso{(negResult.summary.sales?.length ?? 0) !== 1 ? 's' : ''}, {negResult.summary.released_count ?? 0} jugador{(negResult.summary.released_count ?? 0) !== 1 ? 'es' : ''} liberado{(negResult.summary.released_count ?? 0) !== 1 ? 's' : ''}.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* ── Player Pool ──────────────────────────────────────────────────── */}
       {/* ── Transfer Windows ─────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
@@ -2937,6 +3136,32 @@ export default function Admin() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function NegotiationWindowCountdown({ closesAt }) {
+  const [remaining, setRemaining] = useState(() => new Date(closesAt).getTime() - Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setRemaining(new Date(closesAt).getTime() - Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [closesAt]);
+
+  const clamped = Math.max(0, remaining);
+  const hours = Math.floor(clamped / 3600000);
+  const minutes = Math.floor((clamped % 3600000) / 60000);
+  const seconds = Math.floor((clamped % 60000) / 1000);
+
+  return (
+    <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <p className="text-info font-semibold">Ventana de negociación abierta</p>
+        <p className="text-secondary text-sm mt-0.5">Cierra {new Date(closesAt).toLocaleString()}</p>
+      </div>
+      <span className="text-2xl font-mono font-bold tabular-nums text-info">
+        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+      </span>
     </div>
   );
 }
