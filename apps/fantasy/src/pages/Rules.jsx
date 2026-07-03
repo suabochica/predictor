@@ -275,6 +275,38 @@ export default function HowToPlay() {
         </div>
       </Section>
 
+      {/* Negociaciones a puerta cerrada */}
+      <Section title="Negociaciones a puerta cerrada">
+        <p className="text-secondary mb-3">
+          Cuando un equipo fantasy queda <strong className="text-primary">eliminado</strong> de la
+          competición, sus jugadores cuya selección <strong className="text-primary">sigue viva</strong> en
+          el Mundial no se congelan: el administrador puede abrir una <strong className="text-primary">ventana
+          de negociación a puerta cerrada</strong> en la que los equipos que siguen compitiendo pujan por
+          ellos mediante <strong className="text-primary">ofertas selladas</strong>.
+        </p>
+        <ul className="space-y-2 text-secondary">
+          <li><Bullet /><strong className="text-primary">Qué jugadores entran:</strong> solo los de equipos fantasy eliminados cuya selección sigue viva en el Mundial. Si la selección del jugador también fue eliminada, no entra (puntuaría 0).</li>
+          <li><Bullet /><strong className="text-primary">Quién puede ofertar:</strong> solo los equipos que siguen en competición. Los equipos eliminados ven la ventana en modo solo lectura.</li>
+          <li><Bullet /><strong className="text-primary">La oferta:</strong> ofreces exactamente <strong className="text-primary">uno de tus jugadores</strong> más (opcional) <strong className="text-primary">efectivo</strong> de tu presupuesto. El total (precio de tu jugador + efectivo) debe ser <strong className="text-primary">al menos el precio</strong> del jugador objetivo.</li>
+          <li><Bullet /><strong className="text-primary">Ofertas selladas:</strong> nadie —ni siquiera el administrador— ve el monto ni quién oferta. Lo único público es <strong className="text-primary">cuántas</strong> ofertas hay por cada jugador (un contador), nunca de quién ni por cuánto.</li>
+          <li><Bullet /><strong className="text-primary">Límites:</strong> una oferta activa por jugador objetivo, y cada jugador tuyo puede comprometerse en una sola oferta a la vez. El efectivo comprometido no puede superar tu presupuesto, y tus ofertas activas + transferencias ya usadas comparten el <strong className="text-primary">límite de 5</strong> de la ventana eliminatoria. Siempre debes conservar al menos <strong className="text-primary">1 portero</strong>.</li>
+          <li><Bullet /><strong className="text-primary">Puedes retirar</strong> una oferta y volver a ofertar mientras la ventana siga abierta.</li>
+          <li><Bullet /><strong className="text-primary">Cierre:</strong> la ventana cierra automáticamente <strong className="text-primary">1 hora antes</strong> del primer partido de la jornada elegida.</li>
+        </ul>
+        <div className="mt-4 bg-surface border border-border rounded-lg p-3 text-sm text-secondary">
+          <strong className="text-primary">Cómo se resuelve</strong> (al cerrar la ventana):
+          <ol className="mt-1 space-y-1 list-decimal list-inside">
+            <li>Por cada jugador objetivo gana la oferta con el <strong className="text-primary">total más alto</strong> (precio del jugador ofrecido + efectivo). En caso de empate, gana la oferta <strong className="text-primary">más antigua</strong>.</li>
+            <li>El ganador recibe al jugador; el jugador que ofreciste <strong className="text-primary">queda libre</strong> (vuelve al mercado, no pasa al equipo eliminado) y el efectivo se descuenta de tu presupuesto. Tu alineación se actualiza sola: el jugador que entra ocupa el sitio del que sale.</li>
+            <li>Los que no ganan <strong className="text-primary">conservan sus jugadores</strong> intactos.</li>
+            <li>Al terminar, <strong className="text-primary">todos los jugadores restantes</strong> de los equipos eliminados quedan libres y vuelven al mercado abierto para cualquiera.</li>
+          </ol>
+        </div>
+        <div className="mt-3 bg-info/10 border border-info/30 rounded-lg p-3 text-sm text-secondary">
+          <strong className="text-info">¿Por qué negociar?</strong> Es tu oportunidad de <strong className="text-primary">asegurar</strong> a un jugador concreto todavía vivo antes de que, al cerrar la ventana, todos los sobrantes salgan al mercado abierto donde cualquiera puede quedárselos por orden de llegada.
+        </div>
+      </Section>
+
       {/* Jugadores eliminados */}
       <Section title="Jugadores cuya selección queda eliminada">
         <p className="text-secondary">
