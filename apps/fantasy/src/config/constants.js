@@ -18,6 +18,11 @@ export const SQUAD_REQUIREMENTS = {
 export const TRANSFER_CAP_ROUND_ROBIN = 2;
 export const TRANSFER_CAP_KNOCKOUT = 5;
 
+// Closed-door negotiation windows close this many hours before the next
+// round's first kickoff (server-enforced in open_negotiation_window; this is
+// display copy only).
+export const NEGOTIATION_CLOSE_LEAD_HOURS = 1;
+
 export const MIN_GOALKEEPERS = 1;
 export const LOCK_LEAD_MINUTES = 10;
 

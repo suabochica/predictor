@@ -7,6 +7,7 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import MyTeam from './pages/MyTeam';
 import Market from './pages/Market';
+import Negotiations from './pages/Negotiations';
 import Leaderboard from './pages/Leaderboard';
 import Bracket from './pages/Bracket';
 import Auction from './pages/Auction';
@@ -58,6 +59,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
         <Route path="/market" element={<ProtectedRoute><Market /></ProtectedRoute>} />
+        <Route path="/negotiations" element={<ProtectedRoute><Negotiations /></ProtectedRoute>} />
         <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/bracket" element={<ProtectedRoute><Bracket /></ProtectedRoute>} />
         <Route path="/auction" element={<ProtectedRoute><Auction /></ProtectedRoute>} />

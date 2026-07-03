@@ -8,6 +8,7 @@ import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import marketIcon from '@predictor/ui/icons/market.svg';
+import negotiationsIcon from '@predictor/ui/icons/transfers.svg';
 import bracketsIcon from '@predictor/ui/icons/brackets.svg';
 import historyIcon from '@predictor/ui/icons/history.svg';
 import rulesIcon from '@predictor/ui/icons/rules.svg';
@@ -51,6 +52,7 @@ export default function MobileNav() {
 
   const moreNavItems = [
     { to: '/auction', icon: auctionIcon, label: 'Subasta' },
+    { to: '/negotiations', icon: negotiationsIcon, label: 'Negociaciones' },
     otherItem,
     { to: '/history', icon: historyIcon, label: 'Históricos' },
     { to: '/rules', icon: rulesIcon, label: 'Reglas' },

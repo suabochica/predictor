@@ -5,6 +5,7 @@ import { classNames } from '../../lib/utils';
 import homeIcon from '@predictor/ui/icons/home.svg';
 import teamIcon from '@predictor/ui/icons/team.svg';
 import marketIcon from '@predictor/ui/icons/market.svg';
+import negotiationsIcon from '@predictor/ui/icons/transfers.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import bracketsIcon from '@predictor/ui/icons/brackets.svg';
@@ -16,6 +17,7 @@ const navItems = [
   { to: '/dashboard', icon: homeIcon, label: 'Inicio' },
   { to: '/my-team', icon: teamIcon, label: 'Mi equipo' },
   { to: '/market', icon: marketIcon, label: 'Mercado de jugadores' },
+  { to: '/negotiations', icon: negotiationsIcon, label: 'Negociaciones' },
   { to: '/auction', icon: auctionIcon, label: 'Subasta' },
   { to: '/leaderboard', icon: standingsIcon, label: 'Tabla de posiciones' },
   { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' },
