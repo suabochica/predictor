@@ -1017,6 +1017,12 @@ export default function Admin() {
       if (error) errors.push(`Next round creation error: ${error.message}`);
     }
 
+    const loserIds = [...new Set(Object.values(matchResults).map(r => r.l).filter(Boolean))];
+    if (loserIds.length > 0) {
+      const { error } = await supabase.rpc('set_teams_eliminated', { p_team_ids: loserIds, p_eliminated: true });
+      if (error) errors.push(`Elimination marking error: ${error.message}`);
+    }
+
     setKnockoutCalcResult({ resolved: updates.length, errors });
     await fetchKnockoutData();
     setKnockoutCalcRunning(false);
