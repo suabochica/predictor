@@ -30,6 +30,9 @@ export default function Market() {
   const [swapping, setSwapping] = useState(false);
   const [swapError, setSwapError] = useState(null);
   const [recentAction, setRecentAction] = useState(null);
+  const [negWindow, setNegWindow] = useState(null);
+  const [committedCash, setCommittedCash] = useState(0);
+  const [committedPlayerIds, setCommittedPlayerIds] = useState(new Set());
 
   // Normalize squad rows into flat player objects
   const squad = useMemo(
@@ -54,6 +57,39 @@ export default function Market() {
   );
 
   const budget = team?.budget_remaining ?? 0;
+
+  // Cash/players already staked in active closed-door negotiation offers can't
+  // also be spent/transferred here — mirrors execute_transfer's guards (056).
+  useEffect(() => {
+    if (!team) return;
+    fetchNegotiationState();
+  }, [team?.id]);
+
+  async function fetchNegotiationState() {
+    const { data: windows } = await supabase
+      .from('negotiation_windows')
+      .select('*')
+      .eq('status', 'open')
+      .order('id', { ascending: false })
+      .limit(1);
+    const w = windows?.[0];
+    const open = w && new Date(w.closes_at) > new Date();
+    setNegWindow(open ? w : null);
+    if (!open) {
+      setCommittedCash(0);
+      setCommittedPlayerIds(new Set());
+      return;
+    }
+    const { data: offers } = await supabase
+      .from('negotiation_offers')
+      .select('cash, offered_player_id')
+      .eq('window_id', w.id)
+      .eq('status', 'active');
+    setCommittedCash((offers ?? []).reduce((sum, o) => sum + Number(o.cash), 0));
+    setCommittedPlayerIds(new Set((offers ?? []).map((o) => o.offered_player_id)));
+  }
+
+  const effectiveBudget = negWindow ? Number((budget - committedCash).toFixed(1)) : budget;
 
   function isPlayerLocked(player) {
     if (!player) return false;
@@ -89,14 +125,14 @@ export default function Market() {
       }
       if (filters.affordableOnly) {
         const effective = offerOut
-          ? budget + offerOut.current_price - p.current_price >= 0
-          : p.current_price <= budget;
+          ? effectiveBudget + offerOut.current_price - p.current_price >= 0
+          : p.current_price <= effectiveBudget;
         if (!effective) return false;
       }
       if (filters.freeAgentsOnly && p.owner !== null) return false;
       return true;
     });
-  }, [allPlayers, filters, budget, offerOut]);
+  }, [allPlayers, filters, effectiveBudget, offerOut]);
 
   function sortValue(p, key) {
     if (key === 'current_price') return p.current_price ?? p.price ?? 0;
@@ -172,8 +208,13 @@ export default function Market() {
       setSwapping(false);
       return;
     }
-    if (budgetAfterSwap < 0) {
-      setSwapError('Presupuesto insuficiente para este cambio.');
+    if (committedPlayerIds.has(playerOut.id)) {
+      setSwapError('Ese jugador está comprometido en una oferta de negociación activa.');
+      setSwapping(false);
+      return;
+    }
+    if (budgetAfterSwap < committedCash) {
+      setSwapError('Presupuesto insuficiente para este cambio (tienes efectivo comprometido en negociaciones).');
       setSwapping(false);
       return;
     }
@@ -242,6 +283,20 @@ export default function Market() {
     );
   }
 
+  if (team.status === 'eliminated') {
+    return (
+      <div className="space-y-4 max-w-2xl">
+        <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
+        <div className="bg-surface border border-error/30 rounded-xl p-6 text-center">
+          <p className="text-error font-semibold">Estás eliminado — solo lectura</p>
+          <p className="text-secondary text-sm mt-1">
+            Tu equipo quedó fuera del torneo y ya no puede fichar. Revisa Negociaciones si hay una ventana abierta.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 max-w-4xl">
       {/* ── Header ── */}
@@ -254,8 +309,13 @@ export default function Market() {
         </div>
         <div className="flex gap-3">
           <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
-            <p className="text-label-caps text-muted uppercase tracking-wider">Presupuesto</p>
-            <p className="text-base font-bold text-tertiary">{formatPrice(budget)}</p>
+            <p className="text-label-caps text-muted uppercase tracking-wider">
+              Presupuesto{negWindow ? ' disponible' : ''}
+            </p>
+            <p className="text-base font-bold text-tertiary">{formatPrice(effectiveBudget)}</p>
+            {negWindow && committedCash > 0 && (
+              <p className="text-xs text-muted mt-0.5">{formatPrice(committedCash)} comprometido</p>
+            )}
           </div>
           <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
             <p className="text-label-caps text-muted uppercase tracking-wider">Plantilla</p>
@@ -345,7 +405,8 @@ export default function Market() {
           <div className="p-2 max-h-48 overflow-y-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
               {squad.map((p) => {
-                const locked = isPlayerLocked(p) || noTransfersLeft;
+                const committed = committedPlayerIds.has(p.id);
+                const locked = isPlayerLocked(p) || noTransfersLeft || committed;
                 return (
                   <button
                     key={p.id}
@@ -365,7 +426,10 @@ export default function Market() {
                       {p.position}
                     </span>
                     <span className="text-sm text-primary flex-1 truncate">{p.name}</span>
-                    {locked && (
+                    {committed && (
+                      <span className="text-label-caps text-info font-semibold text-xs flex-shrink-0">EN NEGOCIACIÓN</span>
+                    )}
+                    {!committed && locked && (
                       <span className="text-label-caps text-warning font-semibold text-xs flex-shrink-0">BLOQUEADO</span>
                     )}
                     <span className="text-xs text-tertiary flex-shrink-0">
@@ -451,8 +515,8 @@ export default function Market() {
             {sortedPlayers.map((player) => {
               const isMine = player.owner?.userId === team?.user_id;
               const canAfford = offerOut
-                ? budget + offerOut.current_price - player.current_price >= 0
-                : player.current_price <= budget;
+                ? effectiveBudget + offerOut.current_price - player.current_price >= 0
+                : player.current_price <= effectiveBudget;
               return (
                 <PlayerRow
                   key={player.id}
