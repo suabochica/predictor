@@ -14,6 +14,7 @@ export default function Negotiations() {
     committedCash,
     committedPlayerIds,
     offersRemaining,
+    history,
     loading,
     submitOffer,
     withdrawOffer,
@@ -234,6 +235,8 @@ export default function Negotiations() {
         </>
       )}
 
+      {history.length > 0 && <NegotiationHistory groups={history} />}
+
       {/* Offer modal */}
       {offerTarget && (
         <div
@@ -367,6 +370,74 @@ function NegotiationCountdown({ closesAt }) {
       <span className="text-2xl font-mono font-bold tabular-nums text-info">
         {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </span>
+    </div>
+  );
+}
+
+function NegotiationHistory({ groups }) {
+  const [expandedId, setExpandedId] = useState(groups[0]?.windowId ?? null);
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-lg font-bold text-primary">Historial de negociaciones</h2>
+      <div className="space-y-3">
+        {groups.map((g) => {
+          const expanded = expandedId === g.windowId;
+          return (
+            <div key={g.windowId} className="bg-surface border border-border rounded-xl overflow-hidden">
+              <button
+                onClick={() => setExpandedId(expanded ? null : g.windowId)}
+                className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-surface-hover transition-colors"
+              >
+                <h3 className="text-sm font-semibold text-secondary">
+                  Ronda {g.fantasyRound}
+                  {g.resolvedAt && (
+                    <span className="text-xs text-muted font-normal ml-2">
+                      resuelta {new Date(g.resolvedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </h3>
+                <span className="text-muted text-xs">{expanded ? '▲' : '▼'}</span>
+              </button>
+              {expanded && (
+                <div className="divide-y divide-border">
+                  {g.sales.length === 0 ? (
+                    <p className="px-4 py-3 text-sm text-muted">Sin ventas en esta ronda.</p>
+                  ) : (
+                    g.sales.map((sale) => (
+                      <div key={sale.target?.name ?? Math.random()} className="px-4 py-3 space-y-2 text-sm">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span
+                            className={`text-xs font-bold px-2 py-1 rounded flex-shrink-0 ${getPositionColor(sale.target?.position)}`}
+                          >
+                            {sale.target?.position}
+                          </span>
+                          <span className="text-primary font-medium">{sale.target?.name}</span>
+                          <span className="text-muted">←</span>
+                          <span className="text-error">{sale.winner.offered?.name}</span>
+                          <span className="text-secondary">+ {formatPrice(sale.winner.cash)}</span>
+                          <span className="text-tertiary font-semibold">= {formatPrice(sale.winner.total)}</span>
+                        </div>
+                        <p className="text-xs text-tertiary font-semibold">vendido a {sale.winner.teamName}</p>
+                        {sale.losers.length > 0 && (
+                          <div className="pl-2 space-y-1">
+                            <p className="text-label-caps text-muted uppercase tracking-wider">Otras ofertas</p>
+                            {sale.losers.map((l, i) => (
+                              <p key={i} className="text-xs text-muted">
+                                {l.teamName} — {l.offered?.name} + {formatPrice(l.cash)} = {formatPrice(l.total)}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

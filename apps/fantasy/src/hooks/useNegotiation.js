@@ -10,6 +10,7 @@ export function useNegotiation() {
   const [counts, setCounts] = useState({});
   const [myOffers, setMyOffers] = useState([]);
   const [transfersUsed, setTransfersUsed] = useState(0);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const isOpen = !!negWindow && negWindow.status === 'open' && new Date(negWindow.closes_at) > new Date();
@@ -65,6 +66,61 @@ export function useNegotiation() {
     [team?.id]
   );
 
+  const fetchResolvedWindows = useCallback(async () => {
+    const { data } = await supabase
+      .from('negotiation_windows')
+      .select('*')
+      .eq('status', 'resolved')
+      .order('id', { ascending: false });
+    return data ?? [];
+  }, []);
+
+  const fetchHistoryOffers = useCallback(async (windowIds) => {
+    if (!windowIds.length) return [];
+    const { data } = await supabase
+      .from('negotiation_offers')
+      .select(
+        '*, target:players!negotiation_offers_target_player_id_fkey(name, position, country, country_code, current_price), offered:players!negotiation_offers_offered_player_id_fkey(name, position, country, country_code, current_price), bidder:teams!negotiation_offers_bidder_team_id_fkey(id, name)'
+      )
+      .in('window_id', windowIds)
+      .in('status', ['won', 'lost'])
+      .order('created_at', { ascending: true });
+    return data ?? [];
+  }, []);
+
+  const fetchHistory = useCallback(async () => {
+    const windows = await fetchResolvedWindows();
+    if (!windows.length) return [];
+    const offers = await fetchHistoryOffers(windows.map((w) => w.id));
+    const offersByWindow = new Map();
+    for (const o of offers) {
+      if (!offersByWindow.has(o.window_id)) offersByWindow.set(o.window_id, []);
+      offersByWindow.get(o.window_id).push(o);
+    }
+    const toEntry = (o) => {
+      const total = Number((Number(o.offered?.current_price ?? 0) + Number(o.cash)).toFixed(1));
+      return { teamName: o.bidder?.name ?? `Equipo #${o.bidder_team_id}`, offered: o.offered, cash: Number(o.cash), total };
+    };
+    return windows.map((w) => {
+      const windowOffers = offersByWindow.get(w.id) ?? [];
+      const byTarget = new Map();
+      for (const o of windowOffers) {
+        if (!byTarget.has(o.target_player_id)) byTarget.set(o.target_player_id, { target: o.target, won: null, lost: [] });
+        const group = byTarget.get(o.target_player_id);
+        if (o.status === 'won') group.won = toEntry(o);
+        else group.lost.push(toEntry(o));
+      }
+      const sales = [...byTarget.values()]
+        .filter((g) => g.won)
+        .map((g) => ({
+          target: g.target,
+          winner: g.won,
+          losers: g.lost.sort((a, b) => b.total - a.total),
+        }));
+      return { windowId: w.id, fantasyRound: w.fantasy_round, resolvedAt: w.resolved_at, sales };
+    });
+  }, [fetchResolvedWindows, fetchHistoryOffers]);
+
   const fetchTransfersUsed = useCallback(
     async (matchdayId) => {
       if (!matchdayId || !team) return 0;
@@ -82,18 +138,20 @@ export function useNegotiation() {
     const w = await fetchWindow();
     setNegWindow(w);
     const open = !!w && w.status === 'open' && new Date(w.closes_at) > new Date();
-    const [poolData, countsData, offersData, used] = await Promise.all([
+    const [poolData, countsData, offersData, used, historyData] = await Promise.all([
       open ? fetchPool() : Promise.resolve([]),
       open ? fetchCounts(w.id) : Promise.resolve({}),
       w ? fetchMyOffers(w.id) : Promise.resolve([]),
       open ? fetchTransfersUsed(w.matchday_id) : Promise.resolve(0),
+      fetchHistory(),
     ]);
     setPool(poolData);
     setCounts(countsData);
     setMyOffers(offersData);
     setTransfersUsed(used);
+    setHistory(historyData);
     setLoading(false);
-  }, [fetchWindow, fetchPool, fetchCounts, fetchMyOffers, fetchTransfersUsed]);
+  }, [fetchWindow, fetchPool, fetchCounts, fetchMyOffers, fetchTransfersUsed, fetchHistory]);
 
   useEffect(() => {
     if (!team) {
@@ -155,6 +213,7 @@ export function useNegotiation() {
     committedCash,
     committedPlayerIds,
     offersRemaining,
+    history,
     loading,
     submitOffer,
     withdrawOffer,
