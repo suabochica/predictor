@@ -4,6 +4,7 @@ import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
 import marketIcon from '@predictor/ui/icons/market.svg';
+import negotiationsIcon from '@predictor/ui/icons/transfers.svg';
 import bracketsIcon from '@predictor/ui/icons/brackets.svg';
 import historyIcon from '@predictor/ui/icons/history.svg';
 import rulesIcon from '@predictor/ui/icons/rules.svg';
@@ -23,6 +24,7 @@ export default function Dashboard() {
     { to: '/auction', icon: auctionIcon, label: 'Sala de subasta' },
     { to: '/leaderboard', icon: standingsIcon, label: 'Tabla de posiciones' },
     { to: '/market', icon: marketIcon, label: 'Mercado de jugadores' },
+    { to: '/negotiations', icon: negotiationsIcon, label: 'Negociaciones' },
     { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' },
     { to: '/history', icon: historyIcon, label: 'Históricos' },
     { to: '/rules', icon: rulesIcon, label: 'Reglas' },

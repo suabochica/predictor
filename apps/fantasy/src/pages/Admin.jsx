@@ -1089,9 +1089,11 @@ export default function Admin() {
       });
     }
 
+    let resolvedCount = 0;
     for (const { id, ...data } of updates) {
       const { error } = await supabase.from('knockout_matches').update(data).eq('id', id);
       if (error) errors.push(`Match update error: ${error.message}`);
+      else resolvedCount++;
     }
 
     const nextRows = buildNextRoundRows(round, matchResults, knockoutMatches);
@@ -1106,7 +1108,7 @@ export default function Admin() {
       if (error) errors.push(`Elimination marking error: ${error.message}`);
     }
 
-    setKnockoutCalcResult({ resolved: updates.length, errors });
+    setKnockoutCalcResult({ resolved: resolvedCount, errors });
     await fetchKnockoutData();
     setKnockoutCalcRunning(false);
   }
