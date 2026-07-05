@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
-import { countries } from '../data/matches';
+import { useEffect, useState } from "react";
+import { supabase } from "@predictor/supabase";
+import { countries } from "../data/matches";
 
 interface KnockoutMatch {
   id: string;
@@ -27,15 +27,15 @@ interface MatchForm {
 }
 
 const STAGES: { key: string; label: string }[] = [
-  { key: 'round_of_32', label: 'Dieciseisavos de final' },
-  { key: 'round_of_16', label: 'Octavos de final' },
-  { key: 'quarterfinal', label: 'Cuartos de final' },
-  { key: 'semifinal', label: 'Semifinal' },
-  { key: 'third_place', label: 'Tercer lugar' },
-  { key: 'final', label: 'Final' },
+  { key: "round_of_32", label: "Dieciseisavos de final" },
+  { key: "round_of_16", label: "Octavos de final" },
+  { key: "quarterfinal", label: "Cuartos de final" },
+  { key: "semifinal", label: "Semifinal" },
+  { key: "third_place", label: "Tercer lugar" },
+  { key: "final", label: "Final" },
 ];
 
-const STATUS_OPTIONS = ['upcoming', 'live', 'finished'] as const;
+const STATUS_OPTIONS = ["upcoming", "live", "finished"] as const;
 
 const countryOptions = Object.entries(countries).map(([code, data]) => ({
   code,
@@ -45,27 +45,27 @@ const countryOptions = Object.entries(countries).map(([code, data]) => ({
 countryOptions.sort((a, b) => a.label.localeCompare(b.label));
 
 function toLocalDatetime(iso: string): string {
-  if (!iso) return '';
+  if (!iso) return "";
   const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function fromLocalDatetime(local: string): string {
-  if (!local) return '';
+  if (!local) return "";
   return new Date(local).toISOString();
 }
 
 function newForm(match?: KnockoutMatch): MatchForm {
   return {
-    match_code: match?.match_code ?? '',
-    team_a: match?.team_a ?? 'TBD',
-    team_b: match?.team_b ?? 'TBD',
-    match_date: match?.match_date ? toLocalDatetime(match.match_date) : '',
-    stadium: match?.stadium ?? '',
-    status: match?.status ?? 'upcoming',
-    actual_score_a: match?.actual_score_a?.toString() ?? '',
-    actual_score_b: match?.actual_score_b?.toString() ?? '',
+    match_code: match?.match_code ?? "",
+    team_a: match?.team_a ?? "TBD",
+    team_b: match?.team_b ?? "TBD",
+    match_date: match?.match_date ? toLocalDatetime(match.match_date) : "",
+    stadium: match?.stadium ?? "",
+    status: match?.status ?? "upcoming",
+    actual_score_a: match?.actual_score_a?.toString() ?? "",
+    actual_score_b: match?.actual_score_b?.toString() ?? "",
   };
 }
 
@@ -77,7 +77,9 @@ export default function KnockoutAdmin() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedStage, setExpandedStage] = useState<Record<string, boolean>>({});
+  const [expandedStage, setExpandedStage] = useState<Record<string, boolean>>(
+    {},
+  );
 
   useEffect(() => {
     fetchMatches();
@@ -86,10 +88,10 @@ export default function KnockoutAdmin() {
   async function fetchMatches() {
     try {
       const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .neq('stage', 'group')
-        .order('match_code', { ascending: true });
+        .from("matches")
+        .select("*")
+        .neq("stage", "group")
+        .order("match_code", { ascending: true });
 
       if (error) throw error;
 
@@ -116,14 +118,22 @@ export default function KnockoutAdmin() {
       setForms(formMap);
       setExpandedStage(expanded);
     } catch (err: any) {
-      setErrorMsg(err?.message ?? 'Error al cargar partidos');
+      setErrorMsg(err?.message ?? "Error al cargar partidos");
     } finally {
       setLoading(false);
     }
   }
 
-  function handleFormChange(matchId: string, field: keyof MatchForm, value: string) {
-    if ((field === 'actual_score_a' || field === 'actual_score_b') && !/^\d*$/.test(value)) return;
+  function handleFormChange(
+    matchId: string,
+    field: keyof MatchForm,
+    value: string,
+  ) {
+    if (
+      (field === "actual_score_a" || field === "actual_score_b") &&
+      !/^\d*$/.test(value)
+    )
+      return;
     setForms((prev) => ({
       ...prev,
       [matchId]: { ...prev[matchId], [field]: value },
@@ -135,29 +145,35 @@ export default function KnockoutAdmin() {
     if (!form) return;
 
     if (!form.match_code.trim()) {
-      setErrorMsg('El código del partido es obligatorio');
+      setErrorMsg("El código del partido es obligatorio");
       return;
     }
 
     setSaving(match.id);
     setErrorMsg(null);
     try {
-      const scoreA = form.actual_score_a ? parseInt(form.actual_score_a, 10) : null;
-      const scoreB = form.actual_score_b ? parseInt(form.actual_score_b, 10) : null;
+      const scoreA = form.actual_score_a
+        ? parseInt(form.actual_score_a, 10)
+        : null;
+      const scoreB = form.actual_score_b
+        ? parseInt(form.actual_score_b, 10)
+        : null;
 
       const { error } = await supabase
-        .from('matches')
+        .from("matches")
         .update({
           match_code: form.match_code.trim(),
-          team_a: form.team_a || 'TBD',
-          team_b: form.team_b || 'TBD',
-          match_date: form.match_date ? fromLocalDatetime(form.match_date) : match.match_date,
+          team_a: form.team_a || "TBD",
+          team_b: form.team_b || "TBD",
+          match_date: form.match_date
+            ? fromLocalDatetime(form.match_date)
+            : match.match_date,
           stadium: form.stadium || null,
           status: form.status,
           actual_score_a: scoreA,
           actual_score_b: scoreB,
         })
-        .eq('id', match.id);
+        .eq("id", match.id);
 
       if (error) throw error;
 
@@ -165,7 +181,7 @@ export default function KnockoutAdmin() {
       setTimeout(() => setSuccessMsg(null), 3000);
       fetchMatches();
     } catch (err: any) {
-      setErrorMsg(err?.message ?? 'Error al guardar');
+      setErrorMsg(err?.message ?? "Error al guardar");
     } finally {
       setSaving(null);
     }
@@ -178,9 +194,9 @@ export default function KnockoutAdmin() {
     setErrorMsg(null);
     try {
       const { error } = await supabase
-        .from('matches')
+        .from("matches")
         .delete()
-        .eq('id', match.id);
+        .eq("id", match.id);
 
       if (error) throw error;
 
@@ -188,7 +204,7 @@ export default function KnockoutAdmin() {
       setTimeout(() => setSuccessMsg(null), 3000);
       setMatches((prev) => prev.filter((m) => m.id !== match.id));
     } catch (err: any) {
-      setErrorMsg(err?.message ?? 'Error al eliminar');
+      setErrorMsg(err?.message ?? "Error al eliminar");
     } finally {
       setDeleting(null);
     }
@@ -196,21 +212,21 @@ export default function KnockoutAdmin() {
 
   async function handleAdd(stage: string) {
     const { data, error } = await supabase
-      .from('matches')
+      .from("matches")
       .insert({
-        match_code: '',
-        team_a: 'TBD',
-        team_b: 'TBD',
+        match_code: "",
+        team_a: "TBD",
+        team_b: "TBD",
         match_date: new Date().toISOString(),
         stadium: null,
         stage,
-        status: 'upcoming',
+        status: "upcoming",
       })
       .select()
       .single();
 
     if (error || !data) {
-      setErrorMsg(error?.message ?? 'Error al crear partido');
+      setErrorMsg(error?.message ?? "Error al crear partido");
       return;
     }
 
@@ -264,7 +280,7 @@ export default function KnockoutAdmin() {
 
       {STAGES.map(({ key, label }) => {
         const stageMatches = (matchesByStage[key] ?? []).sort((a, b) =>
-          a.match_code.localeCompare(b.match_code)
+          a.match_code.localeCompare(b.match_code),
         );
         const isExpanded = expandedStage[key] !== false;
 
@@ -278,15 +294,20 @@ export default function KnockoutAdmin() {
               <h3 className="font-heading text-body-md font-semibold text-primary">
                 {label}
                 <span className="text-muted font-normal text-body-sm ml-2">
-                  {stageMatches.length} partido{stageMatches.length !== 1 ? 's' : ''}
+                  {stageMatches.length} partido
+                  {stageMatches.length !== 1 ? "s" : ""}
                 </span>
               </h3>
               <svg
-                className={`w-5 h-5 text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                className={`w-5 h-5 text-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
 
@@ -318,7 +339,13 @@ export default function KnockoutAdmin() {
                             <input
                               type="text"
                               value={form.match_code}
-                              onChange={(e) => handleFormChange(match.id, 'match_code', e.target.value)}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  match.id,
+                                  "match_code",
+                                  e.target.value,
+                                )
+                              }
                               placeholder="M73"
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             />
@@ -331,7 +358,13 @@ export default function KnockoutAdmin() {
                             <input
                               type="datetime-local"
                               value={form.match_date}
-                              onChange={(e) => handleFormChange(match.id, 'match_date', e.target.value)}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  match.id,
+                                  "match_date",
+                                  e.target.value,
+                                )
+                              }
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             />
                           </div>
@@ -343,7 +376,13 @@ export default function KnockoutAdmin() {
                             <input
                               type="text"
                               value={form.stadium}
-                              onChange={(e) => handleFormChange(match.id, 'stadium', e.target.value)}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  match.id,
+                                  "stadium",
+                                  e.target.value,
+                                )
+                              }
                               placeholder="Estadio"
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             />
@@ -355,11 +394,19 @@ export default function KnockoutAdmin() {
                             </label>
                             <select
                               value={form.status}
-                              onChange={(e) => handleFormChange(match.id, 'status', e.target.value)}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  match.id,
+                                  "status",
+                                  e.target.value,
+                                )
+                              }
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             >
                               {STATUS_OPTIONS.map((s) => (
-                                <option key={s} value={s}>{s}</option>
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -372,12 +419,20 @@ export default function KnockoutAdmin() {
                             </label>
                             <select
                               value={form.team_a}
-                              onChange={(e) => handleFormChange(match.id, 'team_a', e.target.value)}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  match.id,
+                                  "team_a",
+                                  e.target.value,
+                                )
+                              }
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             >
                               <option value="TBD">— TBD —</option>
                               {countryOptions.map((c) => (
-                                <option key={c.code} value={c.code}>{c.label}</option>
+                                <option key={c.code} value={c.code}>
+                                  {c.label}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -388,12 +443,20 @@ export default function KnockoutAdmin() {
                             </label>
                             <select
                               value={form.team_b}
-                              onChange={(e) => handleFormChange(match.id, 'team_b', e.target.value)}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  match.id,
+                                  "team_b",
+                                  e.target.value,
+                                )
+                              }
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             >
                               <option value="TBD">— TBD —</option>
                               {countryOptions.map((c) => (
-                                <option key={c.code} value={c.code}>{c.label}</option>
+                                <option key={c.code} value={c.code}>
+                                  {c.label}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -409,18 +472,32 @@ export default function KnockoutAdmin() {
                             pattern="[0-9]*"
                             placeholder="0"
                             value={form.actual_score_a}
-                            onChange={(e) => handleFormChange(match.id, 'actual_score_a', e.target.value)}
+                            onChange={(e) =>
+                              handleFormChange(
+                                match.id,
+                                "actual_score_a",
+                                e.target.value,
+                              )
+                            }
                             disabled={isSaving}
                             className="w-14 rounded-sm border border-border bg-surface px-2 py-1 text-center text-body-sm text-primary disabled:opacity-50"
                           />
-                          <span className="text-muted text-body-sm font-semibold">-</span>
+                          <span className="text-muted text-body-sm font-semibold">
+                            -
+                          </span>
                           <input
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             placeholder="0"
                             value={form.actual_score_b}
-                            onChange={(e) => handleFormChange(match.id, 'actual_score_b', e.target.value)}
+                            onChange={(e) =>
+                              handleFormChange(
+                                match.id,
+                                "actual_score_b",
+                                e.target.value,
+                              )
+                            }
                             disabled={isSaving}
                             className="w-14 rounded-sm border border-border bg-surface px-2 py-1 text-center text-body-sm text-primary disabled:opacity-50"
                           />
@@ -432,7 +509,7 @@ export default function KnockoutAdmin() {
                               disabled={isSaving || isDeleting}
                               className="rounded-sm bg-success/15 px-3 py-1 font-label text-label-caps text-success transition-colors hover:bg-success/25 disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                              {isSaving ? 'Guardando...' : 'Guardar'}
+                              {isSaving ? "Guardando..." : "Guardar"}
                             </button>
                             <button
                               type="button"
@@ -440,21 +517,13 @@ export default function KnockoutAdmin() {
                               disabled={isSaving || isDeleting}
                               className="rounded-sm bg-error/10 px-3 py-1 font-label text-label-caps text-error transition-colors hover:bg-error/20 disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                              {isDeleting ? 'Eliminando...' : 'Eliminar'}
+                              {isDeleting ? "Eliminando..." : "Eliminar"}
                             </button>
                           </div>
                         </div>
                       </div>
                     );
                   })}
-
-                  <button
-                    type="button"
-                    onClick={() => handleAdd(key)}
-                    className="w-full rounded-sm border-2 border-dashed border-border hover:border-tertiary px-4 py-3 text-body-sm text-muted hover:text-primary transition-colors"
-                  >
-                    + Agregar partido
-                  </button>
                 </div>
               </div>
             )}
