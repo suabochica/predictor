@@ -72,6 +72,9 @@ function newForm(match?: KnockoutMatch): MatchForm {
 export default function KnockoutAdmin() {
   const [matches, setMatches] = useState<KnockoutMatch[]>([]);
   const [forms, setForms] = useState<Record<string, MatchForm>>({});
+  const [predictionsByCode, setPredictionsByCode] = useState<
+    Record<string, { display_name: string; predicted_score_a: number; predicted_score_b: number }[]>
+  >({});
   const [saving, setSaving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -81,21 +84,19 @@ export default function KnockoutAdmin() {
     {},
   );
 
-  useEffect(() => {
-    fetchMatches();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
-  async function fetchMatches() {
+  async function loadData() {
     try {
-      const { data, error } = await supabase
+      const { data: matchData, error: matchErr } = await supabase
         .from("matches")
         .select("*")
         .neq("stage", "group")
         .order("match_code", { ascending: true });
 
-      if (error) throw error;
+      if (matchErr) throw matchErr;
 
-      const list: KnockoutMatch[] = (data ?? []).map((m: any) => ({
+      const list: KnockoutMatch[] = (matchData ?? []).map((m: any) => ({
         id: m.id,
         match_code: m.match_code,
         team_a: m.team_a,
@@ -110,15 +111,41 @@ export default function KnockoutAdmin() {
 
       const formMap: Record<string, MatchForm> = {};
       const expanded: Record<string, boolean> = {};
+      const uuidToCode: Record<string, string> = {};
       for (const m of list) {
         formMap[m.id] = newForm(m);
         expanded[m.stage] = true;
+        uuidToCode[m.id] = m.match_code;
       }
       setMatches(list);
       setForms(formMap);
       setExpandedStage(expanded);
+
+      const { data: predData, error: predErr } = await supabase.rpc(
+        "polla_get_all_predictions",
+      );
+      if (!predErr && predData) {
+        const byCode: Record<
+          string,
+          {
+            display_name: string;
+            predicted_score_a: number;
+            predicted_score_b: number;
+          }[]
+        > = {};
+        for (const p of predData as any[]) {
+          const code = p.match_code ?? uuidToCode[p.match_id];
+          if (!code) continue;
+          (byCode[code] ??= []).push({
+            display_name: p.display_name,
+            predicted_score_a: p.predicted_score_a,
+            predicted_score_b: p.predicted_score_b,
+          });
+        }
+        setPredictionsByCode(byCode);
+      }
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Error al cargar partidos");
+      setErrorMsg(err?.message ?? "Error al cargar datos");
     } finally {
       setLoading(false);
     }
@@ -179,7 +206,7 @@ export default function KnockoutAdmin() {
 
       setSuccessMsg(`Partido ${form.match_code} actualizado`);
       setTimeout(() => setSuccessMsg(null), 3000);
-      fetchMatches();
+      loadData();
     } catch (err: any) {
       setErrorMsg(err?.message ?? "Error al guardar");
     } finally {
@@ -208,44 +235,6 @@ export default function KnockoutAdmin() {
     } finally {
       setDeleting(null);
     }
-  }
-
-  async function handleAdd(stage: string) {
-    const { data, error } = await supabase
-      .from("matches")
-      .insert({
-        match_code: "",
-        team_a: "TBD",
-        team_b: "TBD",
-        match_date: new Date().toISOString(),
-        stadium: null,
-        stage,
-        status: "upcoming",
-      })
-      .select()
-      .single();
-
-    if (error || !data) {
-      setErrorMsg(error?.message ?? "Error al crear partido");
-      return;
-    }
-
-    const newMatch: KnockoutMatch = {
-      id: data.id,
-      match_code: data.match_code,
-      team_a: data.team_a,
-      team_b: data.team_b,
-      match_date: data.match_date,
-      stadium: data.stadium,
-      stage: data.stage,
-      status: data.status,
-      actual_score_a: null,
-      actual_score_b: null,
-    };
-
-    setMatches((prev) => [...prev, newMatch]);
-    setForms((prev) => ({ ...prev, [newMatch.id]: newForm(newMatch) }));
-    setExpandedStage((prev) => ({ ...prev, [stage]: true }));
   }
 
   function toggleStage(stage: string) {
@@ -521,6 +510,59 @@ export default function KnockoutAdmin() {
                             </button>
                           </div>
                         </div>
+
+                      {(() => {
+                        const matchPreds = predictionsByCode[match.match_code] ?? [];
+                        const teamA = countries[match.team_a];
+                        const teamB = countries[match.team_b];
+                        return matchPreds.length > 0 ? (
+                          <div className="mt-3 overflow-hidden rounded-sm border border-border">
+                            <table className="min-w-full divide-y divide-border">
+                              <thead className="bg-neutral">
+                                <tr>
+                                  <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                                    Usuario
+                                  </th>
+                                  <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                                    {teamA?.name || match.team_a}
+                                  </th>
+                                  <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
+                                  <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                                    {teamB?.name || match.team_b}
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border bg-surface">
+                                {matchPreds.map((pred, i) => (
+                                  <tr
+                                    key={`${match.match_code}-${pred.display_name}`}
+                                    className={
+                                      i % 2 === 0 ? 'bg-surface' : 'bg-neutral/50'
+                                    }
+                                  >
+                                    <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
+                                      {pred.display_name}
+                                    </td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                                      {pred.predicted_score_a}
+                                    </td>
+                                    <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
+                                      -
+                                    </td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                                      {pred.predicted_score_b}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="mt-3 rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
+                            Aún no hay predicciones para este partido.
+                          </div>
+                        );
+                      })()}
                       </div>
                     );
                   })}

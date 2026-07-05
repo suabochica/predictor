@@ -84,8 +84,6 @@ function groupByCode<T extends { match_code: string }>(items: T[]): Record<strin
   }, {} as Record<string, T[]>);
 }
 
-
-
 export default function AdminTable() {
   const [predictions, setPredictions] = useState<AdminPrediction[]>([]);
   const [allMatches, setAllMatches] = useState<AllMatch[]>([]);
@@ -94,7 +92,6 @@ export default function AdminTable() {
   const [saving, setSaving] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showGroups, setShowGroups] = useState(false);
 
   useEffect(() => {
     fetchPredictions();
@@ -107,13 +104,13 @@ export default function AdminTable() {
         .select(
           'id, match_code, team_a, team_b, match_date, group_name, stage, actual_score_a, actual_score_b, status',
         )
+        .eq('stage', 'group')
         .order('match_date', { ascending: false });
 
       if (matchErr) throw matchErr;
 
       const { data: dbPredictions, error: predErr } = await supabase
-        .from('predictions')
-        .select('match_id, predicted_score_a, predicted_score_b, user_id, users(display_name)');
+        .rpc('polla_get_all_predictions');
 
       if (predErr) throw predErr;
 
@@ -157,13 +154,25 @@ export default function AdminTable() {
 
       if (dbPredictions && dbPredictions.length > 0) {
         const rows: AdminPrediction[] = [];
+        const codeSet = new Set(matches.map((m) => m.match_code));
 
         for (const p of dbPredictions as any[]) {
-          const matchCode = uuidToCode[p.match_id];
-          if (!matchCode) continue;
+          const matchCode = p.match_code ?? uuidToCode[p.match_id];
+          if (!matchCode) {
+            console.warn('AdminTable: prediction missing match_code', p);
+            continue;
+          }
+
+          if (!codeSet.has(matchCode)) {
+            console.warn(
+              'AdminTable: prediction match_code not in matches list',
+              { matchCode, match_id: p.match_id },
+            );
+            continue;
+          }
 
           const dbMatch = (dbMatches as any[]).find(
-            (dm: any) => dm.id === p.match_id,
+            (dm: any) => dm.match_code === matchCode,
           );
           if (!dbMatch) continue;
 
@@ -178,7 +187,7 @@ export default function AdminTable() {
             actual_score_a: dbMatch.actual_score_a,
             actual_score_b: dbMatch.actual_score_b,
             status: dbMatch.status,
-            display_name: p.users?.display_name ?? 'Unknown',
+            display_name: p.display_name ?? 'Unknown',
             predicted_score_a: p.predicted_score_a,
             predicted_score_b: p.predicted_score_b,
           });
@@ -296,13 +305,6 @@ export default function AdminTable() {
               if (!aFinished && bFinished) return -1;
               return a.localeCompare(b);
             });
-
-          const groupCodes = codes.filter(
-            (c) => dateMatches.find((m) => m.match_code === c)?.stage === 'group'
-          );
-          const knockoutCodes = codes.filter(
-            (c) => dateMatches.find((m) => m.match_code === c)?.stage !== 'group'
-          );
 
           function renderMatch(code: string) {
             const match = dateMatches.find((m) => m.match_code === code)!;
@@ -429,23 +431,7 @@ export default function AdminTable() {
                 {formatDateLabel(dateMatches[0].match_date)}
               </h2>
 
-              {knockoutCodes.map(renderMatch)}
-
-              {groupCodes.length > 0 && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowGroups((prev) => !prev)}
-                    className="flex items-center gap-2 rounded-sm border border-border px-3 py-1.5 text-body-sm font-label text-muted hover:text-primary transition-colors mb-3"
-                  >
-                    <span className="text-lg leading-none">
-                      {showGroups ? '−' : '+'}
-                    </span>
-                    Fase de grupos ({groupCodes.length} partidos)
-                  </button>
-                  {showGroups && groupCodes.map(renderMatch)}
-                </div>
-              )}
+              {codes.map(renderMatch)}
             </div>
           );
         })}
