@@ -141,8 +141,6 @@ export default function PredictionForm({
         .select(
           "id, match_code, team_a, team_b, match_date, group_name, stadium, status, stage, actual_score_a, actual_score_b",
         )
-        .neq("team_a", "TBD")
-        .neq("team_b", "TBD")
         .order("match_date", { ascending: false })
         .abortSignal(controller.signal);
 
