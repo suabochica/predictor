@@ -119,6 +119,12 @@ From the `predictor` directory, run Claude with this prompt:
 read @apps/fantasy/data/stats/raw_opta_stats/README.md and apply it to @"apps/fantasy/data/stats/raw_opta_stats/NED vs MAR.ods" using @apps/fantasy/data/stats/raw_opta_stats/players_rows_new_version.csv
 ```
 
+For opencode code agent please use the next prompt:
+
+```txt
+Read @apps/fantasy/data/stats/raw_opta_stats/README.md and apply it to @apps/fantasy/data/stats/raw_opta_stats/ESP vs AUT.ods using @apps/fantasy/data/stats/raw_opta_stats/add_db_name_col_opencode.py to modify teh ODS file and the @apps/fantasy/data/stats/raw_opta_stats/players_rows_new_version.csv to map the players name in the DB name column.
+```
+
 This adds the **`DB Name`** column to T1/T2 by matching the abbreviated Opta names
 (`V. van Dijk` → `Virgil van Dijk`) against the player DB export.
 

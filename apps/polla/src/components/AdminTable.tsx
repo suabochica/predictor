@@ -27,6 +27,19 @@ interface MatchInfo {
   status: string;
 }
 
+interface AllMatch {
+  id: string;
+  match_code: string;
+  team_a: string;
+  team_b: string;
+  match_date: string;
+  group_name: string | null;
+  stage: string;
+  actual_score_a: number | null;
+  actual_score_b: number | null;
+  status: string;
+}
+
 interface ScoreFormState {
   scoreA: string;
   scoreB: string;
@@ -56,31 +69,29 @@ function dateKey(dateStr: string): string {
     .join('-');
 }
 
-function groupByDate(preds: AdminPrediction[]): Record<string, AdminPrediction[]> {
-  return preds.reduce((acc, p) => {
-    const dk = dateKey(p.match_date);
-    (acc[dk] ??= []).push(p);
+function groupByDate<T extends { match_date: string }>(items: T[]): Record<string, T[]> {
+  return items.reduce((acc, item) => {
+    const dk = dateKey(item.match_date);
+    (acc[dk] ??= []).push(item);
     return acc;
-  }, {} as Record<string, AdminPrediction[]>);
+  }, {} as Record<string, T[]>);
 }
 
-function groupByMatch(preds: AdminPrediction[]): Record<string, AdminPrediction[]> {
-  return preds.reduce((acc, p) => {
-    (acc[p.match_code] ??= []).push(p);
+function groupByCode<T extends { match_code: string }>(items: T[]): Record<string, T[]> {
+  return items.reduce((acc, item) => {
+    (acc[item.match_code] ??= []).push(item);
     return acc;
-  }, {} as Record<string, AdminPrediction[]>);
+  }, {} as Record<string, T[]>);
 }
-
-
 
 export default function AdminTable() {
   const [predictions, setPredictions] = useState<AdminPrediction[]>([]);
+  const [allMatches, setAllMatches] = useState<AllMatch[]>([]);
   const [matchInfo, setMatchInfo] = useState<Record<string, MatchInfo>>({});
   const [scoreForms, setScoreForms] = useState<Record<string, ScoreFormState>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showGroups, setShowGroups] = useState(false);
 
   useEffect(() => {
     fetchPredictions();
@@ -88,60 +99,106 @@ export default function AdminTable() {
 
   async function fetchPredictions() {
     try {
-      const { data, error } = await supabase
-        .from('predictions')
-        .select(`
-          match_id,
-          predicted_score_a,
-          predicted_score_b,
-          users!inner(display_name),
-          matches!inner(id, match_code, team_a, team_b, match_date, group_name, stage, actual_score_a, actual_score_b, status)
-        `)
-        .order('match_code', { foreignTable: 'matches' })
-        .order('display_name', { foreignTable: 'users' });
+      const { data: dbMatches, error: matchErr } = await supabase
+        .from('matches')
+        .select(
+          'id, match_code, team_a, team_b, match_date, group_name, stage, actual_score_a, actual_score_b, status',
+        )
+        .eq('stage', 'group')
+        .order('match_date', { ascending: false });
 
-      if (error) throw error;
+      if (matchErr) throw matchErr;
 
-      if (data) {
-        const info: Record<string, MatchInfo> = {};
-        const forms: Record<string, ScoreFormState> = {};
+      const { data: dbPredictions, error: predErr } = await supabase
+        .rpc('polla_get_all_predictions');
 
-        const rows = (data as any[]).map((row: any) => {
-          const code = row.matches.match_code;
+      if (predErr) throw predErr;
 
-          if (!info[code]) {
-            info[code] = {
-              id: row.matches.id,
-              match_code: code,
-              actual_score_a: row.matches.actual_score_a,
-              actual_score_b: row.matches.actual_score_b,
-              status: row.matches.status,
-            };
-            forms[code] = {
-              scoreA: row.matches.actual_score_a?.toString() ?? '',
-              scoreB: row.matches.actual_score_b?.toString() ?? '',
-            };
+      const info: Record<string, MatchInfo> = {};
+      const forms: Record<string, ScoreFormState> = {};
+      const matches: AllMatch[] = [];
+      const uuidToCode: Record<string, string> = {};
+
+      if (dbMatches) {
+        for (const m of dbMatches as any[]) {
+          info[m.match_code] = {
+            id: m.id,
+            match_code: m.match_code,
+            actual_score_a: m.actual_score_a,
+            actual_score_b: m.actual_score_b,
+            status: m.status,
+          };
+          forms[m.match_code] = {
+            scoreA: m.actual_score_a?.toString() ?? '',
+            scoreB: m.actual_score_b?.toString() ?? '',
+          };
+          uuidToCode[m.id] = m.match_code;
+          matches.push({
+            id: m.id,
+            match_code: m.match_code,
+            team_a: m.team_a,
+            team_b: m.team_b,
+            match_date: m.match_date,
+            group_name: m.group_name,
+            stage: m.stage,
+            actual_score_a: m.actual_score_a,
+            actual_score_b: m.actual_score_b,
+            status: m.status,
+          });
+        }
+      }
+
+      setMatchInfo(info);
+      setScoreForms(forms);
+      setAllMatches(matches);
+
+      if (dbPredictions && dbPredictions.length > 0) {
+        const rows: AdminPrediction[] = [];
+        const codeSet = new Set(matches.map((m) => m.match_code));
+
+        for (const p of dbPredictions as any[]) {
+          const matchCode = p.match_code ?? uuidToCode[p.match_id];
+          if (!matchCode) {
+            console.warn('AdminTable: prediction missing match_code', p);
+            continue;
           }
 
-          return {
-            match_id: row.matches.id,
-            match_code: code,
-            team_a: row.matches.team_a,
-            team_b: row.matches.team_b,
-            match_date: row.matches.match_date,
-            group_name: row.matches.group_name,
-            stage: row.matches.stage,
-            actual_score_a: row.matches.actual_score_a,
-            actual_score_b: row.matches.actual_score_b,
-            status: row.matches.status,
-            display_name: row.users.display_name,
-            predicted_score_a: row.predicted_score_a,
-            predicted_score_b: row.predicted_score_b,
-          };
+          if (!codeSet.has(matchCode)) {
+            console.warn(
+              'AdminTable: prediction match_code not in matches list',
+              { matchCode, match_id: p.match_id },
+            );
+            continue;
+          }
+
+          const dbMatch = (dbMatches as any[]).find(
+            (dm: any) => dm.match_code === matchCode,
+          );
+          if (!dbMatch) continue;
+
+          rows.push({
+            match_id: dbMatch.id,
+            match_code: matchCode,
+            team_a: dbMatch.team_a,
+            team_b: dbMatch.team_b,
+            match_date: dbMatch.match_date,
+            group_name: dbMatch.group_name,
+            stage: dbMatch.stage,
+            actual_score_a: dbMatch.actual_score_a,
+            actual_score_b: dbMatch.actual_score_b,
+            status: dbMatch.status,
+            display_name: p.display_name ?? 'Unknown',
+            predicted_score_a: p.predicted_score_a,
+            predicted_score_b: p.predicted_score_b,
+          });
+        }
+
+        rows.sort((a, b) => {
+          const dateCmp = new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
+          if (dateCmp !== 0) return dateCmp;
+          return a.match_code.localeCompare(b.match_code);
         });
 
-        setMatchInfo(info);
-        setScoreForms(forms);
         setPredictions(rows);
       }
     } catch (err: any) {
@@ -206,17 +263,18 @@ export default function AdminTable() {
     );
   }
 
-  if (predictions.length === 0) {
+  if (allMatches.length === 0) {
     return (
       <div className="rounded-sm border border-warning/30 bg-warning/10 px-6 py-8 text-center">
         <p className="text-warning text-body-md">
-          No se encontraron predicciones. Los usuarios aún no han enviado ninguna predicción.
+          No se encontraron partidos disponibles.
         </p>
       </div>
     );
   }
 
-  const matchesByDate = groupByDate(predictions);
+  const matchesByDate = groupByDate(allMatches);
+  const predictionsByCode = groupByCode(predictions);
 
   return (
     <div className="space-y-6">
@@ -235,28 +293,24 @@ export default function AdminTable() {
           if (!aPast && bPast) return -1;
           return a.localeCompare(b);
         })
-        .map(([date, datePreds]) => {
-          const byMatch = groupByMatch(datePreds);
-          const allCodes = Object.keys(byMatch).sort((a, b) => {
-            const aFinished = byMatch[a][0]?.status === 'finished';
-            const bFinished = byMatch[b][0]?.status === 'finished';
-            if (aFinished && !bFinished) return 1;
-            if (!aFinished && bFinished) return -1;
-            return a.localeCompare(b);
-          });
-
-          const groupCodes = allCodes.filter(
-            (c) => byMatch[c][0]?.stage === 'group'
-          );
-          const knockoutCodes = allCodes.filter(
-            (c) => byMatch[c][0]?.stage !== 'group'
-          );
+        .map(([date, dateMatches]) => {
+          const codes = dateMatches
+            .map((m) => m.match_code)
+            .sort((a, b) => {
+              const matchA = matchInfo[a];
+              const matchB = matchInfo[b];
+              const aFinished = matchA?.status === 'finished';
+              const bFinished = matchB?.status === 'finished';
+              if (aFinished && !bFinished) return 1;
+              if (!aFinished && bFinished) return -1;
+              return a.localeCompare(b);
+            });
 
           function renderMatch(code: string) {
-            const matchPreds = byMatch[code];
-            const first = matchPreds[0];
-            const teamA = countries[first.team_a];
-            const teamB = countries[first.team_b];
+            const match = dateMatches.find((m) => m.match_code === code)!;
+            const matchPreds = predictionsByCode[code] ?? [];
+            const teamA = countries[match.team_a];
+            const teamB = countries[match.team_b];
             const alreadyScored = hasScore(code);
             const mi = matchInfo[code];
             const form = scoreForms[code];
@@ -267,11 +321,11 @@ export default function AdminTable() {
             return (
               <div key={code} className="mb-4">
                 <h3 className="font-heading text-body-md font-semibold text-primary mb-2">
-                  {teamA?.flag} {teamA?.name || first.team_a}
+                  {teamA?.flag} {teamA?.name || match.team_a}
                   {' vs '}
-                  {teamB?.flag} {teamB?.name || first.team_b}
+                  {teamB?.flag} {teamB?.name || match.team_b}
                     <span className="text-muted font-normal text-body-sm ml-2">
-                      {code} · {formatTime(first.match_date)} · {first.group_name || first.stage || 'N/D'}
+                      {code} · {formatTime(match.match_date)} · {match.group_name || match.stage || 'N/D'}
                     </span>
                 </h3>
 
@@ -322,45 +376,51 @@ export default function AdminTable() {
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-sm border border-border">
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-neutral">
-                      <tr>
-                        <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                          Usuario
-                        </th>
-                        <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                          {teamA?.name || first.team_a}
-                        </th>
-                        <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
-                        <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                          {teamB?.name || first.team_b}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-surface">
-                      {matchPreds.map((pred, i) => (
-                        <tr
-                          key={`${code}-${pred.display_name}`}
-                          className={i % 2 === 0 ? 'bg-surface' : 'bg-neutral/50'}
-                        >
-                          <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
-                            {pred.display_name}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
-                            {pred.predicted_score_a}
-                          </td>
-                          <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
-                            -
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
-                            {pred.predicted_score_b}
-                          </td>
+                {matchPreds.length > 0 ? (
+                  <div className="overflow-hidden rounded-sm border border-border">
+                    <table className="min-w-full divide-y divide-border">
+                      <thead className="bg-neutral">
+                        <tr>
+                          <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
+                            Usuario
+                          </th>
+                          <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                            {teamA?.name || match.team_a}
+                          </th>
+                          <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
+                          <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
+                            {teamB?.name || match.team_b}
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-border bg-surface">
+                        {matchPreds.map((pred, i) => (
+                          <tr
+                            key={`${code}-${pred.display_name}`}
+                            className={i % 2 === 0 ? 'bg-surface' : 'bg-neutral/50'}
+                          >
+                            <td className="whitespace-nowrap px-4 py-2 text-body-sm font-medium text-primary">
+                              {pred.display_name}
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                              {pred.predicted_score_a}
+                            </td>
+                            <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
+                              -
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-2 text-center text-body-sm">
+                              {pred.predicted_score_b}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
+                    Aún no hay predicciones para este partido.
+                  </div>
+                )}
               </div>
             );
           }
@@ -368,26 +428,10 @@ export default function AdminTable() {
           return (
             <div key={date} className="space-y-4">
               <h2 className="font-heading text-h2 font-semibold text-primary">
-                {formatDateLabel(datePreds[0].match_date)}
+                {formatDateLabel(dateMatches[0].match_date)}
               </h2>
 
-              {knockoutCodes.map(renderMatch)}
-
-              {groupCodes.length > 0 && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowGroups((prev) => !prev)}
-                    className="flex items-center gap-2 rounded-sm border border-border px-3 py-1.5 text-body-sm font-label text-muted hover:text-primary transition-colors mb-3"
-                  >
-                    <span className="text-lg leading-none">
-                      {showGroups ? '−' : '+'}
-                    </span>
-                    Fase de grupos ({groupCodes.length} partidos)
-                  </button>
-                  {showGroups && groupCodes.map(renderMatch)}
-                </div>
-              )}
+              {codes.map(renderMatch)}
             </div>
           );
         })}
