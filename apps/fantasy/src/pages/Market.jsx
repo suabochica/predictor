@@ -19,7 +19,7 @@ export default function Market() {
   const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
   const { players: allPlayers, loading: playersLoading, refresh: refreshPlayers } = usePlayers({ withOwner: true });
-  const { totals: playerTotals, activePointsById } = usePlayerTotals();
+  const { totals: playerTotals, activePointsById, pointsByPlayerByMatchday, matchdayColumns } = usePlayerTotals();
   const { transfers, transfersUsedThisWindow, transfersRemaining, refresh: refreshTransfers } = useTransfers();
   const { lockTimeFor } = useMatchdayLocks(activeTransferWindow?.matchday_id);
 
@@ -130,6 +130,7 @@ export default function Market() {
         if (!effective) return false;
       }
       if (filters.freeAgentsOnly && p.owner !== null) return false;
+      if (filters.hideEliminated && p.is_eliminated) return false;
       return true;
     });
   }, [allPlayers, filters, effectiveBudget, offerOut]);
@@ -137,6 +138,7 @@ export default function Market() {
   function sortValue(p, key) {
     if (key === 'current_price') return p.current_price ?? p.price ?? 0;
     if (key === 'total_points') return activePointsById[p.id] ?? 0;
+    if (key.startsWith('md:')) return pointsByPlayerByMatchday[p.id]?.[Number(key.slice(3))] ?? 0;
     if (['name', 'country', 'position'].includes(key)) return p[key] ?? '';
     if (key === 'owner') return p.owner?.teamName ?? '';
     return playerTotals[p.id]?.[key] ?? 0;
@@ -489,9 +491,19 @@ export default function Market() {
               <Th onClick={() => toggleSort('assists')} className="hidden sm:table-cell text-center cursor-pointer select-none">
                 A {sort.key === 'assists' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
-              <Th onClick={() => toggleSort('total_points')} className="hidden sm:table-cell text-center cursor-pointer select-none">
+              <Th onClick={() => toggleSort('total_points')} className="text-center cursor-pointer select-none">
                 Pts {sort.key === 'total_points' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
+              {matchdayColumns.map((col) => (
+                <Th
+                  key={col.id}
+                  onClick={() => toggleSort(`md:${col.id}`)}
+                  className="text-center cursor-pointer select-none"
+                  title={col.title}
+                >
+                  {col.label} {sort.key === `md:${col.id}` ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                </Th>
+              ))}
               <Th onClick={() => toggleSort('current_price')} className="text-right cursor-pointer select-none">
                 Precio {sort.key === 'current_price' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
@@ -530,6 +542,8 @@ export default function Market() {
                   noTransfersLeft={noTransfersLeft}
                   onSwap={setConfirmSwapIn}
                   stats={{ ...(playerTotals[player.id] ?? {}), total_points: activePointsById[player.id] }}
+                  matchdayColumns={matchdayColumns}
+                  mdPoints={pointsByPlayerByMatchday[player.id]}
                 />
               );
             })}

@@ -94,6 +94,17 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
           <span className="text-xs text-secondary">Solo agentes libres</span>
         </label>
 
+        {/* Hide eliminated toggle */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={filters.hideEliminated ?? false}
+            onChange={(e) => set('hideEliminated', e.target.checked)}
+            className="accent-tertiary w-3.5 h-3.5"
+          />
+          <span className="text-xs text-secondary">Ocultar eliminados</span>
+        </label>
+
         <span className="text-xs text-muted ml-auto">{resultCount} jugadores</span>
       </div>
     </div>

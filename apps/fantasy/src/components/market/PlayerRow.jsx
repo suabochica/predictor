@@ -21,6 +21,8 @@ export default function PlayerRow({
   noTransfersLeft,
   onSwap,
   stats,
+  matchdayColumns = [],
+  mdPoints,
 }) {
   let actionLabel = 'Elige jugador para intercambiar';
   let disabled = true;
@@ -101,10 +103,16 @@ export default function PlayerRow({
         <StatTd value={stats?.assists} />
 
         {/* Pts */}
-        <StatTd
-          value={fmtPts(stats?.total_points)}
-          className="font-semibold text-tertiary hidden sm:table-cell"
-        />
+        <Td className="py-2 text-center text-xs tabular-nums font-semibold text-tertiary">
+          {fmtPts(stats?.total_points)}
+        </Td>
+
+        {/* Per-matchday points */}
+        {matchdayColumns.map((col) => (
+          <Td key={col.id} className="py-2 text-center text-xs tabular-nums text-secondary">
+            {fmtPts(mdPoints?.[col.id])}
+          </Td>
+        ))}
 
         {/* Price */}
         <Td className="py-2 text-right text-sm font-bold text-tertiary whitespace-nowrap">
