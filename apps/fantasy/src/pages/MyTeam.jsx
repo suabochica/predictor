@@ -30,7 +30,7 @@ function normalizeSquad(teamPlayers) {
 
 
 export default function MyTeam() {
-  const { db } = useCompetition();
+  const { db, competitionId } = useCompetition();
   const { team, players, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { totals: totalsById } = usePlayerTotals();
   const { activeMatchday, refreshTeam } = useLeague();
@@ -163,8 +163,13 @@ export default function MyTeam() {
   useEffect(() => {
     if (!team) return;
     const channel = supabase
-      .channel('myteam-team-players-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_players' }, () => {
+      .channel(`myteam-team-players-rt-${competitionId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'team_players',
+        filter: `competition_id=eq.${competitionId}`,
+      }, () => {
         refreshSquad();
         refreshTeam();
       })

@@ -19,21 +19,25 @@ export function AuctionProvider({ children }) {
     fetchOwnedPlayerIds();
     fetchPlayerOwners();
 
+    // Every binding is filtered, not just the channel renamed: without the filter
+    // the server pushes every row change on the table, and the auction_state
+    // handler below would blindly replace this competition's state with another's.
+    const scope = `competition_id=eq.${competitionId}`;
     const channel = supabase
-      .channel('auction-bids')
+      .channel(`auction-bids-${competitionId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'auction_bids' },
+        { event: 'INSERT', schema: 'public', table: 'auction_bids', filter: scope },
         () => { fetchBids(); }
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'auction_bids' },
+        { event: 'UPDATE', schema: 'public', table: 'auction_bids', filter: scope },
         () => { fetchBids(); }
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'auction_state' },
+        { event: 'UPDATE', schema: 'public', table: 'auction_state', filter: scope },
         (payload) => {
           setAuctionState(payload.new);
           fetchBids();
@@ -43,7 +47,7 @@ export function AuctionProvider({ children }) {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'team_players' },
+        { event: 'INSERT', schema: 'public', table: 'team_players', filter: scope },
         () => {
           fetchOwnedPlayerIds();
           fetchPlayerOwners();

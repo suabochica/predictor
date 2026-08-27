@@ -8,7 +8,7 @@ const LeagueContext = createContext(null);
 
 export function LeagueProvider({ children }) {
   const { user } = useAuth();
-  const { db, competition } = useCompetition();
+  const { db, competition, competitionId } = useCompetition();
   const [team, setTeam] = useState(null);
   const [activeMatchday, setActiveMatchday] = useState(null);
   const [activeTransferWindow, setActiveTransferWindow] = useState(null);
@@ -21,11 +21,19 @@ export function LeagueProvider({ children }) {
     }
     Promise.all([fetchTeam(), fetchMatchdayAndWindow()]).finally(() => setLoading(false));
 
+    // The channel name must be unique per competition (a shared name collides) AND
+    // the binding must carry a filter — renaming alone changes nothing, the server
+    // still pushes every row change on the table.
     const channel = supabase
-      .channel('league-team')
+      .channel(`league-team-${competitionId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'teams' },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'teams',
+          filter: `competition_id=eq.${competitionId}`,
+        },
         () => { fetchTeam(); }
       )
       .subscribe();

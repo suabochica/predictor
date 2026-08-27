@@ -16,7 +16,7 @@ import PlayerRow from '../components/market/PlayerRow';
 import { useCompetition } from '../context/CompetitionContext';
 
 export default function Market() {
-  const { db } = useCompetition();
+  const { db, competitionId } = useCompetition();
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
@@ -168,8 +168,13 @@ export default function Market() {
   useEffect(() => {
     if (!team) return;
     const channel = supabase
-      .channel('market-team-players-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_players' }, () => {
+      .channel(`market-team-players-rt-${competitionId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'team_players',
+        filter: `competition_id=eq.${competitionId}`,
+      }, () => {
         refreshSquad();
         refreshTeam();
         refreshPlayers();

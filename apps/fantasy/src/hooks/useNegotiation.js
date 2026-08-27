@@ -5,7 +5,7 @@ import { TRANSFER_CAP_KNOCKOUT } from '../config/constants';
 import { useCompetition } from '../context/CompetitionContext';
 
 export function useNegotiation() {
-  const { db, competition } = useCompetition();
+  const { db, competition, competitionId } = useCompetition();
   const { team } = useLeague();
   const [negWindow, setNegWindow] = useState(null);
   const [pool, setPool] = useState([]);
@@ -163,8 +163,17 @@ export function useNegotiation() {
     refresh();
 
     const channel = supabase
-      .channel('negotiation-window-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'negotiation_windows' }, () => refresh())
+      .channel(`negotiation-window-rt-${competitionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'negotiation_windows',
+          filter: `competition_id=eq.${competitionId}`,
+        },
+        () => refresh()
+      )
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [team?.id]);

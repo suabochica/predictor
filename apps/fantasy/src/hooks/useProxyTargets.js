@@ -16,6 +16,9 @@ export function useProxyTargets() {
     setAutoBidEnabled(!!team.auto_bid_enabled);
     fetchTargets();
 
+    // Realtime allows one filter per binding, and user_id is the discriminating
+    // one here. A user with targets in two competitions gets a spurious wake-up
+    // from the other one — harmless, since fetchTargets() is competition-scoped.
     const channel = supabase
       .channel(`proxy-targets-${team.id}`)
       .on(
