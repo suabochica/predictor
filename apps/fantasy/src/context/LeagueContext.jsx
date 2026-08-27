@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useAuth } from '@predictor/supabase';
+import { useCompetition } from './CompetitionContext';
 import { LOCK_LEAD_MINUTES, TRANSFER_CAP_ROUND_ROBIN, TRANSFER_CAP_KNOCKOUT } from '../config/constants';
 
 const LeagueContext = createContext(null);
 
 export function LeagueProvider({ children }) {
   const { user } = useAuth();
+  const { db } = useCompetition();
   const [team, setTeam] = useState(null);
   const [activeMatchday, setActiveMatchday] = useState(null);
   const [activeTransferWindow, setActiveTransferWindow] = useState(null);
@@ -32,7 +34,7 @@ export function LeagueProvider({ children }) {
   }, [user]);
 
   async function fetchTeam() {
-    const { data } = await supabase
+    const { data } = await db
       .from('teams')
       .select('*')
       .eq('user_id', user.id)
@@ -41,7 +43,7 @@ export function LeagueProvider({ children }) {
   }
 
   async function fetchMatchdayAndWindow() {
-    const { data: matchdays } = await supabase.from('matchdays').select('*');
+    const { data: matchdays } = await db.from('matchdays').select('*');
 
     if (!matchdays?.length) {
       setActiveMatchday(null);
@@ -51,7 +53,7 @@ export function LeagueProvider({ children }) {
 
     // Window timing is derived purely from real kickoff times (matches.match_date),
     // NOT from the admin's is_completed flag (that drives scoring only).
-    const { data: matches } = await supabase
+    const { data: matches } = await db
       .from('matches')
       .select('matchday_id, match_date');
 

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useLeague } from '../context/LeagueContext';
+import { useCompetition } from '../context/CompetitionContext';
 
 export function useTeam() {
+  const { db } = useCompetition();
   const { team } = useLeague();
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ export function useTeam() {
   }, [team]);
 
   async function fetchTeamPlayers() {
-    const { data } = await supabase
+    const { data } = await db
       .from('team_players')
       .select('*, players(*)')
       .eq('team_id', team.id);

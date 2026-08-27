@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
+import { useCompetition } from '../context/CompetitionContext';
 
 export function useStandings() {
+  const { db } = useCompetition();
   const [standings, setStandings] = useState([]);
   const [matchdays, setMatchdays] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,13 +13,13 @@ export function useStandings() {
 
   async function fetchAll() {
     const [teamsRes, standingsRes, matchdaysRes] = await Promise.all([
-      supabase
+      db
         .from('teams')
         .select('id, name, user_id, users(display_name)'),
-      supabase
+      db
         .from('fantasy_standings')
         .select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
-      supabase
+      db
         .from('matchdays')
         .select('id, name, wc_stage, is_completed')
         .order('id'),

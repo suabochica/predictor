@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
+import { useCompetition } from '../context/CompetitionContext';
 
 export function usePlayers(filters = {}) {
+  const { db } = useCompetition();
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,12 +13,12 @@ export function usePlayers(filters = {}) {
   async function fetchPlayers() {
     let ownedIds = [];
     if (filters.available) {
-      const { data: owned } = await supabase.from('team_players').select('player_id');
+      const { data: owned } = await db.from('team_players').select('player_id');
       ownedIds = (owned ?? []).map((tp) => tp.player_id);
     }
 
     function buildQuery() {
-      let q = supabase.from('players').select('*').order('current_price', { ascending: false });
+      let q = db.from('players').select('*').order('current_price', { ascending: false });
       if (filters.position) q = q.eq('position', filters.position);
       if (filters.maxPrice) q = q.lte('current_price', filters.maxPrice);
       if (filters.search) q = q.ilike('name', `%${filters.search}%`);
@@ -42,7 +43,7 @@ export function usePlayers(filters = {}) {
       // Fetch ownership with a separate query rather than an embedded join:
       // PostgREST's nested embed returns empty for cross-team rosters here,
       // so we mirror the auction's working pattern (see AuctionContext).
-      const { data: rosters } = await supabase
+      const { data: rosters } = await db
         .from('team_players')
         .select('player_id, teams(id, name, user_id)');
       const ownerByPlayer = new Map();

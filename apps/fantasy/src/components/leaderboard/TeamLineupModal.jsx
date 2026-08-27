@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
 import LineupGrid from '../team/LineupGrid';
 import BenchList from '../team/BenchList';
 import PointsBreakdownModal from '../team/PointsBreakdownModal';
 import { getActivePoints, sumSeasonPointsByPlayer } from '../../lib/scoring';
+import { useCompetition } from '../../context/CompetitionContext';
 
 const LINEUP_SELECT =
   'is_starting, is_captain, bench_order, players(id, name, country, country_code, position, is_eliminated)';
@@ -11,6 +11,7 @@ const LINEUP_SELECT =
 const noop = () => {};
 
 export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClose }) {
+  const { db } = useCompetition();
   const [rows, setRows] = useState(null); // null = loading, [] = none found
   const [scoringSystem, setScoringSystem] = useState('opta');
   const [liveStats, setLiveStats] = useState({});
@@ -27,7 +28,7 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
         let data = null;
 
         if (matchdayId != null) {
-          const res = await supabase
+          const res = await db
             .from('lineups')
             .select(LINEUP_SELECT)
             .eq('team_id', entry.team_id)
@@ -37,7 +38,7 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
         }
 
         if (!data || data.length === 0) {
-          const { data: recent, error: recentErr } = await supabase
+          const { data: recent, error: recentErr } = await db
             .from('lineups')
             .select('matchday_id')
             .eq('team_id', entry.team_id)
@@ -46,7 +47,7 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
             .limit(1);
           if (recentErr) throw recentErr;
           if (recent && recent.length > 0) {
-            const res = await supabase
+            const res = await db
               .from('lineups')
               .select(LINEUP_SELECT)
               .eq('team_id', entry.team_id)
@@ -57,7 +58,7 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
         }
 
         if (!data || data.length === 0) {
-          const res = await supabase
+          const res = await db
             .from('lineups')
             .select(LINEUP_SELECT)
             .eq('team_id', entry.team_id)
@@ -95,11 +96,11 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
         { data: liveData },
         { data: allData },
       ] = await Promise.all([
-        supabase.from('auction_state').select('scoring_system').single(),
+        db.from('auction_state').select('scoring_system').order('id').limit(1).maybeSingle(),
         matchdayId
-          ? supabase.from('player_stats').select('*').eq('matchday_id', matchdayId).in('player_id', playerIds)
+          ? db.from('player_stats').select('*').eq('matchday_id', matchdayId).in('player_id', playerIds)
           : Promise.resolve({ data: [] }),
-        supabase.from('player_stats').select('*').in('player_id', playerIds),
+        db.from('player_stats').select('*').in('player_id', playerIds),
       ]);
       if (cancelled) return;
       setScoringSystem(sysData?.scoring_system ?? 'opta');

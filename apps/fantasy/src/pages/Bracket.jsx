@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
 import { useKnockout } from '../hooks/useKnockout';
 import { useStandings } from '../hooks/useStandings';
 import { generateChampionshipBracket } from '../lib/brackets';
 import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
+import { useCompetition } from '../context/CompetitionContext';
 
 // ── Match card ────────────────────────────────────────────────────────────
 
@@ -151,6 +151,7 @@ function Connector() {
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function Bracket() {
+  const { db } = useCompetition();
   const { matches, loading: matchesLoading } = useKnockout();
   const { standings, loading: standingsLoading } = useStandings();
   const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
@@ -170,7 +171,7 @@ export default function Bracket() {
     const teamIds = [...new Set(pairs.map((p) => p[1]))];
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data } = await db
         .from('fantasy_standings')
         .select('team_id, matchday_id, matchday_points')
         .in('matchday_id', mdIds)

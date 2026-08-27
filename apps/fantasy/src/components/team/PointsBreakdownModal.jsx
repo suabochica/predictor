@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
 import { breakdownPoints, aggregateBreakdown } from '../../lib/scoring';
 import { fmtPts, getPositionColor } from '../../lib/utils';
+import { useCompetition } from '../../context/CompetitionContext';
 
 export default function PointsBreakdownModal({ player, activeMatchdayId, isCaptain, onClose }) {
+  const { db } = useCompetition();
   const [allStats, setAllStats] = useState(null);
   const [scoringSystem, setScoringSystem] = useState('opta');
   const [loading, setLoading] = useState(true);
@@ -12,8 +13,8 @@ export default function PointsBreakdownModal({ player, activeMatchdayId, isCapta
     let cancelled = false;
     async function load() {
       const [{ data: statsData }, { data: sysData }] = await Promise.all([
-        supabase.from('player_stats').select('*').eq('player_id', player.id),
-        supabase.from('auction_state').select('scoring_system').single(),
+        db.from('player_stats').select('*').eq('player_id', player.id),
+        db.from('auction_state').select('scoring_system').order('id').limit(1).maybeSingle(),
       ]);
       if (cancelled) return;
       setAllStats(statsData ?? []);

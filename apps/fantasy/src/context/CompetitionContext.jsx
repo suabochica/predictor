@@ -113,6 +113,11 @@ export function CompetitionProvider({ children }) {
 
   // `db` is only built once the id resolves; CompetitionGate keeps descendants
   // from rendering (and firing competition_id=eq.undefined) until then.
+  //
+  // Its identity changes only when competitionId does — and that same change
+  // flips the `key` on LeagueProvider, remounting every consumer below. So a
+  // hook may safely leave `db` out of its dependency array: it can never observe
+  // a stale one.
   const db = useMemo(() => (competitionId == null ? null : createDb(competitionId)), [competitionId]);
 
   const value = useMemo(

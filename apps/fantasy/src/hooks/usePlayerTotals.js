@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
 import { sumSeasonPointsByPlayer, getActivePoints } from '../lib/scoring';
+import { useCompetition } from '../context/CompetitionContext';
 
 async function fetchAllPages(queryFn) {
   const PAGE = 1000;
@@ -17,6 +17,7 @@ async function fetchAllPages(queryFn) {
 }
 
 export function usePlayerTotals() {
+  const { db } = useCompetition();
   const [totals, setTotals] = useState({});
   const [activePointsById, setActivePointsById] = useState({});
   const [pointsByPlayerByMatchday, setPointsByPlayerByMatchday] = useState({});
@@ -26,9 +27,9 @@ export function usePlayerTotals() {
   useEffect(() => {
     async function load() {
       const [{ data: totalsData }, { data: sysData }, { data: matchdaysData }] = await Promise.all([
-        supabase.from('player_tournament_totals').select('*'),
-        supabase.from('auction_state').select('scoring_system').single(),
-        supabase.from('matchdays').select('id, name, wc_stage'),
+        db.from('player_tournament_totals').select('*'),
+        db.from('auction_state').select('scoring_system').order('id').limit(1).maybeSingle(),
+        db.from('matchdays').select('id, name, wc_stage'),
       ]);
 
       const map = {};
@@ -39,8 +40,8 @@ export function usePlayerTotals() {
       const matchdayById = Object.fromEntries((matchdaysData ?? []).map((md) => [md.id, md]));
 
       const [statsRows, playerRows] = await Promise.all([
-        fetchAllPages((from, to) => supabase.from('player_stats').select('*').range(from, to)),
-        fetchAllPages((from, to) => supabase.from('players').select('id, position').range(from, to)),
+        fetchAllPages((from, to) => db.from('player_stats').select('*').range(from, to)),
+        fetchAllPages((from, to) => db.from('players').select('id, position').range(from, to)),
       ]);
 
       const positionById = Object.fromEntries(playerRows.map((p) => [p.id, p.position]));

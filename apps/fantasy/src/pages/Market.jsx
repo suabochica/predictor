@@ -13,8 +13,10 @@ import { MAX_SQUAD_SIZE } from '../config/constants';
 import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import FilterBar from '../components/market/FilterBar';
 import PlayerRow from '../components/market/PlayerRow';
+import { useCompetition } from '../context/CompetitionContext';
 
 export default function Market() {
+  const { db } = useCompetition();
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
@@ -66,7 +68,7 @@ export default function Market() {
   }, [team?.id]);
 
   async function fetchNegotiationState() {
-    const { data: windows } = await supabase
+    const { data: windows } = await db
       .from('negotiation_windows')
       .select('*')
       .eq('status', 'open')
@@ -80,7 +82,7 @@ export default function Market() {
       setCommittedPlayerIds(new Set());
       return;
     }
-    const { data: offers } = await supabase
+    const { data: offers } = await db
       .from('negotiation_offers')
       .select('cash, offered_player_id')
       .eq('window_id', w.id)

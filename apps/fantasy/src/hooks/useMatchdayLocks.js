@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@predictor/supabase';
 import { LOCK_LEAD_MINUTES } from '../config/constants';
+import { useCompetition } from '../context/CompetitionContext';
 
 // Keys are FIFA 3-letter codes from matches.team_a/team_b (e.g. 'MEX', 'RSA').
 // Callers must pass player.country_code, NOT player.country.
 export function useMatchdayLocks(matchdayId) {
+  const { db } = useCompetition();
   const [kickoffByCode, setKickoffByCode] = useState({});
 
   useEffect(() => {
     if (!matchdayId) { setKickoffByCode({}); return; }
-    supabase
+    db
       .from('matches')
       .select('team_a, team_b, match_date')
       .eq('matchday_id', matchdayId)

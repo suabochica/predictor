@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
-import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT, WC_COMPETITION_ID } from '../config/constants';
+import { useCompetition } from './CompetitionContext';
+import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
 export function AuctionProvider({ children }) {
+  const { db, competitionId } = useCompetition();
   const [auctionState, setAuctionState] = useState(null);
   const [bids, setBids] = useState([]);
   const [ownedPlayerIds, setOwnedPlayerIds] = useState(new Set());
@@ -60,13 +62,13 @@ export function AuctionProvider({ children }) {
   }, [auctionState?.current_round]);
 
   async function fetchAuctionState() {
-    const { data } = await supabase.from('auction_state').select('*').order('id').limit(1).single();
+    const { data } = await db.from('auction_state').select('*').order('id').limit(1).single();
     setAuctionState(data);
     setLoading(false);
   }
 
   async function fetchBids() {
-    const { data } = await supabase
+    const { data } = await db
       .from('auction_bids')
       .select('*, players(name, position, price), users(display_name)')
       .order('created_at', { ascending: false });
@@ -74,12 +76,12 @@ export function AuctionProvider({ children }) {
   }
 
   async function fetchOwnedPlayerIds() {
-    const { data } = await supabase.from('team_players').select('player_id');
+    const { data } = await db.from('team_players').select('player_id');
     setOwnedPlayerIds(new Set((data ?? []).map((r) => r.player_id)));
   }
 
   async function fetchPlayerOwners() {
-    const { data } = await supabase
+    const { data } = await db
       .from('team_players')
       .select('player_id, teams(name, user_id)');
     const map = new Map();
@@ -120,7 +122,7 @@ export function AuctionProvider({ children }) {
   // ── Admin controls ──────────────────────────────────────────────────────────
 
   async function updateAuctionState(updates) {
-    const { error } = await supabase
+    const { error } = await db
       .from('auction_state')
       .update(updates)
       .eq('id', auctionState.id);
@@ -178,11 +180,11 @@ export function AuctionProvider({ children }) {
     // Read fresh from the DB rather than React state: realtime may not have
     // delivered this round's bids (or a round advance) into local state yet,
     // which previously caused contested players to be lost on early/quick resolves.
-    const { data: freshState } = await supabase
+    const { data: freshState } = await db
       .from('auction_state').select('current_round').order('id').limit(1).single();
     const round = freshState?.current_round ?? auctionState.current_round;
 
-    const { data: freshBids } = await supabase
+    const { data: freshBids } = await db
       .from('auction_bids')
       .select('*, players(name, position, price), users(display_name)')
       .eq('round_number', round);
@@ -223,7 +225,7 @@ export function AuctionProvider({ children }) {
           // Carry the top bid into the next round, owned by the top bidder.
           // upsert + ignoreDuplicates against auction_bids_unique_user_player_round
           // (migration 021) keeps a re-run of resolveRound() on the same round idempotent.
-          const { error: coErr } = await supabase.from('auction_bids').upsert(
+          const { error: coErr } = await db.from('auction_bids').upsert(
             {
               user_id: topBid.user_id,
               player_id: playerId,
@@ -242,7 +244,7 @@ export function AuctionProvider({ children }) {
       if (!winner) continue;
 
       // 1. Mark winning bid
-      const { error: bidErr } = await supabase
+      const { error: bidErr } = await db
         .from('auction_bids')
         .update({ is_winning: true })
         .eq('id', winner.id);
@@ -253,7 +255,7 @@ export function AuctionProvider({ children }) {
       }
 
       // 2. Look up winner's team
-      const { data: team, error: teamErr } = await supabase
+      const { data: team, error: teamErr } = await db
         .from('teams')
         .select('id, budget_remaining')
         .eq('user_id', winner.user_id)
@@ -265,7 +267,7 @@ export function AuctionProvider({ children }) {
       }
 
       // 3. Safety net: skip if team already has a full squad. Also fetch positions for GK check.
-      const { data: currentSquad } = await supabase
+      const { data: currentSquad } = await db
         .from('team_players')
         .select('player_id, players(position)')
         .eq('team_id', team.id);
@@ -287,7 +289,7 @@ export function AuctionProvider({ children }) {
       }
 
       // 4. Assign player to team (ignore if already assigned from a re-run)
-      const { error: tpErr } = await supabase.from('team_players').upsert(
+      const { error: tpErr } = await db.from('team_players').upsert(
         {
           team_id: team.id,
           player_id: playerId,
@@ -302,13 +304,13 @@ export function AuctionProvider({ children }) {
       }
 
       // 5. Persist winning bid as current_price (price never reverts after auction)
-      await supabase
+      await db
         .from('players')
         .update({ current_price: winner.bid_amount })
         .eq('id', playerId);
 
       // 6. Deduct from team budget
-      await supabase
+      await db
         .from('teams')
         .update({
           budget_remaining: +(team.budget_remaining - winner.bid_amount).toFixed(1),
@@ -332,19 +334,19 @@ export function AuctionProvider({ children }) {
   // ── Auto-bid RPCs ────────────────────────────────────────────────────────────
 
   async function runAutoBids() {
-    const { data: freshState } = await supabase
+    const { data: freshState } = await db
       .from('auction_state').select('current_round').order('id').limit(1).single();
     const round = freshState?.current_round ?? auctionState?.current_round;
     const { data, error } = await supabase.rpc('run_auto_bids', {
       p_round: round,
-      p_competition_id: WC_COMPETITION_ID,
+      p_competition_id: competitionId,
     });
     return { data, error };
   }
 
   async function autoCompleteSquads() {
     const { data, error } = await supabase.rpc('auto_complete_squads', {
-      p_competition_id: WC_COMPETITION_ID,
+      p_competition_id: competitionId,
     });
     return { data, error };
   }

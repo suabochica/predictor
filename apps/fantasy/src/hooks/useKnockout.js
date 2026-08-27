@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@predictor/supabase';
+import { useCompetition } from '../context/CompetitionContext';
 
 export function useKnockout() {
+  const { db } = useCompetition();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -10,7 +11,7 @@ export function useKnockout() {
   }, []);
 
   async function fetchMatches() {
-    const { data } = await supabase
+    const { data } = await db
       .from('knockout_matches')
       .select(
         `*,

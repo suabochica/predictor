@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useLeague } from '../context/LeagueContext';
 import { TRANSFER_CAP_KNOCKOUT } from '../config/constants';
+import { useCompetition } from '../context/CompetitionContext';
 
 export function useNegotiation() {
+  const { db } = useCompetition();
   const { team } = useLeague();
   const [negWindow, setNegWindow] = useState(null);
   const [pool, setPool] = useState([]);
@@ -16,7 +18,7 @@ export function useNegotiation() {
   const isOpen = !!negWindow && negWindow.status === 'open' && new Date(negWindow.closes_at) > new Date();
 
   const fetchWindow = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await db
       .from('negotiation_windows')
       .select('*')
       .order('id', { ascending: false })
@@ -27,10 +29,10 @@ export function useNegotiation() {
   // Pool = players of eliminated fantasy teams whose country is still alive,
   // derived live (never snapshotted) — matches submit/resolve RPC checks.
   const fetchPool = useCallback(async () => {
-    const { data: elimTeams } = await supabase.from('teams').select('id, name').eq('status', 'eliminated');
+    const { data: elimTeams } = await db.from('teams').select('id, name').eq('status', 'eliminated');
     if (!elimTeams?.length) return [];
     const teamIds = elimTeams.map((t) => t.id);
-    const { data: rows } = await supabase
+    const { data: rows } = await db
       .from('team_players')
       .select('team_id, player_id, players(*)')
       .in('team_id', teamIds);
@@ -53,7 +55,7 @@ export function useNegotiation() {
   const fetchMyOffers = useCallback(
     async (windowId) => {
       if (!windowId || !team) return [];
-      const { data } = await supabase
+      const { data } = await db
         .from('negotiation_offers')
         .select(
           '*, target:players!negotiation_offers_target_player_id_fkey(name, position, country, country_code, current_price), offered:players!negotiation_offers_offered_player_id_fkey(name, position, country, country_code, current_price)'
@@ -67,7 +69,7 @@ export function useNegotiation() {
   );
 
   const fetchResolvedWindows = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await db
       .from('negotiation_windows')
       .select('*')
       .eq('status', 'resolved')
@@ -77,7 +79,7 @@ export function useNegotiation() {
 
   const fetchHistoryOffers = useCallback(async (windowIds) => {
     if (!windowIds.length) return [];
-    const { data } = await supabase
+    const { data } = await db
       .from('negotiation_offers')
       .select(
         '*, target:players!negotiation_offers_target_player_id_fkey(name, position, country, country_code, current_price), offered:players!negotiation_offers_offered_player_id_fkey(name, position, country, country_code, current_price), bidder:teams!negotiation_offers_bidder_team_id_fkey(id, name)'
@@ -124,7 +126,7 @@ export function useNegotiation() {
   const fetchTransfersUsed = useCallback(
     async (matchdayId) => {
       if (!matchdayId || !team) return 0;
-      const { count } = await supabase
+      const { count } = await db
         .from('transfers')
         .select('id', { count: 'exact', head: true })
         .eq('team_id', team.id)

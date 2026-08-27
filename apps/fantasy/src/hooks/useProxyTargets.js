@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase, useAuth } from '@predictor/supabase';
 import { useLeague } from '../context/LeagueContext';
+import { useCompetition } from '../context/CompetitionContext';
 
 export function useProxyTargets() {
+  const { db } = useCompetition();
   const { user } = useAuth();
   const { team } = useLeague();
   const [targets, setTargets] = useState([]);
@@ -33,7 +35,7 @@ export function useProxyTargets() {
 
   async function fetchTargets() {
     if (!user) { setLoading(false); return; }
-    const { data } = await supabase
+    const { data } = await db
       .from('proxy_targets')
       .select('*, players(id, name, position, price, current_price)')
       .eq('user_id', user.id)
@@ -45,7 +47,7 @@ export function useProxyTargets() {
   async function addTarget(playerId, maxPrice) {
     if (!user) return;
     const nextPriority = targets.length > 0 ? Math.max(...targets.map((t) => t.priority)) + 1 : 1;
-    await supabase.from('proxy_targets').insert({
+    await db.from('proxy_targets').insert({
       user_id: user.id,
       player_id: playerId,
       priority: nextPriority,
@@ -55,14 +57,14 @@ export function useProxyTargets() {
   }
 
   async function removeTarget(targetId) {
-    await supabase.from('proxy_targets').delete().eq('id', targetId);
+    await db.from('proxy_targets').delete().eq('id', targetId);
     await fetchTargets();
   }
 
   async function setMaxPrice(targetId, value) {
     const parsed = parseFloat(value);
     if (isNaN(parsed) || parsed <= 0) return;
-    await supabase.from('proxy_targets').update({ max_price: parsed }).eq('id', targetId);
+    await db.from('proxy_targets').update({ max_price: parsed }).eq('id', targetId);
     await fetchTargets();
   }
 
@@ -86,13 +88,13 @@ export function useProxyTargets() {
         };
       })
       .filter(Boolean);
-    await supabase.from('proxy_targets').upsert(rows, { onConflict: 'id' });
+    await db.from('proxy_targets').upsert(rows, { onConflict: 'id' });
     await fetchTargets();
   }
 
   async function toggleAutoBid(enabled) {
     if (!team) return;
-    await supabase.from('teams').update({ auto_bid_enabled: enabled }).eq('id', team.id);
+    await db.from('teams').update({ auto_bid_enabled: enabled }).eq('id', team.id);
     setAutoBidEnabled(enabled);
   }
 

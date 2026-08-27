@@ -1,9 +1,3 @@
-// The World Cup 2026 archive is competition 1 (migration 060). Until Phase 3
-// lands CompetitionContext, the handful of RPCs that take an explicit
-// p_competition_id (migration 065) pass this constant. Every such call site is
-// a `WC_COMPETITION_ID` grep away from being rewired to the active competition.
-export const WC_COMPETITION_ID = 1;
-
 export const MAX_SQUAD_SIZE = 15;
 export const TOTAL_BUDGET = 105.0;
 export const AUCTION_CUSHION = 5.0;

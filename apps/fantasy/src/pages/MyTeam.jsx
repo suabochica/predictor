@@ -11,6 +11,7 @@ import { getActivePoints } from '../lib/scoring.js';
 import LineupGrid from '../components/team/LineupGrid';
 import BenchList from '../components/team/BenchList';
 import PointsBreakdownModal from '../components/team/PointsBreakdownModal';
+import { useCompetition } from '../context/CompetitionContext';
 
 // Flatten team_players rows into usable player objects
 function normalizeSquad(teamPlayers) {
@@ -29,6 +30,7 @@ function normalizeSquad(teamPlayers) {
 
 
 export default function MyTeam() {
+  const { db } = useCompetition();
   const { team, players, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { totals: totalsById } = usePlayerTotals();
   const { activeMatchday, refreshTeam } = useLeague();
@@ -78,7 +80,7 @@ export default function MyTeam() {
 
   // ── Load matchdays for selector — time-driven: active matchday and forward ─
   useEffect(() => {
-    supabase
+    db
       .from('matchdays')
       .select('id, name, wc_stage, is_active, is_completed')
       .order('id', { ascending: true })
@@ -103,17 +105,19 @@ export default function MyTeam() {
 
   // ── Fetch active scoring system ──────────────────────────────────────────
   useEffect(() => {
-    supabase
+    db
       .from('auction_state')
       .select('scoring_system')
-      .single()
+      .order('id')
+      .limit(1)
+      .maybeSingle()
       .then(({ data }) => setScoringSystem(data?.scoring_system ?? 'opta'));
   }, []);
 
   // ── Load live stats for the active matchday (display only) ─────────────
   useEffect(() => {
     if (!activeMatchday) { setPlayerMatchdayStats({}); return; }
-    supabase
+    db
       .from('player_stats')
       .select('*')
       .eq('matchday_id', activeMatchday.id)
@@ -131,7 +135,7 @@ export default function MyTeam() {
     if (squad.length === 0) return;
     const playerIds = squad.map(p => p.id);
 
-    supabase
+    db
       .from('matchdays')
       .select('id, name, wc_stage')
       .eq('is_completed', true)
@@ -140,7 +144,7 @@ export default function MyTeam() {
         if (!mds?.length) return;
         setCompletedMatchdays(mds);
 
-        const { data: stats } = await supabase
+        const { data: stats } = await db
           .from('player_stats')
           .select('*')
           .in('player_id', playerIds)
@@ -174,7 +178,7 @@ export default function MyTeam() {
     setLineupLoading(true);
 
     const matchdayId = selectedMatchday?.id ?? null;
-    let query = supabase.from('lineups').select('*').eq('team_id', team.id);
+    let query = db.from('lineups').select('*').eq('team_id', team.id);
     query = matchdayId !== null
       ? query.eq('matchday_id', matchdayId)
       : query.is('matchday_id', null);
@@ -182,7 +186,7 @@ export default function MyTeam() {
 
     // Seed from most recent saved lineup if none found for this matchday
     if ((!data || data.length === 0) && matchdayId !== null) {
-      const { data: recentCheck } = await supabase
+      const { data: recentCheck } = await db
         .from('lineups')
         .select('matchday_id')
         .eq('team_id', team.id)
@@ -192,7 +196,7 @@ export default function MyTeam() {
 
       if (recentCheck && recentCheck.length > 0) {
         const recentId = recentCheck[0].matchday_id;
-        const { data: recentRows } = await supabase
+        const { data: recentRows } = await db
           .from('lineups')
           .select('*')
           .eq('team_id', team.id)
@@ -200,7 +204,7 @@ export default function MyTeam() {
         data = recentRows;
       } else {
         // Fall back to null default
-        const { data: nullData } = await supabase
+        const { data: nullData } = await db
           .from('lineups')
           .select('*')
           .eq('team_id', team.id)

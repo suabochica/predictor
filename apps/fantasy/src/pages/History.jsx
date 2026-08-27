@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@predictor/supabase';
 import { useTeam } from '../hooks/useTeam';
 import { calculatePlayerPoints } from '../lib/scoring';
 import PointsBreakdownModal from '../components/team/PointsBreakdownModal';
+import { useCompetition } from '../context/CompetitionContext';
 
 const POSITION_COLOR = {
   GK:  'bg-warning/15 text-warning',
@@ -12,6 +12,7 @@ const POSITION_COLOR = {
 };
 
 export default function History() {
+  const { db } = useCompetition();
   const { team } = useTeam();
 
   const [matchdays, setMatchdays] = useState([]);
@@ -27,8 +28,8 @@ export default function History() {
   useEffect(() => {
     async function load() {
       const [{ data: mds }, { data: st }] = await Promise.all([
-        supabase.from('matchdays').select('*').order('id', { ascending: true }),
-        supabase.from('fantasy_standings').select('*, teams(name)'),
+        db.from('matchdays').select('*').order('id', { ascending: true }),
+        db.from('fantasy_standings').select('*, teams(name)'),
       ]);
       setMatchdays(mds ?? []);
       setStandings(st ?? []);
@@ -44,14 +45,14 @@ export default function History() {
     setPlayerBreakdown(null);
 
     // Fetch lineup for this team + matchday; fall back to pre-tournament (null) lineup
-    let { data: lineupRows } = await supabase
+    let { data: lineupRows } = await db
       .from('lineups')
       .select('player_id, is_starting, is_captain, bench_order')
       .eq('team_id', teamId)
       .eq('matchday_id', matchday.id);
 
     if (!lineupRows?.length) {
-      const { data: nullRows } = await supabase
+      const { data: nullRows } = await db
         .from('lineups')
         .select('player_id, is_starting, is_captain, bench_order')
         .eq('team_id', teamId)
@@ -60,14 +61,14 @@ export default function History() {
     }
 
     // Fetch player_stats for this matchday
-    const { data: statsRows } = await supabase
+    const { data: statsRows } = await db
       .from('player_stats')
       .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded')
       .eq('matchday_id', matchday.id);
 
     // Fetch player names/positions
     const playerIds = [...new Set((lineupRows ?? []).map(r => r.player_id))];
-    const { data: playerRows } = await supabase
+    const { data: playerRows } = await db
       .from('players')
       .select('id, name, position, country_code')
       .in('id', playerIds.length > 0 ? playerIds : [-1]);

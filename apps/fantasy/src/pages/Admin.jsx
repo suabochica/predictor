@@ -3,11 +3,12 @@ import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
-import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS, WC_COMPETITION_ID } from '../config/constants';
+import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
 import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
+import { useCompetition } from '../context/CompetitionContext';
 
 const WC_STAGES = [
   'Group Stage MD1',
@@ -36,6 +37,7 @@ const POSITION_BADGE = {
 };
 
 export default function Admin() {
+  const { db, competitionId } = useCompetition();
   const {
     auctionState,
     bids,
@@ -62,10 +64,10 @@ export default function Admin() {
 
     // Auto-create pre-tournament (matchday_id = null) lineups for every full squad.
     const [{ data: teams }, { data: existingLineups }] = await Promise.all([
-      supabase
+      db
         .from('teams')
         .select('id, name, team_players(player_id, acquisition_price, players(id, name, position, price))'),
-      supabase.from('lineups').select('team_id').is('matchday_id', null),
+      db.from('lineups').select('team_id').is('matchday_id', null),
     ]);
 
     const teamsWithLineup = new Set((existingLineups ?? []).map(r => r.team_id));
@@ -95,13 +97,13 @@ export default function Admin() {
     }
 
     if (toInsert.length > 0) {
-      const { error } = await supabase.from('lineups').insert(toInsert);
+      const { error } = await db.from('lineups').insert(toInsert);
       if (error) warnings.push(`Lineup insert error: ${error.message}`);
     }
 
     setLineupWarnings(warnings);
 
-    const { data: fresh } = await supabase
+    const { data: fresh } = await db
       .from('matchdays')
       .select('*')
       .order('id', { ascending: true });
@@ -127,7 +129,7 @@ export default function Admin() {
     // roster exceeds that — ordering by country then dropped the alphabetical
     // tail (Spain…Uzbekistan), so the grid only showed 40 of 48 teams.
     const rows = await fetchAllPages((from, to) =>
-      supabase
+      db
         .from('players')
         .select('country, country_code, is_eliminated')
         .order('country', { ascending: true })
@@ -150,7 +152,7 @@ export default function Admin() {
     const { error } = await supabase.rpc('set_country_eliminated', {
       p_country_code: country_code,
       p_eliminated: !currentlyEliminated,
-      p_competition_id: WC_COMPETITION_ID,
+      p_competition_id: competitionId,
     });
     if (error) {
       alert(`No se pudo actualizar el país: ${error.message}`);
@@ -219,11 +221,13 @@ export default function Admin() {
     // Since 062 dropped teams UNIQUE(user_id) for UNIQUE(user_id, competition_id),
     // PostgREST emits this embed as a to-many ARRAY instead of a to-one object —
     // hence the flatten below, which the rest of this section relies on.
-    // TODO(phase 5): competition_id 1 → adminCompetitionId.
-    const { data } = await supabase
+    // The embed is rooted on `users` (unscoped), so db.from() can't filter it —
+    // the predicate has to name the embedded table explicitly.
+    // TODO(phase 4): competitionId → adminCompetitionId.
+    const { data } = await db
       .from('users')
       .select('id, display_name, email, teams(id, name, budget_remaining)')
-      .eq('teams.competition_id', 1)
+      .eq('teams.competition_id', competitionId)
       .order('created_at', { ascending: true });
     setParticipants(
       (data ?? []).map((u) => ({
@@ -236,7 +240,7 @@ export default function Admin() {
 
   async function handleAddToLeague(user) {
     setAddingTeamFor(user.id);
-    await supabase.from('teams').insert({
+    await db.from('teams').insert({
       user_id: user.id,
       name: user.display_name,
       budget_remaining: 105.0,
@@ -246,7 +250,7 @@ export default function Admin() {
   }
 
   async function handleRemoveFromLeague(userId) {
-    await supabase.from('teams').delete().eq('user_id', userId);
+    await db.from('teams').delete().eq('user_id', userId);
     await fetchParticipants();
   }
   // ──────────────────────────────────────────────────────────────────────────
@@ -261,7 +265,7 @@ export default function Admin() {
 
   const fetchMatchdays = useCallback(async () => {
     setMatchdaysLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('matchdays')
       .select('*')
       .order('id', { ascending: true });
@@ -274,15 +278,15 @@ export default function Admin() {
   const fetchKnockoutData = useCallback(async () => {
     setKnockoutLoading(true);
     const [{ data: km }, { data: sd }, { data: teams }] = await Promise.all([
-      supabase
+      db
         .from('knockout_matches')
         .select(`*,
           team_a:teams!knockout_matches_team_a_id_fkey(id, name, users(display_name)),
           team_b:teams!knockout_matches_team_b_id_fkey(id, name, users(display_name)),
           winner:teams!knockout_matches_winner_id_fkey(id, name, users(display_name))`)
         .order('round').order('id'),
-      supabase.from('fantasy_standings').select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
-      supabase.from('teams').select('id, name, users(display_name)'),
+      db.from('fantasy_standings').select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
+      db.from('teams').select('id, name, users(display_name)'),
     ]);
     setKnockoutMatches(km ?? []);
     setKnockoutStandingsData(sd ?? []);
@@ -298,7 +302,7 @@ export default function Admin() {
     if (!mdForm.name.trim()) { setMdError('El nombre es obligatorio.'); return; }
     if (!mdForm.deadline)    { setMdError('La fecha límite es obligatoria.'); return; }
     setMdSaving(true);
-    const { error } = await supabase.from('matchdays').insert({
+    const { error } = await db.from('matchdays').insert({
       name:       mdForm.name.trim(),
       wc_stage:   mdForm.wc_stage,
       start_date: mdForm.start_date || null,
@@ -311,7 +315,7 @@ export default function Admin() {
   }
 
   async function handleToggleActive(md) {
-    await supabase
+    await db
       .from('matchdays')
       .update({ is_active: !md.is_active })
       .eq('id', md.id);
@@ -334,14 +338,14 @@ export default function Admin() {
         }
       }
 
-      await supabase
+      await db
         .from('matchdays')
         .update({ is_completed: completing, is_active: completing ? false : md.is_active })
         .eq('id', md.id);
 
       // When marking a matchday complete, auto-activate the next one (by ID).
       if (completing) {
-        const { data: fresh } = await supabase
+        const { data: fresh } = await db
           .from('matchdays')
           .select('*')
           .order('id', { ascending: true });
@@ -395,7 +399,7 @@ export default function Admin() {
     const STATS_PAGE = 1000;
     let allPlayers = [];
     for (let from = 0; ; from += STATS_PAGE) {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('players')
         .select('id, name, position')
         .range(from, from + STATS_PAGE - 1);
@@ -434,7 +438,7 @@ export default function Admin() {
 
     let inserted = 0;
     if (toUpsert.length > 0) {
-      const { error } = await supabase.from('player_stats').upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
+      const { error } = await db.from('player_stats').upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
       else inserted = toUpsert.length;
     }
@@ -494,7 +498,7 @@ export default function Admin() {
 
   const fetchNegotiationData = useCallback(async () => {
     setNegLoading(true);
-    const { data: windows } = await supabase
+    const { data: windows } = await db
       .from('negotiation_windows')
       .select('*')
       .order('id', { ascending: false })
@@ -504,7 +508,7 @@ export default function Admin() {
 
     if (w && w.status === 'open') {
       const [{ data: elimTeams }, { data: counts }] = await Promise.all([
-        supabase.from('teams').select('id, name').eq('status', 'eliminated'),
+        db.from('teams').select('id, name').eq('status', 'eliminated'),
         supabase.rpc('get_negotiation_offer_counts', { p_window_id: w.id }),
       ]);
       const countsMap = {};
@@ -513,7 +517,7 @@ export default function Admin() {
 
       const teamIds = (elimTeams ?? []).map(t => t.id);
       if (teamIds.length > 0) {
-        const { data: rows } = await supabase
+        const { data: rows } = await db
           .from('team_players')
           .select('team_id, player_id, players(*)')
           .in('team_id', teamIds);
@@ -577,14 +581,14 @@ export default function Admin() {
   const fetchFixtureMatches = useCallback(async () => {
     setFixtureLoading(true);
     const [{ data: matchData }, { data: metaData }, { data: playersData }] = await Promise.all([
-      supabase
+      db
         .from('matches')
         .select('id, match_code, team_a, team_b, match_date, matchday_id')
         .order('match_date', { ascending: true }),
-      supabase
+      db
         .from('match_metadata')
         .select('matchday_id, home_team, away_team'),
-      supabase
+      db
         .from('players')
         .select('country, country_code'),
     ]);
@@ -609,7 +613,7 @@ export default function Admin() {
 
   async function handleFixtureMatchdayChange(matchId, newMatchdayId) {
     setFixtureSavingIds(prev => new Set(prev).add(matchId));
-    await supabase
+    await db
       .from('matches')
       .update({ matchday_id: newMatchdayId === '' ? null : Number(newMatchdayId) })
       .eq('id', matchId);
@@ -634,7 +638,7 @@ export default function Admin() {
   const [activityLoading, setActivityLoading] = useState(false);
 
   async function fetchTransferWindows() {
-    const { data } = await supabase
+    const { data } = await db
       .from('transfer_windows')
       .select('*')
       .order('window_number');
@@ -643,7 +647,7 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    supabase.from('transfer_windows').select('*').order('window_number').then(({ data }) => {
+    db.from('transfer_windows').select('*').order('window_number').then(({ data }) => {
       setTransferWindows(data ?? []);
       setTwLoading(false);
     });
@@ -651,7 +655,7 @@ export default function Admin() {
 
   async function fetchWindowActivity(windowNumber) {
     setActivityLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('transfers')
       .select(`
         id, window_number, price_difference, created_at,
@@ -672,7 +676,7 @@ export default function Admin() {
     const max = preset ? preset.max_transfers : parseInt(twForm.max_transfers, 10);
     if (!num || num < 1 || num > 3) { setTwError('El número de ventana debe ser 1–3.'); setTwSaving(false); return; }
     if (!max || max < 1)            { setTwError('Máx. fichajes debe ser ≥ 1.'); setTwSaving(false); return; }
-    const { error } = await supabase.from('transfer_windows').insert({
+    const { error } = await db.from('transfer_windows').insert({
       window_number: num,
       max_transfers: max,
       is_active: false,
@@ -690,16 +694,16 @@ export default function Admin() {
     const activating = !tw.is_active;
     // Only one window active at a time — deactivate others first
     if (activating) {
-      await supabase.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
+      await db.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
     }
-    await supabase.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
+    await db.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
     setTwLoading(true);
     await fetchTransferWindows();
     if (activating) await fetchWindowActivity(tw.window_number);
   }
 
   async function handleDeleteTransferWindow(tw) {
-    await supabase.from('transfer_windows').delete().eq('id', tw.id);
+    await db.from('transfer_windows').delete().eq('id', tw.id);
     setTwLoading(true);
     await fetchTransferWindows();
   }
@@ -708,7 +712,7 @@ export default function Admin() {
   // ── 5a. Scoring system toggle ─────────────────────────────────────────────
   async function handleSaveScoringSystem(system) {
     setSavingSystem(true);
-    await supabase
+    await db
       .from('auction_state')
       .update({ scoring_system: system })
       .eq('id', auctionState.id);
@@ -736,12 +740,12 @@ export default function Admin() {
     const errors = [];
 
     // 1. Fetch all teams
-    const { data: teams } = await supabase.from('teams').select('id, name');
+    const { data: teams } = await db.from('teams').select('id, name');
     if (!teams?.length) return null;
 
     // 2. Fetch all player_stats — paginated so no starter's stats are ever dropped
     const allStats = await fetchAllPages((f, t) =>
-      supabase
+      db
         .from('player_stats')
         .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won')
         .eq('matchday_id', matchdayIdInt)
@@ -750,14 +754,14 @@ export default function Admin() {
 
     // 3. Fetch all players for position + price lookup — roster exceeds 1000 rows
     const allPlayers = await fetchAllPages((f, t) =>
-      supabase.from('players').select('id, position, price').range(f, t));
+      db.from('players').select('id, position, price').range(f, t));
     const positionMap = Object.fromEntries(allPlayers.map(p => [p.id, p.position]));
     const priceMap = Object.fromEntries(allPlayers.map(p => [p.id, p.price]));
 
     // 4. Fetch lineups — prefer matchday-specific; otherwise carry forward each
     //    team's most recent PRIOR matchday lineup (falling back to preseason null).
     const matchdayLineups = await fetchAllPages((f, t) =>
-      supabase
+      db
         .from('lineups')
         .select('team_id, player_id, is_starting, is_captain, bench_order')
         .eq('matchday_id', matchdayIdInt)
@@ -768,7 +772,7 @@ export default function Admin() {
     // Prior lineups: any matchday strictly before this one, plus preseason null.
     // Paginated: spans all prior matchdays and will exceed 1000 once several MDs exist.
     const priorLineups = await fetchAllPages((f, t) =>
-      supabase
+      db
         .from('lineups')
         .select('team_id, player_id, is_starting, is_captain, bench_order, matchday_id')
         .or(`matchday_id.lt.${matchdayIdInt},matchday_id.is.null`)
@@ -792,7 +796,7 @@ export default function Admin() {
     const allLineups = [...matchdayLineups, ...carriedRows];
 
     // 5. Fetch matchday_points from OTHER matchdays — idempotent on re-runs
-    const { data: otherStandings } = await supabase
+    const { data: otherStandings } = await db
       .from('fantasy_standings')
       .select('team_id, matchday_points, goals_scored')
       .neq('matchday_id', matchdayIdInt);
@@ -884,7 +888,7 @@ export default function Admin() {
     });
 
     if (upsertRows.length > 0) {
-      const { error } = await supabase
+      const { error } = await db
         .from('fantasy_standings')
         .upsert(upsertRows, { onConflict: 'team_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
@@ -892,7 +896,7 @@ export default function Admin() {
 
     // Stamp carried lineups as matchday-specific — permanent historical record
     if (toStamp.length > 0) {
-      const { error: stampErr } = await supabase
+      const { error: stampErr } = await db
         .from('lineups')
         .upsert(toStamp, { onConflict: 'team_id,matchday_id,player_id' });
       if (stampErr) errors.push(`Lineup stamp error: ${stampErr.message}`);
@@ -977,7 +981,7 @@ export default function Admin() {
       round: 1, bracket: 'championship', match_label: s.label,
       team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
     }));
-    const { error } = await supabase.from('knockout_matches').insert(rows);
+    const { error } = await db.from('knockout_matches').insert(rows);
     setBracketSeedResult(error ? { error: error.message } : { ok: true, count: rows.length });
     if (!error) await fetchKnockoutData();
     setBracketSeeding(false);
@@ -1030,7 +1034,7 @@ export default function Admin() {
 
     const allTeamIds = [...new Set(toResolve.flatMap(m => [m.team_a_id, m.team_b_id]).filter(Boolean))];
 
-    const { data: standingsRows } = await supabase
+    const { data: standingsRows } = await db
       .from('fantasy_standings')
       .select('team_id, matchday_points, goals_scored')
       .eq('matchday_id', matchdayIdInt)
@@ -1038,8 +1042,8 @@ export default function Admin() {
     const mdStandings = Object.fromEntries((standingsRows ?? []).map(s => [s.team_id, s]));
 
     const [{ data: mdCaptains }, { data: nullCaptains }] = await Promise.all([
-      supabase.from('lineups').select('team_id, player_id').eq('matchday_id', matchdayIdInt).eq('is_captain', true).in('team_id', allTeamIds),
-      supabase.from('lineups').select('team_id, player_id').is('matchday_id', null).eq('is_captain', true).in('team_id', allTeamIds),
+      db.from('lineups').select('team_id, player_id').eq('matchday_id', matchdayIdInt).eq('is_captain', true).in('team_id', allTeamIds),
+      db.from('lineups').select('team_id, player_id').is('matchday_id', null).eq('is_captain', true).in('team_id', allTeamIds),
     ]);
     const captainMap = {};
     for (const r of nullCaptains ?? []) captainMap[r.team_id] = r.player_id;
@@ -1048,7 +1052,7 @@ export default function Admin() {
     const captainPlayerIds = [...new Set(Object.values(captainMap))].filter(Boolean);
     const captainStatsMap = {};
     if (captainPlayerIds.length > 0) {
-      const { data: cStats } = await supabase
+      const { data: cStats } = await db
         .from('player_stats')
         .select('player_id, total_points')
         .eq('matchday_id', matchdayIdInt)
@@ -1106,14 +1110,14 @@ export default function Admin() {
 
     let resolvedCount = 0;
     for (const { id, ...data } of updates) {
-      const { error } = await supabase.from('knockout_matches').update(data).eq('id', id);
+      const { error } = await db.from('knockout_matches').update(data).eq('id', id);
       if (error) errors.push(`Match update error: ${error.message}`);
       else resolvedCount++;
     }
 
     const nextRows = buildNextRoundRows(round, matchResults, knockoutMatches);
     if (nextRows.length > 0) {
-      const { error } = await supabase.from('knockout_matches').insert(nextRows);
+      const { error } = await db.from('knockout_matches').insert(nextRows);
       if (error) errors.push(`Next round creation error: ${error.message}`);
     }
 
@@ -1138,7 +1142,7 @@ export default function Admin() {
     setKnockoutCalcRunning(true);
     setKnockoutCalcResult(null);
     const matchdayIdInt = parseInt(knockoutCalcMatchdayId, 10);
-    const { error } = await supabase
+    const { error } = await db
       .from('knockout_matches')
       .update({ matchday_id: matchdayIdInt })
       .eq('bracket', 'championship')
@@ -1173,7 +1177,7 @@ export default function Admin() {
     }
 
     // Fetch existing players for ded up by normName(name)|normName(country)
-    const { data: existing } = await supabase.from('players').select('id, name, country');
+    const { data: existing } = await db.from('players').select('id, name, country');
     const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const existingSet = new Set(
       (existing ?? []).map(p => `${normName(p.name)}|${normName(p.country)}`)
@@ -1208,7 +1212,7 @@ export default function Admin() {
 
     let created = 0;
     if (toInsert.length > 0) {
-      const { error, data: inserted } = await supabase
+      const { error, data: inserted } = await db
         .from('players')
         .insert(toInsert)
         .select('id');
@@ -1257,7 +1261,7 @@ export default function Admin() {
 
     const errors = [];
 
-    const { error: metaError } = await supabase
+    const { error: metaError } = await db
       .from('match_metadata')
       .upsert({
         matchday_id: matchdayId,
@@ -1275,7 +1279,7 @@ export default function Admin() {
     const PAGE = 1000;
     let allPlayers = [];
     for (let from = 0; ; from += PAGE) {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('players')
         .select('id, name, position, country')
         .range(from, from + PAGE - 1);
@@ -1354,7 +1358,7 @@ export default function Admin() {
 
     let inserted = 0;
     if (toUpsert.length > 0) {
-      const { error } = await supabase
+      const { error } = await db
         .from('player_stats')
         .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
