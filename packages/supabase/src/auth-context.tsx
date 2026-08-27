@@ -7,6 +7,8 @@ interface UserProfile {
   email: string;
   display_name: string;
   is_admin: boolean;
+  /** Fantasy competition switcher preference (migration 066). */
+  active_competition_id: number | null;
 }
 
 interface AuthContextValue {

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@predictor/supabase';
+import { CompetitionProvider, CompetitionGate, useCompetition } from './context/CompetitionContext';
 import { LeagueProvider } from './context/LeagueContext';
 import { AuctionProvider } from './context/AuctionContext';
 import Layout from './components/layout/Layout';
@@ -73,15 +74,29 @@ function AppRoutes() {
   );
 }
 
+// `key={competitionId}` remounts the whole league subtree on a switch. Without it
+// you keep the previous competition's team, squad, in-progress lineup draft, bids
+// and offers — one line in place of a dozen manual invalidations.
+function CompetitionScopedProviders({ children }) {
+  const { competitionId } = useCompetition();
+  return (
+    <LeagueProvider key={competitionId ?? 'none'}>
+      <AuctionProvider>{children}</AuctionProvider>
+    </LeagueProvider>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter basename="/fantasy">
       <AuthProvider>
-        <LeagueProvider>
-          <AuctionProvider>
-            <AppRoutes />
-          </AuctionProvider>
-        </LeagueProvider>
+        <CompetitionProvider>
+          <CompetitionGate>
+            <CompetitionScopedProviders>
+              <AppRoutes />
+            </CompetitionScopedProviders>
+          </CompetitionGate>
+        </CompetitionProvider>
       </AuthProvider>
     </BrowserRouter>
   );
