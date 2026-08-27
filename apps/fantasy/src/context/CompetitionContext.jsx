@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@predictor/supabase';
 import { createDb, unscopedFrom } from '../lib/db';
 
@@ -32,6 +32,17 @@ function readSlugParam() {
   }
 }
 
+// Single source of the visibility rule: 'setup' means half-built, so it stays out
+// of the user switcher until an admin promotes it. Admins see everything, which is
+// what makes the Admin panel able to work on a competition nobody else can reach.
+async function fetchVisibleCompetitions(isAdmin) {
+  const { data } = await unscopedFrom('competitions')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('id', { ascending: true });
+  return (data ?? []).filter((c) => isAdmin || c.status !== 'setup');
+}
+
 export function CompetitionProvider({ children }) {
   const { user, profile, isAdmin, loading: authLoading } = useAuth();
   const [competitions, setCompetitions] = useState([]);
@@ -56,15 +67,8 @@ export function CompetitionProvider({ children }) {
     let cancelled = false;
 
     (async () => {
-      const { data } = await unscopedFrom('competitions')
-        .select('*')
-        .order('sort_order', { ascending: true })
-        .order('id', { ascending: true });
+      const visible = await fetchVisibleCompetitions(isAdmin);
       if (cancelled) return;
-
-      const all = data ?? [];
-      // 'setup' = half-built, admin-only. Users see active + archived.
-      const visible = all.filter((c) => isAdmin || c.status !== 'setup');
       setCompetitions(visible);
 
       if (!visible.length) {
@@ -106,6 +110,15 @@ export function CompetitionProvider({ children }) {
     };
   }, [authLoading, user?.id, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-reads the list without disturbing the active selection. The Admin panel
+  // calls this after creating a competition or changing one's status, so the
+  // switcher and the admin selector pick it up without a reload.
+  const refreshCompetitions = useCallback(async () => {
+    const visible = await fetchVisibleCompetitions(isAdmin);
+    setCompetitions(visible);
+    return visible;
+  }, [isAdmin]);
+
   const competition = useMemo(
     () => competitions.find((c) => c.id === competitionId) ?? null,
     [competitions, competitionId]
@@ -128,6 +141,7 @@ export function CompetitionProvider({ children }) {
       isArchived: competition?.status === 'archived',
       loading,
       db,
+      refreshCompetitions,
       setCompetition(id) {
         if (id === competitionId || !competitions.some((c) => c.id === id)) return;
         setCompetitionId(id);
@@ -142,7 +156,7 @@ export function CompetitionProvider({ children }) {
         }
       },
     }),
-    [competition, competitionId, competitions, loading, db, user]
+    [competition, competitionId, competitions, loading, db, refreshCompetitions, user]
   );
 
   return <CompetitionContext.Provider value={value}>{children}</CompetitionContext.Provider>;

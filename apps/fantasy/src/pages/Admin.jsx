@@ -3,13 +3,23 @@ import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
-import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
+import {
+  AUCTION_STATUSES,
+  AUTO_BID_DELAY_SECONDS,
+  DEFAULT_ROUND_DURATION_SECONDS,
+  MAX_LEAGUE_PARTICIPANTS,
+  MAX_SQUAD_SIZE,
+  MIN_BID_INCREMENT,
+  TOTAL_BUDGET,
+  TRANSFER_CAP_KNOCKOUT,
+  TRANSFER_CAP_ROUND_ROBIN,
+} from '../config/constants';
 import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
 import { useCompetition } from '../context/CompetitionContext';
-import { createDb } from '../lib/db';
+import { createDb, unscopedFrom } from '../lib/db';
 
 const WC_STAGES = [
   'Group Stage MD1',
@@ -3209,9 +3219,302 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
   );
 }
 
+const COMPETITION_STATUSES = [
+  { value: 'setup',    label: 'En preparación' },
+  { value: 'active',   label: 'Activa' },
+  { value: 'archived', label: 'Archivada' },
+];
+
+const COMPETITION_STATUS_BADGE = {
+  setup:    'bg-warning/15 text-warning',
+  active:   'bg-tertiary/15 text-tertiary',
+  archived: 'bg-border text-secondary',
+};
+
+const EMPTY_COMPETITION_FORM = {
+  slug: '',
+  name: '',
+  short_label: '',
+  // Prefilled from the World Cup list so a new competition is an edit, not a retype.
+  stage_labels: WC_STAGES.join('\n'),
+  budget: String(TOTAL_BUDGET),
+  max_squad_size: String(MAX_SQUAD_SIZE),
+  max_participants: String(MAX_LEAGUE_PARTICIPANTS),
+  transfer_cap_league: String(TRANSFER_CAP_ROUND_ROBIN),
+  transfer_cap_knockout: String(TRANSFER_CAP_KNOCKOUT),
+  min_bid_increment: String(MIN_BID_INCREMENT),
+  round_duration_seconds: String(DEFAULT_ROUND_DURATION_SECONDS),
+};
+
+const inputClass =
+  'w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary';
+
 /**
- * The admin page: a competition selector, the banners that keep it honest, and
- * the panel itself.
+ * Section 17 — create a competition, then manage the status and default flag of
+ * every existing one.
+ *
+ * Creation goes through the `create_competition` RPC rather than an insert,
+ * because the competitions row and its `auction_state` row have to appear in the
+ * same transaction: a competition without an auction state is one the panel and
+ * AuctionContext both refuse to render. Every competition starts as 'setup',
+ * which keeps it out of non-admin switchers until it has players and matchdays.
+ */
+function CreateCompetitionSection({ competitions, onChanged, onAdminister }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_COMPETITION_FORM);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [created, setCreated] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // Slug is what the ?competition= deep link uses, so keep it URL-shaped.
+  function suggestSlug(name) {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setError(null);
+    setCreated(null);
+    setSaving(true);
+
+    const { data, error: rpcError } = await supabase.rpc('create_competition', {
+      p_slug: form.slug.trim() || suggestSlug(form.name),
+      p_name: form.name.trim(),
+      p_short_label: form.short_label.trim(),
+      p_stage_labels: form.stage_labels
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      p_budget: Number(form.budget),
+      p_max_squad_size: parseInt(form.max_squad_size, 10),
+      p_max_participants: parseInt(form.max_participants, 10),
+      p_transfer_cap_league: parseInt(form.transfer_cap_league, 10),
+      p_transfer_cap_knockout: parseInt(form.transfer_cap_knockout, 10),
+      p_min_bid_increment: Number(form.min_bid_increment),
+      p_round_duration_seconds: parseInt(form.round_duration_seconds, 10),
+    });
+
+    if (rpcError) {
+      setError(rpcError.message);
+      setSaving(false);
+      return;
+    }
+
+    setCreated(data);
+    setForm(EMPTY_COMPETITION_FORM);
+    await onChanged();
+    setSaving(false);
+  }
+
+  async function handleStatusChange(competition, status) {
+    setBusyId(competition.id);
+    setError(null);
+    const { error: updErr } = await unscopedFrom('competitions')
+      .update({ status })
+      .eq('id', competition.id);
+    if (updErr) setError(updErr.message);
+    await onChanged();
+    setBusyId(null);
+  }
+
+  async function handleMakeDefault(competition) {
+    setBusyId(competition.id);
+    setError(null);
+    // One RPC, not two updates: `one_default_competition` is a partial unique
+    // index, so the old default has to be cleared inside the same transaction.
+    const { error: rpcError } = await supabase.rpc('set_default_competition', {
+      p_competition_id: competition.id,
+    });
+    if (rpcError) setError(rpcError.message);
+    await onChanged();
+    setBusyId(null);
+  }
+
+  return (
+    <section className="bg-surface rounded-xl p-6 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-primary">Competencias</h2>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="px-3 py-1.5 rounded-lg bg-surface-hover hover:bg-border text-secondary text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+        >
+          {open ? 'Ocultar formulario' : 'Crear competencia'}
+        </button>
+      </div>
+
+      {/* Existing competitions: status transitions + the default flag */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-muted border-b border-border">
+              <th className="pb-3 pr-4 font-medium">Competencia</th>
+              <th className="pb-3 pr-4 font-medium">Identificador</th>
+              <th className="pb-3 pr-4 font-medium">Estado</th>
+              <th className="pb-3 pr-4 font-medium">Por defecto</th>
+              <th className="pb-3 font-medium">Acción</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {competitions.map((c) => (
+              <tr key={c.id} className="text-secondary hover:bg-surface-hover/40">
+                <td className="py-2.5 pr-4">
+                  <span className="text-primary font-medium">{c.name}</span>
+                  <span className="text-muted text-xs ml-2">{c.short_label}</span>
+                </td>
+                <td className="py-2.5 pr-4 text-xs font-mono">{c.slug}</td>
+                <td className="py-2.5 pr-4">
+                  <select
+                    value={c.status}
+                    disabled={busyId === c.id}
+                    onChange={(e) => handleStatusChange(c, e.target.value)}
+                    className={`rounded px-2 py-1 text-xs font-semibold disabled:opacity-50 ${COMPETITION_STATUS_BADGE[c.status] ?? ''}`}
+                  >
+                    {COMPETITION_STATUSES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="py-2.5 pr-4">
+                  {c.is_default ? (
+                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-info/15 text-info">
+                      Por defecto
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleMakeDefault(c)}
+                      disabled={busyId === c.id}
+                      className="text-xs text-tertiary hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                    >
+                      Marcar
+                    </button>
+                  )}
+                </td>
+                <td className="py-2.5">
+                  <button
+                    onClick={() => onAdminister(c.id)}
+                    className="text-xs text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                  >
+                    Administrar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {created && (
+        <p className="text-sm text-tertiary bg-tertiary/10 rounded-lg px-3 py-2">
+          Competencia «{created.name}» creada en preparación. Cárgale jugadores, jornadas y
+          participantes antes de activarla.
+        </p>
+      )}
+      {error && <p className="text-error text-sm">{error}</p>}
+
+      {open && (
+        <form onSubmit={handleCreate} className="space-y-4 border-t border-border pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Nombre</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={set('name')}
+                placeholder="ej. UEFA Champions League 2026/27"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Etiqueta corta</label>
+              <input
+                type="text"
+                value={form.short_label}
+                onChange={set('short_label')}
+                placeholder="ej. Champions 26/27"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">
+                Identificador (se genera del nombre si lo dejas vacío)
+              </label>
+              <input
+                type="text"
+                value={form.slug}
+                onChange={set('slug')}
+                placeholder={form.name ? suggestSlug(form.name) : 'ucl-2026-27'}
+                className={`${inputClass} font-mono`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-muted mb-1">
+              Fases (una por línea — solo etiquetas para los formularios de jornadas)
+            </label>
+            <textarea
+              rows={5}
+              value={form.stage_labels}
+              onChange={set('stage_labels')}
+              className={`${inputClass} font-mono`}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Presupuesto</label>
+              <input type="number" step="0.1" value={form.budget} onChange={set('budget')} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Plantilla</label>
+              <input type="number" value={form.max_squad_size} onChange={set('max_squad_size')} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Participantes</label>
+              <input type="number" value={form.max_participants} onChange={set('max_participants')} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Incremento de puja</label>
+              <input type="number" step="0.1" value={form.min_bid_increment} onChange={set('min_bid_increment')} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Fichajes por jornada de liga</label>
+              <input type="number" value={form.transfer_cap_league} onChange={set('transfer_cap_league')} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Fichajes por eliminatoria</label>
+              <input type="number" value={form.transfer_cap_knockout} onChange={set('transfer_cap_knockout')} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Duración de ronda (s)</label>
+              <input type="number" value={form.round_duration_seconds} onChange={set('round_duration_seconds')} className={inputClass} />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving || !form.name.trim() || !form.short_label.trim()}
+            className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            {saving ? 'Creando…' : 'Crear competencia'}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
+/**
+ * The admin page: a competition selector, the banners that keep it honest, the
+ * create/manage-competitions section, and the panel itself.
  *
  * The selector is deliberately NOT the sidebar switcher. An admin has to be able
  * to build a `status='setup'` competition — one no user can select — while still
@@ -3219,7 +3522,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
  * divergence is called out loudly instead of being hidden.
  */
 export default function Admin() {
-  const { competitions, competitionId, setCompetition } = useCompetition();
+  const { competitions, competitionId, setCompetition, refreshCompetitions } = useCompetition();
   const [pickedCompetitionId, setAdminCompetitionId] = useState(null);
 
   // Derived, not stored: the list can change under us (a competition was just
@@ -3290,6 +3593,12 @@ export default function Admin() {
           </p>
         </div>
       )}
+
+      <CreateCompetitionSection
+        competitions={competitions}
+        onChanged={refreshCompetitions}
+        onAdminister={setAdminCompetitionId}
+      />
 
       {adminCompetitionId != null && (
         <AdminPanel
