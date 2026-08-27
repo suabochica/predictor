@@ -3,7 +3,7 @@ import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
-import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS } from '../config/constants';
+import { AUCTION_STATUSES, AUTO_BID_DELAY_SECONDS, WC_COMPETITION_ID } from '../config/constants';
 import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
@@ -147,7 +147,11 @@ export default function Admin() {
 
   async function handleToggleCountryEliminated(country_code, currentlyEliminated) {
     setTogglingCountry(country_code);
-    const { error } = await supabase.rpc('set_country_eliminated', { p_country_code: country_code, p_eliminated: !currentlyEliminated });
+    const { error } = await supabase.rpc('set_country_eliminated', {
+      p_country_code: country_code,
+      p_eliminated: !currentlyEliminated,
+      p_competition_id: WC_COMPETITION_ID,
+    });
     if (error) {
       alert(`No se pudo actualizar el país: ${error.message}`);
       setTogglingCountry(null);

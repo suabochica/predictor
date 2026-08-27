@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
-import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT } from '../config/constants';
+import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT, WC_COMPETITION_ID } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
@@ -335,12 +335,17 @@ export function AuctionProvider({ children }) {
     const { data: freshState } = await supabase
       .from('auction_state').select('current_round').order('id').limit(1).single();
     const round = freshState?.current_round ?? auctionState?.current_round;
-    const { data, error } = await supabase.rpc('run_auto_bids', { p_round: round });
+    const { data, error } = await supabase.rpc('run_auto_bids', {
+      p_round: round,
+      p_competition_id: WC_COMPETITION_ID,
+    });
     return { data, error };
   }
 
   async function autoCompleteSquads() {
-    const { data, error } = await supabase.rpc('auto_complete_squads');
+    const { data, error } = await supabase.rpc('auto_complete_squads', {
+      p_competition_id: WC_COMPETITION_ID,
+    });
     return { data, error };
   }
 
