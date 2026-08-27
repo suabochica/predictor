@@ -20,3 +20,6 @@ dist/
 # Misc
 .DS_Store
 *.log
+
+# UCL second-competition plan: Phase 0 baseline captures (not for commit)
+apps/fantasy/.phase0-baseline/
