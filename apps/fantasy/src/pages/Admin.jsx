@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
@@ -9,6 +9,7 @@ import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
 import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
 import { useCompetition } from '../context/CompetitionContext';
+import { createDb } from '../lib/db';
 
 const WC_STAGES = [
   'Group Stage MD1',
@@ -36,8 +37,25 @@ const POSITION_BADGE = {
   FWD: 'bg-error/10 text-error',
 };
 
-export default function Admin() {
-  const { db, competitionId } = useCompetition();
+/**
+ * The panel itself, bound to ONE competition — `adminCompetitionId`, chosen by the
+ * selector in `Admin` below, which is deliberately independent of the sidebar
+ * switcher (an admin has to be able to build a `status='setup'` competition while
+ * still using the app as a player in another).
+ *
+ * `adb` is that binding: a scoped client for the *administered* competition, used
+ * in place of the `db` every other page takes from `useCompetition()`. The parent
+ * keys this component on the same id, so a switch remounts it and every one of its
+ * ~40 useState hooks starts clean rather than showing the previous competition's
+ * rows under the new competition's name.
+ *
+ * `auctionInSync` is false while the selector and the sidebar disagree. The auction
+ * sections read `useAuction()`, which is wired to the *sidebar* competition and
+ * cannot be re-pointed from here, so they are hidden rather than shown pointing
+ * somewhere other than the panel header claims.
+ */
+function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
+  const adb = useMemo(() => createDb(adminCompetitionId), [adminCompetitionId]);
   const {
     auctionState,
     bids,
@@ -64,10 +82,10 @@ export default function Admin() {
 
     // Auto-create pre-tournament (matchday_id = null) lineups for every full squad.
     const [{ data: teams }, { data: existingLineups }] = await Promise.all([
-      db
+      adb
         .from('teams')
         .select('id, name, team_players(player_id, acquisition_price, players(id, name, position, price))'),
-      db.from('lineups').select('team_id').is('matchday_id', null),
+      adb.from('lineups').select('team_id').is('matchday_id', null),
     ]);
 
     const teamsWithLineup = new Set((existingLineups ?? []).map(r => r.team_id));
@@ -97,13 +115,13 @@ export default function Admin() {
     }
 
     if (toInsert.length > 0) {
-      const { error } = await db.from('lineups').insert(toInsert);
+      const { error } = await adb.from('lineups').insert(toInsert);
       if (error) warnings.push(`Lineup insert error: ${error.message}`);
     }
 
     setLineupWarnings(warnings);
 
-    const { data: fresh } = await db
+    const { data: fresh } = await adb
       .from('matchdays')
       .select('*')
       .order('id', { ascending: true });
@@ -115,7 +133,9 @@ export default function Admin() {
     }
   }
 
-  const { players, loading: playersLoading } = usePlayers();
+  // Override the hook's client so the roster listed at the bottom of the panel is
+  // the administered competition's, not the sidebar's.
+  const { players, loading: playersLoading } = usePlayers({}, adb);
   const [confirming, setConfirming] = useState(false);
 
   // ── Country Elimination ───────────────────────────────────────────────────
@@ -129,7 +149,7 @@ export default function Admin() {
     // roster exceeds that — ordering by country then dropped the alphabetical
     // tail (Spain…Uzbekistan), so the grid only showed 40 of 48 teams.
     const rows = await fetchAllPages((from, to) =>
-      db
+      adb
         .from('players')
         .select('country, country_code, is_eliminated')
         .order('country', { ascending: true })
@@ -152,7 +172,7 @@ export default function Admin() {
     const { error } = await supabase.rpc('set_country_eliminated', {
       p_country_code: country_code,
       p_eliminated: !currentlyEliminated,
-      p_competition_id: competitionId,
+      p_competition_id: adminCompetitionId,
     });
     if (error) {
       alert(`No se pudo actualizar el país: ${error.message}`);
@@ -182,6 +202,10 @@ export default function Admin() {
     setAutoBidRunning(false);
   }
 
+  // Fires for the SIDEBAR competition's auction (that is where auctionState and
+  // runAutoBids come from), and deliberately keeps firing even while the admin
+  // selector points elsewhere: a live auction must not stall because the admin
+  // stepped away to set up another competition.
   useEffect(() => {
     if (!auctionState) return;
     const { status, current_round, round_started_at } = auctionState;
@@ -221,13 +245,12 @@ export default function Admin() {
     // Since 062 dropped teams UNIQUE(user_id) for UNIQUE(user_id, competition_id),
     // PostgREST emits this embed as a to-many ARRAY instead of a to-one object —
     // hence the flatten below, which the rest of this section relies on.
-    // The embed is rooted on `users` (unscoped), so db.from() can't filter it —
+    // The embed is rooted on `users` (unscoped), so adb.from() can't filter it —
     // the predicate has to name the embedded table explicitly.
-    // TODO(phase 4): competitionId → adminCompetitionId.
-    const { data } = await db
+    const { data } = await adb
       .from('users')
       .select('id, display_name, email, teams(id, name, budget_remaining)')
-      .eq('teams.competition_id', competitionId)
+      .eq('teams.competition_id', adminCompetitionId)
       .order('created_at', { ascending: true });
     setParticipants(
       (data ?? []).map((u) => ({
@@ -240,7 +263,7 @@ export default function Admin() {
 
   async function handleAddToLeague(user) {
     setAddingTeamFor(user.id);
-    await db.from('teams').insert({
+    await adb.from('teams').insert({
       user_id: user.id,
       name: user.display_name,
       budget_remaining: 105.0,
@@ -250,7 +273,7 @@ export default function Admin() {
   }
 
   async function handleRemoveFromLeague(userId) {
-    await db.from('teams').delete().eq('user_id', userId);
+    await adb.from('teams').delete().eq('user_id', userId);
     await fetchParticipants();
   }
   // ──────────────────────────────────────────────────────────────────────────
@@ -265,7 +288,7 @@ export default function Admin() {
 
   const fetchMatchdays = useCallback(async () => {
     setMatchdaysLoading(true);
-    const { data } = await db
+    const { data } = await adb
       .from('matchdays')
       .select('*')
       .order('id', { ascending: true });
@@ -278,15 +301,15 @@ export default function Admin() {
   const fetchKnockoutData = useCallback(async () => {
     setKnockoutLoading(true);
     const [{ data: km }, { data: sd }, { data: teams }] = await Promise.all([
-      db
+      adb
         .from('knockout_matches')
         .select(`*,
           team_a:teams!knockout_matches_team_a_id_fkey(id, name, users(display_name)),
           team_b:teams!knockout_matches_team_b_id_fkey(id, name, users(display_name)),
           winner:teams!knockout_matches_winner_id_fkey(id, name, users(display_name))`)
         .order('round').order('id'),
-      db.from('fantasy_standings').select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
-      db.from('teams').select('id, name, users(display_name)'),
+      adb.from('fantasy_standings').select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
+      adb.from('teams').select('id, name, users(display_name)'),
     ]);
     setKnockoutMatches(km ?? []);
     setKnockoutStandingsData(sd ?? []);
@@ -302,7 +325,7 @@ export default function Admin() {
     if (!mdForm.name.trim()) { setMdError('El nombre es obligatorio.'); return; }
     if (!mdForm.deadline)    { setMdError('La fecha límite es obligatoria.'); return; }
     setMdSaving(true);
-    const { error } = await db.from('matchdays').insert({
+    const { error } = await adb.from('matchdays').insert({
       name:       mdForm.name.trim(),
       wc_stage:   mdForm.wc_stage,
       start_date: mdForm.start_date || null,
@@ -315,7 +338,7 @@ export default function Admin() {
   }
 
   async function handleToggleActive(md) {
-    await db
+    await adb
       .from('matchdays')
       .update({ is_active: !md.is_active })
       .eq('id', md.id);
@@ -338,14 +361,14 @@ export default function Admin() {
         }
       }
 
-      await db
+      await adb
         .from('matchdays')
         .update({ is_completed: completing, is_active: completing ? false : md.is_active })
         .eq('id', md.id);
 
       // When marking a matchday complete, auto-activate the next one (by ID).
       if (completing) {
-        const { data: fresh } = await db
+        const { data: fresh } = await adb
           .from('matchdays')
           .select('*')
           .order('id', { ascending: true });
@@ -399,7 +422,7 @@ export default function Admin() {
     const STATS_PAGE = 1000;
     let allPlayers = [];
     for (let from = 0; ; from += STATS_PAGE) {
-      const { data, error } = await db
+      const { data, error } = await adb
         .from('players')
         .select('id, name, position')
         .range(from, from + STATS_PAGE - 1);
@@ -438,7 +461,7 @@ export default function Admin() {
 
     let inserted = 0;
     if (toUpsert.length > 0) {
-      const { error } = await db.from('player_stats').upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
+      const { error } = await adb.from('player_stats').upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
       else inserted = toUpsert.length;
     }
@@ -498,7 +521,7 @@ export default function Admin() {
 
   const fetchNegotiationData = useCallback(async () => {
     setNegLoading(true);
-    const { data: windows } = await db
+    const { data: windows } = await adb
       .from('negotiation_windows')
       .select('*')
       .order('id', { ascending: false })
@@ -508,7 +531,7 @@ export default function Admin() {
 
     if (w && w.status === 'open') {
       const [{ data: elimTeams }, { data: counts }] = await Promise.all([
-        db.from('teams').select('id, name').eq('status', 'eliminated'),
+        adb.from('teams').select('id, name').eq('status', 'eliminated'),
         supabase.rpc('get_negotiation_offer_counts', { p_window_id: w.id }),
       ]);
       const countsMap = {};
@@ -517,7 +540,7 @@ export default function Admin() {
 
       const teamIds = (elimTeams ?? []).map(t => t.id);
       if (teamIds.length > 0) {
-        const { data: rows } = await db
+        const { data: rows } = await adb
           .from('team_players')
           .select('team_id, player_id, players(*)')
           .in('team_id', teamIds);
@@ -581,14 +604,14 @@ export default function Admin() {
   const fetchFixtureMatches = useCallback(async () => {
     setFixtureLoading(true);
     const [{ data: matchData }, { data: metaData }, { data: playersData }] = await Promise.all([
-      db
+      adb
         .from('matches')
         .select('id, match_code, team_a, team_b, match_date, matchday_id')
         .order('match_date', { ascending: true }),
-      db
+      adb
         .from('match_metadata')
         .select('matchday_id, home_team, away_team'),
-      db
+      adb
         .from('players')
         .select('country, country_code'),
     ]);
@@ -613,7 +636,7 @@ export default function Admin() {
 
   async function handleFixtureMatchdayChange(matchId, newMatchdayId) {
     setFixtureSavingIds(prev => new Set(prev).add(matchId));
-    await db
+    await adb
       .from('matches')
       .update({ matchday_id: newMatchdayId === '' ? null : Number(newMatchdayId) })
       .eq('id', matchId);
@@ -638,7 +661,7 @@ export default function Admin() {
   const [activityLoading, setActivityLoading] = useState(false);
 
   async function fetchTransferWindows() {
-    const { data } = await db
+    const { data } = await adb
       .from('transfer_windows')
       .select('*')
       .order('window_number');
@@ -647,7 +670,7 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    db.from('transfer_windows').select('*').order('window_number').then(({ data }) => {
+    adb.from('transfer_windows').select('*').order('window_number').then(({ data }) => {
       setTransferWindows(data ?? []);
       setTwLoading(false);
     });
@@ -655,7 +678,7 @@ export default function Admin() {
 
   async function fetchWindowActivity(windowNumber) {
     setActivityLoading(true);
-    const { data } = await db
+    const { data } = await adb
       .from('transfers')
       .select(`
         id, window_number, price_difference, created_at,
@@ -676,7 +699,7 @@ export default function Admin() {
     const max = preset ? preset.max_transfers : parseInt(twForm.max_transfers, 10);
     if (!num || num < 1 || num > 3) { setTwError('El número de ventana debe ser 1–3.'); setTwSaving(false); return; }
     if (!max || max < 1)            { setTwError('Máx. fichajes debe ser ≥ 1.'); setTwSaving(false); return; }
-    const { error } = await db.from('transfer_windows').insert({
+    const { error } = await adb.from('transfer_windows').insert({
       window_number: num,
       max_transfers: max,
       is_active: false,
@@ -694,16 +717,16 @@ export default function Admin() {
     const activating = !tw.is_active;
     // Only one window active at a time — deactivate others first
     if (activating) {
-      await db.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
+      await adb.from('transfer_windows').update({ is_active: false }).neq('id', tw.id);
     }
-    await db.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
+    await adb.from('transfer_windows').update({ is_active: activating }).eq('id', tw.id);
     setTwLoading(true);
     await fetchTransferWindows();
     if (activating) await fetchWindowActivity(tw.window_number);
   }
 
   async function handleDeleteTransferWindow(tw) {
-    await db.from('transfer_windows').delete().eq('id', tw.id);
+    await adb.from('transfer_windows').delete().eq('id', tw.id);
     setTwLoading(true);
     await fetchTransferWindows();
   }
@@ -712,7 +735,7 @@ export default function Admin() {
   // ── 5a. Scoring system toggle ─────────────────────────────────────────────
   async function handleSaveScoringSystem(system) {
     setSavingSystem(true);
-    await db
+    await adb
       .from('auction_state')
       .update({ scoring_system: system })
       .eq('id', auctionState.id);
@@ -740,12 +763,12 @@ export default function Admin() {
     const errors = [];
 
     // 1. Fetch all teams
-    const { data: teams } = await db.from('teams').select('id, name');
+    const { data: teams } = await adb.from('teams').select('id, name');
     if (!teams?.length) return null;
 
     // 2. Fetch all player_stats — paginated so no starter's stats are ever dropped
     const allStats = await fetchAllPages((f, t) =>
-      db
+      adb
         .from('player_stats')
         .select('player_id, minutes_played, goals, assists, clean_sheet, saves, penalty_saves, penalty_misses, yellow_cards, red_cards, own_goals, goals_conceded, total_points, shots_on_target, shots_off_target, blocked_shots, tackles, interceptions, fouls_won, fouls_conceded, offsides, passes, crosses, penalties_won')
         .eq('matchday_id', matchdayIdInt)
@@ -754,14 +777,14 @@ export default function Admin() {
 
     // 3. Fetch all players for position + price lookup — roster exceeds 1000 rows
     const allPlayers = await fetchAllPages((f, t) =>
-      db.from('players').select('id, position, price').range(f, t));
+      adb.from('players').select('id, position, price').range(f, t));
     const positionMap = Object.fromEntries(allPlayers.map(p => [p.id, p.position]));
     const priceMap = Object.fromEntries(allPlayers.map(p => [p.id, p.price]));
 
     // 4. Fetch lineups — prefer matchday-specific; otherwise carry forward each
     //    team's most recent PRIOR matchday lineup (falling back to preseason null).
     const matchdayLineups = await fetchAllPages((f, t) =>
-      db
+      adb
         .from('lineups')
         .select('team_id, player_id, is_starting, is_captain, bench_order')
         .eq('matchday_id', matchdayIdInt)
@@ -772,7 +795,7 @@ export default function Admin() {
     // Prior lineups: any matchday strictly before this one, plus preseason null.
     // Paginated: spans all prior matchdays and will exceed 1000 once several MDs exist.
     const priorLineups = await fetchAllPages((f, t) =>
-      db
+      adb
         .from('lineups')
         .select('team_id, player_id, is_starting, is_captain, bench_order, matchday_id')
         .or(`matchday_id.lt.${matchdayIdInt},matchday_id.is.null`)
@@ -796,7 +819,7 @@ export default function Admin() {
     const allLineups = [...matchdayLineups, ...carriedRows];
 
     // 5. Fetch matchday_points from OTHER matchdays — idempotent on re-runs
-    const { data: otherStandings } = await db
+    const { data: otherStandings } = await adb
       .from('fantasy_standings')
       .select('team_id, matchday_points, goals_scored')
       .neq('matchday_id', matchdayIdInt);
@@ -888,7 +911,7 @@ export default function Admin() {
     });
 
     if (upsertRows.length > 0) {
-      const { error } = await db
+      const { error } = await adb
         .from('fantasy_standings')
         .upsert(upsertRows, { onConflict: 'team_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
@@ -896,7 +919,7 @@ export default function Admin() {
 
     // Stamp carried lineups as matchday-specific — permanent historical record
     if (toStamp.length > 0) {
-      const { error: stampErr } = await db
+      const { error: stampErr } = await adb
         .from('lineups')
         .upsert(toStamp, { onConflict: 'team_id,matchday_id,player_id' });
       if (stampErr) errors.push(`Lineup stamp error: ${stampErr.message}`);
@@ -981,7 +1004,7 @@ export default function Admin() {
       round: 1, bracket: 'championship', match_label: s.label,
       team_a_id: s.teamA.team_id, team_b_id: s.teamB.team_id,
     }));
-    const { error } = await db.from('knockout_matches').insert(rows);
+    const { error } = await adb.from('knockout_matches').insert(rows);
     setBracketSeedResult(error ? { error: error.message } : { ok: true, count: rows.length });
     if (!error) await fetchKnockoutData();
     setBracketSeeding(false);
@@ -1034,7 +1057,7 @@ export default function Admin() {
 
     const allTeamIds = [...new Set(toResolve.flatMap(m => [m.team_a_id, m.team_b_id]).filter(Boolean))];
 
-    const { data: standingsRows } = await db
+    const { data: standingsRows } = await adb
       .from('fantasy_standings')
       .select('team_id, matchday_points, goals_scored')
       .eq('matchday_id', matchdayIdInt)
@@ -1042,8 +1065,8 @@ export default function Admin() {
     const mdStandings = Object.fromEntries((standingsRows ?? []).map(s => [s.team_id, s]));
 
     const [{ data: mdCaptains }, { data: nullCaptains }] = await Promise.all([
-      db.from('lineups').select('team_id, player_id').eq('matchday_id', matchdayIdInt).eq('is_captain', true).in('team_id', allTeamIds),
-      db.from('lineups').select('team_id, player_id').is('matchday_id', null).eq('is_captain', true).in('team_id', allTeamIds),
+      adb.from('lineups').select('team_id, player_id').eq('matchday_id', matchdayIdInt).eq('is_captain', true).in('team_id', allTeamIds),
+      adb.from('lineups').select('team_id, player_id').is('matchday_id', null).eq('is_captain', true).in('team_id', allTeamIds),
     ]);
     const captainMap = {};
     for (const r of nullCaptains ?? []) captainMap[r.team_id] = r.player_id;
@@ -1052,7 +1075,7 @@ export default function Admin() {
     const captainPlayerIds = [...new Set(Object.values(captainMap))].filter(Boolean);
     const captainStatsMap = {};
     if (captainPlayerIds.length > 0) {
-      const { data: cStats } = await db
+      const { data: cStats } = await adb
         .from('player_stats')
         .select('player_id, total_points')
         .eq('matchday_id', matchdayIdInt)
@@ -1110,14 +1133,14 @@ export default function Admin() {
 
     let resolvedCount = 0;
     for (const { id, ...data } of updates) {
-      const { error } = await db.from('knockout_matches').update(data).eq('id', id);
+      const { error } = await adb.from('knockout_matches').update(data).eq('id', id);
       if (error) errors.push(`Match update error: ${error.message}`);
       else resolvedCount++;
     }
 
     const nextRows = buildNextRoundRows(round, matchResults, knockoutMatches);
     if (nextRows.length > 0) {
-      const { error } = await db.from('knockout_matches').insert(nextRows);
+      const { error } = await adb.from('knockout_matches').insert(nextRows);
       if (error) errors.push(`Next round creation error: ${error.message}`);
     }
 
@@ -1142,7 +1165,7 @@ export default function Admin() {
     setKnockoutCalcRunning(true);
     setKnockoutCalcResult(null);
     const matchdayIdInt = parseInt(knockoutCalcMatchdayId, 10);
-    const { error } = await db
+    const { error } = await adb
       .from('knockout_matches')
       .update({ matchday_id: matchdayIdInt })
       .eq('bracket', 'championship')
@@ -1177,7 +1200,7 @@ export default function Admin() {
     }
 
     // Fetch existing players for ded up by normName(name)|normName(country)
-    const { data: existing } = await db.from('players').select('id, name, country');
+    const { data: existing } = await adb.from('players').select('id, name, country');
     const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const existingSet = new Set(
       (existing ?? []).map(p => `${normName(p.name)}|${normName(p.country)}`)
@@ -1212,7 +1235,7 @@ export default function Admin() {
 
     let created = 0;
     if (toInsert.length > 0) {
-      const { error, data: inserted } = await db
+      const { error, data: inserted } = await adb
         .from('players')
         .insert(toInsert)
         .select('id');
@@ -1261,7 +1284,7 @@ export default function Admin() {
 
     const errors = [];
 
-    const { error: metaError } = await db
+    const { error: metaError } = await adb
       .from('match_metadata')
       .upsert({
         matchday_id: matchdayId,
@@ -1279,7 +1302,7 @@ export default function Admin() {
     const PAGE = 1000;
     let allPlayers = [];
     for (let from = 0; ; from += PAGE) {
-      const { data, error } = await db
+      const { data, error } = await adb
         .from('players')
         .select('id, name, position, country')
         .range(from, from + PAGE - 1);
@@ -1358,7 +1381,7 @@ export default function Admin() {
 
     let inserted = 0;
     if (toUpsert.length > 0) {
-      const { error } = await db
+      const { error } = await adb
         .from('player_stats')
         .upsert(toUpsert, { onConflict: 'player_id,matchday_id' });
       if (error) errors.push(`DB error: ${error.message}`);
@@ -1523,10 +1546,14 @@ export default function Admin() {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  // These two gates are about the auction sections only, and those come from
+  // useAuction() — the SIDEBAR competition. While the selector points somewhere
+  // else the auction sections are hidden anyway, so a missing or still-loading
+  // auction state must not block the rest of the panel.
+  if (auctionInSync && loading) {
     return <div className="text-secondary p-6">Cargando estado de subasta…</div>;
   }
-  if (!auctionState) {
+  if (auctionInSync && !auctionState) {
     return (
       <div className="text-error p-6">
         No se encontró estado de subasta. Ejecuta el seed SQL en Supabase.
@@ -1534,7 +1561,7 @@ export default function Admin() {
     );
   }
 
-  const { status, current_round, round_duration_seconds, round_started_at } = auctionState;
+  const { status, current_round, round_duration_seconds, round_started_at } = auctionState ?? {};
   const isPending   = status === AUCTION_STATUSES.PENDING;
   const isActive    = status === AUCTION_STATUSES.ACTIVE;
   const isPaused    = status === AUCTION_STATUSES.PAUSED;
@@ -1581,13 +1608,17 @@ export default function Admin() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">Panel de admin</h1>
-        <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_BADGE[status]}`}>
-          {status}
-        </span>
+    <div className="space-y-6">
+      {/* Panel header — names the competition every section below is bound to */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-xl font-bold text-primary">
+          {adminCompetition?.name ?? `Competencia #${adminCompetitionId}`}
+        </h2>
+        {auctionInSync && status && (
+          <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_BADGE[status]}`}>
+            {status}
+          </span>
+        )}
       </div>
 
       {/* ── League Participants ──────────────────────────────────────────── */}
@@ -1668,6 +1699,22 @@ export default function Admin() {
         )}
       </section>
 
+      {/* The auction sections are driven by AuctionContext, which is bound to the
+          competition selected in the SIDEBAR — it cannot be re-pointed from here.
+          Rather than show controls that would start, resolve or auto-bid a
+          different competition than the one this panel names, hide them and say so. */}
+      {!auctionInSync && (
+        <section className="bg-surface rounded-xl p-6 space-y-2">
+          <h2 className="text-lg font-semibold text-primary">Control de subasta</h2>
+          <p className="text-sm text-secondary">
+            Las secciones de subasta (control, resolución de ronda y pujas en vivo) operan sobre la
+            competencia activa de la app, no sobre la seleccionada aquí. Cambia la competencia de la
+            app para administrarlas.
+          </p>
+        </section>
+      )}
+
+      {auctionInSync && (<>
       {/* ── Auction Controls ─────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <h2 className="text-lg font-semibold text-primary">Control de subasta</h2>
@@ -1985,6 +2032,7 @@ export default function Admin() {
           )}
         </section>
       )}
+      </>)}
 
       {/* ── Matchday Management ─────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-6">
@@ -3157,6 +3205,100 @@ export default function Admin() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+/**
+ * The admin page: a competition selector, the banners that keep it honest, and
+ * the panel itself.
+ *
+ * The selector is deliberately NOT the sidebar switcher. An admin has to be able
+ * to build a `status='setup'` competition — one no user can select — while still
+ * using the app as a player in another, so the two are independent and the
+ * divergence is called out loudly instead of being hidden.
+ */
+export default function Admin() {
+  const { competitions, competitionId, setCompetition } = useCompetition();
+  const [pickedCompetitionId, setAdminCompetitionId] = useState(null);
+
+  // Derived, not stored: the list can change under us (a competition was just
+  // created, or archived out of view), and an explicit pick that no longer
+  // resolves falls back to the active competition rather than leaving the panel
+  // bound to an id with no name.
+  const adminCompetitionId =
+    pickedCompetitionId != null && competitions.some((c) => c.id === pickedCompetitionId)
+      ? pickedCompetitionId
+      : competitionId;
+
+  const adminCompetition = competitions.find((c) => c.id === adminCompetitionId) ?? null;
+
+  const diverged = adminCompetitionId !== competitionId;
+  const isArchived = adminCompetition?.status === 'archived';
+  const activeCompetition = competitions.find((c) => c.id === competitionId) ?? null;
+
+  return (
+    <div className="space-y-6 max-w-5xl">
+      <div className="sticky top-0 z-20 -mx-4 px-4 md:-mx-6 md:px-6 py-3 bg-neutral/95 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold text-primary">Panel de admin</h1>
+          <div className="flex items-center gap-2">
+            <label htmlFor="admin-competition" className="text-xs text-muted uppercase tracking-wider">
+              Administrando
+            </label>
+            <select
+              id="admin-competition"
+              value={adminCompetitionId ?? ''}
+              onChange={(e) => setAdminCompetitionId(Number(e.target.value))}
+              className="bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-primary text-sm focus:outline-none focus:border-tertiary"
+            >
+              {competitions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.short_label}
+                  {c.status !== 'active' ? ` (${c.status})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {diverged && (
+        <div className="bg-warning/15 border border-warning/40 rounded-xl px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-sm text-warning">
+            <span className="font-semibold">Ojo:</span> estás administrando{' '}
+            <span className="font-semibold">{adminCompetition?.short_label ?? `#${adminCompetitionId}`}</span>,
+            pero la app está mostrando{' '}
+            <span className="font-semibold">{activeCompetition?.short_label ?? `#${competitionId}`}</span>.
+            Todo lo que hagas aquí abajo afecta a la primera.
+          </p>
+          <button
+            onClick={() => setCompetition(adminCompetitionId)}
+            className="px-3 py-1.5 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+          >
+            Cambiar la app también
+          </button>
+        </div>
+      )}
+
+      {isArchived && (
+        <div className="bg-border/60 border border-border rounded-xl px-4 py-3">
+          <p className="text-sm text-secondary">
+            <span className="font-semibold text-primary">Competencia archivada.</span> Es un archivo
+            de solo lectura: las escrituras se rechazan del lado del servidor. Cámbiale el estado si
+            de verdad necesitas modificarla.
+          </p>
+        </div>
+      )}
+
+      {adminCompetitionId != null && (
+        <AdminPanel
+          key={adminCompetitionId}
+          adminCompetitionId={adminCompetitionId}
+          adminCompetition={adminCompetition}
+          auctionInSync={!diverged}
+        />
+      )}
     </div>
   );
 }

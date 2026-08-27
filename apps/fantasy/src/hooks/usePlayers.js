@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useCompetition } from '../context/CompetitionContext';
 
-export function usePlayers(filters = {}) {
-  const { db } = useCompetition();
+/**
+ * `dbOverride` lets the Admin panel read the competition its own selector points
+ * at rather than the one the sidebar switcher has active. Everywhere else it is
+ * omitted and the active competition's client is used. Callers that pass an
+ * override are expected to remount on a switch (Admin keys its body on the
+ * selected id), so the override is not in the effect's dependency list.
+ */
+export function usePlayers(filters = {}, dbOverride = null) {
+  const { db: activeDb } = useCompetition();
+  const db = dbOverride ?? activeDb;
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
