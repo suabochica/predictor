@@ -104,6 +104,9 @@ export default function AdminTable() {
         .select(
           'id, match_code, team_a, team_b, match_date, group_name, stage, actual_score_a, actual_score_b, status',
         )
+        // Polla is World-Cup-only; pin the competition so fantasy's other
+        // competitions can never appear here.
+        .eq('competition_id', 1)
         .eq('stage', 'group')
         .order('match_date', { ascending: false });
 
@@ -232,7 +235,8 @@ export default function AdminTable() {
           actual_score_b: scoreB,
           status: 'finished',
         })
-        .eq('id', matchId);
+        .eq('id', matchId)
+        .eq('competition_id', 1);
 
       if (error) throw error;
 

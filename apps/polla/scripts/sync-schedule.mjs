@@ -95,6 +95,12 @@ const MANUAL_SQL_DIR = resolve(__dirname, '../../../supabase/manual');
 // Time_ET column normalizes every venue to Eastern, so a single offset is correct.
 const ET_OFFSET = '-04:00';
 
+// Fantasy gained a `competition_id` dimension (migrations 060–062); polla did not.
+// This script is the World Cup schedule syncer, so every lookup and write here is
+// pinned to competition 1. Keeps `wc_stage` label lookups unambiguous once a second
+// competition exists with its own matchdays.
+const WC_COMPETITION_ID = 1;
+
 // CSV `matchday` value (lowercased/trimmed) → matchdays.wc_stage label.
 // 'off season' intentionally absent → matchday_id stays NULL.
 const MATCHDAY_TO_WC_STAGE = {
@@ -227,9 +233,9 @@ function generateSql(rows) {
     const ts = csvInstant(r.Date, r.Time_ET);
     out.push(
       `UPDATE matches SET ` +
-      `matchday_id = (SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)}), ` +
+      `matchday_id = (SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)} AND competition_id = ${WC_COMPETITION_ID}), ` +
       `match_date = ${q(ts)} ` +
-      `WHERE stage = 'group' AND group_name = ${q(r.Group)} ` +
+      `WHERE competition_id = ${WC_COMPETITION_ID} AND stage = 'group' AND group_name = ${q(r.Group)} ` +
       `AND ((team_a = ${q(home)} AND team_b = ${q(away)}) OR (team_a = ${q(away)} AND team_b = ${q(home)}));`
     );
   }
@@ -246,13 +252,15 @@ function generateSql(rows) {
       .map((r) => csvInstant(r.Date, r.Time_ET))
       .sort((a, b) => Date.parse(a) - Date.parse(b));
     if (!csvRows.length) continue;
-    const mdExpr = wcStage ? `(SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)})` : 'NULL';
+    const mdExpr = wcStage
+      ? `(SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)} AND competition_id = ${WC_COMPETITION_ID})`
+      : 'NULL';
     const values = csvRows.map((ts, i) => `(${i + 1}, ${q(ts)}::timestamptz)`).join(', ');
     out.push(`-- ${dbStage} (${csvRows.length})${wcStage ? ` → ${wcStage}` : ' — off-season, matchday_id NULL'}`);
     out.push(
       `WITH ranked AS (\n` +
       `  SELECT id, row_number() OVER (ORDER BY match_date, match_code) AS rn\n` +
-      `  FROM matches WHERE stage = ${q(dbStage)}\n` +
+      `  FROM matches WHERE competition_id = ${WC_COMPETITION_ID} AND stage = ${q(dbStage)}\n` +
       `), csv(rn, ts) AS (VALUES ${values})\n` +
       `UPDATE matches m SET matchday_id = ${mdExpr}, match_date = csv.ts\n` +
       `FROM ranked JOIN csv ON csv.rn = ranked.rn WHERE m.id = ranked.id;`
@@ -292,11 +300,11 @@ function generateInsertSql(rows, groups) {
       const ts = csvInstant(r.Date, r.Time_ET);
       const stadium = [r.Venue, r.City].filter(Boolean).join(', ');
       out.push(
-        `INSERT INTO matches (match_code, team_a, team_b, match_date, group_name, status, stadium, stage, matchday_id)\n` +
-        `SELECT ${q(code)}, ${q(home)}, ${q(away)}, ${q(ts)}::timestamptz, ${q(g)}, 'upcoming', ${q(stadium)}, 'group',\n` +
-        `       (SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)})\n` +
+        `INSERT INTO matches (competition_id, match_code, team_a, team_b, match_date, group_name, status, stadium, stage, matchday_id)\n` +
+        `SELECT ${WC_COMPETITION_ID}, ${q(code)}, ${q(home)}, ${q(away)}, ${q(ts)}::timestamptz, ${q(g)}, 'upcoming', ${q(stadium)}, 'group',\n` +
+        `       (SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)} AND competition_id = ${WC_COMPETITION_ID})\n` +
         `WHERE NOT EXISTS (\n` +
-        `  SELECT 1 FROM matches WHERE stage = 'group' AND group_name = ${q(g)}\n` +
+        `  SELECT 1 FROM matches WHERE competition_id = ${WC_COMPETITION_ID} AND stage = 'group' AND group_name = ${q(g)}\n` +
         `    AND ((team_a = ${q(home)} AND team_b = ${q(away)}) OR (team_a = ${q(away)} AND team_b = ${q(home)}))\n` +
         `);`
       );
@@ -335,7 +343,9 @@ function generateInsertKnockoutSql(rows, teams = {}) {
   for (const [dbStage, csvRows] of byStage) {
     const matchdayKey = csvRows[0].matchday.toLowerCase().trim();
     const wcStage = MATCHDAY_TO_WC_STAGE[matchdayKey] || null;
-    const mdExpr = wcStage ? `(SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)})` : 'NULL';
+    const mdExpr = wcStage
+      ? `(SELECT id FROM matchdays WHERE wc_stage = ${q(wcStage)} AND competition_id = ${WC_COMPETITION_ID})`
+      : 'NULL';
     const offLabel = wcStage ? `→ ${wcStage}` : '— off-season, matchday_id NULL';
 
     out.push(`-- ${dbStage} (${csvRows.length} matches) ${offLabel}`);
@@ -346,11 +356,11 @@ function generateInsertKnockoutSql(rows, teams = {}) {
       const pair = teams[code] || ['TBD', 'TBD'];
       const [teamA, teamB] = pair;
       out.push(
-        `INSERT INTO matches (match_code, team_a, team_b, match_date, group_name, status, stadium, stage, matchday_id)\n` +
-        `SELECT ${q(code)}, ${q(teamA)}, ${q(teamB)}, ${q(ts)}::timestamptz, NULL, 'upcoming', ${q(stadium)}, ${q(dbStage)},\n` +
+        `INSERT INTO matches (competition_id, match_code, team_a, team_b, match_date, group_name, status, stadium, stage, matchday_id)\n` +
+        `SELECT ${WC_COMPETITION_ID}, ${q(code)}, ${q(teamA)}, ${q(teamB)}, ${q(ts)}::timestamptz, NULL, 'upcoming', ${q(stadium)}, ${q(dbStage)},\n` +
         `       ${mdExpr}\n` +
         `WHERE NOT EXISTS (\n` +
-        `  SELECT 1 FROM matches WHERE match_code = ${q(code)}\n` +
+        `  SELECT 1 FROM matches WHERE competition_id = ${WC_COMPETITION_ID} AND match_code = ${q(code)}\n` +
         `);`
       );
       n++;
@@ -441,7 +451,10 @@ async function main() {
   console.log(`Supabase: ${supabaseUrl.replace(/\/\/.*@/, '//***@')}`);
 
   // Build wc_stage(lower/trim) → matchday_id.
-  const { data: matchdays, error: mdErr } = await supabase.from('matchdays').select('id, wc_stage');
+  const { data: matchdays, error: mdErr } = await supabase
+    .from('matchdays')
+    .select('id, wc_stage')
+    .eq('competition_id', WC_COMPETITION_ID);
   if (mdErr) { console.error('ERROR fetching matchdays:', mdErr); process.exit(1); }
   const wcStageToId = {};
   for (const md of matchdays ?? []) {
@@ -459,7 +472,8 @@ async function main() {
   // Fetch all DB matches.
   const { data: dbMatches, error: matchErr } = await supabase
     .from('matches')
-    .select('id, match_code, match_date, group_name, stage, team_a, team_b');
+    .select('id, match_code, match_date, group_name, stage, team_a, team_b')
+    .eq('competition_id', WC_COMPETITION_ID);
   if (matchErr) { console.error('ERROR fetching matches:', matchErr); process.exit(1); }
 
   const updates = []; // { id, matchday_id, match_date }
@@ -522,7 +536,8 @@ async function main() {
     const { error } = await supabase
       .from('matches')
       .update({ matchday_id: u.matchday_id, match_date: u.match_date })
-      .eq('id', u.id);
+      .eq('id', u.id)
+      .eq('competition_id', WC_COMPETITION_ID);
     if (error) { console.error(`  ERROR updating ${u.id}:`, error.message); continue; }
     written++;
   }

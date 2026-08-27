@@ -141,6 +141,9 @@ export default function PredictionForm({
         .select(
           "id, match_code, team_a, team_b, match_date, group_name, stadium, status, stage, actual_score_a, actual_score_b",
         )
+        // Polla has no competition concept — it is the World Cup only. Pin it so
+        // fantasy's other competitions can never leak into the prediction form.
+        .eq("competition_id", 1)
         .neq("team_a", "TBD")
         .neq("team_b", "TBD")
         .order("match_date", { ascending: false })

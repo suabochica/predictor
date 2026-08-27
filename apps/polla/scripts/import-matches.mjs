@@ -214,6 +214,7 @@ function parseMatches(wikitext, groupName) {
     }
 
     matches.push({
+      competition_id: 1, // World Cup 2026 — this script only imports the WC schedule
       match_code: `M${String(matchNumber).padStart(2, '0')}`,
       team_a: teamA,
       team_b: teamB,
@@ -264,7 +265,10 @@ async function importMatches() {
   const { data, error } = await supabase
     .from('matches')
     .upsert(allMatches, {
-      onConflict: 'match_code',
+      // Migration 062 replaced matches_match_code_key with UNIQUE(competition_id,
+      // match_code); the conflict target must name the whole composite key.
+      // Rows land in competition 1 (World Cup) via the column default.
+      onConflict: 'competition_id,match_code',
       ignoreDuplicates: false,
     })
     .select('match_code');

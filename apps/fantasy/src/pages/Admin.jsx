@@ -211,11 +211,22 @@ export default function Admin() {
 
   async function fetchParticipants() {
     setParticipantsLoading(true);
+    // `teams` is a LEFT embed (no !inner) so users without a team still appear.
+    // Since 062 dropped teams UNIQUE(user_id) for UNIQUE(user_id, competition_id),
+    // PostgREST emits this embed as a to-many ARRAY instead of a to-one object —
+    // hence the flatten below, which the rest of this section relies on.
+    // TODO(phase 5): competition_id 1 → adminCompetitionId.
     const { data } = await supabase
       .from('users')
       .select('id, display_name, email, teams(id, name, budget_remaining)')
+      .eq('teams.competition_id', 1)
       .order('created_at', { ascending: true });
-    setParticipants(data ?? []);
+    setParticipants(
+      (data ?? []).map((u) => ({
+        ...u,
+        teams: Array.isArray(u.teams) ? (u.teams[0] ?? null) : (u.teams ?? null),
+      })),
+    );
     setParticipantsLoading(false);
   }
 

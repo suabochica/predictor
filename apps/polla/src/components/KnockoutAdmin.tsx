@@ -91,6 +91,9 @@ export default function KnockoutAdmin() {
       const { data: matchData, error: matchErr } = await supabase
         .from("matches")
         .select("*")
+        // Polla is World-Cup-only; pin the competition so fantasy's other
+        // competitions can never appear here.
+        .eq("competition_id", 1)
         .neq("stage", "group")
         .order("match_code", { ascending: true });
 
@@ -200,7 +203,8 @@ export default function KnockoutAdmin() {
           actual_score_a: scoreA,
           actual_score_b: scoreB,
         })
-        .eq("id", match.id);
+        .eq("id", match.id)
+        .eq("competition_id", 1);
 
       if (error) throw error;
 
@@ -223,7 +227,8 @@ export default function KnockoutAdmin() {
       const { error } = await supabase
         .from("matches")
         .delete()
-        .eq("id", match.id);
+        .eq("id", match.id)
+        .eq("competition_id", 1);
 
       if (error) throw error;
 
