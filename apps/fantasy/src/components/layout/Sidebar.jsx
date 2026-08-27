@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../../context/LeagueContext';
+import { useCompetition } from '../../context/CompetitionContext';
 import { classNames } from '../../lib/utils';
 import homeIcon from '@predictor/ui/icons/home.svg';
 import teamIcon from '@predictor/ui/icons/team.svg';
@@ -32,9 +33,29 @@ const adminItems = [
 export default function Sidebar() {
   const { isAdmin } = useAuth();
   const { team, activeMatchday, activeTransferWindow } = useLeague();
+  const { competitions, competitionId, setCompetition } = useCompetition();
 
   return (
     <aside className="hidden md:flex flex-col w-56 bg-surface border-r border-border min-h-screen pt-4 pb-8">
+      {/* Competition switcher — hidden while there is only one to pick from */}
+      {competitions.length > 1 && (
+        <div className="px-4 mb-5">
+          <label htmlFor="competition-switcher" className="block text-xs text-muted uppercase tracking-wider mb-1">
+            Competencia
+          </label>
+          <select
+            id="competition-switcher"
+            value={competitionId ?? ''}
+            onChange={(e) => setCompetition(Number(e.target.value))}
+            className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-primary text-sm focus:outline-none focus:border-tertiary"
+          >
+            {competitions.map((c) => (
+              <option key={c.id} value={c.id}>{c.short_label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Team info */}
       {team && (
         <div className="px-4 mb-6">

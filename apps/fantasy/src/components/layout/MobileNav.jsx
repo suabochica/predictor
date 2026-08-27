@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../../context/LeagueContext';
+import { useCompetition } from '../../context/CompetitionContext';
 import { classNames, isKnockout } from '../../lib/utils';
 import homeIcon from '@predictor/ui/icons/home.svg';
 import teamIcon from '@predictor/ui/icons/team.svg';
@@ -20,6 +21,7 @@ const cuadros = { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' };
 export default function MobileNav() {
   const { user, isAdmin } = useAuth();
   const { activeMatchday } = useLeague();
+  const { competitions, competitionId, setCompetition } = useCompetition();
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -70,6 +72,25 @@ export default function MobileNav() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border">
         {moreOpen && (
           <div className="absolute bottom-full right-0 mb-px w-48 bg-surface border border-border rounded-lg shadow-lg overflow-hidden">
+            {/* Competition switcher — hidden while there is only one to pick from */}
+            {competitions.length > 1 && (
+              <div className="px-4 py-3 border-b border-border">
+                <label htmlFor="competition-switcher-mobile" className="block text-xs text-muted uppercase tracking-wider mb-1">
+                  Competencia
+                </label>
+                <select
+                  id="competition-switcher-mobile"
+                  value={competitionId ?? ''}
+                  onChange={(e) => setCompetition(Number(e.target.value))}
+                  className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-primary text-sm focus:outline-none focus:border-tertiary"
+                >
+                  {competitions.map((c) => (
+                    <option key={c.id} value={c.id}>{c.short_label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {moreNavItems.map(({ to, icon, label }) => (
               <NavLink
                 key={to}
