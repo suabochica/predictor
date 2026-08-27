@@ -1,0 +1,53 @@
+id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,current_price
+129,Amar Dedic,Bosnia And Herzegovina,BIH,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3
+136,Amar Memic,Bosnia And Herzegovina,BIH,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7
+137,Amir Hadziahmetovic,Bosnia And Herzegovina,BIH,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5
+130,Armin Gigovic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1
+128,Benjamin Tahirovic,Bosnia And Herzegovina,BIH,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3
+125,Dennis Hadzikadunic,Bosnia And Herzegovina,BIH,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7
+138,Dzenis Burnic,Bosnia And Herzegovina,BIH,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9
+133,Edin Dzeko,Bosnia And Herzegovina,BIH,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1
+132,Ermedin Demirovic,Bosnia And Herzegovina,BIH,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2
+147,Ermin Mahmic,Bosnia And Herzegovina,BIH,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2
+141,Esmir Bajraktarevic,Bosnia And Herzegovina,BIH,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7
+144,Haris Tabakovic,Bosnia And Herzegovina,BIH,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1
+134,Ivan Basic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1
+135,Ivan Sunjic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1
+146,Jovo Lukic,Bosnia And Herzegovina,BIH,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6
+140,Kerim Alajbegovic,Bosnia And Herzegovina,BIH,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2
+143,Martin Zlomislic,Bosnia And Herzegovina,BIH,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5
+1121,Mladen Jurkas,Bosnia And Herzegovina,BIH,GK,3.5,false,,2026-06-08 12:44:50.237218,3.5
+145,Nidal Celik,Bosnia And Herzegovina,BIH,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5
+124,Nihad Mujakic,Bosnia And Herzegovina,BIH,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6
+139,Nikola Katic,Bosnia And Herzegovina,BIH,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8
+123,Nikola Vasilj,Bosnia And Herzegovina,BIH,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0
+131,Samed Bazdar,Bosnia And Herzegovina,BIH,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5
+127,Sead Kolasinac,Bosnia And Herzegovina,BIH,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3
+142,Stjepan Radeljic,Bosnia And Herzegovina,BIH,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7
+126,Tarik Muharemovic,Bosnia And Herzegovina,BIH,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9
+196,Alfie Jones,Canada,CAN,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8
+190,Ali Ahmed,Canada,CAN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9
+174,Alistair Johnston,Canada,CAN,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0
+189,Alphonso Davies,Canada,CAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9
+180,Cyle Larin,Canada,CAN,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2
+173,Dayne St. Clair,Canada,CAN,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8
+183,Derek Cornelius,Canada,CAN,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0
+179,Ismaël Koné,Canada,CAN,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0
+184,Jacob Shaffelburg,Canada,CAN,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2
+176,Joel Waterman,Canada,CAN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7
+181,Jonathan David,Canada,CAN,FWD,7.0,false,,2026-06-07 20:08:13.783269,7.0
+191,Jonathan Osorio,Canada,CAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6
+182,Liam Millar,Canada,CAN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1
+175,Luc De Fougerolles,Canada,CAN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5
+195,Marcelo Flores,Canada,CAN,MID,5.7,false,,2026-06-07 20:08:13.783269,5.7
+177,Mathieu Choinière,Canada,CAN,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3
+186,Maxime Crépeau,Canada,CAN,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0
+185,Moïse Bombito,Canada,CAN,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1
+194,Nathan Saliba,Canada,CAN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1
+192,Niko Sigur,Canada,CAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9
+188,Owen Goodman,Canada,CAN,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5
+193,Promise David,Canada,CAN,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4
+198,Richie Laryea,Canada,CAN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9
+178,Stephen Eustaquio,Canada,CAN,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0
+187,Tajon Buchanan,Canada,CAN,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5
+197,Tani Oluwaseyi,Canada,CAN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9

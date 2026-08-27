@@ -21,8 +21,8 @@ export function useStandings() {
         .select('team_id, matchday_id, matchday_points, total_points, goals_scored'),
       db
         .from('matchdays')
-        .select('id, name, wc_stage, is_completed')
-        .order('id'),
+        .select('id, name, wc_stage, phase, sequence, is_completed')
+        .order('sequence'),
     ]);
 
     const teams = teamsRes.data ?? [];
@@ -31,15 +31,12 @@ export function useStandings() {
 
     setMatchdays(matchdaysData);
 
-    // The leaderboard ranks teams by the 3 group-stage matchdays only.
-    // Knockout rounds are H2H-only and must never enter the group total.
-    // Same rule the Leaderboard uses: wc_stage includes "group", sort by id, first 3.
-    const groupIds = new Set(
-      matchdaysData
-        .filter((md) => md.wc_stage?.toLowerCase().includes('group'))
-        .sort((a, b) => a.id - b.id)
-        .slice(0, 3)
-        .map((md) => md.id)
+    // The leaderboard ranks teams by the league-phase matchdays only — knockout
+    // rounds are H2H-only and must never enter the league total. No `.slice(0, 3)`:
+    // `phase` names the set exactly, and hard-coding 3 would have truncated UCL's
+    // 8-matchday league phase. Same rule the Leaderboard uses.
+    const leagueIds = new Set(
+      matchdaysData.filter((md) => md.phase === 'league').map((md) => md.id)
     );
 
     // Seed every enrolled team with 0 points
@@ -59,13 +56,13 @@ export function useStandings() {
     for (const row of standingsData) {
       if (!byTeam[row.team_id]) continue;
       // Keep every matchday's points in the per-md map (columns/popups render
-      // only the 3 group columns; knockout entries are harmless here).
+      // only the league columns; knockout entries are harmless here).
       byTeam[row.team_id].matchday_points[row.matchday_id] = row.matchday_points;
-      // Only group rows feed the leaderboard total/goals. The stored
+      // Only league rows feed the leaderboard total/goals. The stored
       // total_points is cumulative AND polluted (computeStandingsForMatchday
       // folds in every other matchday incl. knockout), so we sum the group
       // matchday_points ourselves instead of trusting it.
-      if (!groupIds.has(row.matchday_id)) continue;
+      if (!leagueIds.has(row.matchday_id)) continue;
       byTeam[row.team_id].total_points += row.matchday_points ?? 0;
       byTeam[row.team_id].goals_scored += row.goals_scored ?? 0;
     }

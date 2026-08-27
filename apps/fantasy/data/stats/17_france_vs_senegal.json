@@ -1,0 +1,40 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-16",
+    "home_team": "France",
+    "away_team": "Senegal",
+    "score": { "home": 3, "away": 1 }
+  },
+  "players": [
+    { "name": "Kylian Mbappé",       "MP": 90, "G": 2, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 4, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 2, "O": 0, "P": 16, "C": 0, "PW": 0, "PTS": 9.22 },
+    { "name": "Dayot Upamecano",      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 6, "INT": 3, "FW": 1, "FC": 1, "O": 0, "P": 80, "C": 0, "PW": 0, "PTS": 8.80 },
+    { "name": "Michael Olise",        "MP": 90, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 2, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 2, "FC": 0, "O": 0, "P": 57, "C": 3, "PW": 0, "PTS": 8.60 },
+    { "name": "Aurélien Tchouaméni",  "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 3, "INT": 2, "FW": 0, "FC": 0, "O": 0, "P": 69, "C": 0, "PW": 0, "PTS": 7.78 },
+    { "name": "Jules Koundé",         "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 4, "INT": 0, "FW": 0, "FC": 1, "O": 1, "P": 59, "C": 3, "PW": 0, "PTS": 7.24 },
+    { "name": "Theo Hernández",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 2, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 48, "C": 1, "PW": 0, "PTS": 7.18 },
+    { "name": "Désiré Doué",          "MP": 87, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 1, "BS": 0, "Tk": 1, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 36, "C": 0, "PW": 0, "PTS": 7.12 },
+    { "name": "William Saliba",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 72, "C": 0, "PW": 0, "PTS": 7.04 },
+    { "name": "Bradley Barcola",      "MP": 10, "G": 1, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P":  7, "C": 0, "PW": 0, "PTS": 6.94 },
+    { "name": "Adrien Rabiot",        "MP": 90, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P": 50, "C": 0, "PW": 0, "PTS": 6.90 },
+    { "name": "Mike Maignan",         "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 2, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 39, "C": 0, "PW": 0, "PTS": 6.78 },
+    { "name": "Ousmane Dembélé",      "MP": 80, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 1, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 34, "C": 2, "PW": 0, "PTS": 6.72 },
+    { "name": "Rayan Cherki",         "MP":  3, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P":  8, "C": 0, "PW": 0, "PTS": 5.66 },
+    { "name": "Krépin Diatta",        "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 5, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 50, "C": 1, "PW": 0, "PTS": 7.42 },
+    { "name": "Kalidou Koulibaly",    "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 4, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 44, "C": 0, "PW": 0, "PTS": 7.08 },
+    { "name": "Moussa Niakhaté",      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 83, "C": 0, "PW": 0, "PTS": 6.96 },
+    { "name": "Édouard Mendy",        "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 5, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 36, "C": 0, "PW": 0, "PTS": 6.92 },
+    { "name": "Ibrahim Mbaye",        "MP": 15, "G": 1, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P":  8, "C": 2, "PW": 0, "PTS": 6.90 },
+    { "name": "Sadio Mané",           "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 2, "FW": 3, "FC": 0, "O": 0, "P": 30, "C": 0, "PW": 0, "PTS": 6.90 },
+    { "name": "Idrissa Gueye",        "MP": 88, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P": 61, "C": 0, "PW": 0, "PTS": 6.82 },
+    { "name": "El Hadji Malick Diouf","MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1, "FW": 0, "FC": 1, "O": 0, "P": 45, "C": 3, "PW": 0, "PTS": 6.66 },
+    { "name": "Pape Gueye",           "MP": 83, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 2, "FW": 0, "FC": 1, "O": 0, "P": 49, "C": 0, "PW": 0, "PTS": 6.58 },
+    { "name": "Iliman Ndiaye",        "MP":  7, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 10, "C": 0, "PW": 0, "PTS": 6.40 },
+    { "name": "Ismaïla Sarr",         "MP": 75, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 2, "BS": 1, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 13, "C": 1, "PW": 0, "PTS": 6.28 },
+    { "name": "Lamine Camara",        "MP": 76, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 2, "O": 0, "P": 29, "C": 2, "PW": 0, "PTS": 5.82 },
+    { "name": "Pathé Ciss",           "MP":  2, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 14, "C": 0, "PW": 0, "PTS": 5.68 },
+    { "name": "Nicolas Jackson",      "MP": 83, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 1, "INT": 0, "FW": 0, "FC": 2, "O": 3, "P": 18, "C": 0, "PW": 0, "PTS": 5.56 },
+    { "name": "Bamba Dieng",          "MP":  7, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P":  3, "C": 0, "PW": 0, "PTS": 5.46 },
+    { "name": "Habib Diarra",         "MP": 14, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 2, "O": 0, "P":  9, "C": 0, "PW": 0, "PTS": 5.38 }
+  ]
+}

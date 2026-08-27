@@ -29,7 +29,7 @@ export function usePlayerTotals() {
       const [{ data: totalsData }, { data: sysData }, { data: matchdaysData }] = await Promise.all([
         db.from('player_tournament_totals').select('*'),
         db.from('auction_state').select('scoring_system').order('id').limit(1).maybeSingle(),
-        db.from('matchdays').select('id, name, wc_stage'),
+        db.from('matchdays').select('id, name, wc_stage, sequence').order('sequence'),
       ]);
 
       const map = {};
@@ -39,8 +39,16 @@ export function usePlayerTotals() {
       const system = sysData?.scoring_system ?? 'opta';
       const matchdayById = Object.fromEntries((matchdaysData ?? []).map((md) => [md.id, md]));
 
+      // player_stats has no competition_id (it hangs off matchday_id/player_id), so
+      // scope it by this competition's matchdays instead of paginating every
+      // competition's rows and discarding the rest.
+      const scopedMatchdayIds = (matchdaysData ?? []).map((md) => md.id);
       const [statsRows, playerRows] = await Promise.all([
-        fetchAllPages((from, to) => db.from('player_stats').select('*').range(from, to)),
+        scopedMatchdayIds.length
+          ? fetchAllPages((from, to) =>
+              db.from('player_stats').select('*').in('matchday_id', scopedMatchdayIds).range(from, to)
+            )
+          : Promise.resolve([]),
         fetchAllPages((from, to) => db.from('players').select('id, position').range(from, to)),
       ]);
 
@@ -58,7 +66,7 @@ export function usePlayerTotals() {
       setPointsByPlayerByMatchday(byPlayer);
       setMatchdayColumns(
         [...matchdayIds]
-          .sort((a, b) => a - b)
+          .sort((a, b) => (matchdayById[a]?.sequence ?? a) - (matchdayById[b]?.sequence ?? b))
           .map((id) => {
             const md = matchdayById[id];
             const label = md ? md.name.replace(/matchday\s*/i, 'JD').replace(/group stage /i, '') : `MD${id}`;

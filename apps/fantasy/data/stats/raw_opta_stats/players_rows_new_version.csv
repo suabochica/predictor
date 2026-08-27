@@ -100,19 +100,19 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 99,Arthur Theate,Belgium,BEL,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,A. Theate
 100,Brandon Mechele,Belgium,BEL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,B. Mechele
 101,Maxim De Cuyper,Belgium,BEL,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,M. De Cuyper
-102,Axel Witsel,Belgium,BEL,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+102,Axel Witsel,Belgium,BEL,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,A. Witsel
 103,Kevin De Bruyne,Belgium,BEL,MID,7.5,false,,2026-06-07 20:08:13.783269,7.5,K. De Bruyne
 104,Youri Tielemans,Belgium,BEL,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,Y. Tielemans
 105,Romelu Lukaku,Belgium,BEL,FWD,7.4,false,,2026-06-07 20:08:13.783269,7.4,R. Lukaku
 106,Leandro Trossard,Belgium,BEL,FWD,6.6,false,,2026-06-07 20:08:13.783269,6.6,L. Trossard
 107,Jérémy Doku,Belgium,BEL,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,J. Doku
-108,Senne Lammens,Belgium,BEL,GK,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+108,Senne Lammens,Belgium,BEL,GK,4.6,false,,2026-06-07 20:08:13.783269,4.6,S. Lammens
 109,Mike Penders,Belgium,BEL,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
 110,Dodi Lukébakio,Belgium,BEL,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,D. Lukébakio
 111,Thomas Meunier,Belgium,BEL,DEF,4.8,false,,2026-06-07 20:08:13.783269,4.8,T. Meunier
 112,Koni De Winter,Belgium,BEL,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
 113,Charles De Ketelaere,Belgium,BEL,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,C. De Ketelaere
-114,Joaquin Seys,Belgium,BEL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+114,Joaquin Seys,Belgium,BEL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Seys
 115,Diego Moreira,Belgium,BEL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,D. Moreira
 116,Hans Vanaken,Belgium,BEL,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,H. Vanaken
 117,Timothy Castagne,Belgium,BEL,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,T. Castagne
@@ -128,7 +128,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 127,Sead Kolasinac,Bosnia And Herzegovina,BIH,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,S. Kolašinac
 128,Benjamin Tahirovic,Bosnia And Herzegovina,BIH,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,B. Tahirović
 129,Amar Dedic,Bosnia And Herzegovina,BIH,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,A. Dedić
-130,Armin Gigovic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+130,Armin Gigovic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,A. Gigović
 131,Samed Bazdar,Bosnia And Herzegovina,BIH,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
 132,Ermedin Demirovic,Bosnia And Herzegovina,BIH,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,E. Demirović
 133,Edin Dzeko,Bosnia And Herzegovina,BIH,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,E. Džeko
@@ -142,7 +142,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 141,Esmir Bajraktarevic,Bosnia And Herzegovina,BIH,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,E. Bajraktarević
 142,Stjepan Radeljic,Bosnia And Herzegovina,BIH,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,S. Radeljić
 143,Martin Zlomislic,Bosnia And Herzegovina,BIH,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
-144,Haris Tabakovic,Bosnia And Herzegovina,BIH,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+144,Haris Tabakovic,Bosnia And Herzegovina,BIH,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,H. Tabaković
 145,Nidal Celik,Bosnia And Herzegovina,BIH,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
 146,Jovo Lukic,Bosnia And Herzegovina,BIH,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,J. Lukić
 147,Ermin Mahmic,Bosnia And Herzegovina,BIH,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,E. Mahmić
@@ -189,7 +189,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 188,Owen Goodman,Canada,CAN,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
 189,Alphonso Davies,Canada,CAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Davies
 190,Ali Ahmed,Canada,CAN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Ahmed
-191,Jonathan Osorio,Canada,CAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+191,Jonathan Osorio,Canada,CAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,J. Osorio
 192,Niko Sigur,Canada,CAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,N. Sigur
 193,Promise David,Canada,CAN,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,P. David
 194,Nathan Saliba,Canada,CAN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,N. Saliba
@@ -260,7 +260,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 259,James Rodríguez,Colombia,COL,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,J. Rodríguez
 260,Jhon Arias,Colombia,COL,MID,6.3,false,,2026-06-07 20:08:13.783269,6.9,J. Arias
 261,Camilo Vargas,Colombia,COL,GK,4.3,false,,2026-06-07 20:08:13.783269,4.3,C. Vargas
-262,Yerry Mina,Colombia,COL,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+262,Yerry Mina,Colombia,COL,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,Y. Mina
 263,Gustavo Puerta,Colombia,COL,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,G. Puerta
 264,Juan Portilla,Colombia,COL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
 265,Jefferson Lerma,Colombia,COL,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,J. Lerma
@@ -346,13 +346,13 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 345,Trevor Doornbusch,Curaçao,CUW,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
 346,Sontje Hansen,Curaçao,CUW,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,S. Hansen
 347,Matej Kovár,Czechia,CZE,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,M. Kovář
-348,David Zima,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+348,David Zima,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,D. Zima
 349,Tomás Holes,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,T. Holeš
 350,Robin Hranác,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,R. Hranáč
 351,Vladimír Coufal,Czechia,CZE,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,V. Coufal
 352,Stepán Chaloupek,Czechia,CZE,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Š. Chaloupek
 353,Ladislav Krejcí,Czechia,CZE,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,L. Krejčí
-354,Vladimír Darida,Czechia,CZE,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+354,Vladimír Darida,Czechia,CZE,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,V. Darida
 355,Adam Hlozek,Czechia,CZE,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,A. Hložek
 356,Patrik Schick,Czechia,CZE,FWD,7.3,false,,2026-06-07 20:08:13.783269,7.3,P. Schick
 357,Jan Kuchta,Czechia,CZE,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,
@@ -378,7 +378,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 377,Pervis Estupiñán,Ecuador,ECU,DEF,4.8,false,,2026-06-07 20:08:13.783269,4.8,P. Estupiñán
 378,Anthony Valencia,Ecuador,ECU,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
 379,John Yeboah,Ecuador,ECU,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,J. Yeboah
-380,Kendry Páez,Ecuador,ECU,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,
+380,Kendry Páez,Ecuador,ECU,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,K. Páez
 381,Kevin Rodríguez,Ecuador,ECU,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,K. Rodríguez
 382,Moisés Ramírez,Ecuador,ECU,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
 383,Enner Valencia,Ecuador,ECU,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,E. Valencia
@@ -394,14 +394,14 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 393,Moisés Caicedo,Ecuador,ECU,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,M. Caicedo
 394,Jeremy Arévalo,Ecuador,ECU,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,
 395,Jackson Porozo,Ecuador,ECU,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,J. Porozo
-396,Yaimar Medina,Ecuador,ECU,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+396,Yaimar Medina,Ecuador,ECU,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Y. Medina
 397,Yasser Ibrahim,Egypt,EGY,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Yasser Ibrahim
 398,Mohamed Hany,Egypt,EGY,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Mohamed Hany
 399,Ramy Rabia,Egypt,EGY,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Ramy Rabia
 400,Emam Ashour,Egypt,EGY,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,Emam Ashour
 401,Hamza Abdelkarim,Egypt,EGY,FWD,4.3,false,,2026-06-07 20:08:13.783269,4.3,Hamza Abdelkarim
 402,Mohamed Salah,Egypt,EGY,FWD,10.0,false,,2026-06-07 20:08:13.783269,10,Mohamed Salah
-403,Haissem Hassan,Egypt,EGY,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+403,Haissem Hassan,Egypt,EGY,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,Haissem Hassan
 404,Karim Hafez,Egypt,EGY,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,Karim Hafez
 405,Ibrahim Adel,Egypt,EGY,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,Ibrahim Adel
 406,Mahmoud Saber,Egypt,EGY,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Mahmoud Saber
@@ -430,7 +430,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 429,Djed Spence,England,ENG,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,D. Spence
 430,Jarell Quansah,England,ENG,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,J. Quansah
 431,Tino Livramento,England,ENG,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,
-432,Dan Burn,England,ENG,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+432,Dan Burn,England,ENG,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,D. Burn
 433,Ollie Watkins,England,ENG,FWD,7.9,false,,2026-06-07 20:08:13.783269,7.9,O. Watkins
 434,Noni Madueke,England,ENG,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,N. Madueke
 435,David Raya,Spain,ESP,GK,5.0,false,,2026-06-07 20:08:13.783269,5,
@@ -452,7 +452,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 451,Unai Simón,Spain,ESP,GK,5.0,false,,2026-06-07 20:08:13.783269,5.0,Unai Simón
 452,Marc Cucurella,Spain,ESP,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,Marc Cucurella
 453,Víctor Muñoz,Spain,ESP,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,
-454,Borja Iglesias,Spain,ESP,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,
+454,Borja Iglesias,Spain,ESP,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,Borja Iglesias
 455,Brice Samba,France,FRA,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,
 456,Malo Gusto,France,FRA,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,M. Gusto
 457,Lucas Digne,France,FRA,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,L. Digne
@@ -468,7 +468,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 467,Ibrahima Konaté,France,FRA,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,I. Konaté
 468,Mike Maignan,France,FRA,GK,5.0,false,,2026-06-07 20:08:13.783269,5,M. Maignan
 469,William Saliba,France,FRA,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,W. Saliba
-470,Warren Zaïre-Emery,France,FRA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+470,Warren Zaïre-Emery,France,FRA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,W. Zaïre-Emery
 471,Theo Hernández,France,FRA,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.3,T. Hernández
 472,Désiré Doué,France,FRA,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,D. Doué
 473,Lucas Hernández,France,FRA,DEF,5.2,false,,2026-06-07 20:08:13.783269,5.2,
@@ -506,7 +506,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 505,Lennart Karl,Germany,GER,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,
 506,Deniz Undav,Germany,GER,FWD,6.6,false,,2026-06-07 20:08:13.783269,6.6,D. Undav
 507,Lawrence Ati Zigi,Ghana,GHA,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,L. Zigi
-508,Alidu Seidu,Ghana,GHA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+508,Alidu Seidu,Ghana,GHA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,A. Seidu
 509,Caleb Yirenkyi,Ghana,GHA,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,C. Yirenkyi
 510,Jonas Adjetey,Ghana,GHA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,J. Adjetey
 511,Thomas Partey,Ghana,GHA,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,T. Partey
@@ -889,7 +889,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 888,Ricardo Goss,South Africa,RSA,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
 889,Jayden Adams,South Africa,RSA,MID,4.0,false,,2026-06-07 20:08:13.783269,4.0,J. Adams
 890,Olwethu Makhanya,South Africa,RSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
-891,Kamogelo Sebelebele,South Africa,RSA,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+891,Kamogelo Sebelebele,South Africa,RSA,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,K. Sebelebele
 892,Bradley Cross,South Africa,RSA,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
 893,Yaya Sithole,South Africa,RSA,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,Y. Sithole
 894,Angus Gunn,Scotland,SCO,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,A. Gunn
@@ -960,8 +960,8 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 959,Djibril Sow,Switzerland,SUI,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,D. Sow
 960,Christian Fassnacht,Switzerland,SUI,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,C. Fassnacht
 961,Rubén Vargas,Switzerland,SUI,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,R. Vargas
-962,Eray Cömert,Switzerland,SUI,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
-963,Noah Okafor,Switzerland,SUI,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+962,Eray Cömert,Switzerland,SUI,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,E. Cömert
+963,Noah Okafor,Switzerland,SUI,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,N. Okafor
 964,Michel Aebischer,Switzerland,SUI,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,M. Aebischer
 965,Marvin Keller,Switzerland,SUI,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
 966,Fabian Rieder,Switzerland,SUI,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,F. Rieder
@@ -992,7 +992,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 991,Besfort Zeneli,Sweden,SWE,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,B. Zeneli
 992,Kristoffer Nordfeldt,Sweden,SWE,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,K. Nordfeldt
 993,Elliot Stroud,Sweden,SWE,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,E. Stroud
-994,Gustaf Nilsson,Sweden,SWE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+994,Gustaf Nilsson,Sweden,SWE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,G. Nilsson
 995,Taha Ali,Sweden,SWE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,T. Ali
 996,Abdelmouhib Chamakh,Tunisia,TUN,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,A. Chamakh
 997,Montassar Talbi,Tunisia,TUN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,M. Talbi
@@ -1082,7 +1082,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 1081,Chris Richards,USA,USA,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,C. Richards
 1082,Weston McKennie,USA,USA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,W. McKennie
 1083,Tim Ream,USA,USA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,T. Ream
-1084,Max Arfsten,USA,USA,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+1084,Max Arfsten,USA,USA,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,M. Arfsten
 1085,Joe Scally,USA,USA,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,J. Scally
 1086,Matt Freese,USA,USA,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,M. Freese
 1087,Chris Brady,USA,USA,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
@@ -1154,7 +1154,7 @@ id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,c
 1153,Azz-Eddine Ounahi,Morocco,MAR,MID,6.2,false,,2026-06-08 12:44:50.237218,6.2,A. Ounahi
 1154,Soufiane Rahimi,Morocco,MAR,FWD,5.6,false,,2026-06-08 12:44:50.237218,5.6,S. Rahimi
 1155,Brahim Abdelkader Diaz,Morocco,MAR,FWD,6.4,false,,2026-06-08 12:44:50.237218,6.4,B. Díaz
-1156,Zakaria El Ouahdi,Morocco,MAR,DEF,4.1,false,,2026-06-08 12:44:50.237218,4.1,
+1156,Zakaria El Ouahdi,Morocco,MAR,DEF,4.1,false,,2026-06-08 12:44:50.237218,4.1,Z. El Ouahdi
 1157,Issa Laye Lucas Jean Diop,Morocco,MAR,DEF,4.5,false,,2026-06-08 12:44:50.237218,4.5,I. Diop
 1158,Abdessamad Ezzalzouli,Morocco,MAR,FWD,5.3,false,,2026-06-08 12:44:50.237218,5.3,
 1159,Chadi Riad,Morocco,MAR,DEF,3.9,false,,2026-06-08 12:44:50.237218,3.9,C. Riad

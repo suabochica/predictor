@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
 import { useLeague } from '../../context/LeagueContext';
-import { classNames, isKnockoutStage } from '../../lib/utils';
+import { classNames, isKnockout } from '../../lib/utils';
 import homeIcon from '@predictor/ui/icons/home.svg';
 import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
@@ -35,7 +35,7 @@ export default function MobileNav() {
   } else if (pathname === '/bracket') {
     slotItem = tabla;
     otherItem = cuadros;
-  } else if (isKnockoutStage(activeMatchday?.wc_stage)) {
+  } else if (isKnockout(activeMatchday)) {
     slotItem = cuadros;
     otherItem = tabla;
   } else {

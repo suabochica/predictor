@@ -12,9 +12,11 @@ export function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-// Knockout = any wc_stage that is not a group/round-robin stage.
-export function isKnockoutStage(wcStage) {
-  return !!wcStage && !wcStage.toLowerCase().includes('group');
+// Knockout = H2H bracket round. Reads matchdays.phase (migration 060); the old
+// `wc_stage` string match called UCL's 36-team Swiss league phase "knockout"
+// because the label has no "group" in it.
+export function isKnockout(matchday) {
+  return matchday?.phase === 'knockout';
 }
 
 export function getPositionColor(position) {

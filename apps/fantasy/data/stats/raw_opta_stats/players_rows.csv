@@ -1,0 +1,1191 @@
+id,name,country,country_code,position,price,is_eliminated,photo_url,created_at,current_price,opta_name
+1,Melvin Mastil,Algeria,ALG,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+2,Aïssa Mandi,Algeria,ALG,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,A. Mandi
+3,Zinéddine Belaïd,Algeria,ALG,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+4,Ramiz Zerrouki,Algeria,ALG,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,R. Zerrouki
+5,Riyad Mahrez,Algeria,ALG,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,R. Mahrez
+6,Houssem Aouar,Algeria,ALG,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,H. Aouar
+7,Farès Chaïbi,Algeria,ALG,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,F. Chaïbi
+8,Anis Hadj Moussa,Algeria,ALG,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,A. Hadj Moussa
+9,Ahmed Benbouali,Algeria,ALG,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+10,Hicham Boudaoui,Algeria,ALG,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,H. Boudaoui
+11,Rayan Aït-Nouri,Algeria,ALG,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,R. Aït-Nouri
+12,Mohammed Amoura,Algeria,ALG,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,M. Amoura
+13,Adil Boulbina,Algeria,ALG,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,A. Boulbina
+14,Ibrahim Maza,Algeria,ALG,MID,5.4,false,,2026-06-07 20:08:13.783269,5.4,I. Maza
+15,Luca Zidane,Algeria,ALG,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,L. Zidane
+16,Farès Ghedjemis,Algeria,ALG,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+17,Achref Abada,Algeria,ALG,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+18,Rafik Belghali,Algeria,ALG,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,R. Belghali
+19,Ramy Bensebaini,Algeria,ALG,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,R. Bensebaini
+20,Yacine Titraoui,Algeria,ALG,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+21,Amine Gouiri,Algeria,ALG,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,A. Gouiri
+22,Juan Musso,Argentina,ARG,GK,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+23,Leonardo Balerdi,Argentina,ARG,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+24,Nicolás Tagliafico,Argentina,ARG,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+25,Gonzalo Montiel,Argentina,ARG,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,G. Montiel
+26,Leandro Paredes,Argentina,ARG,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+27,Lisandro Martínez,Argentina,ARG,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,Lisandro Martínez
+28,Rodrigo De Paul,Argentina,ARG,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,R. De Paul
+29,Valentín Barco,Argentina,ARG,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+30,Julián Alvarez,Argentina,ARG,FWD,8.6,false,,2026-06-07 20:08:13.783269,8.6,J. Alvarez
+31,Lionel Messi,Argentina,ARG,FWD,10.0,false,,2026-06-07 20:08:13.783269,10.0,L. Messi
+32,Giovani Lo Celso,Argentina,ARG,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+33,Gerónimo Rulli,Argentina,ARG,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+34,Cristian Romero,Argentina,ARG,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,C. Romero
+35,Exequiel Palacios,Argentina,ARG,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+36,Thiago Almada,Argentina,ARG,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,T. Almada
+37,Giuliano Simeone,Argentina,ARG,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+38,Nicolás Otamendi,Argentina,ARG,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,N. Otamendi
+39,Alexis Mac Allister,Argentina,ARG,MID,6.6,false,,2026-06-07 20:08:13.783269,6.6,A. Mac Allister
+40,José Manuel López,Argentina,ARG,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+41,Lautaro Martínez,Argentina,ARG,FWD,8.8,false,,2026-06-07 20:08:13.783269,8.8,Lautaro Martínez
+42,Emiliano Martínez,Argentina,ARG,GK,5.0,false,,2026-06-07 20:08:13.783269,6,E. Martínez
+43,Enzo Fernández,Argentina,ARG,MID,7.5,false,,2026-06-07 20:08:13.783269,7.5,E. Fernández
+44,Facundo Medina,Argentina,ARG,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,F. Medina
+45,Nahuel Molina,Argentina,ARG,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,N. Molina
+46,Nico González,Argentina,ARG,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,N. González
+47,Mathew Ryan,Australia,AUS,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+48,Milos Degenek,Australia,AUS,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+49,Alessandro Circati,Australia,AUS,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,A. Circati
+50,Jacob Italiano,Australia,AUS,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,J. Italiano
+51,Jordan Bos,Australia,AUS,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,J. Bos
+52,Jason Geria,Australia,AUS,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,J. Geria
+53,Mathew Leckie,Australia,AUS,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+54,Connor Metcalfe,Australia,AUS,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,C. Metcalfe
+55,Mohamed Touré,Australia,AUS,FWD,5.0,false,,2026-06-07 20:08:13.783269,5.0,M. Touré
+56,Ajdin Hrustic,Australia,AUS,FWD,5.7,false,,2026-06-07 20:08:13.783269,5.7,
+57,Awer Mabil,Australia,AUS,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+58,Paul Izzo,Australia,AUS,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+59,Aiden O'Neill,Australia,AUS,MID,5.4,false,,2026-06-07 20:08:13.783269,5.4,A. O'Neill
+60,Cameron Devlin,Australia,AUS,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+61,Kai Trewin,Australia,AUS,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+62,Aziz Behich,Australia,AUS,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,A. Behich
+63,Nestory Irankunda,Australia,AUS,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,N. Irankunda
+64,Patrick Beach,Australia,AUS,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,P. Beach
+65,Harry Souttar,Australia,AUS,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,H. Souttar
+66,Cameron Burgess,Australia,AUS,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,C. Burgess
+67,Jackson Irvine,Australia,AUS,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,J. Irvine
+68,Nishan Velupillay,Australia,AUS,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,N. Velupillay
+69,Paul Okon,Australia,AUS,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,P. Okon-Engstler
+70,Lucas Herrington,Australia,AUS,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+71,Alexander Schlager,Austria,AUT,GK,4.6,false,,2026-06-07 20:08:13.783269,4.6,A. Schlager
+72,David Affengruber,Austria,AUT,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+73,Kevin Danso,Austria,AUT,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,K. Danso
+74,Xaver Schlager,Austria,AUT,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,X. Schlager
+75,Stefan Posch,Austria,AUT,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,S. Posch
+76,Nicolas Seiwald,Austria,AUT,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,N. Seiwald
+77,Marko Arnautovic,Austria,AUT,FWD,6.0,false,,2026-06-07 20:08:13.783269,6,M. Arnautović
+78,David Alaba,Austria,AUT,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,D. Alaba
+79,Marcel Sabitzer,Austria,AUT,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,M. Sabitzer
+80,Florian Grillitsch,Austria,AUT,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+81,Michael Gregoritsch,Austria,AUT,FWD,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+82,Florian Wiegele,Austria,AUT,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+83,Patrick Pentz,Austria,AUT,GK,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+84,Sasa Kalajdzic,Austria,AUT,FWD,6.0,false,,2026-06-07 20:08:13.783269,6.0,S. Kalajdžić
+85,Philipp Lienhart,Austria,AUT,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,P. Lienhart
+86,Carney Chukwuemeka,Austria,AUT,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,C. Chukwuemeka
+87,Romano Schmid,Austria,AUT,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,R. Schmid
+88,Christoph Baumgartner,Austria,AUT,MID,6.7,false,,2026-06-07 20:08:13.783269,6.7,
+89,Konrad Laimer,Austria,AUT,MID,5.8,false,,2026-06-07 20:08:13.783269,5.8,K. Laimer
+90,Patrick Wimmer,Austria,AUT,FWD,6.0,false,,2026-06-07 20:08:13.783269,6.0,P. Wimmer
+91,Alexander Prass,Austria,AUT,MID,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+92,Marco Friedl,Austria,AUT,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+93,Paul Wanner,Austria,AUT,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,P. Wanner
+94,Michael Svoboda,Austria,AUT,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+95,Alessandro Schöpf,Austria,AUT,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+96,Phillipp Mwene,Austria,AUT,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,P. Mwene
+97,Thibaut Courtois,Belgium,BEL,GK,4.9,false,,2026-06-07 20:08:13.783269,4.9,T. Courtois
+98,Zeno Debast,Belgium,BEL,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+99,Arthur Theate,Belgium,BEL,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+100,Brandon Mechele,Belgium,BEL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,B. Mechele
+101,Maxim De Cuyper,Belgium,BEL,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,M. De Cuyper
+102,Axel Witsel,Belgium,BEL,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+103,Kevin De Bruyne,Belgium,BEL,MID,7.5,false,,2026-06-07 20:08:13.783269,7.5,K. De Bruyne
+104,Youri Tielemans,Belgium,BEL,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,Y. Tielemans
+105,Romelu Lukaku,Belgium,BEL,FWD,7.4,false,,2026-06-07 20:08:13.783269,7.4,R. Lukaku
+106,Leandro Trossard,Belgium,BEL,FWD,6.6,false,,2026-06-07 20:08:13.783269,6.6,L. Trossard
+107,Jérémy Doku,Belgium,BEL,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,J. Doku
+108,Senne Lammens,Belgium,BEL,GK,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+109,Mike Penders,Belgium,BEL,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+110,Dodi Lukébakio,Belgium,BEL,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+111,Thomas Meunier,Belgium,BEL,DEF,4.8,false,,2026-06-07 20:08:13.783269,4.8,T. Meunier
+112,Koni De Winter,Belgium,BEL,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+113,Charles De Ketelaere,Belgium,BEL,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,C. De Ketelaere
+114,Joaquin Seys,Belgium,BEL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+115,Diego Moreira,Belgium,BEL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+116,Hans Vanaken,Belgium,BEL,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,H. Vanaken
+117,Timothy Castagne,Belgium,BEL,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,T. Castagne
+118,Alexis Saelemaekers,Belgium,BEL,MID,5.7,false,,2026-06-07 20:08:13.783269,5.7,
+119,Nicolas Raskin,Belgium,BEL,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,N. Raskin
+120,Amadou Onana,Belgium,BEL,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,A. Onana
+121,Nathan Ngoy,Belgium,BEL,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,N. Ngoy
+122,Matias Fernandez-Pardo,Belgium,BEL,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,M. Fernandez-Pardo
+123,Nikola Vasilj,Bosnia And Herzegovina,BIH,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+124,Nihad Mujakic,Bosnia And Herzegovina,BIH,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+125,Dennis Hadzikadunic,Bosnia And Herzegovina,BIH,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+126,Tarik Muharemovic,Bosnia And Herzegovina,BIH,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+127,Sead Kolasinac,Bosnia And Herzegovina,BIH,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+128,Benjamin Tahirovic,Bosnia And Herzegovina,BIH,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+129,Amar Dedic,Bosnia And Herzegovina,BIH,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+130,Armin Gigovic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+131,Samed Bazdar,Bosnia And Herzegovina,BIH,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+132,Ermedin Demirovic,Bosnia And Herzegovina,BIH,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+133,Edin Dzeko,Bosnia And Herzegovina,BIH,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+134,Ivan Basic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+135,Ivan Sunjic,Bosnia And Herzegovina,BIH,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+136,Amar Memic,Bosnia And Herzegovina,BIH,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+137,Amir Hadziahmetovic,Bosnia And Herzegovina,BIH,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+138,Dzenis Burnic,Bosnia And Herzegovina,BIH,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+139,Nikola Katic,Bosnia And Herzegovina,BIH,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+140,Kerim Alajbegovic,Bosnia And Herzegovina,BIH,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+141,Esmir Bajraktarevic,Bosnia And Herzegovina,BIH,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+142,Stjepan Radeljic,Bosnia And Herzegovina,BIH,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+143,Martin Zlomislic,Bosnia And Herzegovina,BIH,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+144,Haris Tabakovic,Bosnia And Herzegovina,BIH,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+145,Nidal Celik,Bosnia And Herzegovina,BIH,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+146,Jovo Lukic,Bosnia And Herzegovina,BIH,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+147,Ermin Mahmic,Bosnia And Herzegovina,BIH,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+148,Alisson Becker,Brazil,BRA,GK,5.0,false,,2026-06-07 20:08:13.783269,5,Alisson Becker
+149,Wesley,Brazil,BRA,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+150,Gabriel Magalhães,Brazil,BRA,DEF,5.5,false,,2026-06-07 20:08:13.783269,5.5,Gabriel Magalhães
+151,Alex Sandro,Brazil,BRA,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+152,Vinícius Júnior,Brazil,BRA,FWD,10.0,false,,2026-06-07 20:08:13.783269,10,Vinícius Júnior
+153,Bruno Guimarães,Brazil,BRA,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,Bruno Guimarães
+154,Matheus Cunha,Brazil,BRA,FWD,7.3,false,,2026-06-07 20:08:13.783269,7.3,Matheus Cunha
+155,Neymar,Brazil,BRA,FWD,7.2,false,,2026-06-07 20:08:13.783269,7.2,
+156,Weverton,Brazil,BRA,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+157,Danilo,Brazil,BRA,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,Danilo
+158,Bremer,Brazil,BRA,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+159,Douglas Santos,Brazil,BRA,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,Douglas Santos
+160,Endrick,Brazil,BRA,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+161,Luiz Henrique,Brazil,BRA,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,Luiz Henrique
+162,Gabriel Martinelli,Brazil,BRA,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+163,Ederson,Brazil,BRA,GK,5.0,false,,2026-06-07 20:08:13.783269,5,
+164,Ibañez,Brazil,BRA,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,Roger Ibañez
+165,Igor Thiago,Brazil,BRA,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,Igor Thiago
+166,Rayan,Brazil,BRA,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+167,Léo Pereira,Brazil,BRA,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+168,Marquinhos,Brazil,BRA,DEF,5.2,false,,2026-06-07 20:08:13.783269,5.2,Marquinhos
+169,Casemiro,Brazil,BRA,MID,6.3,false,,2026-06-07 20:08:13.783269,6.3,Casemiro
+170,Raphinha,Brazil,BRA,FWD,8.2,false,,2026-06-07 20:08:13.783269,8.2,Raphinha
+171,Fabinho,Brazil,BRA,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,Fabinho
+172,Lucas Paquetá,Brazil,BRA,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,Lucas Paquetá
+173,Dayne St. Clair,Canada,CAN,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+174,Alistair Johnston,Canada,CAN,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+175,Luc De Fougerolles,Canada,CAN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+176,Joel Waterman,Canada,CAN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+177,Mathieu Choinière,Canada,CAN,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+178,Stephen Eustaquio,Canada,CAN,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+179,Ismaël Koné,Canada,CAN,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+180,Cyle Larin,Canada,CAN,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+181,Jonathan David,Canada,CAN,FWD,7.0,false,,2026-06-07 20:08:13.783269,7.0,
+182,Liam Millar,Canada,CAN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+183,Derek Cornelius,Canada,CAN,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+184,Jacob Shaffelburg,Canada,CAN,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,
+185,Moïse Bombito,Canada,CAN,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+186,Maxime Crépeau,Canada,CAN,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+187,Tajon Buchanan,Canada,CAN,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+188,Owen Goodman,Canada,CAN,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+189,Alphonso Davies,Canada,CAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+190,Ali Ahmed,Canada,CAN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+191,Jonathan Osorio,Canada,CAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+192,Niko Sigur,Canada,CAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+193,Promise David,Canada,CAN,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,
+194,Nathan Saliba,Canada,CAN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+195,Marcelo Flores,Canada,CAN,MID,5.7,false,,2026-06-07 20:08:13.783269,5.7,
+196,Alfie Jones,Canada,CAN,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+197,Tani Oluwaseyi,Canada,CAN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+198,Richie Laryea,Canada,CAN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+199,Yahia Fofana,Côte D'Ivoire,CIV,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,Y. Fofana
+200,Ousmane Diomande,Côte D'Ivoire,CIV,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+201,Ghislain Konan,Côte D'Ivoire,CIV,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,G. Konan
+202,Jean Michaël Seri,Côte D'Ivoire,CIV,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+203,Wilfried Singo,Côte D'Ivoire,CIV,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,W. Singo
+204,Seko Fofana,Côte D'Ivoire,CIV,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,S. Fofana
+205,Odilon Kossounou,Côte D'Ivoire,CIV,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,O. Kossounou
+206,Franck Kessie,Côte D'Ivoire,CIV,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,F. Kessie
+207,Ange-Yoan Bonny,Côte D'Ivoire,CIV,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Bonny
+208,Simon Adingra,Côte D'Ivoire,CIV,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+209,Yan Diomande,Côte D'Ivoire,CIV,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,Y. Diomande
+210,Elye Wahi,Côte D'Ivoire,CIV,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,E. Wahi
+211,Oumar Diakité,Côte D'Ivoire,CIV,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+212,Amad Diallo,Côte D'Ivoire,CIV,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,A. Diallo
+213,Mohamed Koné,Côte D'Ivoire,CIV,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+214,Guéla Doué,Côte D'Ivoire,CIV,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,G. Doué
+215,Ibrahim Sangaré,Côte D'Ivoire,CIV,MID,5.8,false,,2026-06-07 20:08:13.783269,5.8,I. Sangaré
+216,Nicolas Pépé,Côte D'Ivoire,CIV,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,N. Pépé
+217,Emmanuel Agbadou,Côte D'Ivoire,CIV,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,E. Agbadou
+218,Evan Ndicka,Côte D'Ivoire,CIV,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+219,Evann Guessand,Côte D'Ivoire,CIV,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+220,Alban Lafont,Côte D'Ivoire,CIV,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+221,Bazoumana Touré,Côte D'Ivoire,CIV,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,B. Touré
+222,Parfait Guiagon,Côte D'Ivoire,CIV,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+223,Christ Inao Oulaï,Côte D'Ivoire,CIV,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,C. Inao Oulaï
+224,Lionel Mpasi,Congo DR,COD,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,L. Mpasi
+225,Aaron Wan-Bissaka,Congo DR,COD,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,A. Wan-Bissaka
+226,Steve Kapuadi,Congo DR,COD,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,S. Kapuadi
+227,Axel Tuanzebe,Congo DR,COD,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,A. Tuanzebe
+228,Dylan Batubinsika,Congo DR,COD,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+229,Ngal'ayel Mukau,Congo DR,COD,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,N. Mukau
+230,Nathanaël Mbuku,Congo DR,COD,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+231,Samuel Moutoussamy,Congo DR,COD,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,S. Moutoussamy
+232,Brian Cipenga,Congo DR,COD,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+233,Théo Bongonda,Congo DR,COD,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+234,Gaël Kakuta,Congo DR,COD,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+235,Joris Kayembe,Congo DR,COD,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Kayembe
+236,Meschack Elia,Congo DR,COD,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+237,Noah Sadiki,Congo DR,COD,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,N. Sadiki
+238,Aaron Tshibola,Congo DR,COD,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+239,Timothy Fayulu,Congo DR,COD,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+240,Cédric Bakambu,Congo DR,COD,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,C. Bakambu
+241,Charles Pickel,Congo DR,COD,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,C. Pickel
+242,Fiston Mayele,Congo DR,COD,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+243,Yoane Wissa,Congo DR,COD,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,Y. Wissa
+244,Matthieu Epolo,Congo DR,COD,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+245,Chancel Mbemba,Congo DR,COD,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,C. Mbemba
+246,Simon Banza,Congo DR,COD,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,S. Banza
+247,Gédéon Kalulu,Congo DR,COD,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,G. Kalulu
+248,Edo Kayembe,Congo DR,COD,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,E. Kayembe
+249,Arthur Masuaku,Congo DR,COD,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,A. Masuaku
+250,David Ospina,Colombia,COL,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+251,Daniel Muñoz,Colombia,COL,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,D. Muñoz
+252,Jhon Lucumí,Colombia,COL,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,J. Lucumí
+253,Santiago Arias,Colombia,COL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+254,Kevin Castaño,Colombia,COL,MID,4.3,false,,2026-06-07 20:08:13.783269,4.3,K. Castaño
+255,Richard Ríos,Colombia,COL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,R. Ríos
+256,Luis Díaz,Colombia,COL,FWD,8.1,false,,2026-06-07 20:08:13.783269,8.1,L. Díaz
+257,Jorge Carrascal,Colombia,COL,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+258,Jhon Córdoba,Colombia,COL,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+259,James Rodríguez,Colombia,COL,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,J. Rodríguez
+260,Jhon Arias,Colombia,COL,MID,6.3,false,,2026-06-07 20:08:13.783269,6.9,J. Arias
+261,Camilo Vargas,Colombia,COL,GK,4.3,false,,2026-06-07 20:08:13.783269,4.3,C. Vargas
+262,Yerry Mina,Colombia,COL,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+263,Gustavo Puerta,Colombia,COL,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,G. Puerta
+264,Juan Portilla,Colombia,COL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+265,Jefferson Lerma,Colombia,COL,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,J. Lerma
+266,Johan Mojica,Colombia,COL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Mojica
+267,Willer Ditta,Colombia,COL,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+268,Juan Fernando Quintero,Colombia,COL,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+269,Jaminton Campaz,Colombia,COL,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,J. Campaz
+270,Déiver Machado,Colombia,COL,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+271,Dávinson Sánchez,Colombia,COL,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,D. Sánchez
+272,Álvaro Montero,Colombia,COL,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+273,Luis Suárez,Colombia,COL,FWD,5.7,false,,2026-06-07 20:08:13.783269,5.7,L. Suárez
+274,Andrés Gómez,Colombia,COL,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Gómez
+275,Logan Costa,Cabo Verde,CPV,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+276,Kevin Pina,Cabo Verde,CPV,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,Kevin Pina
+277,Jovane Cabral,Cabo Verde,CPV,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Jovane Cabral
+278,João Paulo,Cabo Verde,CPV,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,João Paulo
+279,Gilson Benchimol,Cabo Verde,CPV,FWD,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+280,Jamiro Monteiro,Cabo Verde,CPV,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,Jamiro Monteiro
+281,Garry Rodrigues,Cabo Verde,CPV,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+282,Márcio da Rosa,Cabo Verde,CPV,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+283,Sidny Cabral,Cabo Verde,CPV,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Sidny Cabral
+284,Deroy Duarte,Cabo Verde,CPV,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Deroy Duarte
+285,Laros Duarte,Cabo Verde,CPV,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,Laros Duarte
+286,Willy Semedo,Cabo Verde,CPV,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,Willy Semedo
+287,Telmo Arcanjo,Cabo Verde,CPV,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Telmo Arcanjo
+288,Dailon Livramento,Cabo Verde,CPV,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Dailon Livramento
+289,Ryan Mendes,Cabo Verde,CPV,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Ryan Mendes
+290,Nuno da Costa,Cabo Verde,CPV,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,Nuno da Costa
+291,Steven Moreira,Cabo Verde,CPV,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,Steven Moreira
+292,Wagner Pina,Cabo Verde,CPV,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+293,Kelvin Pires,Cabo Verde,CPV,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+294,Hélio Varela,Cabo Verde,CPV,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+295,Dominik Livakovic,Croatia,CRO,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,D. Livaković
+296,Josip Stanisic,Croatia,CRO,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,J. Stanišić
+297,Marin Pongracic,Croatia,CRO,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+298,Josko Gvardiol,Croatia,CRO,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,J. Gvardiol
+299,Duje Caleta-Car,Croatia,CRO,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+300,Josip Sutalo,Croatia,CRO,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,J. Šutalo
+301,Nikola Moro,Croatia,CRO,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+302,Mateo Kovacic,Croatia,CRO,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,M. Kovačić
+303,Andrej Kramaric,Croatia,CRO,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,A. Kramarić
+304,Luka Modric,Croatia,CRO,MID,6.2,false,,2026-06-07 20:08:13.783269,6.3,L. Modrić
+305,Ante Budimir,Croatia,CRO,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,
+306,Ivor Pandur,Croatia,CRO,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+307,Nikola Vlasic,Croatia,CRO,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,N. Vlašić
+308,Ivan Perisic,Croatia,CRO,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,I. Perišić
+309,Mario Pasalic,Croatia,CRO,MID,6.4,false,,2026-06-07 20:08:13.783269,6.4,Mario Pašalić
+310,Martin Baturina,Croatia,CRO,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,M. Baturina
+311,Petar Sucic,Croatia,CRO,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,P. Sučić
+312,Kristijan Jakic,Croatia,CRO,DEF,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+313,Toni Fruk,Croatia,CRO,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+314,Igor Matanovic,Croatia,CRO,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,I. Matanović
+315,Luka Sucic,Croatia,CRO,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+316,Luka Vuskovic,Croatia,CRO,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,L. Vušković
+317,Dominik Kotarski,Croatia,CRO,GK,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+318,Marco Pasalic,Croatia,CRO,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,Marco Pašalić
+319,Martin Erlic,Croatia,CRO,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+320,Petar Musa,Croatia,CRO,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,P. Musa
+321,Eloy Room,Curaçao,CUW,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,E. Room
+322,Shurandy Sambo,Curaçao,CUW,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+323,Juriën Gaari,Curaçao,CUW,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+324,Roshon van Eijma,Curaçao,CUW,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+325,Sherel Floranus,Curaçao,CUW,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,S. Floranus
+326,Godfried Roemeratoe,Curaçao,CUW,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+327,Juninho Bacuna,Curaçao,CUW,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,J. Bacuna
+328,Livano Comenencia,Curaçao,CUW,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,L. Comenencia
+329,Jürgen Locadia,Curaçao,CUW,FWD,4.1,false,,2026-06-07 20:08:13.783269,4.1,J. Locadia
+330,Leandro Bacuna,Curaçao,CUW,MID,4.0,false,,2026-06-07 20:08:13.783269,4.0,L. Bacuna
+331,Jeremy Antonisse,Curaçao,CUW,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,J. Antonisse
+332,Tyrese Noslin,Curaçao,CUW,FWD,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+333,Kenji Gorré,Curaçao,CUW,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+334,Ar'Jany Martha,Curaçao,CUW,MID,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+335,Jearl Margaritha,Curaçao,CUW,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,J. Margaritha
+336,Brandley Kuwas,Curaçao,CUW,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+337,Armando Obispo,Curaçao,CUW,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,A. Obispo
+338,Gervane Kastaneer,Curaçao,CUW,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,G. Kastaneer
+339,Joshua Brenet,Curaçao,CUW,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+340,Tahith Chong,Curaçao,CUW,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,T. Chong
+341,Kevin Felida,Curaçao,CUW,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+342,Riechedly Bazoer,Curaçao,CUW,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,R. Bazoer
+343,Deveron Fonville,Curaçao,CUW,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,D. Fonville
+344,Tyrick Bodak,Curaçao,CUW,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+345,Trevor Doornbusch,Curaçao,CUW,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+346,Sontje Hansen,Curaçao,CUW,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,S. Hansen
+347,Matej Kovár,Czechia,CZE,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,M. Kovář
+348,David Zima,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+349,Tomás Holes,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+350,Robin Hranác,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,R. Hranáč
+351,Vladimír Coufal,Czechia,CZE,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,V. Coufal
+352,Stepán Chaloupek,Czechia,CZE,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Š. Chaloupek
+353,Ladislav Krejcí,Czechia,CZE,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,L. Krejčí
+354,Vladimír Darida,Czechia,CZE,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+355,Adam Hlozek,Czechia,CZE,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,A. Hložek
+356,Patrik Schick,Czechia,CZE,FWD,7.3,false,,2026-06-07 20:08:13.783269,7.3,P. Schick
+357,Jan Kuchta,Czechia,CZE,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+358,Lukás Cerv,Czechia,CZE,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+359,Mojmír Chytil,Czechia,CZE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,M. Chytil
+360,David Jurásek,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+361,Pavel Sulc,Czechia,CZE,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,P. Šulc
+362,Jindrich Stanek,Czechia,CZE,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+363,Lukás Provod,Czechia,CZE,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,L. Provod
+364,Michal Sadílek,Czechia,CZE,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,M. Sadílek
+365,Tomás Chory,Czechia,CZE,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,T. Chorý
+366,Jaroslav Zeleny,Czechia,CZE,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Zelený
+367,David Doudera,Czechia,CZE,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+368,Tomás Soucek,Czechia,CZE,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,T. Souček
+369,Lukás Hornícek,Czechia,CZE,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+370,Alexandr Sojka,Czechia,CZE,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,A. Sojka
+371,Hugo Sochurek,Czechia,CZE,MID,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+372,Denis Visinsky,Czechia,CZE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+373,Hernán Galíndez,Ecuador,ECU,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,H. Galíndez
+374,Félix Torres,Ecuador,ECU,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+375,Joel Ordóñez,Ecuador,ECU,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Ordoñez
+376,Jordy Alcívar,Ecuador,ECU,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+377,Pervis Estupiñán,Ecuador,ECU,DEF,4.8,false,,2026-06-07 20:08:13.783269,4.8,
+378,Anthony Valencia,Ecuador,ECU,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+379,John Yeboah,Ecuador,ECU,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,J. Yeboah
+380,Kendry Páez,Ecuador,ECU,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,
+381,Kevin Rodríguez,Ecuador,ECU,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,K. Rodríguez
+382,Moisés Ramírez,Ecuador,ECU,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+383,Enner Valencia,Ecuador,ECU,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,E. Valencia
+384,Alan Minda,Ecuador,ECU,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Minda
+385,Pedro Vite,Ecuador,ECU,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,P. Vite
+386,Jordy Caicedo,Ecuador,ECU,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+387,Ángelo Preciado,Ecuador,ECU,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,Á. Preciado
+388,Denil Castillo,Ecuador,ECU,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+389,Gonzalo Plata,Ecuador,ECU,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,G. Plata
+390,Nilson Angulo,Ecuador,ECU,FWD,6.0,false,,2026-06-07 20:08:13.783269,6.0,N. Angulo
+391,Alan Franco,Ecuador,ECU,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,A. Franco
+392,Gonzalo Valle,Ecuador,ECU,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+393,Moisés Caicedo,Ecuador,ECU,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,M. Caicedo
+394,Jeremy Arévalo,Ecuador,ECU,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+395,Jackson Porozo,Ecuador,ECU,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,J. Porozo
+396,Yaimar Medina,Ecuador,ECU,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+397,Yasser Ibrahim,Egypt,EGY,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Yasser Ibrahim
+398,Mohamed Hany,Egypt,EGY,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Mohamed Hany
+399,Ramy Rabia,Egypt,EGY,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Ramy Rabia
+400,Emam Ashour,Egypt,EGY,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,Emam Ashour
+401,Hamza Abdelkarim,Egypt,EGY,FWD,4.3,false,,2026-06-07 20:08:13.783269,4.3,Hamza Abdelkarim
+402,Mohamed Salah,Egypt,EGY,FWD,10.0,false,,2026-06-07 20:08:13.783269,10,Mohamed Salah
+403,Haissem Hassan,Egypt,EGY,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+404,Karim Hafez,Egypt,EGY,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,Karim Hafez
+405,Ibrahim Adel,Egypt,EGY,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,Ibrahim Adel
+406,Mahmoud Saber,Egypt,EGY,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+407,Omar Marmoush,Egypt,EGY,FWD,7.8,false,,2026-06-07 20:08:13.783269,7.8,Omar Marmoush
+408,Tarek Alaa,Egypt,EGY,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+409,Jordan Pickford,England,ENG,GK,4.8,false,,2026-06-07 20:08:13.783269,4.8,J. Pickford
+410,Ezri Konsa,England,ENG,DEF,4.8,false,,2026-06-07 20:08:13.783269,4.8,E. Konsa
+411,Nico O'Reilly,England,ENG,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,N. O'Reilly
+412,Declan Rice,England,ENG,MID,7.0,false,,2026-06-07 20:08:13.783269,7,D. Rice
+413,John Stones,England,ENG,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,J. Stones
+414,Marc Guéhi,England,ENG,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,M. Guéhi
+415,Bukayo Saka,England,ENG,FWD,9.5,false,,2026-06-07 20:08:13.783269,9.5,B. Saka
+416,Elliot Anderson,England,ENG,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,E. Anderson
+417,Harry Kane,England,ENG,FWD,10.5,false,,2026-06-07 20:08:13.783269,10.5,H. Kane
+418,Jude Bellingham,England,ENG,MID,8.3,false,,2026-06-07 20:08:13.783269,8.6,J. Bellingham
+419,Marcus Rashford,England,ENG,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,M. Rashford
+420,Dean Henderson,England,ENG,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+421,Jordan Henderson,England,ENG,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+422,Kobbie Mainoo,England,ENG,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+423,Morgan Rogers,England,ENG,MID,7.2,false,,2026-06-07 20:08:13.783269,7.2,M. Rogers
+424,Anthony Gordon,England,ENG,FWD,7.0,false,,2026-06-07 20:08:13.783269,7.0,A. Gordon
+425,Eberechi Eze,England,ENG,MID,8.0,false,,2026-06-07 20:08:13.783269,8,
+426,Ivan Toney,England,ENG,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,
+427,James Trafford,England,ENG,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+428,Reece James,England,ENG,DEF,5.2,false,,2026-06-07 20:08:13.783269,5.2,R. James
+429,Djed Spence,England,ENG,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,D. Spence
+430,Jarell Quansah,England,ENG,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+431,Tino Livramento,England,ENG,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+432,Dan Burn,England,ENG,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+433,Ollie Watkins,England,ENG,FWD,7.9,false,,2026-06-07 20:08:13.783269,7.9,
+434,Noni Madueke,England,ENG,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,N. Madueke
+435,David Raya,Spain,ESP,GK,5.0,false,,2026-06-07 20:08:13.783269,5,
+436,Marc Pubill,Spain,ESP,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+437,Alejandro Grimaldo,Spain,ESP,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+438,Eric García,Spain,ESP,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+439,Marcos Llorente,Spain,ESP,DEF,5.5,false,,2026-06-07 20:08:13.783269,5.5,Marcos Llorente
+440,Mikel Merino,Spain,ESP,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,Mikel Merino
+441,Ferran Torres,Spain,ESP,FWD,7.8,false,,2026-06-07 20:08:13.783269,7.8,Ferran Torres
+442,Fabián Ruiz,Spain,ESP,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,Fabián Ruiz
+443,Yéremy Pino,Spain,ESP,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+444,Pedro Porro,Spain,ESP,DEF,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+445,Joan García,Spain,ESP,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+446,Aymeric Laporte,Spain,ESP,DEF,5.5,false,,2026-06-07 20:08:13.783269,5.5,Aymeric Laporte
+447,Martín Zubimendi,Spain,ESP,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+448,Lamine Yamal,Spain,ESP,FWD,10.0,false,,2026-06-07 20:08:13.783269,10,Lamine Yamal
+449,Mikel Oyarzabal,Spain,ESP,FWD,8.1,false,,2026-06-07 20:08:13.783269,8.1,Mikel Oyarzabal
+450,Pau Cubarsí,Spain,ESP,DEF,5.0,false,,2026-06-07 20:08:13.783269,5,Pau Cubarsí
+451,Unai Simón,Spain,ESP,GK,5.0,false,,2026-06-07 20:08:13.783269,5.0,Unai Simón
+452,Marc Cucurella,Spain,ESP,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,Marc Cucurella
+453,Víctor Muñoz,Spain,ESP,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+454,Borja Iglesias,Spain,ESP,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,
+455,Brice Samba,France,FRA,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+456,Malo Gusto,France,FRA,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+457,Lucas Digne,France,FRA,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+458,Jules Koundé,France,FRA,DEF,5.4,false,,2026-06-07 20:08:13.783269,5.4,J. Koundé
+459,Ousmane Dembélé,France,FRA,FWD,10.0,false,,2026-06-07 20:08:13.783269,10,O. Dembélé
+460,Aurélien Tchouaméni,France,FRA,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,A. Tchouaméni
+461,Marcus Thuram,France,FRA,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,
+462,Kylian Mbappé,France,FRA,FWD,10.5,false,,2026-06-07 20:08:13.783269,10.5,K. Mbappé
+463,Michael Olise,France,FRA,FWD,9.5,false,,2026-06-07 20:08:13.783269,9.5,M. Olise
+464,Bradley Barcola,France,FRA,FWD,8.0,false,,2026-06-07 20:08:13.783269,8.0,B. Barcola
+465,N'Golo Kanté,France,FRA,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+466,Adrien Rabiot,France,FRA,MID,6.4,false,,2026-06-07 20:08:13.783269,6.4,A. Rabiot
+467,Ibrahima Konaté,France,FRA,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+468,Mike Maignan,France,FRA,GK,5.0,false,,2026-06-07 20:08:13.783269,5,M. Maignan
+469,William Saliba,France,FRA,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,W. Saliba
+470,Warren Zaïre-Emery,France,FRA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+471,Theo Hernández,France,FRA,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.3,T. Hernández
+472,Désiré Doué,France,FRA,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,D. Doué
+473,Lucas Hernández,France,FRA,DEF,5.2,false,,2026-06-07 20:08:13.783269,5.2,
+474,Jean-Philippe Mateta,France,FRA,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+475,Robin Risser,France,FRA,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+476,Rayan Cherki,France,FRA,MID,8.0,false,,2026-06-07 20:08:13.783269,8.0,R. Cherki
+477,Maghnes Akliouche,France,FRA,MID,6.4,false,,2026-06-07 20:08:13.783269,6.4,
+478,Maxence Lacroix,France,FRA,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+479,Dayot Upamecano,France,FRA,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,D. Upamecano
+480,Manu Koné,France,FRA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+481,Manuel Neuer,Germany,GER,GK,5.0,false,,2026-06-07 20:08:13.783269,5,M. Neuer
+482,Antonio Rüdiger,Germany,GER,DEF,5.5,false,,2026-06-07 20:08:13.783269,5.5,A. Rüdiger
+483,Waldemar Anton,Germany,GER,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,W. Anton
+484,Jonathan Tah,Germany,GER,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,J. Tah
+485,Aleksandar Pavlovic,Germany,GER,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,A. Pavlović
+486,Joshua Kimmich,Germany,GER,DEF,5.5,false,,2026-06-07 20:08:13.783269,5.6,J. Kimmich
+487,Kai Havertz,Germany,GER,FWD,7.8,false,,2026-06-07 20:08:13.783269,7.8,K. Havertz
+488,Leon Goretzka,Germany,GER,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,L. Goretzka
+489,Jamie Leweling,Germany,GER,MID,6.4,false,,2026-06-07 20:08:13.783269,6.4,
+490,Jamal Musiala,Germany,GER,MID,8.0,false,,2026-06-07 20:08:13.783269,8,J. Musiala
+491,Nick Woltemade,Germany,GER,FWD,7.2,false,,2026-06-07 20:08:13.783269,7.2,
+492,Oliver Baumann,Germany,GER,GK,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+493,Pascal Groß,Germany,GER,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+494,Maximilian Beier,Germany,GER,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+495,Nico Schlotterbeck,Germany,GER,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,N. Schlotterbeck
+496,Angelo Stiller,Germany,GER,MID,5.8,false,,2026-06-07 20:08:13.783269,5.8,
+497,Florian Wirtz,Germany,GER,MID,7.5,false,,2026-06-07 20:08:13.783269,7.5,F. Wirtz
+498,Nathaniel Brown,Germany,GER,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,N. Brown
+499,Leroy Sané,Germany,GER,MID,7.4,false,,2026-06-07 20:08:13.783269,7.4,L. Sané
+500,Nadiem Amiri,Germany,GER,MID,6.3,false,,2026-06-07 20:08:13.783269,6.3,
+501,Alexander Nübel,Germany,GER,GK,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+502,David Raum,Germany,GER,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,D. Raum
+503,Felix Nmecha,Germany,GER,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,F. Nmecha
+504,Malick Thiaw,Germany,GER,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+505,Lennart Karl,Germany,GER,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,
+506,Deniz Undav,Germany,GER,FWD,6.6,false,,2026-06-07 20:08:13.783269,6.6,D. Undav
+507,Lawrence Ati Zigi,Ghana,GHA,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,L. Zigi
+508,Alidu Seidu,Ghana,GHA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+509,Caleb Yirenkyi,Ghana,GHA,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,C. Yirenkyi
+510,Jonas Adjetey,Ghana,GHA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,J. Adjetey
+511,Thomas Partey,Ghana,GHA,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+512,Abdul Mumin,Ghana,GHA,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+513,Abdul Fatawu,Ghana,GHA,FWD,6.4,false,,2026-06-07 20:08:13.783269,6.4,A. Fatawu
+514,Kwasi Sibo,Ghana,GHA,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,K. Sibo
+515,Jordan Ayew,Ghana,GHA,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,J. Ayew
+516,Brandon Thomas-Asante,Ghana,GHA,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,B. Thomas-Asante
+517,Antoine Semenyo,Ghana,GHA,MID,7.2,false,,2026-06-07 20:08:13.783269,7.2,A. Semenyo
+518,Joseph Anang,Ghana,GHA,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+519,Christopher Bonsu Baah,Ghana,GHA,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+520,Gideon Mensah,Ghana,GHA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,G. Mensah
+521,Elisha Owusu,Ghana,GHA,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,E. Owusu
+522,Benjamin Asare,Ghana,GHA,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,B. Asare
+523,Abdul Baba,Ghana,GHA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+524,Jerome Opoku,Ghana,GHA,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,J. Opoku
+525,Iñaki Williams,Ghana,GHA,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+526,Augustine Boakye,Ghana,GHA,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+527,Kojo Peprah Oppong,Ghana,GHA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+528,Ernest Nuamah,Ghana,GHA,FWD,5.0,false,,2026-06-07 20:08:13.783269,5.0,E. Nuamah
+529,Prince Adu,Ghana,GHA,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,P. Adu
+530,Marvin Senaya,Ghana,GHA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,M. Senaya
+531,Kamaldeen Sulemana,Ghana,GHA,FWD,5.1,false,,2026-06-07 20:08:13.783269,5.1,K. Sulemana
+532,Johny Placide,Haiti,HAI,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Placide
+533,Carlens Arcus,Haiti,HAI,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,C. Arcus
+534,Keeto Thermoncy,Haiti,HAI,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+535,Ricardo Adé,Haiti,HAI,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,R. Adé
+536,Hannes Delcroix,Haiti,HAI,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,H. Delcroix
+537,Carl Sainté,Haiti,HAI,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+538,Derrick Etienne,Haiti,HAI,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+539,Martin Expérience,Haiti,HAI,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,M. Expérience
+540,Duckens Nazon,Haiti,HAI,FWD,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+541,Jean-Ricner Bellegarde,Haiti,HAI,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,J. Bellegarde
+542,Louicius Deedson,Haiti,HAI,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,L. Deedson
+543,Alexandre Pierre,Haiti,HAI,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+544,Leverton Pierre,Haiti,HAI,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+545,Ruben Providence,Haiti,HAI,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,R. Providence
+546,Lenny Joseph,Haiti,HAI,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,L. Joseph
+547,Danley Jean Jacques,Haiti,HAI,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,D. Jean Jacques
+548,Wilson Isidor,Haiti,HAI,FWD,5.0,false,,2026-06-07 20:08:13.783269,5.0,W. Isidor
+549,Yassin Fortuné,Haiti,HAI,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,Y. Fortuné
+550,Frantzdy Pierrot,Haiti,HAI,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,F. Pierrot
+551,Josué Casimir,Haiti,HAI,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,J. Casimir
+552,Jean-Kévin Duverne,Haiti,HAI,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+553,Josué Duverger,Haiti,HAI,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+554,Wilguens Paugain,Haiti,HAI,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+555,Dominique Simon,Haiti,HAI,MID,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+556,Woodensky Pierre,Haiti,HAI,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+557,Duke Lacroix,Haiti,HAI,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+558,Saleh Hardani,IR Iran,IRN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+559,Saeid Ezatolahi,IR Iran,IRN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,S. Ezatolahi
+560,Alireza Jahanbakhsh,IR Iran,IRN,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+561,Mehdi Taremi,IR Iran,IRN,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,M. Taremi
+562,Mehdi Ghayedi,IR Iran,IRN,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,M. Ghayedi
+563,Roozbeh Cheshmi,IR Iran,IRN,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,
+564,Ali Nemati,IR Iran,IRN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,A. Nemati
+565,Mohammad Ghorbani,IR Iran,IRN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+566,Dennis Dargahi,IR Iran,IRN,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+567,Amir Mohammad Razzaghinia,IR Iran,IRN,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+568,Mohammad Mohebi,IR Iran,IRN,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,M. Mohebbi
+569,Ehsan Hajisafi,IR Iran,IRN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,E. Hajisafi
+570,Shoja Khalilzadeh,IR Iran,IRN,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,S. Khalilzadeh
+571,Payam Niazmand,IR Iran,IRN,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+572,Mehdi Torabi,IR Iran,IRN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+573,Aria Yousefi,IR Iran,IRN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,A. Yousefi
+574,Hossein Hosseini,IR Iran,IRN,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+575,Danial Eiri,IR Iran,IRN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+576,Saman Ghoddos,IR Iran,IRN,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,S. Ghoddos
+577,Fahad Talib,Iraq,IRQ,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+578,Hussein Ali,Iraq,IRQ,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Hussein Ali
+579,Zaid Tahseen,Iraq,IRQ,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Zaid Tahseen
+580,Akam Hashim,Iraq,IRQ,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Akam Hashim
+581,Munaf Younus,Iraq,IRQ,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+582,Youssef Amyn,Iraq,IRQ,MID,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+583,Ibrahim Bayesh,Iraq,IRQ,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,Ibrahim Bayesh
+584,Mohanad Ali,Iraq,IRQ,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Mohanad Ali
+585,Ali Yousif,Iraq,IRQ,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+586,Zidane Iqbal,Iraq,IRQ,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,Zidane Iqbal
+587,Ahmed Yahya,Iraq,IRQ,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+588,Amir Al Ammari,Iraq,IRQ,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,Amir Al Ammari
+589,Ali Jasim,Iraq,IRQ,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Ali Jasim
+590,Aymen Hussein,Iraq,IRQ,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,Aymen Hussein
+591,Kevin Yakob,Iraq,IRQ,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+592,Aimar Sher,Iraq,IRQ,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+593,Ahmed Basil,Iraq,IRQ,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+594,Zaid Ismael,Iraq,IRQ,MID,4.4,false,,2026-06-07 20:08:13.783269,4.4,Zaid Ismael
+595,Mustafa Saadoon,Iraq,IRQ,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Mustafa Saadoon
+596,Yazeed  Abulaila,Jordan,JOR,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+597,Abdallah Nasib,Jordan,JOR,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,Abdallah Nasib
+598,Amer Jamous,Jordan,JOR,MID,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+599,Mohammad Abu Zraiq,Jordan,JOR,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+600,Noor Al Rawabdeh,Jordan,JOR,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,Noor Al Rawabdeh
+601,Ali Olwan,Jordan,JOR,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,Ali Olwan
+602,Odeh Fakhoury,Jordan,JOR,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,Odeh Fakhoury
+603,Raja'ei Ayed,Jordan,JOR,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+604,Ibrahim Sadeh,Jordan,JOR,MID,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+605,Saleem Obaid,Jordan,JOR,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Saleem Obaid
+606,Ibrahim Sabra,Jordan,JOR,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+607,Mohannad Abu Taha,Jordan,JOR,MID,3.5,false,,2026-06-07 20:08:13.783269,3.5,Mohannad Abu Taha
+608,Nizar Al Rashdan,Jordan,JOR,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Nizar Al Rashdan
+609,Ehsan Haddad,Jordan,JOR,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Ehsan Haddad
+610,Ali Azaizeh,Jordan,JOR,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,Ali Azaizeh
+611,Anas Badawi,Jordan,JOR,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+612,Zion Suzuki,Japan,JPN,GK,4.3,false,,2026-06-07 20:08:13.783269,4.3,Z. Suzuki
+613,Yukinari Sugawara,Japan,JPN,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,Y. Sugawara
+614,Shogo Taniguchi,Japan,JPN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,S. Taniguchi
+615,Yuto Nagatomo,Japan,JPN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+616,Wataru Endo,Japan,JPN,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+617,Ao Tanaka,Japan,JPN,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+618,Takefusa Kubo,Japan,JPN,MID,7.0,false,,2026-06-07 20:08:13.783269,7.0,T. Kubo
+619,Keisuke Goto,Japan,JPN,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+620,Ritsu Doan,Japan,JPN,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,R. Doan
+621,Daizen Maeda,Japan,JPN,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,D. Maeda
+622,Keisuke Osako,Japan,JPN,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+623,Keito Nakamura,Japan,JPN,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,K. Nakamura
+624,Junya Ito,Japan,JPN,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,J. Ito
+625,Daichi Kamada,Japan,JPN,MID,5.8,false,,2026-06-07 20:08:13.783269,5.8,D. Kamada
+626,Tsuyoshi Watanabe,Japan,JPN,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,T. Watanabe
+627,Yuito Suzuki,Japan,JPN,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+628,Ayase Ueda,Japan,JPN,FWD,7.0,false,,2026-06-07 20:08:13.783269,7.0,A. Ueda
+629,Koki Ogawa,Japan,JPN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,K. Ogawa
+630,Ayumu Seko,Japan,JPN,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+631,Hiroki Ito,Japan,JPN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,H. Ito
+632,Takehiro Tomiyasu,Japan,JPN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,T. Tomiyasu
+633,Tomoki Hayakawa,Japan,JPN,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+634,Kaishu Sano,Japan,JPN,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,K. Sano
+635,Junnosuke Suzuki,Japan,JPN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+636,Kento Shiogai,Japan,JPN,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,K. Shiogai
+637,Ko Itakura,Japan,JPN,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+638,Kim Seung-Gyu,Korea Republic,KOR,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,Kim Seung-Gyu
+639,Lee Han-Beom,Korea Republic,KOR,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,Lee Han-Beom
+640,Lee Gi-Hyuk,Korea Republic,KOR,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,Lee Gi-Hyuk
+641,Kim Min-Jae,Korea Republic,KOR,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,Kim Min-Jae
+642,Kim Tae-Hyeon,Korea Republic,KOR,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+643,Hwang In-Beom,Korea Republic,KOR,MID,5.8,false,,2026-06-07 20:08:13.783269,5.8,Hwang In-Beom
+644,Son Heung-Min,Korea Republic,KOR,FWD,7.4,false,,2026-06-07 20:08:13.783269,7.4,Son Heung-Min
+645,Paik Seung-Ho,Korea Republic,KOR,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,Paik Seung-Ho
+646,Cho Gue-Sung,Korea Republic,KOR,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+647,Lee Jae-Sung,Korea Republic,KOR,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,Lee Jae-Sung
+648,Hwang Hee-Chan,Korea Republic,KOR,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,Hwang Hee-Chan
+649,Song Bum-Keun,Korea Republic,KOR,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+650,Lee Tae-Seok,Korea Republic,KOR,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,Lee Tae-Seok
+651,Kim Moon-Hwan,Korea Republic,KOR,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+652,Park Jin-Seob,Korea Republic,KOR,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,Park Jin-Seob
+653,Bae Jun-Ho,Korea Republic,KOR,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+654,Oh Hyeon-Gyu,Korea Republic,KOR,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Oh Hyeon-Gyu
+655,Lee Kang-In,Korea Republic,KOR,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,Lee Kang-In
+656,Yang Hyun-Jun,Korea Republic,KOR,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+657,Jo Hyeon-Woo,Korea Republic,KOR,GK,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+658,Seol Young-Woo,Korea Republic,KOR,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,Seol Young-Woo
+659,Jens Castrop,Korea Republic,KOR,DEF,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+660,Kim Jin-Gyu,Korea Republic,KOR,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Kim Jin-Gyu
+661,Eom Ji-Sung,Korea Republic,KOR,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,Eom Ji-Sung
+662,Lee Dong-Gyeong,Korea Republic,KOR,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+663,Ali Majrashi,Saudi Arabia,KSA,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+664,Ali Lajami,Saudi Arabia,KSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Ali Lajami
+665,Aiman Yahya,Saudi Arabia,KSA,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+666,Saud Abdulhamid,Saudi Arabia,KSA,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,Saud Abdulhamid
+667,Nawaf Bu Washl,Saudi Arabia,KSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,Nawaf Bu Washl
+668,Hassan Kadish,Saudi Arabia,KSA,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+669,Sultan Mandash,Saudi Arabia,KSA,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+670,Mohamed Kanno,Saudi Arabia,KSA,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,Mohamed Kanno
+671,Jehad Thikri,Saudi Arabia,KSA,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+672,Hassan Al Tambakti,Saudi Arabia,KSA,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,Hassan Al Tambakti
+673,Abdullah Al Khaibari,Saudi Arabia,KSA,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,Abdullah Al Khaibari
+674,Abdulelah Al Amri,Saudi Arabia,KSA,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,Abdulelah Al Amri
+675,Ayyoub Bouaddi,Morocco,MAR,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,A. Bouaddi
+676,Ismael Saibari,Morocco,MAR,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,I. Saibari
+677,Samir El Mourabet,Morocco,MAR,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,S. El Mourabet
+678,Gessime Yassine,Morocco,MAR,MID,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+679,Youssef Belammari,Morocco,MAR,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+680,Ayoub El Kaabi,Morocco,MAR,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+681,Ayoube Amaimouni-Echghouyab,Morocco,MAR,FWD,4.3,false,,2026-06-07 20:08:13.783269,4.3,A. Amaimouni-Echghouyab
+682,Anass Salah-Eddine,Morocco,MAR,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,A. Salah-Eddine
+683,Munir El Kajoui,Morocco,MAR,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+684,Raúl Rangel,Mexico,MEX,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+685,Jorge Sánchez,Mexico,MEX,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+686,César Montes,Mexico,MEX,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+687,Edson Álvarez,Mexico,MEX,DEF,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+688,Johan Vásquez,Mexico,MEX,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+689,Érik Lira,Mexico,MEX,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+690,Luis Romo,Mexico,MEX,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+691,Álvaro Fidalgo,Mexico,MEX,MID,6.4,false,,2026-06-07 20:08:13.783269,6.4,
+692,Raúl Jiménez,Mexico,MEX,FWD,7.0,false,,2026-06-07 20:08:13.783269,7.0,
+693,Alexis Vega,Mexico,MEX,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+694,Santiago Giménez,Mexico,MEX,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,
+695,Carlos Acevedo,Mexico,MEX,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+696,Guillermo Ochoa,Mexico,MEX,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+697,Armando González,Mexico,MEX,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+698,Israel Reyes,Mexico,MEX,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+699,Julián Quiñones,Mexico,MEX,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+700,Orbelín Pineda,Mexico,MEX,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,
+701,Obed Vargas,Mexico,MEX,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+702,Gilberto Mora,Mexico,MEX,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+703,Mateo Chávez,Mexico,MEX,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+704,César Huerta,Mexico,MEX,FWD,6.3,false,,2026-06-07 20:08:13.783269,6.3,
+705,Guillermo Martínez,Mexico,MEX,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+706,Jesús Gallardo,Mexico,MEX,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+707,Luis Chávez,Mexico,MEX,MID,6.3,false,,2026-06-07 20:08:13.783269,6.3,
+708,Roberto Alvarado,Mexico,MEX,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+709,Brian Gutiérrez,Mexico,MEX,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+710,Bart Verbruggen,Netherlands,NED,GK,4.7,false,,2026-06-07 20:08:13.783269,4.7,B. Verbruggen
+711,Virgil van Dijk,Netherlands,NED,DEF,5.5,false,,2026-06-07 20:08:13.783269,6.4,V. van Dijk
+712,Nathan Aké,Netherlands,NED,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,N. Aké
+713,Jan Paul van Hecke,Netherlands,NED,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,J. van Hecke
+714,Ryan Gravenberch,Netherlands,NED,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,R. Gravenberch
+715,Wout Weghorst,Netherlands,NED,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+716,Cody Gakpo,Netherlands,NED,FWD,7.7,false,,2026-06-07 20:08:13.783269,7.7,C. Gakpo
+717,Tijjani Reijnders,Netherlands,NED,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,T. Reijnders
+718,Micky van de Ven,Netherlands,NED,DEF,5.1,false,,2026-06-07 20:08:13.783269,5.1,M. van de Ven
+719,Noa Lang,Netherlands,NED,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+720,Donyell Malen,Netherlands,NED,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,D. Malen
+721,Brian Brobbey,Netherlands,NED,FWD,5.7,false,,2026-06-07 20:08:13.783269,5.7,B. Brobbey
+722,Teun Koopmeiners,Netherlands,NED,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,T. Koopmeiners
+723,Denzel Dumfries,Netherlands,NED,DEF,5.7,false,,2026-06-07 20:08:13.783269,6,D. Dumfries
+724,Mark Flekken,Netherlands,NED,GK,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+725,Jorrel Hato,Netherlands,NED,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+726,Quinten Timber,Netherlands,NED,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,Q. Timber
+727,Ørjan Nyland,Norway,NOR,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,Ø. Nyland
+728,Morten Thorsby,Norway,NOR,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+729,Kristoffer Ajer,Norway,NOR,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,K. Ajer
+730,Leo Østigård,Norway,NOR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,L. Østigård
+731,David Møller Wolfe,Norway,NOR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,D. Møller Wolfe
+732,Patrick Berg,Norway,NOR,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,P. Berg
+733,Alexander Sørloth,Norway,NOR,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,A. Sørloth
+734,Sander Berge,Norway,NOR,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,S. Berge
+735,Erling Haaland,Norway,NOR,FWD,10.5,false,,2026-06-07 20:08:13.783269,10.5,E. Haaland
+736,Martin Ødegaard,Norway,NOR,MID,7.7,false,,2026-06-07 20:08:13.783269,7.7,M. Ødegaard
+737,Jørgen Strand Larsen,Norway,NOR,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+738,Sander Tangvik,Norway,NOR,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+739,Egil Selvik,Norway,NOR,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+740,Fredrik Aursnes,Norway,NOR,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,F. Aursnes
+741,Fredrik Bjørkan,Norway,NOR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+742,Marcus Pedersen,Norway,NOR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+743,Torbjørn Heggem,Norway,NOR,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,T. Heggem
+744,Kristian Thorstvedt,Norway,NOR,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,K. Thorstvedt
+745,Antonio Nusa,Norway,NOR,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,A. Nusa
+746,Andreas Schjelderup,Norway,NOR,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,A. Schjelderup
+747,Oscar Bobb,Norway,NOR,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,O. Bobb
+748,Jens Petter Hauge,Norway,NOR,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+749,Sondre Langås,Norway,NOR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+750,Henrik Falchener,Norway,NOR,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+751,Julian Ryerson,Norway,NOR,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,J. Ryerson
+752,Thelo Aasgaard,Norway,NOR,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+753,Francis de Vries,New Zealand,NZL,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+754,Tyler Bindon,New Zealand,NZL,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,T. Bindon
+755,Michael Boxall,New Zealand,NZL,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,M. Boxall
+756,Joe Bell,New Zealand,NZL,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,J. Bell
+757,Matthew Garbett,New Zealand,NZL,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+758,Marko Stamenic,New Zealand,NZL,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,M. Stamenić
+759,Sarpreet Singh,New Zealand,NZL,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,S. Singh
+760,Elijah Just,New Zealand,NZL,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,E. Just
+761,Liberato Cacace,New Zealand,NZL,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,L. Cacace
+762,Alex Rufer,New Zealand,NZL,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+763,Nando Pijnaker,New Zealand,NZL,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+764,Finn Surman,New Zealand,NZL,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,F. Surman
+765,Kosta Barbarouses,New Zealand,NZL,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+766,Callum McCowatt,New Zealand,NZL,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,C. McCowatt
+767,Jesse Randall,New Zealand,NZL,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,J. Randall
+768,Michael Woud,New Zealand,NZL,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+769,Ryan Thomas,New Zealand,NZL,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,R. Thomas
+770,Callan Elliot,New Zealand,NZL,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,C. Elliot
+771,Lachlan Bayliss,New Zealand,NZL,MID,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+772,Max Crocombe,New Zealand,NZL,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,M. Crocombe
+773,Tim Payne,New Zealand,NZL,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,T. Payne
+774,Chris Wood,New Zealand,NZL,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,C. Wood
+775,Alex Paulsen,New Zealand,NZL,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+776,Ben Waine,New Zealand,NZL,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+777,Ben Old,New Zealand,NZL,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,B. Old
+778,Tommy Smith,New Zealand,NZL,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+779,Luis Mejía,Panama,PAN,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+780,César Blackman,Panama,PAN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,C. Blackman
+781,José Córdoba,Panama,PAN,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,J. Córdoba
+782,Cristian Martínez,Panama,PAN,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,C. Martínez
+783,José Luis Rodríguez,Panama,PAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,J. Rodríguez
+784,Adalberto Carrasquilla,Panama,PAN,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+785,Ismael Díaz,Panama,PAN,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,I. Díaz
+786,Yoel Bárcenas,Panama,PAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,Y. Bárcenas
+787,César Samudio,Panama,PAN,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+788,Jiovany Ramos,Panama,PAN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,J. Ramos
+789,Carlos Harvey,Panama,PAN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,C. Harvey
+790,Éric Davis,Panama,PAN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+791,Andrés Andrade,Panama,PAN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,A. Andrade
+792,José Fajardo,Panama,PAN,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,J. Fajardo
+793,Cecilio Waterman,Panama,PAN,FWD,5.0,false,,2026-06-07 20:08:13.783269,5.0,C. Waterman
+794,Aníbal Godoy,Panama,PAN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,A. Godoy
+795,César Yanis,Panama,PAN,MID,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+796,Orlando Mosquera,Panama,PAN,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,O. Mosquera
+797,Amir Murillo,Panama,PAN,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,A. Murillo
+798,Roderick Miller,Panama,PAN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+799,Jorge Gutiérrez,Panama,PAN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+800,Roberto Fernández,Paraguay,PAR,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+801,Gustavo Velázquez,Paraguay,PAR,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+802,Omar Alderete,Paraguay,PAR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+803,Juan José Cáceres,Paraguay,PAR,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+804,Fabián Balbuena,Paraguay,PAR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+805,Júnior Alonso,Paraguay,PAR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+806,Ramón Sosa,Paraguay,PAR,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+807,Diego Gómez,Paraguay,PAR,MID,6.8,false,,2026-06-07 20:08:13.783269,6.8,
+808,Antonio Sanabria,Paraguay,PAR,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+809,Miguel Almirón,Paraguay,PAR,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+810,Maurício Magalhães Prado,Paraguay,PAR,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+811,Orlando Gill,Paraguay,PAR,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+812,José Canale,Paraguay,PAR,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+813,Andrés Cubas,Paraguay,PAR,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+814,Gustavo Gómez,Paraguay,PAR,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+815,Damián Bobadilla,Paraguay,PAR,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+816,Alejandro Romero,Paraguay,PAR,FWD,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+817,Álex Arce,Paraguay,PAR,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+818,Julio Enciso,Paraguay,PAR,FWD,6.6,false,,2026-06-07 20:08:13.783269,6.6,
+819,Braian Ojeda,Paraguay,PAR,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+820,Gabriel Ávalos,Paraguay,PAR,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+821,Gastón Olveira,Paraguay,PAR,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+822,Matías Galarza,Paraguay,PAR,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,
+823,Gustavo Caballero,Paraguay,PAR,MID,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+824,Isidro Pitta,Paraguay,PAR,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+825,Alexandro Maidana,Paraguay,PAR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+826,Diogo Costa,Portugal,POR,GK,4.9,false,,2026-06-07 20:08:13.783269,4.9,Diogo Costa
+827,Nélson Semedo,Portugal,POR,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,Nélson Semedo
+828,Rúben Dias,Portugal,POR,DEF,5.0,false,,2026-06-07 20:08:13.783269,5,
+829,Tomás Araújo,Portugal,POR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,Tomás Araújo
+830,Diogo Dalot,Portugal,POR,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+831,Matheus Nunes,Portugal,POR,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+832,Cristiano Ronaldo,Portugal,POR,FWD,10.0,false,,2026-06-07 20:08:13.783269,10,Cristiano Ronaldo
+833,Bruno Fernandes,Portugal,POR,MID,8.5,false,,2026-06-07 20:08:13.783269,9.4,Bruno Fernandes
+834,Gonçalo Ramos,Portugal,POR,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,Gonçalo Ramos
+835,Bernardo Silva,Portugal,POR,MID,7.8,false,,2026-06-07 20:08:13.783269,7.8,Bernardo Silva
+836,João Félix,Portugal,POR,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+837,José Sá,Portugal,POR,GK,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+838,Renato Veiga,Portugal,POR,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,Renato Veiga
+839,Gonçalo Inácio,Portugal,POR,DEF,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+840,João Neves,Portugal,POR,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,João Neves
+841,Trincão,Portugal,POR,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+842,Rafael Leão,Portugal,POR,FWD,7.8,false,,2026-06-07 20:08:13.783269,7.8,Rafael Leão
+843,Pedro Neto,Portugal,POR,FWD,6.4,false,,2026-06-07 20:08:13.783269,6.4,Pedro Neto
+844,Gonçalo Guedes,Portugal,POR,FWD,5.8,false,,2026-06-07 20:08:13.783269,5.8,
+845,João Cancelo,Portugal,POR,DEF,5.3,false,,2026-06-07 20:08:13.783269,5.3,João Cancelo
+846,Rúben Neves,Portugal,POR,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+847,Rui Silva,Portugal,POR,GK,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+848,Nuno Mendes,Portugal,POR,DEF,5.8,false,,2026-06-07 20:08:13.783269,5.8,Nuno Mendes
+849,Francisco Conceição,Portugal,POR,FWD,5.7,false,,2026-06-07 20:08:13.783269,5.7,Francisco Conceição
+850,Pedro Miguel,Qatar,QAT,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,Pedro Miguel
+851,Lucas Mendes,Qatar,QAT,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+852,Jassem Gaber,Qatar,QAT,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,Jassem Gaber
+853,Edmílson Junior,Qatar,QAT,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Edmílson Junior
+854,Mohammed Muntari,Qatar,QAT,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+855,Akram Afif,Qatar,QAT,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,Akram Afif
+856,Karim Boudiaf,Qatar,QAT,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,Karim Boudiaf
+857,Yusuf Abdurisag,Qatar,QAT,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,Yusuf Abdurisag
+858,Boualem Khoukhi,Qatar,QAT,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,Boualem Khoukhi
+859,Sultan Al Brake,Qatar,QAT,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+860,Almoez Ali,Qatar,QAT,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+861,Ahmed Fathy,Qatar,QAT,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,Ahmed Fathy
+862,Salah Zakaria,Qatar,QAT,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+863,Meshaal Barsham,Qatar,QAT,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+864,Assim Madibo,Qatar,QAT,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,Assim Madibo
+865,Tahsin Jamshid,Qatar,QAT,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+866,Mahmud Abunada,Qatar,QAT,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,Mahmud Abunada
+867,Mohammad Al Mannai,Qatar,QAT,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,Mohammad Al Mannai
+868,Ronwen Williams,South Africa,RSA,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+869,Thabang Matuludi,South Africa,RSA,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+870,Khulumani Ndamane,South Africa,RSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+871,Teboho Mokoena,South Africa,RSA,MID,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+872,Thalente Mbatha,South Africa,RSA,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+873,Aubrey Modiba,South Africa,RSA,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+874,Oswin Appollis,South Africa,RSA,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+875,Tshepang Moremi,South Africa,RSA,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+876,Lyle Foster,South Africa,RSA,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,
+877,Relebohile Mofokeng,South Africa,RSA,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+878,Themba Zwane,South Africa,RSA,MID,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+879,Thapelo Maseko,South Africa,RSA,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+880,Mbekezeli Mbokazi,South Africa,RSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+881,Iqraam Rayners,South Africa,RSA,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+882,Sipho Chaine,South Africa,RSA,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+883,Evidence Makgopa,South Africa,RSA,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+884,Samukele Kabini,South Africa,RSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+885,Nkosinathi Sibisi,South Africa,RSA,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+886,Khuliso Mudau,South Africa,RSA,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+887,Ime Okon,South Africa,RSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+888,Ricardo Goss,South Africa,RSA,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+889,Jayden Adams,South Africa,RSA,MID,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+890,Olwethu Makhanya,South Africa,RSA,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+891,Kamogelo Sebelebele,South Africa,RSA,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+892,Bradley Cross,South Africa,RSA,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+893,Yaya Sithole,South Africa,RSA,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,
+894,Angus Gunn,Scotland,SCO,GK,3.6,false,,2026-06-07 20:08:13.783269,3.6,A. Gunn
+895,Aaron Hickey,Scotland,SCO,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,A. Hickey
+896,Scott McTominay,Scotland,SCO,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,S. McTominay
+897,Grant Hanley,Scotland,SCO,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,G. Hanley
+898,Kieran Tierney,Scotland,SCO,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,
+899,John McGinn,Scotland,SCO,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,J. McGinn
+900,Lyndon Dykes,Scotland,SCO,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,L. Dykes
+901,Ché Adams,Scotland,SCO,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,C. Adams
+902,Ryan Christie,Scotland,SCO,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,R. Christie
+903,Liam Kelly,Scotland,SCO,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+904,Jack Hendry,Scotland,SCO,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,J. Hendry
+905,Ross Stewart,Scotland,SCO,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,
+906,John Souttar,Scotland,SCO,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+907,Dominic Hyam,Scotland,SCO,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+908,Ben Gannon-Doak,Scotland,SCO,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,B. Gannon-Doak
+909,George Hirst,Scotland,SCO,FWD,4.6,false,,2026-06-07 20:08:13.783269,4.6,
+910,Lewis Ferguson,Scotland,SCO,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,L. Ferguson
+911,Lawrence Shankland,Scotland,SCO,FWD,5.5,false,,2026-06-07 20:08:13.783269,5.5,L. Shankland
+912,Craig Gordon,Scotland,SCO,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+913,Nathan Patterson,Scotland,SCO,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,N. Patterson
+914,Anthony Ralston,Scotland,SCO,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+915,Findlay Curtis,Scotland,SCO,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,F. Curtis
+916,Scott McKenna,Scotland,SCO,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+917,Andy Robertson,Scotland,SCO,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,A. Robertson
+918,Kenny McLean,Scotland,SCO,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,K. McLean
+919,Yehvann Diouf,Senegal,SEN,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+920,Mamadou Sarr,Senegal,SEN,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+921,Kalidou Koulibaly,Senegal,SEN,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,K. Koulibaly
+922,Abdoulaye Seck,Senegal,SEN,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+923,Idrissa Gueye,Senegal,SEN,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,I. Gueye
+924,Pathé Ciss,Senegal,SEN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,P. Ciss
+925,Assane Diao,Senegal,SEN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+926,Lamine Camara,Senegal,SEN,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,L. Camara
+927,Bamba Dieng,Senegal,SEN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,B. Dieng
+928,Sadio Mané,Senegal,SEN,FWD,7.6,false,,2026-06-07 20:08:13.783269,7.6,S. Mané
+929,Nicolas Jackson,Senegal,SEN,FWD,6.7,false,,2026-06-07 20:08:13.783269,6.7,N. Jackson
+930,Cherif Ndiaye,Senegal,SEN,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+931,Iliman Ndiaye,Senegal,SEN,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,I. Ndiaye
+932,Ismail Jakobs,Senegal,SEN,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+933,Krépin Diatta,Senegal,SEN,DEF,6.1,false,,2026-06-07 20:08:13.783269,6.1,K. Diatta
+934,Édouard Mendy,Senegal,SEN,GK,4.5,false,,2026-06-07 20:08:13.783269,4.5,É. Mendy
+935,Pape Matar Sarr,Senegal,SEN,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,
+936,Ismaïla Sarr,Senegal,SEN,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,I. Sarr
+937,Moussa Niakhaté,Senegal,SEN,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,M. Niakhaté
+938,Ibrahim Mbaye,Senegal,SEN,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,I. Mbaye
+939,Habib Diarra,Senegal,SEN,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,H. Diarra
+940,Bara Sapoko Ndiaye,Senegal,SEN,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+941,Mory Diaw,Senegal,SEN,GK,3.8,false,,2026-06-07 20:08:13.783269,3.8,
+942,Antoine Mendy,Senegal,SEN,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+943,El Hadji Malick Diouf,Senegal,SEN,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,E. Diouf
+944,Pape Gueye,Senegal,SEN,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,P. Gueye
+945,Gregor Kobel,Switzerland,SUI,GK,4.7,false,,2026-06-07 20:08:13.783269,4.7,G. Kobel
+946,Miro Muheim,Switzerland,SUI,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,M. Muheim
+947,Silvan Widmer,Switzerland,SUI,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+948,Nico Elvedi,Switzerland,SUI,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,N. Elvedi
+949,Manuel Akanji,Switzerland,SUI,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,M. Akanji
+950,Denis Zakaria,Switzerland,SUI,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,D. Zakaria
+951,Breel Embolo,Switzerland,SUI,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,B. Embolo
+952,Remo Freuler,Switzerland,SUI,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,R. Freuler
+953,Johan Manzambi,Switzerland,SUI,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,J. Manzambi
+954,Granit Xhaka,Switzerland,SUI,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,G. Xhaka
+955,Dan Ndoye,Switzerland,SUI,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,D. Ndoye
+956,Yvon Mvogo,Switzerland,SUI,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+957,Ricardo Rodríguez,Switzerland,SUI,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,R. Rodríguez
+958,Ardon Jashari,Switzerland,SUI,MID,5.2,false,,2026-06-07 20:08:13.783269,5.2,A. Jashari
+959,Djibril Sow,Switzerland,SUI,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+960,Christian Fassnacht,Switzerland,SUI,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+961,Rubén Vargas,Switzerland,SUI,FWD,6.8,false,,2026-06-07 20:08:13.783269,6.8,R. Vargas
+962,Eray Cömert,Switzerland,SUI,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+963,Noah Okafor,Switzerland,SUI,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+964,Michel Aebischer,Switzerland,SUI,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,M. Aebischer
+965,Marvin Keller,Switzerland,SUI,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+966,Fabian Rieder,Switzerland,SUI,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,F. Rieder
+967,Zeki Amdouni,Switzerland,SUI,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Z. Amdouni
+968,Aurèle Amenda,Switzerland,SUI,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+969,Luca Jaquez,Switzerland,SUI,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+970,Cedric Itten,Switzerland,SUI,FWD,5.4,false,,2026-06-07 20:08:13.783269,5.4,
+971,Jacob Widell Zetterström,Sweden,SWE,GK,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+972,Gustaf Lagerbielke,Sweden,SWE,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,G. Lagerbielke
+973,Victor Lindelöf,Sweden,SWE,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,V. Lindelöf
+974,Isak Hien,Sweden,SWE,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,I. Hien
+975,Gabriel Gudmundsson,Sweden,SWE,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,G. Gudmundsson
+976,Lucas Bergvall,Sweden,SWE,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,L. Bergvall
+977,Daniel Svensson,Sweden,SWE,DEF,4.5,false,,2026-06-07 20:08:13.783269,4.5,D. Svensson
+978,Alexander Isak,Sweden,SWE,FWD,8.0,false,,2026-06-07 20:08:13.783269,8.0,A. Isak
+979,Benjamin Nygren,Sweden,SWE,MID,4.9,false,,2026-06-07 20:08:13.783269,4.9,B. Nygren
+980,Anthony Elanga,Sweden,SWE,FWD,5.8,false,,2026-06-07 20:08:13.783269,5.8,A. Elanga
+981,Viktor Johansson,Sweden,SWE,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+982,Ken Sema,Sweden,SWE,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+983,Hjalmar Ekdal,Sweden,SWE,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,
+984,Carl Starfelt,Sweden,SWE,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+985,Jesper Karlström,Sweden,SWE,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,J. Karlström
+986,Viktor Gyökeres,Sweden,SWE,FWD,7.8,false,,2026-06-07 20:08:13.783269,7.8,V. Gyökeres
+987,Yasin Ayari,Sweden,SWE,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,Y. Ayari
+988,Mattias Svanberg,Sweden,SWE,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,M. Svanberg
+989,Eric Smith,Sweden,SWE,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+990,Alexander Bernhardsson,Sweden,SWE,DEF,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Bernhardsson
+991,Besfort Zeneli,Sweden,SWE,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+992,Kristoffer Nordfeldt,Sweden,SWE,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,K. Nordfeldt
+993,Elliot Stroud,Sweden,SWE,DEF,4.7,false,,2026-06-07 20:08:13.783269,4.7,E. Stroud
+994,Gustaf Nilsson,Sweden,SWE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+995,Taha Ali,Sweden,SWE,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,
+996,Abdelmouhib Chamakh,Tunisia,TUN,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,A. Chamakh
+997,Montassar Talbi,Tunisia,TUN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,M. Talbi
+998,Omar Rekik,Tunisia,TUN,DEF,3.8,false,,2026-06-07 20:08:13.783269,3.8,O. Rekik
+999,Dylan Bronn,Tunisia,TUN,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+1000,Elias Saad,Tunisia,TUN,FWD,4.5,false,,2026-06-07 20:08:13.783269,4.5,E. Saad
+1001,Hazem Mastouri,Tunisia,TUN,FWD,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+1002,Hannibal Mejbri,Tunisia,TUN,MID,4.8,false,,2026-06-07 20:08:13.783269,4.8,H. Mejbri
+1003,Ismaël Gharbi,Tunisia,TUN,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,I. Gharbi
+1004,Mortadha Ben Ouanes,Tunisia,TUN,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+1005,Rani Khedira,Tunisia,TUN,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,R. Khedira
+1006,Khalil Ayari,Tunisia,TUN,MID,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1007,Aymen Dahmen,Tunisia,TUN,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+1008,Ellyes Skhiri,Tunisia,TUN,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,E. Skhiri
+1009,Rayan Elloumi,Tunisia,TUN,FWD,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1010,Firas Chaouat,Tunisia,TUN,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,F. Chaouat
+1011,Yan Valery,Tunisia,TUN,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,Y. Valery
+1012,Mohamed Amine Ben Hmida,Tunisia,TUN,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,M. Ben Hmida
+1013,Moutaz Neffati,Tunisia,TUN,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+1014,Raed Chikhaoui,Tunisia,TUN,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+1015,Anis Ben Slimane,Tunisia,TUN,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,A. Ben Slimane
+1016,Sebastian Tounekti,Tunisia,TUN,MID,4.4,false,,2026-06-07 20:08:13.783269,4.4,S. Tounekti
+1017,Adem Arous,Tunisia,TUN,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+1018,Elias Achouri,Tunisia,TUN,FWD,4.8,false,,2026-06-07 20:08:13.783269,4.8,E. Achouri
+1019,Mert Günok,Türkiye,TUR,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1020,Zeki Çelik,Türkiye,TUR,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,Z. Çelik
+1021,Merih Demiral,Türkiye,TUR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,M. Demiral
+1022,Çaglar Söyüncü,Türkiye,TUR,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+1023,Salih Özcan,Türkiye,TUR,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,S. Özcan
+1024,Orkun Kökçü,Türkiye,TUR,MID,6.0,false,,2026-06-07 20:08:13.783269,6.0,O. Kökçü
+1025,Kerem Aktürkoglu,Türkiye,TUR,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,K. Aktürkoğlu
+1026,Arda Güler,Türkiye,TUR,FWD,7.0,false,,2026-06-07 20:08:13.783269,7.3,A. Güler
+1027,Deniz Gül,Türkiye,TUR,FWD,4.4,false,,2026-06-07 20:08:13.783269,4.4,D. Gül
+1028,Hakan Çalhanoglu,Türkiye,TUR,MID,7.1,false,,2026-06-07 20:08:13.783269,7.1,H. Çalhanoğlu
+1029,Kenan Yildiz,Türkiye,TUR,FWD,7.0,false,,2026-06-07 20:08:13.783269,7,K. Yıldız
+1030,Altay Bayindir,Türkiye,TUR,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1031,Eren Elmali,Türkiye,TUR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1032,Abdülkerim Bardakci,Türkiye,TUR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,A. Bardakcı
+1033,Ozan Kabak,Türkiye,TUR,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1034,Ismail Yüksek,Türkiye,TUR,MID,4.6,false,,2026-06-07 20:08:13.783269,4.6,İ. Yüksek
+1035,Irfan Can Kahveci,Türkiye,TUR,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+1036,Mert Müldür,Türkiye,TUR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,M. Müldür
+1037,Yunus Akgün,Türkiye,TUR,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,Y. Akgün
+1038,Ferdi Kadioglu,Türkiye,TUR,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,F. Kadıoğlu
+1039,Kaan Ayhan,Türkiye,TUR,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,
+1040,Ugurcan Çakir,Türkiye,TUR,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,U. Çakır
+1041,Oguz Aydin,Türkiye,TUR,FWD,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+1042,Samet Akaydin,Türkiye,TUR,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+1043,Can Uzun,Türkiye,TUR,FWD,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+1044,Baris Alper Yilmaz,Türkiye,TUR,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,B. Yılmaz
+1045,Sergio Rochet,Uruguay,URU,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+1046,José María Giménez,Uruguay,URU,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+1047,Sebastián Cáceres,Uruguay,URU,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,S. Cáceres
+1048,Ronald Araujo,Uruguay,URU,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+1049,Manuel Ugarte,Uruguay,URU,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,M. Ugarte
+1050,Nicolás de la Cruz,Uruguay,URU,MID,5.9,false,,2026-06-07 20:08:13.783269,5.9,N. de la Cruz
+1051,Federico Valverde,Uruguay,URU,MID,7.5,false,,2026-06-07 20:08:13.783269,8.1,F. Valverde
+1052,Darwin Núñez,Uruguay,URU,FWD,7.5,false,,2026-06-07 20:08:13.783269,7.5,D. Núñez
+1053,Giorgian de Arrascaeta,Uruguay,URU,MID,6.5,false,,2026-06-07 20:08:13.783269,6.5,
+1054,Facundo Pellistri,Uruguay,URU,FWD,5.2,false,,2026-06-07 20:08:13.783269,5.2,
+1055,Santiago Mele,Uruguay,URU,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+1056,Guillermo Varela,Uruguay,URU,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,G. Varela
+1057,Agustín Canobbio,Uruguay,URU,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,A. Canobbio
+1058,Emiliano Martínez,Uruguay,URU,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,E. Martínez
+1059,Mathías Olivera,Uruguay,URU,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,M. Olivera
+1060,Matías Viña,Uruguay,URU,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,M. Viña
+1061,Brian Rodríguez,Uruguay,URU,FWD,6.2,false,,2026-06-07 20:08:13.783269,6.2,B. Rodríguez
+1062,Rodrigo Aguirre,Uruguay,URU,FWD,5.6,false,,2026-06-07 20:08:13.783269,5.6,R. Aguirre
+1063,Federico Viñas,Uruguay,URU,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,F. Viñas
+1064,Fernando Muslera,Uruguay,URU,GK,4.1,false,,2026-06-07 20:08:13.783269,4.1,F. Muslera
+1065,Santiago Bueno,Uruguay,URU,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+1066,Juan Manuel Sanabria,Uruguay,URU,MID,4.5,false,,2026-06-07 20:08:13.783269,4.5,J. Sanabria
+1067,Antonee Robinson,USA,USA,DEF,5.0,false,,2026-06-07 20:08:13.783269,5.0,
+1068,Auston Trusty,USA,USA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+1069,Giovanni Reyna,USA,USA,MID,5.5,false,,2026-06-07 20:08:13.783269,5.5,
+1070,Ricardo Pepi,USA,USA,FWD,5.9,false,,2026-06-07 20:08:13.783269,5.9,
+1071,Christian Pulisic,USA,USA,FWD,7.0,false,,2026-06-07 20:08:13.783269,7,
+1072,Brenden Aaronson,USA,USA,FWD,5.7,false,,2026-06-07 20:08:13.783269,5.7,
+1073,Sebastian Berhalter,USA,USA,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+1074,Cristian Roldan,USA,USA,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+1075,Alexander Freeman,USA,USA,DEF,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1076,Malik Tillman,USA,USA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+1077,Folarin Balogun,USA,USA,FWD,6.0,false,,2026-06-07 20:08:13.783269,6.0,
+1078,Timothy Weah,USA,USA,FWD,5.8,false,,2026-06-07 20:08:13.783269,5.8,
+1079,Mark McKenzie,USA,USA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+1080,Matt Turner,USA,USA,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1081,Chris Richards,USA,USA,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+1082,Weston McKennie,USA,USA,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+1083,Tim Ream,USA,USA,DEF,3.9,false,,2026-06-07 20:08:13.783269,3.9,
+1084,Max Arfsten,USA,USA,DEF,4.4,false,,2026-06-07 20:08:13.783269,4.4,
+1085,Joe Scally,USA,USA,DEF,4.1,false,,2026-06-07 20:08:13.783269,4.1,
+1086,Matt Freese,USA,USA,GK,4.2,false,,2026-06-07 20:08:13.783269,4.2,
+1087,Chris Brady,USA,USA,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+1088,Utkir Yusupov,Uzbekistan,UZB,GK,3.9,false,,2026-06-07 20:08:13.783269,3.9,U. Yusupov
+1089,Abdukodir Khusanov,Uzbekistan,UZB,DEF,4.3,false,,2026-06-07 20:08:13.783269,4.3,A. Khusanov
+1090,Khojiakbar Alijonov,Uzbekistan,UZB,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,
+1091,Farrukh Sayfiev,Uzbekistan,UZB,DEF,3.6,false,,2026-06-07 20:08:13.783269,3.6,F. Sayfiev
+1092,Akmal Mozgovoy,Uzbekistan,UZB,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,A. Mozgovoy
+1093,Otabek Shukurov,Uzbekistan,UZB,MID,5.0,false,,2026-06-07 20:08:13.783269,5.0,O. Shukurov
+1094,Jamshid Iskanderov,Uzbekistan,UZB,MID,5.7,false,,2026-06-07 20:08:13.783269,5.7,
+1095,Jaloliddin Masharipov,Uzbekistan,UZB,MID,6.1,false,,2026-06-07 20:08:13.783269,6.1,
+1096,Oston Urunov,Uzbekistan,UZB,MID,5.6,false,,2026-06-07 20:08:13.783269,5.6,O. Urunov
+1097,Sherzod Nasrullaev,Uzbekistan,UZB,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,S. Nasrullaev
+1098,Eldor Shomurodov,Uzbekistan,UZB,FWD,6.5,false,,2026-06-07 20:08:13.783269,6.5,E. Shomurodov
+1099,Botirali Ergashev,Uzbekistan,UZB,GK,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+1100,Dostonbek Khamdamov,Uzbekistan,UZB,MID,5.1,false,,2026-06-07 20:08:13.783269,5.1,D. Khamdamov
+1101,Abdulla Abdullaev,Uzbekistan,UZB,DEF,4.2,false,,2026-06-07 20:08:13.783269,4.2,A. Abdullaev
+1102,Igor Sergeev,Uzbekistan,UZB,FWD,6.1,false,,2026-06-07 20:08:13.783269,6.1,I. Sergeev
+1103,Abbosbek Fayzullaev,Uzbekistan,UZB,MID,6.2,false,,2026-06-07 20:08:13.783269,6.2,A. Fayzullayev
+1104,Sherzod Esanov,Uzbekistan,UZB,MID,4.7,false,,2026-06-07 20:08:13.783269,4.7,
+1105,Jakhongir Urozov,Uzbekistan,UZB,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,J. Urozov
+1106,Rustam Ashurmatov,Uzbekistan,UZB,DEF,3.7,false,,2026-06-07 20:08:13.783269,3.7,R. Ashurmatov
+1107,Abduvokhid Ne'matov,Uzbekistan,UZB,GK,4.0,false,,2026-06-07 20:08:13.783269,4.0,
+1108,Umar Eshmurodov,Uzbekistan,UZB,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,
+1109,Aziz G'aniev,Uzbekistan,UZB,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+1110,Bekhruz Karimov,Uzbekistan,UZB,DEF,3.5,false,,2026-06-07 20:08:13.783269,3.5,B. Karimov
+1111,Azizbek Amanov,Uzbekistan,UZB,FWD,4.9,false,,2026-06-07 20:08:13.783269,4.9,A. Amonov
+1112,Odiljon Hamrobekov,Uzbekistan,UZB,MID,5.3,false,,2026-06-07 20:08:13.783269,5.3,
+1113,Mohamed Tougaï,Algeria,ALG,DEF,4.0,false,,2026-06-08 12:44:50.237218,4,
+1114,Jaouen Hadjam,Algeria,ALG,DEF,3.8,false,,2026-06-08 12:44:50.237218,3.8,
+1115,Oussama Benbot,Algeria,ALG,GK,4.2,false,,2026-06-08 12:44:50.237218,4.2,
+1116,Nabil Bentaleb,Algeria,ALG,MID,5.5,false,,2026-06-08 12:44:50.237218,5.5,N. Bentaleb
+1117,Samir Sophian Chergui,Algeria,ALG,DEF,4.0,false,,2026-06-08 12:44:50.237218,4,
+1118,Nico Paz,Argentina,ARG,FWD,5.9,false,,2026-06-08 12:44:50.237218,5.9,N. Paz
+1119,Cristian Volpato,Australia,AUS,FWD,6.0,false,,2026-06-08 12:44:50.237218,6,
+1120,Tete Yengi,Australia,AUS,FWD,4.3,false,,2026-06-08 12:44:50.237218,4.3,T. Yengi
+1121,Mladen Jurkas,Bosnia And Herzegovina,BIH,GK,3.5,false,,2026-06-08 12:44:50.237218,3.5,
+1122,Christopher Opéri,Côte D'Ivoire,CIV,DEF,4.0,false,,2026-06-08 12:44:50.237218,4,
+1123,Cucho Hernández,Colombia,COL,FWD,6.3,false,,2026-06-08 12:44:50.237218,6.3,C. Hernández
+1124,Piero Hincapié,Ecuador,ECU,DEF,4.7,false,,2026-06-08 12:44:50.237218,4.7,P. Hincapié
+1125,Willian Pacho,Ecuador,ECU,DEF,4.4,false,,2026-06-08 12:44:50.237218,4.4,W. Pacho
+1126,Mohamed El Shenawy,Egypt,EGY,GK,3.6,false,,2026-06-08 12:44:50.237218,3.6,
+1127,Hossam Abdelmaguid,Egypt,EGY,DEF,3.6,false,,2026-06-08 12:44:50.237218,3.6,
+1128,Mohamed Abdelmonem,Egypt,EGY,DEF,4.0,false,,2026-06-08 12:44:50.237218,4,
+1129,Trezeguet,Egypt,EGY,FWD,5.6,false,,2026-06-08 12:44:50.237218,5.6,
+1130,Mostafa Zico,Egypt,EGY,MID,4.2,false,,2026-06-08 12:44:50.237218,4.2,Mostafa Zico
+1131,Ahmed Fatouh,Egypt,EGY,DEF,3.9,false,,2026-06-08 12:44:50.237218,3.9,Ahmed Fatouh
+1132,Hamdi Fathy,Egypt,EGY,MID,4.4,false,,2026-06-08 12:44:50.237218,4.4,Hamdi Fathy
+1133,El Mahdy Soliman,Egypt,EGY,GK,3.6,false,,2026-06-08 12:44:50.237218,3.6,
+1134,Mohanad Lasheen,Egypt,EGY,MID,5.3,false,,2026-06-08 12:44:50.237218,5.3,Mohanad Lasheen
+1135,Nabil Emad Dunga,Egypt,EGY,MID,4.3,false,,2026-06-08 12:44:50.237218,4.3,
+1136,Marwan Attia,Egypt,EGY,MID,4.3,false,,2026-06-08 12:44:50.237218,4.3,Marwan Attia
+1137,Mostafa Shobeir,Egypt,EGY,GK,3.5,false,,2026-06-08 12:44:50.237218,3.5,Mostafa Shobeir
+1138,Hassan,Egypt,EGY,FWD,4.6,false,,2026-06-08 12:44:50.237218,4.6,
+1139,Mohamed Alaa,Egypt,EGY,GK,3.5,false,,2026-06-08 12:44:50.237218,3.5,
+1140,Gavi,Spain,ESP,MID,6.5,false,,2026-06-08 12:44:50.237218,6.5,Gavi
+1141,Dani Olmo,Spain,ESP,MID,7.7,false,,2026-06-08 12:44:50.237218,7.7,Dani Olmo
+1142,Álex Baena,Spain,ESP,MID,6.0,false,,2026-06-08 12:44:50.237218,6,
+1143,Rodri,Spain,ESP,MID,7.5,false,,2026-06-08 12:44:50.237218,7.5,Rodri
+1144,Nico Williams,Spain,ESP,MID,7.8,false,,2026-06-08 12:44:50.237218,7.8,Nico Williams
+1145,Derrick Luckassen,Ghana,GHA,DEF,3.7,false,,2026-06-08 12:44:50.237218,3.7,
+1146,Cho Wi-Je,Korea Republic,KOR,DEF,3.7,false,,2026-06-08 12:44:50.237218,3.7,
+1147,Yassine Bounou,Morocco,MAR,GK,4.7,false,,2026-06-08 12:44:50.237218,4.7,Y. Bounou
+1148,Achraf Hakimi,Morocco,MAR,DEF,6.0,false,,2026-06-08 12:44:50.237218,6,A. Hakimi
+1149,Noussair Mazraoui,Morocco,MAR,DEF,4.4,false,,2026-06-08 12:44:50.237218,4.4,N. Mazraoui
+1150,Sofyan Amrabat,Morocco,MAR,MID,5.9,false,,2026-06-08 12:44:50.237218,5.9,
+1151,Nayef Aguerd,Morocco,MAR,DEF,4.3,false,,2026-06-08 12:44:50.237218,4.3,
+1152,Chemsdine Talbi,Morocco,MAR,MID,4.4,false,,2026-06-08 12:44:50.237218,4.4,C. Talbi
+1153,Azz-Eddine Ounahi,Morocco,MAR,MID,6.2,false,,2026-06-08 12:44:50.237218,6.2,A. Ounahi
+1154,Soufiane Rahimi,Morocco,MAR,FWD,5.6,false,,2026-06-08 12:44:50.237218,5.6,S. Rahimi
+1155,Brahim Abdelkader Diaz,Morocco,MAR,FWD,6.4,false,,2026-06-08 12:44:50.237218,6.4,B. Díaz
+1156,Zakaria El Ouahdi,Morocco,MAR,DEF,4.1,false,,2026-06-08 12:44:50.237218,4.1,
+1157,Issa Laye Lucas Jean Diop,Morocco,MAR,DEF,4.5,false,,2026-06-08 12:44:50.237218,4.5,I. Diop
+1158,Abdessamad Ezzalzouli,Morocco,MAR,FWD,5.3,false,,2026-06-08 12:44:50.237218,5.3,
+1159,Chadi Riad,Morocco,MAR,DEF,3.9,false,,2026-06-08 12:44:50.237218,3.9,C. Riad
+1160,Ahmed Reda Tagnaouti,Morocco,MAR,GK,3.5,false,,2026-06-08 12:44:50.237218,3.5,
+1161,Bilal El Khannouss,Morocco,MAR,MID,6.2,false,,2026-06-08 12:44:50.237218,6.2,B. El Khannouss
+1162,Neil Yoni El Aynaoui,Morocco,MAR,MID,5.6,false,,2026-06-08 12:44:50.237218,5.6,N. El Aynaoui
+1163,Redouane Halhal,Morocco,MAR,DEF,3.5,false,,2026-06-08 12:44:50.237218,3.5,
+1164,Jurriën Timber,Netherlands,NED,DEF,5.2,false,,2026-06-08 12:44:50.237218,5.2,
+1165,Marten de Roon,Netherlands,NED,MID,5.1,false,,2026-06-08 12:44:50.237218,5.1,
+1166,Justin Kluivert,Netherlands,NED,MID,6.5,false,,2026-06-08 12:44:50.237218,6.5,
+1167,Memphis Depay,Netherlands,NED,FWD,7.4,false,,2026-06-08 12:44:50.237218,7.4,M. Depay
+1168,Mats Wieffer,Netherlands,NED,DEF,4.8,false,,2026-06-08 12:44:50.237218,4.8,
+1169,Robin Roefs,Netherlands,NED,GK,4.6,false,,2026-06-08 12:44:50.237218,4.6,
+1170,Guus Til,Netherlands,NED,MID,4.9,false,,2026-06-08 12:44:50.237218,4.9,
+1171,Frenkie De Jong,Netherlands,NED,MID,7.0,false,,2026-06-08 12:44:50.237218,7,F. de Jong
+1172,Crysencio Summerville,Netherlands,NED,FWD,5.3,false,,2026-06-08 12:44:50.237218,5.3,C. Summerville
+1173,Fidel Escobar,Panama,PAN,DEF,3.8,false,,2026-06-08 12:44:50.237218,3.8,
+1174,Edgardo Fariña,Panama,PAN,DEF,3.9,false,,2026-06-08 12:44:50.237218,3.9,
+1175,Tomás Rodríguez,Panama,PAN,FWD,4.5,false,,2026-06-08 12:44:50.237218,4.5,
+1176,Alberto Quintero,Panama,PAN,MID,4.2,false,,2026-06-08 12:44:50.237218,4.2,
+1177,Azarías Londoño,Panama,PAN,FWD,4.4,false,,2026-06-08 12:44:50.237218,4.4,A. Londoño
+1178,Vitinha,Portugal,POR,MID,6.4,false,,2026-06-08 12:44:50.237218,6.4,Vitinha
+1179,Samú Costa,Portugal,POR,MID,5.6,false,,2026-06-08 12:44:50.237218,5.6,
+1180,Tyler Fletcher,Scotland,SCO,MID,4.7,false,,2026-06-08 12:44:50.237218,4.7,
+1181,Herman Johansson,Sweden,SWE,DEF,4.4,false,,2026-06-08 12:44:50.237218,4.4,
+1182,Rodrigo Bentancur,Uruguay,URU,MID,6.0,false,,2026-06-08 12:44:50.237218,6,R. Bentancur
+1183,Maxi Araújo,Uruguay,URU,MID,6.4,false,,2026-06-08 12:44:50.237218,6.4,M. Araújo
+1184,Joaquín Piquerez,Uruguay,URU,MID,4.5,false,,2026-06-08 12:44:50.237218,4.5,
+1185,Rodrigo Zalazar,Uruguay,URU,MID,6.0,false,,2026-06-08 12:44:50.237218,6,
+1186,Sergiño Dest,USA,USA,DEF,4.3,false,,2026-06-08 12:44:50.237218,4.3,
+1187,Tyler Adams,USA,USA,MID,5.3,false,,2026-06-08 12:44:50.237218,5.3,
+1188,Miles Robinson,USA,USA,DEF,4.0,false,,2026-06-08 12:44:50.237218,4,
+1189,Haji Wright,USA,USA,FWD,5.3,false,,2026-06-08 12:44:50.237218,5.3,
+1190,Álex Zendejas,USA,USA,FWD,5.5,false,,2026-06-08 12:44:50.237218,5.5,

@@ -1,0 +1,43 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-16",
+    "home_team": "Argentina",
+    "away_team": "Algeria",
+    "score": { "home": 3, "away": 0 }
+  },
+  "players": [
+    { "name": "Lionel Messi",         "MP": 80, "G": 3, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 4, "SOffT": 2, "BS": 0, "Tk": 2, "INT": 0, "FW": 1, "FC": 1, "O": 1, "P": 37, "C": 3, "PW": 0, "PTS": 10.00 },
+    { "name": "Rodrigo De Paul",      "MP": 90, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 3, "INT": 2, "FW": 1, "FC": 0, "O": 0, "P": 51, "C": 1, "PW": 0, "PTS": 8.24 },
+    { "name": "Enzo Fernández",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 4, "INT": 2, "FW": 1, "FC": 1, "O": 0, "P": 67, "C": 0, "PW": 0, "PTS": 8.04 },
+    { "name": "Alexis Mac Allister",  "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 1, "BS": 0, "Tk": 1, "INT": 2, "FW": 1, "FC": 2, "O": 0, "P": 64, "C": 0, "PW": 0, "PTS": 7.88 },
+    { "name": "Lisandro Martínez",    "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 67, "C": 0, "PW": 0, "PTS": 7.44 },
+    { "name": "Cristian Romero",      "MP": 80, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 1, "FC": 2, "O": 0, "P": 66, "C": 0, "PW": 0, "PTS": 7.12 },
+    { "name": "Thiago Almada",        "MP": 55, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 2, "INT": 0, "FW": 1, "FC": 0, "O": 1, "P": 35, "C": 0, "PW": 0, "PTS": 6.80 },
+    { "name": "Facundo Medina",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 1, "FC": 2, "O": 0, "P": 32, "C": 0, "PW": 0, "PTS": 6.44 },
+    { "name": "Nicolás Otamendi",     "MP": 10, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 16, "C": 0, "PW": 0, "PTS": 6.42 },
+    { "name": "Gonzalo Montiel",      "MP": 45, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1, "FW": 0, "FC": 1, "O": 0, "P": 21, "C": 0, "PW": 0, "PTS": 6.42 },
+    { "name": "Nahuel Molina",        "MP": 45, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 24, "C": 0, "PW": 0, "PTS": 6.38 },
+    { "name": "Nico González",        "MP": 35, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 13, "C": 1, "PW": 0, "PTS": 6.38 },
+    { "name": "Emiliano Martínez",    "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 41, "C": 0, "PW": 0, "PTS": 6.32 },
+    { "name": "Lautaro Martínez",     "MP": 55, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0, "FW": 0, "FC": 2, "O": 1, "P": 13, "C": 1, "PW": 0, "PTS": 6.08 },
+    { "name": "Nico Paz",             "MP": 10, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P":  4, "C": 0, "PW": 0, "PTS": 5.88 },
+    { "name": "Julián Alvarez",       "MP": 35, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P": 10, "C": 0, "PW": 0, "PTS": 5.80 },
+    { "name": "Ramy Bensebaini",      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 3, "FW": 2, "FC": 0, "O": 0, "P": 95, "C": 0, "PW": 0, "PTS": 8.30 },
+    { "name": "Aïssa Mandi",          "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 2, "FW": 4, "FC": 0, "O": 0, "P": 105, "C": 0, "PW": 0, "PTS": 8.30 },
+    { "name": "Rayan Aït-Nouri",      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 4, "INT": 1, "FW": 1, "FC": 1, "O": 0, "P": 48, "C": 3, "PW": 0, "PTS": 7.22 },
+    { "name": "Nabil Bentaleb",       "MP": 82, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 2, "FW": 0, "FC": 0, "O": 0, "P": 56, "C": 0, "PW": 0, "PTS": 7.12 },
+    { "name": "Farès Chaïbi",         "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 3, "BS": 0, "Tk": 2, "INT": 0, "FW": 0, "FC": 1, "O": 1, "P": 49, "C": 2, "PW": 0, "PTS": 7.02 },
+    { "name": "Ibrahim Maza",         "MP": 81, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 0, "INT": 0, "FW": 2, "FC": 0, "O": 0, "P": 47, "C": 0, "PW": 0, "PTS": 6.54 },
+    { "name": "Rafik Belghali",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 3, "INT": 0, "FW": 0, "FC": 2, "O": 0, "P": 35, "C": 1, "PW": 0, "PTS": 6.32 },
+    { "name": "Anis Hadj Moussa",     "MP": 64, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 1, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 21, "C": 1, "PW": 0, "PTS": 6.24 },
+    { "name": "Houssem Aouar",        "MP": 26, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 21, "C": 0, "PW": 0, "PTS": 6.12 },
+    { "name": "Riyad Mahrez",         "MP": 26, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 19, "C": 0, "PW": 0, "PTS": 6.08 },
+    { "name": "Hicham Boudaoui",      "MP": 64, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 0, "FC": 2, "O": 0, "P": 22, "C": 1, "PW": 0, "PTS": 5.96 },
+    { "name": "Luca Zidane",          "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 3, "SAV": 3, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 37, "C": 0, "PW": 0, "PTS": 5.94 },
+    { "name": "Ramiz Zerrouki",       "MP":  8, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 19, "C": 1, "PW": 0, "PTS": 5.90 },
+    { "name": "Adil Boulbina",        "MP":  9, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 11, "C": 0, "PW": 0, "PTS": 5.72 },
+    { "name": "Amine Gouiri",         "MP": 64, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 2, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 1, "O": 0, "P": 18, "C": 0, "PW": 0, "PTS": 5.66 },
+    { "name": "Mohammed Amoura",      "MP": 26, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P":  6, "C": 0, "PW": 0, "PTS": 5.42 }
+  ]
+}

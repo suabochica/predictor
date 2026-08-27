@@ -1,0 +1,11 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-24",
+    "home_team": "Czechia",
+    "away_team": "Mexico",
+    "score": { "home": null, "away": null }
+  },
+  "_placeholder": true,
+  "players": []
+}

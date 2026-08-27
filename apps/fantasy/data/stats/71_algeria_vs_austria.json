@@ -1,0 +1,11 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-27",
+    "home_team": "Algeria",
+    "away_team": "Austria",
+    "score": { "home": null, "away": null }
+  },
+  "_placeholder": true,
+  "players": []
+}

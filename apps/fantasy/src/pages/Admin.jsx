@@ -2422,7 +2422,7 @@ export default function Admin() {
             >
               <option value="">Seleccionar jornada…</option>
               {matchdays
-                .filter(md => md.wc_stage?.toLowerCase().includes('group'))
+                .filter(md => md.phase === 'league')
                 .map(md => (
                   <option key={md.id} value={md.id}>{md.name} — {md.wc_stage}</option>
                 ))}

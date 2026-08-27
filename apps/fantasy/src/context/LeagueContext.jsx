@@ -8,7 +8,7 @@ const LeagueContext = createContext(null);
 
 export function LeagueProvider({ children }) {
   const { user } = useAuth();
-  const { db } = useCompetition();
+  const { db, competition } = useCompetition();
   const [team, setTeam] = useState(null);
   const [activeMatchday, setActiveMatchday] = useState(null);
   const [activeTransferWindow, setActiveTransferWindow] = useState(null);
@@ -70,9 +70,10 @@ export function LeagueProvider({ children }) {
     const lead = LOCK_LEAD_MINUTES * 60 * 1000;
     const now = Date.now();
 
-    // Canonical tournament sequence order (id ascending); unscheduled matchdays stay in
-    // their correct position rather than floating to the front/back by kickoff time.
-    const ordered = [...matchdays].sort((a, b) => a.id - b.id);
+    // Canonical tournament order comes from matchdays.sequence (migration 060), not from
+    // the shared SERIAL id — unscheduled matchdays stay in their correct position rather
+    // than floating to the front/back by kickoff time.
+    const ordered = [...matchdays].sort((a, b) => a.sequence - b.sequence);
 
     // A matchday's window closes 10 min before ITS last game. The active matchday is the
     // first one whose window hasn't closed yet (unscheduled matchdays count as still-open).
@@ -97,18 +98,24 @@ export function LeagueProvider({ children }) {
     // Preseason = no matches scheduled yet, or before the first WC game (minus lead).
     const isPreseason = firstKickoffOverall == null || now < firstKickoffOverall - lead;
 
+    // Caps come from the competition row, not constants.js: the WC pools 2 x 3 league
+    // matchdays = 6, while UCL's 8-matchday league phase would yield 16 under the same
+    // formula. constants.js keeps its exports as create-competition-form defaults.
+    const capLeague = competition?.transfer_cap_league ?? TRANSFER_CAP_ROUND_ROBIN;
+    const capKnockout = competition?.transfer_cap_knockout ?? TRANSFER_CAP_KNOCKOUT;
+
     let maxTransfers = null;
     let countedMatchdayIds = null;
     if (!isPreseason) {
-      const isGroup = activeMd.wc_stage?.toLowerCase().includes('group');
-      if (isGroup) {
+      if (activeMd.phase === 'league') {
+        // League-phase allowances pool across every league matchday up to this one.
         countedMatchdayIds = ordered
-          .filter(md => md.wc_stage?.toLowerCase().includes('group') && md.id <= activeMd.id)
+          .filter(md => md.phase === 'league' && md.sequence <= activeMd.sequence)
           .map(md => md.id);
-        maxTransfers = TRANSFER_CAP_ROUND_ROBIN * countedMatchdayIds.length;
+        maxTransfers = capLeague * countedMatchdayIds.length;
       } else {
         countedMatchdayIds = [activeMd.id];
-        maxTransfers = TRANSFER_CAP_KNOCKOUT;
+        maxTransfers = capKnockout;
       }
     }
 

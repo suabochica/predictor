@@ -1,0 +1,11 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-21",
+    "home_team": "Tunisia",
+    "away_team": "Japan",
+    "score": { "home": null, "away": null }
+  },
+  "_placeholder": true,
+  "players": []
+}

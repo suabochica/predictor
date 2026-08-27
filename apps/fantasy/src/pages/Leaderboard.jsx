@@ -58,11 +58,13 @@ export default function Leaderboard() {
   const provisionalActive =
     !!activeMatchday && !matchdays.find((md) => md.id === activeMatchday.id)?.is_completed;
 
-  // League stage = the 3 group round-robin matchdays (MD1/MD2/MD3).
-  const leagueMatchdays = matchdays.filter((md) => md.wc_stage?.toLowerCase().includes('group'));
-  const leagueComplete = leagueMatchdays.length >= 3 && leagueMatchdays.every((md) => md.is_completed);
-  // Per-matchday point columns show only the 3 group matchdays (round-robin).
-  const groupMatchdays = leagueMatchdays.slice(0, 3);
+  // League phase = every matchday that feeds the table (3 for the WC group stage,
+  // 8 for a UCL-style Swiss league phase). No `.slice(0, 3)` and no `>= 3`: both
+  // would truncate any competition whose league phase isn't three matchdays long.
+  const leagueMatchdays = matchdays.filter((md) => md.phase === 'league');
+  const leagueComplete = leagueMatchdays.length > 0 && leagueMatchdays.every((md) => md.is_completed);
+  // Per-matchday point columns show every league matchday.
+  const groupMatchdays = leagueMatchdays;
 
   if (loading) {
     return (

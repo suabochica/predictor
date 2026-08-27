@@ -1,0 +1,42 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-15",
+    "home_team": "Spain",
+    "away_team": "Cabo Verde",
+    "score": { "home": 0, "away": 0 }
+  },
+  "players": [
+    { "name": "Fabián Ruiz",       "MP": 71, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 4, "BS": 0, "Tk": 2, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 75, "C": 2, "PW": 0, "PTS": 8.84 },
+    { "name": "Aymeric Laporte",   "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 1, "BS": 0, "Tk": 0, "INT": 2, "FW": 0, "FC": 0, "O": 0, "P": 110, "C": 1, "PW": 0, "PTS": 8.72 },
+    { "name": "Rodri",             "MP": 87, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 1, "Tk": 1, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P": 126, "C": 2, "PW": 0, "PTS": 8.56 },
+    { "name": "Pedri",             "MP": 90, "G": 0, "A": 0, "YC": 1, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 1, "Tk": 2, "INT": 1, "FW": 0, "FC": 1, "O": 1, "P": 99, "C": 11, "PW": 0, "PTS": 8.5 },
+    { "name": "Pau Cubarsí",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 0, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 109, "C": 0, "PW": 0, "PTS": 8.08 },
+    { "name": "Marcos Llorente",   "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0, "FW": 1, "FC": 1, "O": 0, "P": 82, "C": 2, "PW": 0, "PTS": 7.58 },
+    { "name": "Marc Cucurella",    "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 1, "BS": 0, "Tk": 1, "INT": 0, "FW": 0, "FC": 1, "O": 1, "P": 67, "C": 4, "PW": 0, "PTS": 7.52 },
+    { "name": "Mikel Oyarzabal",   "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 3, "BS": 1, "Tk": 1, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 10, "C": 1, "PW": 0, "PTS": 7.12 },
+    { "name": "Ferran Torres",     "MP": 81, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 1, "BS": 2, "Tk": 0, "INT": 0, "FW": 0, "FC": 2, "O": 0, "P": 34, "C": 4, "PW": 0, "PTS": 7.06 },
+    { "name": "Gavi",              "MP": 71, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 3, "INT": 1, "FW": 0, "FC": 2, "O": 0, "P": 30, "C": 2, "PW": 0, "PTS": 6.94 },
+    { "name": "Unai Simón",        "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 1, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 17, "C": 0, "PW": 0, "PTS": 6.34 },
+    { "name": "Lamine Yamal",      "MP": 19, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 1, "Tk": 0, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P": 19, "C": 7, "PW": 0, "PTS": 6.32 },
+    { "name": "Mikel Merino",      "MP": 19, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0, "FW": 0, "FC": 1, "O": 0, "P": 10, "C": 0, "PW": 0, "PTS": 6.2 },
+    { "name": "Dani Olmo",         "MP": 9,  "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 10, "C": 0, "PW": 0, "PTS": 5.7 },
+    { "name": "Nico Williams",     "MP": 3,  "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 2, "C": 0, "PW": 0, "PTS": 5.54 },
+    { "name": "Vozinha",           "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 7, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 42, "C": 0, "PW": 0, "PTS": 9.94 },
+    { "name": "Diney",             "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 5, "INT": 2, "FW": 0, "FC": 0, "O": 0, "P": 40, "C": 0, "PW": 0, "PTS": 8.1 },
+    { "name": "Jamiro Monteiro",   "MP": 79, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 3, "INT": 2, "FW": 0, "FC": 0, "O": 0, "P": 21, "C": 0, "PW": 0, "PTS": 6.92 },
+    { "name": "Pico",              "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 2, "FW": 0, "FC": 0, "O": 0, "P": 41, "C": 0, "PW": 0, "PTS": 6.72 },
+    { "name": "Kevin Pina",        "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 1, "INT": 1, "FW": 1, "FC": 0, "O": 0, "P": 20, "C": 0, "PW": 0, "PTS": 6.6 },
+    { "name": "Jovane Cabral",     "MP": 61, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 2, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 13, "C": 0, "PW": 0, "PTS": 6.56 },
+    { "name": "Sidny Cabral",      "MP": 76, "G": 0, "A": 0, "YC": 1, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 2, "FW": 2, "FC": 1, "O": 0, "P": 17, "C": 1, "PW": 0, "PTS": 6.56 },
+    { "name": "Ryan Mendes",       "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 2, "INT": 0, "FW": 2, "FC": 0, "O": 2, "P": 18, "C": 0, "PW": 0, "PTS": 6.46 },
+    { "name": "Steven Moreira",    "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 0, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 27, "C": 1, "PW": 0, "PTS": 6.46 },
+    { "name": "João Paulo",        "MP": 14, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 2, "FW": 1, "FC": 0, "O": 0, "P": 3, "C": 0, "PW": 0, "PTS": 6.26 },
+    { "name": "Willy Semedo",      "MP": 29, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 9, "C": 0, "PW": 0, "PTS": 6.08 },
+    { "name": "Nuno da Costa",     "MP": 29, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0, "FW": 1, "FC": 0, "O": 0, "P": 6, "C": 0, "PW": 0, "PTS": 5.92 },
+    { "name": "Deroy Duarte",      "MP": 29, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 1, "FW": 0, "FC": 0, "O": 0, "P": 8, "C": 0, "PW": 0, "PTS": 5.86 },
+    { "name": "Dailon Livramento", "MP": 61, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 0, "INT": 0, "FW": 1, "FC": 0, "O": 1, "P": 4, "C": 0, "PW": 0, "PTS": 5.78 },
+    { "name": "Laros Duarte",      "MP": 61, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 7, "C": 1, "PW": 0, "PTS": 5.66 },
+    { "name": "Telmo Arcanjo",     "MP": 11, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0, "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0, "FW": 0, "FC": 0, "O": 0, "P": 2, "C": 1, "PW": 0, "PTS": 5.56 }
+  ]
+}

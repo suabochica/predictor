@@ -1,0 +1,11 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-25",
+    "home_team": "Türkiye",
+    "away_team": "USA",
+    "score": { "home": null, "away": null }
+  },
+  "_placeholder": true,
+  "players": []
+}

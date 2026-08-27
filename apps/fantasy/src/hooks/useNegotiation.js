@@ -5,7 +5,7 @@ import { TRANSFER_CAP_KNOCKOUT } from '../config/constants';
 import { useCompetition } from '../context/CompetitionContext';
 
 export function useNegotiation() {
-  const { db } = useCompetition();
+  const { db, competition } = useCompetition();
   const { team } = useLeague();
   const [negWindow, setNegWindow] = useState(null);
   const [pool, setPool] = useState([]);
@@ -182,8 +182,12 @@ export function useNegotiation() {
   const activeOffers = myOffers.filter((o) => o.status === 'active');
   const committedCash = activeOffers.reduce((sum, o) => sum + Number(o.cash), 0);
   const committedPlayerIds = new Set(activeOffers.map((o) => o.offered_player_id));
+  // Negotiation windows only ever open in the knockout phase, so the knockout cap
+  // is the right one — sourced from the competition row (submit_negotiation_offer
+  // reads the same column server-side).
+  const capKnockout = competition?.transfer_cap_knockout ?? TRANSFER_CAP_KNOCKOUT;
   const offersRemaining = isOpen
-    ? Math.max(0, TRANSFER_CAP_KNOCKOUT - transfersUsed - activeOffers.length)
+    ? Math.max(0, capKnockout - transfersUsed - activeOffers.length)
     : 0;
 
   async function submitOffer(targetPlayerId, offeredPlayerId, cash) {

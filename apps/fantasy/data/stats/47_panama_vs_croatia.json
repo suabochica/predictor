@@ -1,0 +1,11 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-23",
+    "home_team": "Panama",
+    "away_team": "Croatia",
+    "score": { "home": null, "away": null }
+  },
+  "_placeholder": true,
+  "players": []
+}

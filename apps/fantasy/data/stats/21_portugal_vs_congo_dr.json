@@ -1,0 +1,197 @@
+{
+  "match": {
+    "competition": "FIFA World Cup",
+    "date": "2026-06-17",
+    "home_team": "Portugal",
+    "away_team": "Congo DR",
+    "score": { "home": 1, "away": 1 }
+  },
+  "players": [
+    {
+      "name": "João Neves",
+      "MP": 90, "G": 1, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 1,
+      "FW": 1, "FC": 0, "O": 0, "P": 89, "C": 0, "PW": 0, "PTS": 9.08
+    },
+    {
+      "name": "Bruno Fernandes",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 1, "Tk": 3, "INT": 0,
+      "FW": 2, "FC": 1, "O": 0, "P": 76, "C": 7, "PW": 0, "PTS": 8.16
+    },
+    {
+      "name": "Vitinha",
+      "MP": 83, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 1, "O": 0, "P": 128, "C": 1, "PW": 0, "PTS": 7.88
+    },
+    {
+      "name": "Renato Veiga",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0,
+      "FW": 1, "FC": 1, "O": 0, "P": 91, "C": 0, "PW": 0, "PTS": 7.62
+    },
+    {
+      "name": "Tomás Araújo",
+      "MP": 90, "G": 0, "A": 0, "YC": 1, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 1,
+      "FW": 0, "FC": 1, "O": 0, "P": 104, "C": 0, "PW": 0, "PTS": 7.38
+    },
+    {
+      "name": "Nuno Mendes",
+      "MP": 72, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 3, "FC": 0, "O": 1, "P": 69, "C": 3, "PW": 0, "PTS": 7.24
+    },
+    {
+      "name": "Pedro Neto",
+      "MP": 71, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 1, "FC": 0, "O": 0, "P": 41, "C": 4, "PW": 0, "PTS": 7.2
+    },
+    {
+      "name": "João Cancelo",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1,
+      "FW": 1, "FC": 2, "O": 1, "P": 64, "C": 5, "PW": 0, "PTS": 7.18
+    },
+    {
+      "name": "Cristiano Ronaldo",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 3, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 21, "C": 0, "PW": 0, "PTS": 6.42
+    },
+    {
+      "name": "Francisco Conceição",
+      "MP": 45, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 1, "Tk": 1, "INT": 0,
+      "FW": 0, "FC": 1, "O": 1, "P": 27, "C": 1, "PW": 0, "PTS": 6.26
+    },
+    {
+      "name": "Diogo Costa",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 1, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 29, "C": 0, "PW": 0, "PTS": 5.98
+    },
+    {
+      "name": "Rafael Leão",
+      "MP": 19, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 9, "C": 1, "PW": 0, "PTS": 5.7
+    },
+    {
+      "name": "Bernardo Silva",
+      "MP": 45, "G": 0, "A": 0, "YC": 1, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 0, "FC": 1, "O": 0, "P": 18, "C": 0, "PW": 0, "PTS": 5.66
+    },
+    {
+      "name": "Gonçalo Ramos",
+      "MP": 7, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 2, "C": 0, "PW": 0, "PTS": 5.54
+    },
+    {
+      "name": "Nélson Semedo",
+      "MP": 18, "G": 0, "A": 0, "YC": 1, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 1, "O": 0, "P": 15, "C": 1, "PW": 0, "PTS": 5.52
+    },
+    {
+      "name": "Yoane Wissa",
+      "MP": 90, "G": 1, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 1, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 3, "FC": 3, "O": 0, "P": 18, "C": 0, "PW": 0, "PTS": 7.56
+    },
+    {
+      "name": "Arthur Masuaku",
+      "MP": 74, "G": 0, "A": 1, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 1, "FC": 0, "O": 0, "P": 16, "C": 5, "PW": 0, "PTS": 6.72
+    },
+    {
+      "name": "Samuel Moutoussamy",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 2, "Tk": 2, "INT": 0,
+      "FW": 1, "FC": 2, "O": 0, "P": 25, "C": 0, "PW": 0, "PTS": 6.6
+    },
+    {
+      "name": "Edo Kayembe",
+      "MP": 74, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 1, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0,
+      "FW": 2, "FC": 2, "O": 0, "P": 18, "C": 0, "PW": 0, "PTS": 6.56
+    },
+    {
+      "name": "Chancel Mbemba",
+      "MP": 90, "G": 0, "A": 0, "YC": 1, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1,
+      "FW": 0, "FC": 1, "O": 0, "P": 30, "C": 1, "PW": 0, "PTS": 6.32
+    },
+    {
+      "name": "Aaron Wan-Bissaka",
+      "MP": 85, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 1,
+      "FW": 0, "FC": 1, "O": 0, "P": 19, "C": 2, "PW": 0, "PTS": 6.32
+    },
+    {
+      "name": "Ngal'ayel Mukau",
+      "MP": 57, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 2,
+      "FW": 0, "FC": 0, "O": 0, "P": 21, "C": 0, "PW": 0, "PTS": 6.22
+    },
+    {
+      "name": "Steve Kapuadi",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 21, "C": 0, "PW": 0, "PTS": 6.22
+    },
+    {
+      "name": "Axel Tuanzebe",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 1,
+      "FW": 0, "FC": 0, "O": 0, "P": 17, "C": 0, "PW": 0, "PTS": 6.14
+    },
+    {
+      "name": "Joris Kayembe",
+      "MP": 16, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0,
+      "FW": 1, "FC": 0, "O": 0, "P": 5, "C": 0, "PW": 0, "PTS": 6.1
+    },
+    {
+      "name": "Noah Sadiki",
+      "MP": 33, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 2, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 7, "C": 1, "PW": 0, "PTS": 6.06
+    },
+    {
+      "name": "Cédric Bakambu",
+      "MP": 85, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 1, "BS": 1, "Tk": 0, "INT": 0,
+      "FW": 1, "FC": 1, "O": 2, "P": 11, "C": 1, "PW": 0, "PTS": 5.84
+    },
+    {
+      "name": "Gédéon Kalulu",
+      "MP": 5, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 1, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 6, "C": 0, "PW": 0, "PTS": 5.82
+    },
+    {
+      "name": "Charles Pickel",
+      "MP": 16, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 9, "C": 0, "PW": 0, "PTS": 5.68
+    },
+    {
+      "name": "Simon Banza",
+      "MP": 5, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 0,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 1, "C": 0, "PW": 0, "PTS": 5.52
+    },
+    {
+      "name": "Lionel Mpasi",
+      "MP": 90, "G": 0, "A": 0, "YC": 0, "RC": 0, "OG": 0, "GC": 1,
+      "SAV": 0, "PSAV": 0, "SOnT": 0, "SOffT": 0, "BS": 0, "Tk": 0, "INT": 0,
+      "FW": 0, "FC": 0, "O": 0, "P": 25, "C": 0, "PW": 0, "PTS": 5.4
+    }
+  ]
+}
