@@ -1,4 +1,9 @@
 import compositeScoringConfig from '../config/composite_scoring.json';
+import { useCompetition } from '../context/CompetitionContext';
+import { competitionCopy } from '../config/competitionCopy';
+
+// "105.0" → "105", "0.3" → "0,3" — the money formatting this page already used.
+const money = (n) => String(Number(n)).replace('.', ',');
 
 const COMPOSITE_STAT_LABELS = {
   shots_on_target:  'Tiros a puerta',
@@ -15,27 +20,35 @@ const COMPOSITE_STAT_LABELS = {
 };
 
 export default function HowToPlay() {
+  const { competition } = useCompetition();
+  const copy = competitionCopy(competition);
+  const maxParticipants = competition?.max_participants ?? 12;
+  const squadSize       = competition?.max_squad_size ?? 15;
+  const budget          = money(competition?.budget ?? 105);
+  const minIncrement    = money(competition?.min_bid_increment ?? 0.3);
+  const knockoutCap     = competition?.transfer_cap_knockout ?? 5;
+
   return (
     <div className="space-y-8 max-w-3xl pb-8">
       <div>
         <h1 className="text-2xl font-bold text-primary">Reglas</h1>
         <p className="text-secondary mt-1">
-          Guía completa de la Fantasy League del Mundial FIFA 2026
+          Guía completa de la Fantasy League{competition?.name ? ` — ${competition.name}` : ''}
         </p>
       </div>
 
       {/* Descripción general */}
       <Section title="Descripción general">
         <p className="text-secondary">
-          Liga privada de fantasy football para el Mundial de Fútbol 2026. Hasta 12 participantes
-          compiten a lo largo del torneo: primero en un formato de liga (fase de grupos + octavos de
-          final del Mundial) y luego en una eliminatoria directa (cuartos de final en adelante).
+          Liga privada de fantasy football para {competition?.name ?? 'la competición'}. Hasta{' '}
+          {maxParticipants} participantes compiten a lo largo del torneo: primero en un formato de
+          liga y luego en una eliminatoria directa entre los 8 mejores.
         </p>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            ['Participantes', 'Máx. 12'],
-            ['Plantilla', '15 jugadores'],
-            ['Presupuesto', '105 M'],
+            ['Participantes', `Máx. ${maxParticipants}`],
+            ['Plantilla', `${squadSize} jugadores`],
+            ['Presupuesto', `${budget} M`],
             ['Capitán', '×2 puntos'],
           ].map(([label, value]) => (
             <div key={label} className="bg-neutral rounded-lg p-3 text-center">
@@ -49,39 +62,41 @@ export default function HowToPlay() {
       {/* Calendario */}
       <Section title="Calendario de la competición">
         <p className="text-secondary mb-3">
-          La fantasy sigue el calendario del Mundial. Las jornadas de liga coinciden con las fases
-          reales del torneo:
+          La fantasy sigue el calendario {copy.tournamentPossessive}. Las jornadas de liga coinciden
+          con las fases reales del torneo:
         </p>
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-2 pr-4 text-muted font-medium">Fase fantasy</th>
-              <th className="text-left py-2 pr-4 text-muted font-medium">Fase real del Mundial</th>
-              <th className="text-left py-2 text-muted font-medium">Usuarios activos</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {[
-              ['Liga — Partidos jugados 1-3', 'Fase de grupos (Partidos jugados 1-3)', '12'],
-              ['Eliminatoria — Cuartos', 'Dieciseisavos de final del Mundial', '8'],
-              ['Eliminatoria — Semis', 'Octavos de final del Mundial', '4'],
-              ['Eliminatoria — Final', 'Cuartos de final del Mundial', '2'],
-            ].map(([phase, wc, users]) => (
-              <tr key={phase}>
-                <td className="py-2 pr-4 text-primary">{phase}</td>
-                <td className="py-2 pr-4 text-secondary">{wc}</td>
-                <td className="py-2 text-secondary">{users}</td>
+        {!copy.calendarRows ? (
+          <p className="text-muted text-sm">
+            El calendario de esta competición aún no está publicado. Consulta la sección «Gestión de
+            jornadas» para ver las jornadas ya creadas.
+          </p>
+        ) : (
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-2 pr-4 text-muted font-medium">Fase fantasy</th>
+                <th className="text-left py-2 pr-4 text-muted font-medium">Fase real {copy.tournamentPossessive}</th>
+                <th className="text-left py-2 text-muted font-medium">Usuarios activos</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {copy.calendarRows.map(([phase, real, users]) => (
+                <tr key={phase}>
+                  <td className="py-2 pr-4 text-primary">{phase}</td>
+                  <td className="py-2 pr-4 text-secondary">{real}</td>
+                  <td className="py-2 text-secondary">{users}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </Section>
 
       {/* Plantilla */}
       <Section title="Plantilla y presupuesto">
         <ul className="space-y-2 text-secondary">
-          <li><Bullet />Cada equipo tiene <strong className="text-primary">15 jugadores</strong> con propiedad exclusiva — ningún otro equipo puede tener el mismo jugador.</li>
-          <li><Bullet />El presupuesto total es de <strong className="text-primary">105 M</strong>. Tu equipo no puede superar ese límite en ningún momento.</li>
+          <li><Bullet />Cada equipo tiene <strong className="text-primary">{squadSize} jugadores</strong> con propiedad exclusiva — ningún otro equipo puede tener el mismo jugador.</li>
+          <li><Bullet />El presupuesto total es de <strong className="text-primary">{budget} M</strong>. Tu equipo no puede superar ese límite en ningún momento.</li>
           <li><Bullet />Debes tener al menos <strong className="text-primary">1 portero</strong> en la plantilla en todo momento.</li>
           <li><Bullet />Las posiciones son: <strong className="text-primary">PT, DEF, MED, DEL</strong> (sin formación fija — elige la que prefieras siempre que haya exactamente 1 portero en el once inicial).</li>
         </ul>
@@ -90,13 +105,13 @@ export default function HowToPlay() {
       {/* Subasta */}
       <Section title="Subasta por rondas (pretemporada)">
         <p className="text-secondary mb-3">
-          Antes del inicio del Mundial, todos los participantes se reúnen en una subasta en tiempo
-          real para pujar por los mejores jugadores.
+          Antes del inicio {copy.tournamentPossessive}, todos los participantes se reúnen en una
+          subasta en tiempo real para pujar por los mejores jugadores.
         </p>
         <ul className="space-y-2 text-secondary">
           <li><Bullet />La subasta funciona por <strong className="text-primary">rondas de 3 minutos</strong>. Durante cada ronda puedes colocar pujas sobre varios jugadores a la vez.</li>
           <li><Bullet />Al final de cada ronda se revelan las pujas más altas y quién las hizo. Si te superan, puedes subir tu puja en la siguiente ronda.</li>
-          <li><Bullet /><strong className="text-primary">Puja mínima:</strong> precio actual del jugador. <strong className="text-primary">Incremento mínimo:</strong> 0,3 M.</li>
+          <li><Bullet /><strong className="text-primary">Puja mínima:</strong> precio actual del jugador. <strong className="text-primary">Incremento mínimo:</strong> {minIncrement} M.</li>
           <li><Bullet />El jugador que ganas pasa a ser <strong className="text-primary">exclusivamente tuyo</strong> y desaparece del resto de listas.</li>
           <li><Bullet />La subasta termina cuando pasa una ronda entera sin nuevas pujas, o cuando el administrador la cierra.</li>
           <li><Bullet /><strong className="text-primary">En caso de empate en la puja</strong>: gana quien pujó primero (por marca de tiempo).</li>
@@ -120,7 +135,7 @@ export default function HowToPlay() {
       <Section title="Mercado abierto (tras la subasta)">
         <p className="text-secondary">
           Los jugadores no reclamados en la subasta pasan al mercado abierto, donde cualquier
-          participante puede adquirirlos libremente hasta completar su plantilla de 15. El precio
+          participante puede adquirirlos libremente hasta completar su plantilla de {squadSize}. El precio
           descuenta del presupuesto restante y la propiedad sigue siendo exclusiva.
         </p>
       </Section>
@@ -128,7 +143,7 @@ export default function HowToPlay() {
       {/* Alineación */}
       <Section title="Alineación y jornadas">
         <ul className="space-y-2 text-secondary">
-          <li><Bullet />Selecciona <strong className="text-primary">11 titulares</strong> de tu plantilla de 15 y elige un <strong className="text-primary">capitán</strong> (sus puntos se multiplican por 2).</li>
+          <li><Bullet />Selecciona <strong className="text-primary">11 titulares</strong> de tu plantilla de {squadSize} y elige un <strong className="text-primary">capitán</strong> (sus puntos se multiplican por 2).</li>
           <li><Bullet /><strong className="text-primary">Solo puntúan tus 11 titulares.</strong> Los puntos de la jornada son la suma de los 11 titulares (el capitán cuenta ×2). Los suplentes <strong className="text-primary">no puntúan</strong>, aunque hayan jugado.</li>
           <li><Bullet /><strong className="text-primary">No hay sustituciones automáticas.</strong> Si un titular no juega ni un minuto, suma <strong className="text-primary">0</strong> esa jornada — la banca no lo reemplaza. El orden de la banca (1–4) es solo organizativo.</li>
           <li><Bullet /><strong className="text-primary">Bloqueo por partido:</strong> un jugador se bloquea 10 minutos antes del inicio de su partido — a partir de entonces, no puedes cambiarlo ni elegirlo como capitán.</li>
@@ -252,14 +267,26 @@ export default function HowToPlay() {
           <thead>
             <tr className="border-b border-border">
               <th className="text-left py-2 pr-4 text-muted font-medium">Ronda fantasy</th>
-              <th className="text-left py-2 pr-4 text-muted font-medium">Fase del Mundial</th>
+              {copy.knockoutRealStages && (
+                <th className="text-left py-2 pr-4 text-muted font-medium">Fase {copy.tournamentPossessive}</th>
+              )}
               <th className="text-left py-2 text-muted font-medium">Enfrentamientos</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-secondary">
-            <tr><td className="py-2 pr-4">Cuartos (8→4)</td><td className="py-2 pr-4">Dieciseisavos</td><td>1.º vs 8.º · 4.º vs 5.º · 2.º vs 7.º · 3.º vs 6.º</td></tr>
-            <tr><td className="py-2 pr-4">Semis (4→2)</td><td className="py-2 pr-4">Octavos</td><td>Ganadores de cuartos</td></tr>
-            <tr><td className="py-2 pr-4">Final (2→1)</td><td className="py-2 pr-4">Cuartos de final</td><td>Los dos finalistas</td></tr>
+            {[
+              ['Cuartos (8→4)', '1.º vs 8.º · 4.º vs 5.º · 2.º vs 7.º · 3.º vs 6.º'],
+              ['Semis (4→2)', 'Ganadores de cuartos'],
+              ['Final (2→1)', 'Los dos finalistas'],
+            ].map(([round, fixtures], i) => (
+              <tr key={round}>
+                <td className="py-2 pr-4">{round}</td>
+                {copy.knockoutRealStages && (
+                  <td className="py-2 pr-4">{copy.knockoutRealStages[i]}</td>
+                )}
+                <td>{fixtures}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
         <p className="text-secondary text-sm mb-2">
@@ -279,17 +306,17 @@ export default function HowToPlay() {
       <Section title="Negociaciones a puerta cerrada">
         <p className="text-secondary mb-3">
           Cuando un equipo fantasy queda <strong className="text-primary">eliminado</strong> de la
-          competición, sus jugadores cuya selección <strong className="text-primary">sigue viva</strong> en
-          el Mundial no se congelan: el administrador puede abrir una <strong className="text-primary">ventana
+          competición, sus jugadores cuyo equipo real <strong className="text-primary">sigue vivo</strong> en
+          {' '}{copy.tournament} no se congelan: el administrador puede abrir una <strong className="text-primary">ventana
           de negociación a puerta cerrada</strong> en la que los equipos que siguen compitiendo pujan por
           ellos mediante <strong className="text-primary">ofertas selladas</strong>.
         </p>
         <ul className="space-y-2 text-secondary">
-          <li><Bullet /><strong className="text-primary">Qué jugadores entran:</strong> solo los de equipos fantasy eliminados cuya selección sigue viva en el Mundial. Si la selección del jugador también fue eliminada, no entra (puntuaría 0).</li>
+          <li><Bullet /><strong className="text-primary">Qué jugadores entran:</strong> solo los de equipos fantasy eliminados cuyo equipo real sigue vivo en {copy.tournament}. Si el equipo real del jugador también fue eliminado, no entra (puntuaría 0).</li>
           <li><Bullet /><strong className="text-primary">Quién puede ofertar:</strong> solo los equipos que siguen en competición. Los equipos eliminados ven la ventana en modo solo lectura.</li>
           <li><Bullet /><strong className="text-primary">La oferta:</strong> ofreces exactamente <strong className="text-primary">uno de tus jugadores</strong> más (opcional) <strong className="text-primary">efectivo</strong> de tu presupuesto. El total (precio de tu jugador + efectivo) debe ser <strong className="text-primary">al menos el precio</strong> del jugador objetivo.</li>
           <li><Bullet /><strong className="text-primary">Ofertas selladas:</strong> nadie —ni siquiera el administrador— ve el monto ni quién oferta. Lo único público es <strong className="text-primary">cuántas</strong> ofertas hay por cada jugador (un contador), nunca de quién ni por cuánto.</li>
-          <li><Bullet /><strong className="text-primary">Límites:</strong> una oferta activa por jugador objetivo, y cada jugador tuyo puede comprometerse en una sola oferta a la vez. El efectivo comprometido no puede superar tu presupuesto, y tus ofertas activas + transferencias ya usadas comparten el <strong className="text-primary">límite de 5</strong> de la ventana eliminatoria. Siempre debes conservar al menos <strong className="text-primary">1 portero</strong>.</li>
+          <li><Bullet /><strong className="text-primary">Límites:</strong> una oferta activa por jugador objetivo, y cada jugador tuyo puede comprometerse en una sola oferta a la vez. El efectivo comprometido no puede superar tu presupuesto, y tus ofertas activas + transferencias ya usadas comparten el <strong className="text-primary">límite de {knockoutCap}</strong> de la ventana eliminatoria. Siempre debes conservar al menos <strong className="text-primary">1 portero</strong>.</li>
           <li><Bullet /><strong className="text-primary">Puedes retirar</strong> una oferta y volver a ofertar mientras la ventana siga abierta.</li>
           <li><Bullet /><strong className="text-primary">Cierre:</strong> la ventana cierra automáticamente <strong className="text-primary">1 hora antes</strong> del primer partido de la jornada elegida.</li>
         </ul>
@@ -308,9 +335,9 @@ export default function HowToPlay() {
       </Section>
 
       {/* Jugadores eliminados */}
-      <Section title="Jugadores cuya selección queda eliminada">
+      <Section title="Jugadores cuyo equipo real queda eliminado">
         <p className="text-secondary">
-          Si la selección de un jugador es eliminada del Mundial real, ese jugador puntúa 0 en las
+          Si el equipo real de un jugador es eliminado {copy.tournamentPossessive}, ese jugador puntúa 0 en las
           jornadas restantes pero <strong className="text-primary">sigue siendo tuyo</strong> — no vuelve al mercado.
           Puedes transferirlo durante la siguiente ventana si prefieres invertir el presupuesto en
           un jugador activo.

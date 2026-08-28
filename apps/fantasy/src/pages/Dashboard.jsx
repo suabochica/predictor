@@ -11,11 +11,13 @@ import rulesIcon from '@predictor/ui/icons/rules.svg';
 import adminIcon from '@predictor/ui/icons/admin.svg';
 
 import { useLeague } from '../context/LeagueContext';
+import { useCompetition } from '../context/CompetitionContext';
 import { useTeam } from '../hooks/useTeam';
 import { formatPrice } from '../lib/utils';
 
 export default function Dashboard() {
   const { profile, isAdmin } = useAuth();
+  const { competition } = useCompetition();
   const { activeMatchday, activeTransferWindow } = useLeague();
   const { team, players } = useTeam();
 
@@ -37,7 +39,9 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-primary">
           ¡Bienvenido de nuevo, {profile?.display_name ?? 'Manager'}!
         </h1>
-        <p className="text-secondary mt-1">FIFA World Cup 2026 Fantasy League</p>
+        <p className="text-secondary mt-1">
+          {competition?.name ? `${competition.name} Fantasy League` : 'Fantasy League'}
+        </p>
       </div>
 
       {/* Status cards */}

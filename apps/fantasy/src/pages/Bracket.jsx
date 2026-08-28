@@ -4,6 +4,7 @@ import { useStandings } from '../hooks/useStandings';
 import { generateChampionshipBracket } from '../lib/brackets';
 import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
 import { useCompetition } from '../context/CompetitionContext';
+import { competitionCopy } from '../config/competitionCopy';
 
 // ── Match card ────────────────────────────────────────────────────────────
 
@@ -151,9 +152,13 @@ function Connector() {
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function Bracket() {
-  const { db } = useCompetition();
+  const { db, competition } = useCompetition();
   const { matches, loading: matchesLoading } = useKnockout();
-  const { standings, loading: standingsLoading } = useStandings();
+  const { standings, matchdays, loading: standingsLoading } = useStandings();
+  // The real stages a fantasy round rides on are competition-specific copy; a
+  // competition with none defined yet simply shows no subtitle.
+  const subtitle = (round) => competitionCopy(competition).bracketSubtitles?.[round];
+  const leagueMatchdays = matchdays.filter((md) => md.phase === 'league').length;
   const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
   // Live H2H points for unresolved, jornada-linked matches: `${mdId}:${teamId}` → matchday_points
   const [provStandings, setProvStandings] = useState({});
@@ -252,7 +257,7 @@ export default function Bracket() {
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
           <p className="text-secondary font-semibold">Cuadro no configurado aún</p>
           <p className="text-muted text-sm mt-1">
-            El cuadro eliminatorio se define al completar la fase de liga (3 jornadas).
+            El cuadro eliminatorio se define al completar la fase de liga ({leagueMatchdays} jornadas).
           </p>
         </div>
       )}
@@ -265,7 +270,7 @@ export default function Bracket() {
           </div>
 
           <div className="flex items-start gap-2 overflow-x-auto pb-2">
-            <RoundColumn title="Cuartos de final" subtitle="Ronda de 32 del Mundial">
+            <RoundColumn title="Cuartos de final" subtitle={subtitle(1)}>
               {generateChampionshipBracket(standings).map((m, i) => (
                 <PreviewMatchCard
                   key={m.label}
@@ -278,12 +283,12 @@ export default function Bracket() {
               ))}
             </RoundColumn>
             <Connector />
-            <RoundColumn title="Semifinales" subtitle="Octavos de final del Mundial">
+            <RoundColumn title="Semifinales" subtitle={subtitle(2)}>
               <PreviewMatchCard label="Semi A" teamA={null} teamB={null} seedA="GA" seedB="GB" />
               <PreviewMatchCard label="Semi B" teamA={null} teamB={null} seedA="GC" seedB="GD" />
             </RoundColumn>
             <Connector />
-            <RoundColumn title="Final" subtitle="Cuartos de final del Mundial">
+            <RoundColumn title="Final" subtitle={subtitle(3)}>
               <PreviewMatchCard label="Final" teamA={null} teamB={null} seedA="G Semi A" seedB="G Semi B" />
             </RoundColumn>
           </div>
@@ -295,7 +300,7 @@ export default function Bracket() {
         <>
           <div className="flex items-start gap-2 overflow-x-auto pb-3">
             {/* Round 1: Quarter-finals */}
-            <RoundColumn title="Cuartos de final" subtitle="Ronda de 32 del Mundial">
+            <RoundColumn title="Cuartos de final" subtitle={subtitle(1)}>
               {[{ key: 'Match A', display: 'Partido A' }, { key: 'Match B', display: 'Partido B' }, { key: 'Match C', display: 'Partido C' }, { key: 'Match D', display: 'Partido D' }].map(({ key, display }, i) => {
                 const m = getMatch('championship', 1, key);
                 const seeds = [{ a: 1, b: 8 }, { a: 4, b: 5 }, { a: 2, b: 7 }, { a: 3, b: 6 }];
@@ -314,7 +319,7 @@ export default function Bracket() {
             <Connector />
 
             {/* Round 2: Semi-finals */}
-            <RoundColumn title="Semifinales" subtitle="Octavos de final del Mundial">
+            <RoundColumn title="Semifinales" subtitle={subtitle(2)}>
               {['Semi A', 'Semi B'].map((label) => {
                 const m = getMatch('championship', 2, label);
                 return (
@@ -331,7 +336,7 @@ export default function Bracket() {
             <Connector />
 
             {/* Round 3: Final */}
-            <RoundColumn title="Final" subtitle="Cuartos de final del Mundial">
+            <RoundColumn title="Final" subtitle={subtitle(3)}>
               {(() => {
                 const m = getMatch('championship', 3, 'Final');
                 return (
