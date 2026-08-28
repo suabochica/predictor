@@ -5,6 +5,7 @@ import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTeam } from '../hooks/useTeam';
 import { useProxyTargets } from '../hooks/useProxyTargets';
+import { useCompetition } from '../context/CompetitionContext';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import AuctionPlayerRow from '../components/auction/AuctionPlayerRow';
 import {
@@ -40,6 +41,10 @@ const POSITION_BADGE = {
 
 export default function Auction() {
   const { user } = useAuth();
+  const { competition } = useCompetition();
+  // Per-competition config (060); the constants are the resolving-state fallback.
+  const maxSquadSize    = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
+  const minBidIncrement = Number(competition?.min_bid_increment ?? MIN_BID_INCREMENT);
   const { team, players: teamPlayers } = useTeam();
   const { auctionState, bids, ownedPlayerIds, playerOwners, loading, getHighestBid, getContestFloor, placeBid, refreshBids } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
@@ -75,7 +80,7 @@ export default function Auction() {
   const myBidCount       = myBids.length;
 
   const squadSize       = teamPlayers?.length ?? 0;
-  const freeSlots       = MAX_SQUAD_SIZE - squadSize;
+  const freeSlots       = maxSquadSize - squadSize;
   const effectiveBudget = (team?.budget_remaining ?? 0) - myBids.reduce((s, b) => s + b.bid_amount, 0);
 
   const gkOwned = (teamPlayers ?? []).filter((tp) => tp.players?.position === 'GK').length;
@@ -95,10 +100,10 @@ export default function Auction() {
 
   function minBidFor(player) {
     const floor = getContestFloor(player.id);
-    if (floor !== null) return +(floor + MIN_BID_INCREMENT).toFixed(1);
+    if (floor !== null) return +(floor + minBidIncrement).toFixed(1);
     const high = getHighestBid(player.id);
     if (!high) return player.current_price ?? player.price;
-    return +(high.bid_amount + MIN_BID_INCREMENT).toFixed(1);
+    return +(high.bid_amount + minBidIncrement).toFixed(1);
   }
 
   async function handleBid(playerId) {
@@ -230,7 +235,7 @@ export default function Auction() {
               <p className="text-xs text-muted uppercase tracking-wider font-medium">Plantilla</p>
               <p className="text-xl font-bold text-primary tabular-nums">
                 {squadSize}
-                <span className="text-muted text-base font-normal">/{MAX_SQUAD_SIZE}</span>
+                <span className="text-muted text-base font-normal">/{maxSquadSize}</span>
               </p>
               <p className="text-xs text-secondary">
                 {freeSlots} cupo{freeSlots !== 1 ? 's' : ''} restante{freeSlots !== 1 ? 's' : ''}
@@ -673,7 +678,7 @@ export default function Auction() {
                 player.position !== 'GK' &&
                 gkOwned === 0 &&
                 !gkInActiveBids &&
-                squadSize + myBidCount + 1 > MAX_SQUAD_SIZE - 1;
+                squadSize + myBidCount + 1 > maxSquadSize - 1;
               const canBid        = isActive && !roundExpired && !myBidOnPlayer && !isOwned && myBidCount < freeSlots && !isGkReserved;
               const minBid        = minBidFor(player);
               const isSubmitting  = submitting.has(player.id);

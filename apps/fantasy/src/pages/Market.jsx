@@ -16,7 +16,8 @@ import PlayerRow from '../components/market/PlayerRow';
 import { useCompetition } from '../context/CompetitionContext';
 
 export default function Market() {
-  const { db, competitionId } = useCompetition();
+  const { db, competitionId, competition } = useCompetition();
+  const maxSquadSize = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { activeMatchday, activeTransferWindow, refreshTeam } = useLeague();
   const { auctionState } = useAuction();
@@ -330,7 +331,7 @@ export default function Market() {
             <p className="text-label-caps text-muted uppercase tracking-wider">Plantilla</p>
             <p className="text-base font-bold text-primary">
               {squad.length}
-              <span className="text-muted font-normal text-sm">/{MAX_SQUAD_SIZE}</span>
+              <span className="text-muted font-normal text-sm">/{maxSquadSize}</span>
             </p>
           </div>
         </div>

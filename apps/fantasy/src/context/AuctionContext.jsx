@@ -6,7 +6,11 @@ import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT } from '../config/constants';
 const AuctionContext = createContext(null);
 
 export function AuctionProvider({ children }) {
-  const { db, competitionId } = useCompetition();
+  const { db, competitionId, competition } = useCompetition();
+  // Squad size and bid increment are per-competition config (060); the constants
+  // survive only as the fallback while a competition row is still resolving.
+  const maxSquadSize = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
+  const minBidIncrement = Number(competition?.min_bid_increment ?? MIN_BID_INCREMENT);
   const [auctionState, setAuctionState] = useState(null);
   const [bids, setBids] = useState([]);
   const [ownedPlayerIds, setOwnedPlayerIds] = useState(new Set());
@@ -278,15 +282,15 @@ export function AuctionProvider({ children }) {
 
       const currentSquadSize = currentSquad?.length ?? 0;
 
-      if (currentSquadSize >= MAX_SQUAD_SIZE) {
-        errors.push({ playerId, reason: `Squad is full (${MAX_SQUAD_SIZE}/${MAX_SQUAD_SIZE}) — player skipped.` });
+      if (currentSquadSize >= maxSquadSize) {
+        errors.push({ playerId, reason: `Squad is full (${maxSquadSize}/${maxSquadSize}) — player skipped.` });
         continue;
       }
 
       // GK safety net: if awarding a non-GK would fill the squad while the team has no GK, skip.
       if (winner.players?.position !== 'GK') {
         const hasGK = (currentSquad ?? []).some((tp) => tp.players?.position === 'GK');
-        if (!hasGK && currentSquadSize + 1 >= MAX_SQUAD_SIZE) {
+        if (!hasGK && currentSquadSize + 1 >= maxSquadSize) {
           errors.push({ playerId, reason: `Squad would be full with no goalkeeper — player skipped.` });
           continue;
         }
@@ -370,7 +374,7 @@ export function AuctionProvider({ children }) {
     }
     const floor = getContestFloor(playerId);
     if (floor !== null && amount <= floor) {
-      return { error: `This player carries over — minimum bid is £${(floor + MIN_BID_INCREMENT).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
+      return { error: `This player carries over — minimum bid is £${(floor + minBidIncrement).toFixed(1)} (must exceed previous high of £${floor.toFixed(1)}).` };
     }
     if (teamSnapshot) {
       const { budgetRemaining, squadSize, gkOwned = 0, playerPosition } = teamSnapshot;
@@ -378,7 +382,7 @@ export function AuctionProvider({ children }) {
       const effectiveBudget = budgetRemaining - sumOfActive;
       const projectedSquad  = squadSize + activeBids.length + 1;
 
-      if (projectedSquad > MAX_SQUAD_SIZE) {
+      if (projectedSquad > maxSquadSize) {
         return { error: 'No squad slots remain for new bids.' };
       }
       if (amount > effectiveBudget) {
@@ -388,7 +392,7 @@ export function AuctionProvider({ children }) {
       // GK reserve: keep the last slot open for a GK when none is owned or in active bids.
       if (playerPosition && playerPosition !== 'GK' && gkOwned === 0) {
         const noGkInActiveBids = !activeBids.some((b) => b.players?.position === 'GK');
-        if (noGkInActiveBids && projectedSquad > MAX_SQUAD_SIZE - 1) {
+        if (noGkInActiveBids && projectedSquad > maxSquadSize - 1) {
           return { error: 'Last squad slot must stay open for a goalkeeper.' };
         }
       }
