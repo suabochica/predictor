@@ -276,7 +276,9 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
     await adb.from('teams').insert({
       user_id: user.id,
       name: user.display_name,
-      budget_remaining: 105.0,
+      // The starting budget is per-competition config (060), not a constant —
+      // constants.js keeps TOTAL_BUDGET only as the create-form default.
+      budget_remaining: Number(adminCompetition?.budget ?? TOTAL_BUDGET),
     });
     await fetchParticipants();
     setAddingTeamFor(null);
@@ -289,7 +291,10 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
   // ──────────────────────────────────────────────────────────────────────────
 
   // ── Matchday Management ───────────────────────────────────────────────────
-  const EMPTY_FORM = { name: '', wc_stage: WC_STAGES[0], start_date: '', deadline: '' };
+  // Stage labels are per-competition (060). WC_STAGES survives only as the
+  // fallback for a competition saved with an empty list.
+  const stageLabels = adminCompetition?.stage_labels?.length ? adminCompetition.stage_labels : WC_STAGES;
+  const EMPTY_FORM = { name: '', wc_stage: stageLabels[0], phase: 'league', start_date: '', deadline: '' };
   const [matchdays, setMatchdays] = useState([]);
   const [matchdaysLoading, setMatchdaysLoading] = useState(true);
   const [mdForm, setMdForm] = useState(EMPTY_FORM);
@@ -335,9 +340,15 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
     if (!mdForm.name.trim()) { setMdError('El nombre es obligatorio.'); return; }
     if (!mdForm.deadline)    { setMdError('La fecha límite es obligatoria.'); return; }
     setMdSaving(true);
+    // `phase` is sent explicitly: 061's trigger only derives it for the World Cup
+    // archive and RAISES for any other competition rather than guessing (a Swiss
+    // league phase has no "group" in its name and would classify as knockout).
+    // `sequence` is deliberately omitted — the same trigger assigns the next one
+    // within this competition.
     const { error } = await adb.from('matchdays').insert({
       name:       mdForm.name.trim(),
       wc_stage:   mdForm.wc_stage,
+      phase:      mdForm.phase,
       start_date: mdForm.start_date || null,
       deadline:   mdForm.deadline,
     });
@@ -656,12 +667,15 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
   // ──────────────────────────────────────────────────────────────────────────
 
   // ── Transfer Windows ──────────────────────────────────────────────────────
-  const WINDOW_DEFAULTS = [
-    { window_number: 1, max_transfers: 5, label: 'Ventana 1 — Antes de R32 / CF fantasy (5 fichajes)' },
-    { window_number: 2, max_transfers: 5, label: 'Ventana 2 — Antes de R16 / SF fantasy (5 fichajes)' },
-    { window_number: 3, max_transfers: 5, label: 'Ventana 3 — Antes de CF Mundial / Final fantasy (5 fichajes)' },
-  ];
-  const EMPTY_TW_FORM = { window_number: '1', max_transfers: '5', opens_at: '', closes_at: '' };
+  // The knockout cap is per-competition config; the labels no longer name World
+  // Cup rounds, since the windows exist in every competition.
+  const knockoutCap = Number(adminCompetition?.transfer_cap_knockout ?? TRANSFER_CAP_KNOCKOUT);
+  const WINDOW_DEFAULTS = [1, 2, 3].map((n) => ({
+    window_number: n,
+    max_transfers: knockoutCap,
+    label: `Ventana ${n} — ${knockoutCap} fichajes`,
+  }));
+  const EMPTY_TW_FORM = { window_number: '1', max_transfers: String(knockoutCap), opens_at: '', closes_at: '' };
   const [transferWindows, setTransferWindows] = useState([]);
   const [twLoading, setTwLoading] = useState(true);
   const [twForm, setTwForm] = useState(EMPTY_TW_FORM);
@@ -1209,11 +1223,14 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
       return;
     }
 
-    // Fetch existing players for ded up by normName(name)|normName(country)
-    const { data: existing } = await adb.from('players').select('id, name, country');
+    // Fetch existing players for dedup by normName(name)|normName(country).
+    // Paginated: a plain .select() is capped at 1000 rows, and a roster past that
+    // would silently lose its tail from the dedup set and re-import duplicates.
+    const existing = await fetchAllPages((f, t) =>
+      adb.from('players').select('id, name, country').range(f, t));
     const normName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const existingSet = new Set(
-      (existing ?? []).map(p => `${normName(p.name)}|${normName(p.country)}`)
+      existing.map(p => `${normName(p.name)}|${normName(p.country)}`)
     );
 
     const VALID_POSITIONS = new Set(['GK', 'DEF', 'MID', 'FWD']);
@@ -1530,7 +1547,9 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
 
       json = {
         match: {
-          competition: 'FIFA World Cup',
+          // Stored in match_metadata, so it must name the administered
+          // competition — not the World Cup this panel started life in.
+          competition: adminCompetition?.name ?? 'FIFA World Cup',
           date: odsDate || null,
           home_team,
           away_team,
@@ -2063,14 +2082,28 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
               />
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Fase del Mundial</label>
+              <label className="block text-xs text-muted mb-1">Etapa de la competencia</label>
               <select
                 value={mdForm.wc_stage}
                 onChange={e => setMdForm(f => ({ ...f, wc_stage: e.target.value }))}
                 className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
               >
-                {WC_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                {stageLabels.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Tipo de jornada</label>
+              <select
+                value={mdForm.phase}
+                onChange={e => setMdForm(f => ({ ...f, phase: e.target.value }))}
+                className="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-tertiary"
+              >
+                <option value="league">Liga (cuenta para la tabla)</option>
+                <option value="knockout">Eliminatoria (H2H)</option>
+              </select>
+              <p className="text-xs text-muted mt-1">
+                Decide el límite de fichajes y qué jornadas suman en la tabla de posiciones.
+              </p>
             </div>
             <div>
               <label className="block text-xs text-muted mb-1">Fecha inicio (opcional)</label>
@@ -2114,7 +2147,8 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
                     <th className="pb-3 pr-4 font-medium">Nombre</th>
-                    <th className="pb-3 pr-4 font-medium">Fase</th>
+                    <th className="pb-3 pr-4 font-medium">Etapa</th>
+                    <th className="pb-3 pr-4 font-medium">Tipo</th>
                     <th className="pb-3 pr-4 font-medium">Fecha límite</th>
                     <th className="pb-3 pr-4 font-medium">Activo</th>
                     <th className="pb-3 font-medium" title="Finalizar marca la puntuación como definitiva. No afecta bloqueos, ventanas de fichajes ni la jornada siguiente.">Finalizar</th>
@@ -2125,6 +2159,9 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
                     <tr key={md.id} className="text-secondary hover:bg-surface-hover/40">
                       <td className="py-2.5 pr-4 text-primary font-medium">{md.name}</td>
                       <td className="py-2.5 pr-4 text-secondary text-xs">{md.wc_stage}</td>
+                      <td className="py-2.5 pr-4 text-secondary text-xs">
+                        {md.phase === 'knockout' ? 'Eliminatoria' : 'Liga'}
+                      </td>
                       <td className="py-2.5 pr-4 text-secondary text-xs">
                         {md.deadline ? new Date(md.deadline).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                       </td>
