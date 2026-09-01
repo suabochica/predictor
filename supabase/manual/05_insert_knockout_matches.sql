@@ -3,6 +3,11 @@
 -- round_of_16 through final remain TBD/TBD until prior rounds complete.
 -- Uses ON CONFLICT (match_code) DO UPDATE: inserts if missing, updates teams if TBD.
 -- Run in the Supabase SQL editor.
+--
+-- STALE as of migration 068 (Phase 6): predates competition_id (061) and omits
+-- it entirely, so re-running this after 068 will fail NOT NULL. Already run
+-- once against the live DB to seed the real schedule — kept for history only,
+-- not part of any pipeline. Do not re-run without adding competition_id = 1.
 
 BEGIN;
 

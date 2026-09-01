@@ -31,7 +31,10 @@ also resolved.
 are committed (`105e62f`, `182dbf9`); only pre-existing `apps/polla/.astro`
 build noise and the unrelated, still-deferred `I18N_PLAN.md` remain untracked.
 
-Phase 6 is unblocked — steps 1–5 are all done.
+Phase 6 is unblocked — steps 1–5 are all done. Migration 068 (drop
+`competition_id` defaults) is written and applied to the live DB
+(2026-09-01) — see "Claude — dev work left" below for what's left
+(write-path verification, commit).
 
 ---
 
@@ -272,20 +275,69 @@ before editing. Build passes. **✅ Committed as `c535b2f`** — 4 files
 ## Claude — dev work left
 
 ### Phase 6 — migration `068` (gated on steps 1–5 above)
-- [ ] `ALTER COLUMN competition_id DROP DEFAULT` on every table, as a write-path
-      tripwire. Numbering shifted by one back in Phase 3, so it is 068, not 067.
-      **`069` is now claimed** by the deferred i18n plan
+
+**Scoping audit done 2026-09-01** (before writing 068). Full write-path sweep
+of all 12 `DEFAULT 1` tables (`players, teams, matchdays, matches,
+auction_state, transfer_windows, knockout_matches, negotiation_windows,
+proxy_targets, team_players, fantasy_standings, auction_bids` — the 9 root
+tables from 061 plus the 3 denormalized ones). `player_tournament_totals` is
+also in `db.js`'s `SCOPED` set but is a view (062), not a table — no default
+to drop, not part of 068.
+
+- **`apps/fantasy/src` — already safe, no action needed.** Every `.insert(`/
+  `.upsert(` (18 call sites) goes through `db.from()`/`adb.from()`
+  (`lib/db.js`), never raw `supabase.from()` — confirmed zero bypasses.
+  `db.js`'s `stamp()` already injects `competition_id` on every scoped
+  insert/upsert unconditionally, so dropping the column default changes
+  nothing here.
+- **SQL RPCs — already safe, no action needed.** Every `INSERT INTO` in the
+  live (`CREATE OR REPLACE`) versions of the write RPCs — 063, 064, 065, 067
+  — already passes `competition_id` explicitly (`team_players`,
+  `auction_bids`, `negotiation_windows`, `auction_state`). Older superseded
+  copies of these functions (016, 022, 025, 027, 034, 035, 040, 047, 050,
+  054, 055, 056) don't matter — only the latest definition is live.
+- **`apps/polla/scripts/import-matches.mjs` + `sync-schedule.mjs` — already
+  fixed, not a Phase 6 risk.** The TODO note above was stale: commit
+  `46a2fa4` (`fix(fantasy,polla): guard cardinality flip and composite
+  match_code conflict`, already on `main`, predates this audit) hardcoded
+  `WC_COMPETITION_ID = 1` into every write in both scripts. Verified live —
+  every `INSERT INTO matches` and the `.upsert()` in `import-matches.mjs`
+  already carry `competition_id`.
+- **`supabase/seed.sql` — real gap, needs a fix.** Lines 7, 16, 21 insert into
+  `matchdays`, `auction_state`, `transfer_windows` with no `competition_id`
+  column at all. This is dev-seed data only (not a prod write path), but it
+  will hard-fail (`NOT NULL violation`) the moment 068 lands, and nothing
+  else in the repo currently depends on it working, so it should still be
+  fixed in the same pass: add `competition_id` (value `1`, matching
+  `WC_COMPETITION_ID` elsewhere) to all three `INSERT` column lists.
+- **`supabase/manual/02_insert_missing_group_matches.sql` +
+  `05_insert_knockout_matches.sql` — minor, historical.** Same gap (`INSERT
+  INTO matches` with no `competition_id`), but these are one-off scripts from
+  before migration 061 existed, already run once against the live DB to seed
+  the real schedule — not part of any pipeline anyone re-runs. Leave as-is;
+  note in a comment that they're stale rather than "fix" them, since fixing
+  implies they're still meant to be executed.
+- [x] `ALTER COLUMN competition_id DROP DEFAULT` on all 12 tables above, as a
+      write-path tripwire — written 2026-09-01 as
+      `supabase/migrations/068_drop_competition_id_defaults.sql`, **applied to
+      the live DB 2026-09-01** (run manually in the SQL editor — confirmed
+      "Success. No rows returned"). `069` is claimed by the deferred i18n plan
       (`apps/fantasy/I18N_PLAN.md`) for `users.language` — do not take it.
-- [ ] Phase 6's real risk sits **outside** `apps/fantasy/src` and is easy to
-      miss: `supabase/seed.sql:7,16,21` insert into `matchdays`,
-      `auction_state` and `transfer_windows` with no `competition_id`, and
-      `apps/polla/scripts/import-matches.mjs` + `sync-schedule.mjs` both write
-      to `matches`. All of these break the moment the default is dropped.
-- [ ] Exercise every write path in both competitions; anything still writing
-      unscoped now fails NOT NULL instead of silently landing in the WC archive.
-      One small commit per fix.
-- Running this before UCL exists tests nothing. UCL now exists, but step 4's
-  write tests still need to happen first — do not start Phase 6 mid-step-4.
+- [x] Fixed `supabase/seed.sql`'s 3 unscoped inserts (`matchdays`,
+      `auction_state`, `transfer_windows` now all pass `competition_id = 1`
+      explicitly) so a fresh `supabase db reset` won't break once 068 is live.
+      Also added stale-as-of-068 comments to
+      `supabase/manual/02_insert_missing_group_matches.sql` and
+      `05_insert_knockout_matches.sql` (same gap, but historical one-offs
+      already run once — not re-fixed, just flagged).
+- [ ] Exercise every write path in both competitions post-068 (CSV import,
+      `.ods` upload, add-a-participant, create-matchday — the same four
+      step-4 already covers) to catch anything this static grep missed (e.g.
+      a dynamic table name, or a function created via the Supabase dashboard
+      rather than a migration file).
+- Running this before UCL exists tests nothing. UCL now exists, and step 4's
+  write tests are done — Phase 6 is unblocked. Code + DB are done; live
+  write-path verification across both competitions is what's left.
 
 ### `ucl-2026-27` entry in `competitionCopy.js`
 - ⚠️ **Coupled to the deferred i18n plan** (`apps/fantasy/I18N_PLAN.md`, §3):
