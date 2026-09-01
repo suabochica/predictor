@@ -53,7 +53,7 @@ export function usePlayers(filters = {}, dbOverride = null) {
       // so we mirror the auction's working pattern (see AuctionContext).
       const { data: rosters } = await db
         .from('team_players')
-        .select('player_id, teams(id, name, user_id)');
+        .select('player_id, teams!team_players_team_id_fkey(id, name, user_id)');
       const ownerByPlayer = new Map();
       (rosters ?? []).forEach((r) => {
         if (r.teams) {

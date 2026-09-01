@@ -78,7 +78,7 @@ export function AuctionProvider({ children }) {
   async function fetchBids() {
     const { data } = await db
       .from('auction_bids')
-      .select('*, players(name, position, price), users(display_name)')
+      .select('*, players!auction_bids_player_id_fkey(name, position, price), users(display_name)')
       .order('created_at', { ascending: false });
     setBids(data ?? []);
   }
@@ -91,7 +91,7 @@ export function AuctionProvider({ children }) {
   async function fetchPlayerOwners() {
     const { data } = await db
       .from('team_players')
-      .select('player_id, teams(name, user_id)');
+      .select('player_id, teams!team_players_team_id_fkey(name, user_id)');
     const map = new Map();
     for (const tp of data ?? []) {
       if (tp.teams) {

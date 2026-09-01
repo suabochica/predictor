@@ -94,7 +94,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
     const [{ data: teams }, { data: existingLineups }] = await Promise.all([
       adb
         .from('teams')
-        .select('id, name, team_players(player_id, acquisition_price, players(id, name, position, price))'),
+        .select('id, name, team_players!team_players_team_id_fkey(player_id, acquisition_price, players(id, name, position, price))'),
       adb.from('lineups').select('team_id').is('matchday_id', null),
     ]);
 

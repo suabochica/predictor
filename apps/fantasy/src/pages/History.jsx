@@ -29,7 +29,7 @@ export default function History() {
     async function load() {
       const [{ data: mds }, { data: st }] = await Promise.all([
         db.from('matchdays').select('*').order('id', { ascending: true }),
-        db.from('fantasy_standings').select('*, teams(name)'),
+        db.from('fantasy_standings').select('*, teams!fantasy_standings_team_id_fkey(name)'),
       ]);
       setMatchdays(mds ?? []);
       setStandings(st ?? []);
