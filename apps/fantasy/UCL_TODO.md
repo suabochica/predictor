@@ -31,10 +31,9 @@ also resolved.
 are committed (`105e62f`, `182dbf9`); only pre-existing `apps/polla/.astro`
 build noise and the unrelated, still-deferred `I18N_PLAN.md` remain untracked.
 
-Phase 6 is unblocked — steps 1–5 are all done. Migration 068 (drop
-`competition_id` defaults) is written and applied to the live DB
-(2026-09-01) — see "Claude — dev work left" below for what's left
-(write-path verification, commit).
+**Phase 6 is complete** (2026-09-01) — migration 068 written, applied to the
+live DB, and committed (`c19de0c`). The live write-path re-verification was
+offered and Lucas declined it; see "Claude — dev work left" below.
 
 ---
 
@@ -330,14 +329,13 @@ to drop, not part of 068.
       `supabase/manual/02_insert_missing_group_matches.sql` and
       `05_insert_knockout_matches.sql` (same gap, but historical one-offs
       already run once — not re-fixed, just flagged).
-- [ ] Exercise every write path in both competitions post-068 (CSV import,
-      `.ods` upload, add-a-participant, create-matchday — the same four
-      step-4 already covers) to catch anything this static grep missed (e.g.
-      a dynamic table name, or a function created via the Supabase dashboard
-      rather than a migration file).
+- [x] **Skipped deliberately 2026-09-01** — Lucas declined the live re-run of
+      step 4's four writes post-068. Static audit (all write paths traced to
+      an explicit `competition_id`) stands as the only verification; any miss
+      will now surface as a loud error on first real use, not silent
+      mis-scoping.
 - Running this before UCL exists tests nothing. UCL now exists, and step 4's
-  write tests are done — Phase 6 is unblocked. Code + DB are done; live
-  write-path verification across both competitions is what's left.
+  write tests are done — **Phase 6 is complete.**
 
 ### `ucl-2026-27` entry in `competitionCopy.js`
 - ⚠️ **Coupled to the deferred i18n plan** (`apps/fantasy/I18N_PLAN.md`, §3):
