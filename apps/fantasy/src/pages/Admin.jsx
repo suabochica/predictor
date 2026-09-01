@@ -17,7 +17,7 @@ import {
 import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
-import { generateChampionshipBracket, resolveH2H } from '../lib/brackets';
+import { generateChampionshipBracket, generateGroupSchedule, resolveH2H } from '../lib/brackets';
 import { useCompetition } from '../context/CompetitionContext';
 import { createDb, unscopedFrom } from '../lib/db';
 
@@ -513,6 +513,74 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
   const [knockoutCalcMatchdayId, setKnockoutCalcMatchdayId] = useState('');
   const [knockoutCalcRunning, setKnockoutCalcRunning] = useState(false);
   const [knockoutCalcResult, setKnockoutCalcResult] = useState(null);
+
+  // ── League-phase draw (H2H group stage) ──────────────────────────────────
+  const [groupFixtures, setGroupFixtures] = useState([]);
+  const [groupFixturesLoading, setGroupFixturesLoading] = useState(true);
+  const [drawPreview, setDrawPreview] = useState(null); // rounds of [teamAId, teamBId] pairs, aligned to leagueMatchdays order
+  const [drawError, setDrawError] = useState('');
+  const [drawSaving, setDrawSaving] = useState(false);
+  const [drawResult, setDrawResult] = useState(null);
+
+  const fetchGroupFixtures = useCallback(async () => {
+    setGroupFixturesLoading(true);
+    const { data } = await adb
+      .from('group_fixtures')
+      .select('*')
+      .order('matchday_id').order('slot');
+    setGroupFixtures(data ?? []);
+    setGroupFixturesLoading(false);
+  }, []);
+
+  useEffect(() => { fetchGroupFixtures(); }, [fetchGroupFixtures]);
+
+  const leagueMatchdays = [...matchdays]
+    .filter(m => m.phase === 'league')
+    .sort((a, b) => a.sequence - b.sequence);
+
+  function handleDrawSchedule() {
+    setDrawError('');
+    setDrawResult(null);
+    try {
+      const teamIds = knockoutTeams.map(t => t.id);
+      const schedule = generateGroupSchedule(teamIds, leagueMatchdays.length);
+      setDrawPreview(schedule);
+    } catch (err) {
+      setDrawPreview(null);
+      setDrawError(err.message);
+    }
+  }
+
+  async function handleConfirmDraw() {
+    if (!drawPreview) return;
+    setDrawSaving(true);
+    const rows = leagueMatchdays.flatMap((md, mdIdx) =>
+      drawPreview[mdIdx].map(([teamAId, teamBId], i) => ({
+        matchday_id: md.id, team_a_id: teamAId, team_b_id: teamBId, slot: i + 1,
+      }))
+    );
+    const { error } = await adb.from('group_fixtures').insert(rows);
+    setDrawResult(error ? { error: error.message } : { ok: true, count: rows.length });
+    if (!error) {
+      setDrawPreview(null);
+      await fetchGroupFixtures();
+    }
+    setDrawSaving(false);
+  }
+
+  async function handleRedrawSchedule() {
+    setDrawSaving(true);
+    setDrawResult(null);
+    const { error } = await adb.from('group_fixtures').delete();
+    if (error) {
+      setDrawResult({ error: error.message });
+      setDrawSaving(false);
+      return;
+    }
+    setDrawPreview(null);
+    await fetchGroupFixtures();
+    setDrawSaving(false);
+  }
 
   // Pre-fill the round→jornada dropdown from the active round's existing link
   // (set by either "Calcular ronda" or "Guardar jornada provisional"). Only when
@@ -2612,6 +2680,139 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
           </div>
         )}
       </section>
+
+      {/* ── League-phase draw (H2H group stage) ─────────────────────────────── */}
+      {adminCompetition?.group_format === 'h2h' && (() => {
+        const teamNameById = Object.fromEntries(
+          knockoutTeams.map(t => [t.id, t.users?.display_name ?? t.name ?? 'Desconocido'])
+        );
+        const leagueMdIds = new Set(leagueMatchdays.map(m => m.id));
+        const lockRedraw =
+          leagueMatchdays.some(m => m.is_completed) ||
+          knockoutStandingsData.some(s => leagueMdIds.has(s.matchday_id));
+        const canDraw = knockoutTeams.length >= 4 && knockoutTeams.length % 2 === 0
+          && leagueMatchdays.length > 0 && leagueMatchdays.length <= knockoutTeams.length - 1;
+
+        return (
+          <section className="bg-surface rounded-xl p-6 space-y-5">
+            <div>
+              <h2 className="text-lg font-semibold text-primary">Calendario de la fase de liga</h2>
+              <p className="text-xs text-muted mt-1">
+                Sortea los enfrentamientos H2H de las {leagueMatchdays.length} jornadas de liga. Ningún
+                rival se repite en toda la fase.
+              </p>
+            </div>
+
+            {groupFixturesLoading ? (
+              <p className="text-muted text-sm">Cargando…</p>
+            ) : groupFixtures.length === 0 ? (
+              <div className="space-y-4">
+                {!canDraw && (
+                  <p className="text-tertiary text-sm">
+                    Se necesita un número par de equipos (mínimo 4) y al menos una jornada de liga, con
+                    como máximo {Math.max(knockoutTeams.length - 1, 0)} jornadas para {knockoutTeams.length} equipos.
+                  </p>
+                )}
+
+                {drawPreview && (
+                  <div className="space-y-3">
+                    {leagueMatchdays.map((md, mdIdx) => (
+                      <div key={md.id}>
+                        <p className="text-label-caps text-muted uppercase tracking-wide mb-2">{md.name}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {drawPreview[mdIdx].map(([a, b], i) => (
+                            <div key={i} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
+                              <span className="text-primary">{teamNameById[a]}</span>
+                              <span className="text-muted"> vs </span>
+                              <span className="text-primary">{teamNameById[b]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {drawError && (
+                  <div className="rounded-lg px-3 py-2 text-sm bg-error/10/40 text-error">{drawError}</div>
+                )}
+                {drawResult && (
+                  <div className={`rounded-lg px-3 py-2 text-sm ${drawResult.error ? 'bg-error/10/40 text-error' : 'bg-tertiary/10 text-tertiary'}`}>
+                    {drawResult.error ?? `✓ Calendario guardado — ${drawResult.count} partidos creados.`}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDrawSchedule}
+                    disabled={!canDraw || drawSaving}
+                    className="px-5 py-2 rounded-lg bg-tertiary hover:bg-tertiary disabled:opacity-50 text-on-tertiary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                  >
+                    Sortear calendario
+                  </button>
+                  {drawPreview && (
+                    <button
+                      onClick={handleConfirmDraw}
+                      disabled={drawSaving}
+                      className="px-5 py-2 rounded-lg bg-surface-hover hover:bg-surface-hover disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                    >
+                      {drawSaving ? 'Guardando…' : 'Confirmar sorteo'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  {leagueMatchdays.map(md => {
+                    const fixtures = groupFixtures.filter(f => f.matchday_id === md.id);
+                    if (fixtures.length === 0) return null;
+                    return (
+                      <div key={md.id}>
+                        <p className="text-label-caps text-muted uppercase tracking-wide mb-2">{md.name}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {fixtures.map(f => (
+                            <div key={f.id} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
+                              <span className="text-primary">{teamNameById[f.team_a_id]}</span>
+                              <span className="text-muted"> vs </span>
+                              <span className="text-primary">{teamNameById[f.team_b_id]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {lockRedraw ? (
+                  <p className="text-xs text-muted">
+                    Re-sorteo bloqueado: ya hay jornadas de liga completadas o con posiciones calculadas.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted">
+                    Si añadiste participantes después del sorteo, no tendrán enfrentamientos — vuelve a
+                    sortear antes de que empiece la fase de liga.
+                  </p>
+                )}
+
+                {drawResult && (
+                  <div className={`rounded-lg px-3 py-2 text-sm ${drawResult.error ? 'bg-error/10/40 text-error' : 'bg-tertiary/10 text-tertiary'}`}>
+                    {drawResult.error}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleRedrawSchedule}
+                  disabled={lockRedraw || drawSaving}
+                  className="px-5 py-2 rounded-lg bg-surface-hover hover:bg-surface-hover disabled:opacity-50 text-primary font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
+                >
+                  {drawSaving ? 'Sorteando…' : 'Re-sortear calendario'}
+                </button>
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       {/* ── Knockout Bracket ─────────────────────────────────────────────── */}
       {isCompleted && (
