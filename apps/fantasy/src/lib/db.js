@@ -18,6 +18,7 @@ const SCOPED = new Set([
   'fantasy_standings',
   'auction_bids',
   'player_tournament_totals',
+  'group_fixtures',
 ]);
 
 // Tables that are only ever reached through an already-scoped id
