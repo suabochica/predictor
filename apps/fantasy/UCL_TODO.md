@@ -31,9 +31,10 @@ also resolved.
 are committed (`105e62f`, `182dbf9`); only pre-existing `apps/polla/.astro`
 build noise and the unrelated, still-deferred `I18N_PLAN.md` remain untracked.
 
-**Phase 6 is complete** (2026-09-01) — migration 068 written, applied to the
-live DB, and committed (`c19de0c`). The live write-path re-verification was
-offered and Lucas declined it; see "Claude — dev work left" below.
+**Phase 6's own scope is complete** (2026-09-01) — migration 068 written,
+applied to the live DB, and committed (`c19de0c`). Full write-path exercise
+of the 8 tables only reachable via auction/transfer/negotiation is deferred
+to when UCL actually runs one — see "Claude — dev work left" below.
 
 ---
 
@@ -329,13 +330,22 @@ to drop, not part of 068.
       `supabase/manual/02_insert_missing_group_matches.sql` and
       `05_insert_knockout_matches.sql` (same gap, but historical one-offs
       already run once — not re-fixed, just flagged).
-- [x] **Skipped deliberately 2026-09-01** — Lucas declined the live re-run of
-      step 4's four writes post-068. Static audit (all write paths traced to
-      an explicit `competition_id`) stands as the only verification; any miss
-      will now surface as a loud error on first real use, not silent
-      mis-scoping.
-- Running this before UCL exists tests nothing. UCL now exists, and step 4's
-  write tests are done — **Phase 6 is complete.**
+- [ ] **Deferred to a full test later (2026-09-01)** — not skipped, just not
+      now. A cheap throwaway-row re-test would only have covered 3 of the 12
+      `competition_id` tables (`matchdays`, `teams`, `players`, via a create-
+      matchday/add-participant/CSV-import cycle); the other 8
+      (`auction_state`, `transfer_windows`, `knockout_matches`,
+      `negotiation_windows`, `proxy_targets`, `team_players`,
+      `fantasy_standings`, `auction_bids`) only get real exercise from an
+      actual auction round, transfer window, or negotiation window on UCL —
+      do the real thing when UCL actually runs one, instead of a synthetic
+      test now. Until then, the static audit (all write paths traced to an
+      explicit `competition_id`) is what's covering Phase 6; any miss
+      surfaces as a loud error on first real use, not silent mis-scoping.
+- Running this before UCL exists tests nothing. UCL now exists, step 4's
+  write tests are done, and 068 is applied — **Phase 6's own scope is
+  complete.** Full write-path exercise of the remaining 8 tables rides on
+  UCL's first real auction/transfer/negotiation window, not a synthetic test.
 
 ### `ucl-2026-27` entry in `competitionCopy.js`
 - ⚠️ **Coupled to the deferred i18n plan** (`apps/fantasy/I18N_PLAN.md`, §3):
