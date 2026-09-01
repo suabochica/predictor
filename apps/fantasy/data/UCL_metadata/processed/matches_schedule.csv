@@ -1,0 +1,145 @@
+matchday_label,date,kickoff_utc,home_team,away_team,venue,city,status,home_score,away_score,match_url
+Liga MD1,2026-09-08,2026-09-08T16:45:00+00:00,AEK Athens,LASK,AEK Arena,Atenas,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049558/
+Liga MD1,2026-09-08,2026-09-08T16:45:00+00:00,Club Brugge,Aston Villa,Jan Breydelstadion,Bruges,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049556/
+Liga MD1,2026-09-08,2026-09-08T19:00:00+00:00,Lille,Real Betis,Stade Pierre Mauroy,Villeneuve d'Ascq,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049557/
+Liga MD1,2026-09-08,2026-09-08T19:00:00+00:00,Porto,Man City,Estádio do Dragão,Oporto,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049555/
+Liga MD1,2026-09-08,2026-09-08T19:00:00+00:00,B. Dortmund,Villarreal,BVB Stadion Dortmund,Dortmund,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049554/
+Liga MD1,2026-09-08,2026-09-08T19:00:00+00:00,Real Madrid,Inter,Estadio Santiago Bernabéu,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049553/
+Liga MD1,2026-09-09,2026-09-09T16:45:00+00:00,Barcelona,Feyenoord,Camp Nou,Barcelona,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049561/
+Liga MD1,2026-09-09,2026-09-09T16:45:00+00:00,Stuttgart,Viking,Arena Stuttgart,Stuttgart,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049564/
+Liga MD1,2026-09-09,2026-09-09T19:00:00+00:00,Napoli,Arsenal,Stadio Diego Armando Maradona,Nápoles,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049563/
+Liga MD1,2026-09-09,2026-09-09T19:00:00+00:00,Liverpool,Atleti,Anfield,Liverpool,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049560/
+Liga MD1,2026-09-09,2026-09-09T19:00:00+00:00,Sporting CP,Galatasaray,Estádio José Alvalade,Lisboa,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049562/
+Liga MD1,2026-09-09,2026-09-09T19:00:00+00:00,Paris,S. Bratislava,Parc des Princes,París,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049559/
+Liga MD1,2026-09-10,2026-09-10T16:45:00+00:00,Fenerbahçe,Roma,Fenerbahçe Şükrü Saracoğlu Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049568/
+Liga MD1,2026-09-10,2026-09-10T16:45:00+00:00,PSV,Shakhtar,PSV Stadion,Eindhoven,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049567/
+Liga MD1,2026-09-10,2026-09-10T19:00:00+00:00,Como,Leipzig,Giuseppe Sinigaglia,Como,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049570/
+Liga MD1,2026-09-10,2026-09-10T19:00:00+00:00,Bayern München,Bodø/Glimt,Fußball Arena München,Múnich,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049565/
+Liga MD1,2026-09-10,2026-09-10T19:00:00+00:00,Slavia Praha,Lens,Eden Arena,Praga,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049569/
+Liga MD1,2026-09-10,2026-09-10T19:00:00+00:00,Man Utd,Sabah,Old Trafford,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049566/
+Liga MD2,2026-10-13,2026-10-13T16:45:00+00:00,Sabah,Slavia Praha,UEFA Champions League,,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049579/
+Liga MD2,2026-10-13,2026-10-13T16:45:00+00:00,Lens,Sporting CP,Stade Bollaert-Delelis,Lens,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049577/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Viking,Bayern München,Viking stadion,Stavanger,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049578/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Inter,Club Brugge,Stadio San Siro,Milán,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049571/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Galatasaray,Barcelona,Ali Sami Yen Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049576/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Villarreal,Napoli,Estadio de la Cerámica,Villarreal,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049575/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Leipzig,PSV,RB Arena,Leipzig,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049574/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Arsenal,Lille,Arsenal Stadium,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049572/
+Liga MD2,2026-10-13,2026-10-13T19:00:00+00:00,Atleti,Man Utd,Estadio Metropolitano,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049573/
+Liga MD2,2026-10-14,2026-10-14T16:45:00+00:00,Feyenoord,Como,Stadion Feijenoord 'De Kuip',Róterdam,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049584/
+Liga MD2,2026-10-14,2026-10-14T16:45:00+00:00,LASK,Liverpool,Oberösterreich Arena,Linz,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049588/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,Aston Villa,Fenerbahçe,Villa Park,Birmingham,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049582/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,Man City,Paris,City of Manchester Stadium,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049580/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,Roma,Real Madrid,Stadio Olimpico,Roma,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049581/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,Real Betis,Porto,LA CARTUJA DE SEVILLA,Sevilla,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049583/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,S. Bratislava,Stuttgart,Národný futbalový štadión,Bratislava,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049587/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,Shakhtar,AEK Athens,Stamford Bridge,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049586/
+Liga MD2,2026-10-14,2026-10-14T19:00:00+00:00,Bodø/Glimt,B. Dortmund,Aspmyra,Bodø,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049585/
+Liga MD3,2026-10-20,2026-10-20T16:45:00+00:00,Sabah,B. Dortmund,UEFA Champions League,,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049597/
+Liga MD3,2026-10-20,2026-10-20T16:45:00+00:00,Fenerbahçe,Slavia Praha,Fenerbahçe Şükrü Saracoğlu Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049595/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Roma,S. Bratislava,Stadio Olimpico,Roma,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049592/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Stuttgart,Atleti,Arena Stuttgart,Stuttgart,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049596/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Paris,Barcelona,Parc des Princes,París,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049589/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Man City,AEK Athens,City of Manchester Stadium,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049591/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Liverpool,Villarreal,Anfield,Liverpool,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049590/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Porto,PSV,Estádio do Dragão,Oporto,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049593/
+Liga MD3,2026-10-20,2026-10-20T19:00:00+00:00,Napoli,Bodø/Glimt,Stadio Diego Armando Maradona,Nápoles,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049594/
+Liga MD3,2026-10-21,2026-10-21T16:45:00+00:00,Como,Man Utd,Giuseppe Sinigaglia,Como,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049606/
+Liga MD3,2026-10-21,2026-10-21T16:45:00+00:00,Lille,Galatasaray,Stade Pierre Mauroy,Villeneuve d'Ascq,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049605/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Real Madrid,Leipzig,Estadio Santiago Bernabéu,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049599/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Bayern München,Arsenal,Fußball Arena München,Múnich,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049598/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Club Brugge,Lens,Jan Breydelstadion,Bruges,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049603/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Inter,Shakhtar,Stadio San Siro,Milán,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049600/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Sporting CP,LASK,Estádio José Alvalade,Lisboa,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049601/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Real Betis,Feyenoord,LA CARTUJA DE SEVILLA,Sevilla,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049604/
+Liga MD3,2026-10-21,2026-10-21T19:00:00+00:00,Aston Villa,Viking,Villa Park,Birmingham,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049602/
+Liga MD4,2026-11-03,2026-11-03T17:45:00+00:00,Shakhtar,Sporting CP,Stamford Bridge,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049613/
+Liga MD4,2026-11-03,2026-11-03T17:45:00+00:00,Galatasaray,Stuttgart,Ali Sami Yen Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049614/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,Villarreal,Paris,Estadio de la Cerámica,Villarreal,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049612/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,Barcelona,Aston Villa,Camp Nou,Barcelona,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049607/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,Atleti,Bayern München,Estadio Metropolitano,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049608/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,Man Utd,Roma,Old Trafford,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049609/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,Feyenoord,Inter,Stadion Feijenoord 'De Kuip',Róterdam,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049610/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,Bodø/Glimt,Lille,Aspmyra,Bodø,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049611/
+Liga MD4,2026-11-03,2026-11-03T20:00:00+00:00,LASK,S. Bratislava,Oberösterreich Arena,Linz,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049615/
+Liga MD4,2026-11-04,2026-11-04T17:45:00+00:00,Fenerbahçe,Liverpool,Fenerbahçe Şükrü Saracoğlu Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049620/
+Liga MD4,2026-11-04,2026-11-04T17:45:00+00:00,AEK Athens,Real Madrid,AEK Arena,Atenas,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049622/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,Leipzig,Man City,RB Arena,Leipzig,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049619/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,Porto,Napoli,Estádio do Dragão,Oporto,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049617/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,PSV,Club Brugge,PSV Stadion,Eindhoven,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049618/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,B. Dortmund,Real Betis,BVB Stadion Dortmund,Dortmund,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049616/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,Slavia Praha,Arsenal,Eden Arena,Praga,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049621/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,Lens,Como,Stade Bollaert-Delelis,Lens,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049623/
+Liga MD4,2026-11-04,2026-11-04T20:00:00+00:00,Viking,Sabah,Viking stadion,Stavanger,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049624/
+Liga MD5,2026-11-24,2026-11-24T17:45:00+00:00,Bodø/Glimt,LASK,Aspmyra,Bodø,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049629/
+Liga MD5,2026-11-24,2026-11-24T17:45:00+00:00,Galatasaray,Aston Villa,Ali Sami Yen Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049631/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,Como,AEK Athens,Giuseppe Sinigaglia,Como,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049633/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,Leipzig,Lens,RB Arena,Leipzig,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049630/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,Feyenoord,Porto,Stadion Feijenoord 'De Kuip',Róterdam,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049628/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,S. Bratislava,Real Betis,Národný futbalový štadión,Bratislava,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049632/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,Arsenal,B. Dortmund,Arsenal Stadium,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049627/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,Real Madrid,PSV,Estadio Santiago Bernabéu,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049625/
+Liga MD5,2026-11-24,2026-11-24T20:00:00+00:00,Man City,Napoli,City of Manchester Stadium,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049626/
+Liga MD5,2026-11-25,2026-11-25T17:45:00+00:00,Slavia Praha,Villarreal,Eden Arena,Praga,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049641/
+Liga MD5,2026-11-25,2026-11-25T17:45:00+00:00,Sabah,Barcelona,UEFA Champions League,,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049642/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Atleti,Viking,Estadio Metropolitano,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049636/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Club Brugge,Liverpool,Jan Breydelstadion,Bruges,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049638/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Paris,Roma,Parc des Princes,París,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049634/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Shakhtar,Fenerbahçe,Stamford Bridge,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049640/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Inter,Stuttgart,Stadio San Siro,Milán,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049635/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Lille,Bayern München,Stade Pierre Mauroy,Villeneuve d'Ascq,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049639/
+Liga MD5,2026-11-25,2026-11-25T20:00:00+00:00,Sporting CP,Man Utd,Estádio José Alvalade,Lisboa,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049637/
+Liga MD6,2026-12-08,2026-12-08T17:45:00+00:00,Viking,Feyenoord,Viking stadion,Stavanger,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049651/
+Liga MD6,2026-12-08,2026-12-08T17:45:00+00:00,Villarreal,Sabah,Estadio de la Cerámica,Villarreal,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049649/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,Aston Villa,Paris,Villa Park,Birmingham,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049646/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,Barcelona,Man City,Camp Nou,Barcelona,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049644/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,Man Utd,Leipzig,Old Trafford,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049647/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,Roma,Sporting CP,Stadio Olimpico,Roma,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049645/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,AEK Athens,Galatasaray,AEK Arena,Atenas,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049650/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,Bayern München,Slavia Praha,Fußball Arena München,Múnich,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049643/
+Liga MD6,2026-12-08,2026-12-08T20:00:00+00:00,Napoli,Club Brugge,Stadio Diego Armando Maradona,Nápoles,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049648/
+Liga MD6,2026-12-09,2026-12-09T17:45:00+00:00,S. Bratislava,Shakhtar,Národný futbalový štadión,Bratislava,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049657/
+Liga MD6,2026-12-09,2026-12-09T17:45:00+00:00,Real Betis,Como,LA CARTUJA DE SEVILLA,Sevilla,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049655/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,B. Dortmund,Inter,BVB Stadion Dortmund,Dortmund,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049654/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,Arsenal,Real Madrid,Arsenal Stadium,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049653/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,Stuttgart,Lille,Arena Stuttgart,Stuttgart,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049658/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,LASK,Fenerbahçe,Oberösterreich Arena,Linz,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049659/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,Lens,Bodø/Glimt,Stade Bollaert-Delelis,Lens,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049660/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,Liverpool,Porto,Anfield,Liverpool,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049652/
+Liga MD6,2026-12-09,2026-12-09T20:00:00+00:00,PSV,Atleti,PSV Stadion,Eindhoven,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049656/
+Liga MD7,2027-01-19,2027-01-19T17:45:00+00:00,Galatasaray,Feyenoord,Ali Sami Yen Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049667/
+Liga MD7,2027-01-19,2027-01-19T17:45:00+00:00,Bodø/Glimt,Atleti,Aspmyra,Bodø,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049666/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,Aston Villa,B. Dortmund,Villa Park,Birmingham,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049663/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,AEK Athens,Roma,AEK Arena,Atenas,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049669/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,Lille,S. Bratislava,Stade Pierre Mauroy,Villeneuve d'Ascq,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049665/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,Real Madrid,LASK,Estadio Santiago Bernabéu,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049661/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,Porto,Slavia Praha,Estádio do Dragão,Oporto,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049664/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,Inter,Liverpool,Stadio San Siro,Milán,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049662/
+Liga MD7,2027-01-19,2027-01-19T20:00:00+00:00,Stuttgart,Club Brugge,Arena Stuttgart,Stuttgart,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049668/
+Liga MD7,2027-01-20,2027-01-20T17:45:00+00:00,Sabah,Napoli,UEFA Champions League,,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049678/
+Liga MD7,2027-01-20,2027-01-20T17:45:00+00:00,Fenerbahçe,Villarreal,Fenerbahçe Şükrü Saracoğlu Spor Kompleksi,Estambul,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049674/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Sporting CP,Barcelona,Estádio José Alvalade,Lisboa,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049670/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Como,Paris,Giuseppe Sinigaglia,Como,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049675/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Viking,PSV,Viking stadion,Stavanger,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049677/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Leipzig,Shakhtar,RB Arena,Leipzig,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049673/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Lens,Man City,Stade Bollaert-Delelis,Lens,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049676/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Man Utd,Bayern München,Old Trafford,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049671/
+Liga MD7,2027-01-20,2027-01-20T20:00:00+00:00,Real Betis,Arsenal,LA CARTUJA DE SEVILLA,Sevilla,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049672/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Slavia Praha,Aston Villa,Eden Arena,Praga,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049694/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Club Brugge,Bodø/Glimt,Jan Breydelstadion,Bruges,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049688/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Napoli,Viking,Stadio Diego Armando Maradona,Nápoles,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049691/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Feyenoord,Leipzig,Stadion Feijenoord 'De Kuip',Róterdam,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049690/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,LASK,Porto,Oberösterreich Arena,Linz,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049696/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Villarreal,Man Utd,Estadio de la Cerámica,Villarreal,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049692/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Shakhtar,Real Madrid,Stamford Bridge,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049693/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Roma,Lille,Stadio Olimpico,Roma,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049687/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,B. Dortmund,AEK Athens,BVB Stadion Dortmund,Dortmund,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049686/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Man City,Sporting CP,City of Manchester Stadium,Mánchester,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049682/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Barcelona,Como,Camp Nou,Barcelona,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049684/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,PSV,Stuttgart,PSV Stadion,Eindhoven,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049689/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Atleti,Fenerbahçe,Estadio Metropolitano,Madrid,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049685/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Bayern München,Real Betis,Fußball Arena München,Múnich,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049680/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,S. Bratislava,Inter,Národný futbalový štadión,Bratislava,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049695/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Arsenal,Sabah,Arsenal Stadium,Londres,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049683/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Liverpool,Lens,Anfield,Liverpool,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049681/
+Liga MD8,2027-01-27,2027-01-27T20:00:00+00:00,Paris,Galatasaray,Parc des Princes,París,scheduled,,,https://es.uefa.com/uefachampionsleague/match/2049679/
