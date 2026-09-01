@@ -36,6 +36,12 @@ applied to the live DB, and committed (`c19de0c`). Full write-path exercise
 of the 8 tables only reachable via auction/transfer/negotiation is deferred
 to when UCL actually runs one — see "Claude — dev work left" below.
 
+**UCL's real schedule is now in the DB** (2026-09-01) — all 144 "Fase liga"
+fixtures from `matches_schedule.csv` inserted into `matches` with
+`competition_id=2`, pre-assigned to their `Liga MD1`…`MD8` matchday
+(`total=144, unmatched=0`). See "UCL data pipeline" below for how. Admin's
+Partidos de la jornada section is no longer empty for UCL.
+
 ---
 
 ## Uncommitted work (as of 2026-09-01)
@@ -108,15 +114,29 @@ touches no DB) turns these into `apps/fantasy/data/UCL_metadata/processed/`:
       topped up, any Opta/`.ods` stats for a non-imported player on these 4
       clubs will silently fail to match (same "Player not found" shape as
       the pagination bugs in `project_opta_upload_pagination_fix`).
-- [ ] Neither CSV has been run through the actual admin importer yet — this
-      is exactly step 4's "Importar jugadores CSV against UCL in isolation"
-      test below, now unblocked by having real data to import.
-- [ ] `matches_schedule.csv` has no consumer yet — nothing currently reads it
-      into `matches`/`matchdays`. `apps/polla/scripts/import-matches.mjs` and
-      `sync-schedule.mjs` are WC-specific (hardcoded Wikipedia scrape /
-      curated WC CSV) and, per Phase 6 below, don't scope writes by
-      `competition_id` yet anyway — don't wire this schedule in before Phase
-      6 lands, or it becomes another unscoped write to fix twice.
+- [x] **CSV run through the actual admin importer — DONE 2026-09-01.** See
+      step 4's "Importar jugadores CSV against UCL in isolation" below: 841
+      jugadores creados, 0 omitidos, 0 errores.
+- [x] **`matches_schedule.csv` imported — DONE 2026-09-01, now unblocked by
+      Phase 6 landing.** `apps/polla/scripts/import-matches.mjs`/
+      `sync-schedule.mjs` were left alone (still WC-specific, still hardcode
+      `competition_id=1` — not reused). Instead, a one-off generator script
+      (scratchpad, not committed — same treatment as the matchday SQL in step
+      4) read `matches_schedule.csv` and emitted 144 idempotent
+      `INSERT ... WHERE NOT EXISTS` statements into `matches`:
+      `competition_id=2`, `team_a`/`team_b` = club names (verified byte-
+      identical to `players.country` for all 36 clubs beforehand — no mapping
+      needed), `match_code` derived from the UEFA match id in `match_url`
+      (e.g. `UCL2049558`, avoids any collision with the WC's `M##`/group-letter
+      codes), `stage='group'` (closest fit — the column's CHECK constraint
+      only knows WC bracket stages, league phase has no equivalent), and
+      `matchday_id` resolved via `matchdays.name = 'Liga MD1'..'MD8' AND
+      competition_id=2`. Run in the SQL editor: verify query came back
+      `total=144, unmatched=0` (every row got a non-`NULL` matchday_id on the
+      first try — the 8 matchdays' names matched the CSV labels exactly).
+      Admin → Partidos de la jornada now lists all 144 UCL fixtures
+      pre-assigned when the selector is on UCL; `useMatchdayLocks` can derive
+      real kickoff-lock times for UCL lineups.
 
 ---
 
