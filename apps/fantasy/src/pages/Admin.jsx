@@ -888,8 +888,8 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
 
       const lineupArgs = { starters, bench, captainId, formation };
 
-      const { totalPoints: currentPts, goalsScored } = calculateTeamMatchdayPoints(lineupArgs, statsMap, positionMap, calculatePlayerPoints);
-      const { totalPoints: optaPts } = calculateTeamMatchdayPoints(lineupArgs, statsMap, positionMap, optaScorer);
+      const { totalPoints: currentPts, goalsScored, breakdown: currentBreakdown } = calculateTeamMatchdayPoints(lineupArgs, statsMap, positionMap, calculatePlayerPoints);
+      const { totalPoints: optaPts, breakdown: optaBreakdown } = calculateTeamMatchdayPoints(lineupArgs, statsMap, positionMap, optaScorer);
 
       const prev = prevByTeam[team.id] ?? { pts: 0, goals: 0 };
 
@@ -898,6 +898,8 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
         teamName: team.name,
         currentPts,     // integer (FPL)
         optaPts,        // float (Composite, with captain ×2)
+        currentCaptainPts: currentBreakdown.find(b => b.isCaptain)?.finalPoints ?? 0,
+        optaCaptainPts: optaBreakdown.find(b => b.isCaptain)?.finalPoints ?? 0,
         prevPts: prev.pts,
         prevGoals: prev.goals,
         goalsScored,
@@ -925,12 +927,14 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
 
     const upsertRows = rows.map(r => {
       const rawPts = isOpta ? r.optaPts : r.currentPts;
+      const captainPts = isOpta ? r.optaCaptainPts : r.currentCaptainPts;
       return {
         team_id: r.teamId,
         matchday_id: matchdayId,
         matchday_points: Math.round(rawPts * 10) / 10,
         total_points: Math.round((r.prevPts + rawPts) * 10) / 10,
         goals_scored: r.goalsScored,
+        captain_points: Math.round((captainPts ?? 0) * 10) / 10,
       };
     });
 
