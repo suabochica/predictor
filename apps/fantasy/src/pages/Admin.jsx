@@ -1661,7 +1661,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
           )}
         </div>
 
-        {isCompleted && (
+        {auctionInSync && isCompleted && (
           <p className="text-xs text-muted bg-surface-hover rounded-lg px-3 py-2">
             Subasta completada. Los nuevos inscritos accederán a jugadores no ganados vía el mercado libre.
           </p>
