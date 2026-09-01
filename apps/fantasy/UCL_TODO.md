@@ -20,16 +20,18 @@ references are still in `~/.claude/plans/`.
 **Migrations 060–067 are all applied to the live DB** (067 applied 2026-08-28).
 
 **`ucl-2026-27` now exists** (created 2026-08-31, slug/name/short-label/stage
-labels set correctly, `status='setup'`, WC keeps `is_default`). Steps 1–4
-are now all done and verified clean against the live DB — matchdays (all 8
-Liga rounds), CSV player import (841 rows), add-a-participant, and `.ods`
-upload all passed through the real admin UI. Both open pipeline items
-(price scale, thin squads) are also resolved.
+labels set correctly, `status='setup'`, WC keeps `is_default`). Steps 1–5 are
+now all done and verified clean against the live DB — matchdays (all 8 Liga
+rounds), CSV player import (841 rows), add-a-participant, `.ods` upload, and
+the full WC Layer 3 re-capture (all 14 states, including the 4 modal/admin
+states) all passed. Both open pipeline items (price scale, thin squads) are
+also resolved.
 
-**Working tree is NOT clean** — see "Uncommitted work" below before doing
-anything destructive (`git stash`/`reset`/`checkout`).
+**Working tree is clean** as of 2026-09-01 — the data pipeline and this TODO
+are committed (`105e62f`, `182dbf9`); only pre-existing `apps/polla/.astro`
+build noise and the unrelated, still-deferred `I18N_PLAN.md` remain untracked.
 
-Phase 6 is still blocked on step 4 finishing.
+Phase 6 is unblocked — steps 1–5 are all done.
 
 ---
 
@@ -206,16 +208,25 @@ submitted:**
 While the admin selector diverges from the sidebar, the **auction sections are
 hidden behind a notice** — expected Phase 4 deferral, not a bug.
 
-### 5. Re-run the Layer 3 capture on the WC — IN PROGRESS 2026-09-01, 1 real bug found + fixed
+### 5. Re-run the Layer 3 capture on the WC — ✅ DONE 2026-09-01, 1 real bug found + fixed
 - [x] Captured 9 of 14 states (dashboard, my-team, market, negotiations,
       auction, leaderboard, bracket, history, rules) with DevTools console open
       and diffed pixel-for-pixel against `layer3_screenshots/`. 8 of 9 matched
       the baseline exactly. **History did not** — see below.
-- [ ] Still need: `/my-team` `PointsBreakdownModal`, `/leaderboard`
-      `TeamLineupModal`, `/bracket` lineup modal, and `/admin` sections 1–8 /
-      9–16 (vs `13_14_admin.pdf`) — not yet re-captured. Do these before
-      calling step 5 fully closed; Admin in particular hits query shapes none
-      of the 9 captured pages exercised.
+- [x] `/my-team` `PointsBreakdownModal`, `/leaderboard` `TeamLineupModal`,
+      `/bracket` lineup modal, and `/admin` (full scroll, matching
+      `13_14_admin.pdf`) — all re-captured and diffed 2026-09-01. All four
+      matched the baseline exactly: same field layout and labels in both
+      modals (just a different player/team, which is expected), same 12
+      participant budgets, same `matchdays`/`matches` rows, same
+      `Países eliminados` toggle states, same `1229 jugadores` count on the
+      Lista de jugadores. The only differences were the deliberate
+      multi-competition additions (Competencia sidebar selector,
+      "Competencias" table listing both WC and UCL, "FIFA World Cup 2026"
+      section heading, and "Fase del Mundial" → "Etapa de la competencia"
+      from the copy-parameterization commit) — all expected, none are
+      regressions. Admin in particular hits query shapes none of the other 9
+      pages exercised, so this closes the last gap in Layer 3 coverage.
 
 **Bug found + fixed:** `/history` showed "Posiciones aún no calculadas para
 esta jornada" for Matchday 1 instead of the real per-team table the baseline
