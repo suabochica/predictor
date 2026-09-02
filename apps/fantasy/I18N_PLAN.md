@@ -6,7 +6,7 @@
 > middlewares + `<html lang>` everywhere, `LangProvider` mounted in
 > `App.jsx`) is invisible by design — nothing renders differently yet.
 > Phases 1–6 remain. **Do this one phase at a time; do not try to do the
-> whole plan in one sitting** (~45–65 h total, see "Effort and the one-go
+> whole plan in one sitting** (~47–68 h total, see "Effort and the one-go
 > call" below).
 >
 > Lives here (`apps/fantasy/I18N_PLAN.md`) alongside `UCL_TODO.md` so it is
@@ -42,25 +42,60 @@ and with one shared file (`competitionCopy.js`) whose shape both projects touch.
 
 ---
 
-## Sequencing — why UCL finishes first
+## Sequencing — why UCL finished first
 
-The UCL plan's pending verification (`UCL_TODO.md` item 5) compares the World Cup
-UI against a baseline that is **12 screenshots + one admin PDF** in
-`apps/fantasy/.phase0-baseline/`. A language switcher changes the header and
-sidebar chrome on every one of those shots, and any reworded string breaks the
-comparison outright. The `innerText` text-diff baseline the method doc describes
-(`layer3_baseline.jsonl`) **was never actually captured**, so those screenshots
-are the only surviving artifact.
+This section is now a record of what happened, not a plan to follow.
 
-So: create UCL → run the assertions → walk the admin panel → ship Phase 6's
-migration `068` → re-capture the WC baseline → **then** Phase 0 below.
+`UCL_TODO.md` closed out **2026-09-02**; the WC Layer-3 baseline **was
+re-captured 2026-08-31** (all 14 states, passed) —
+`apps/fantasy/.phase0-baseline/` (contains `13_14_admin.pdf`,
+`layer3_screenshots/`, `layer1_baseline.txt`, `layer1_checksums*.sql`,
+`phase1_assertions.sql`, `phase4_assertions.sql`). Migration numbering landed
+clean: `068` is the UCL tripwire, `069` is this plan's Phase 0
+(`users.language`), `070` is the H2H group-stage work — no collision.
+`competitionCopy.js`'s `ucl-2026-27` entry landed as part of H2H Phase A6
+(`0de94cf`), so §3's slug × locale restructure has two real slugs to work from
+rather than one.
 
-**Two hard couplings to record in `UCL_TODO.md` before starting:**
-1. **Migration numbering** — `068` is reserved for the UCL tripwire. This plan
-   claims **`069`**.
-2. **`competitionCopy.js` gets a locale axis** (§3). The UCL plan still owes a
-   `ucl-2026-27` entry in that file. Whichever lands second must use the final
-   shape, or that entry gets written twice.
+**Caveat:** H2H phases A3–A6 landed *after* the 2026-08-31 baseline re-capture
+and touched `Leaderboard.jsx`, `Bracket.jsx`, `Rules.jsx`, `Admin.jsx`. Almost
+all of it is gated on `group_format === 'h2h'` and so invisible to the WC
+(`competition_id` #1, `group_format = 'groups'`), **but the `Leaderboard.jsx`
+grid-template refactor is not gated** — the `gridStyle` /
+`minWidth: 2 + 19 + …rem` computation at lines 126-138 replaced a hardcoded
+`min-w-[34rem]`. **Spot-check the WC leaderboard against the baseline shot
+before Phase 1 spends it** — the baseline may already be stale for reasons
+that have nothing to do with i18n.
+
+H2H end-to-end verification (draw → upload → table) is **still open** and
+**UCL MD1 is 2026-09-08**. Phase 1 changes chrome on every page of all three
+apps — recommend keeping it on a branch until MD1 has run.
+
+---
+
+## Standalone pre-Phase-1 fix: Footer competition dates (user decision)
+
+`packages/ui/src/components/Footer.tsx:1,20` hardcodes
+`const LAST_UPDATED = '17 de junio de 2026'` and
+`Mundial 2026 • 11 de junio – 19 de julio de 2026` — World-Cup-specific copy in
+the **shared** package, rendered on every page of all three apps. It goes
+visibly wrong for every UCL user on **2026-09-08**, independent of language.
+
+This is **a UCL correctness fix that happens to touch a file i18n will
+revisit — not an i18n task.** Ship it now, on its own commit, before Phase 1:
+store the competition's dates as ISO and format at render, so the line follows
+the active competition. Fold `LAST_UPDATED` into the same commit — same file,
+same bug class.
+
+Shipping it alone also keeps a one-line content fix out of the commit that
+spends the WC screenshot baseline (see the sequencing caveat above): Phase 1's
+switcher rewrites `Header`/`Footer`/`LoginForm` wholesale, and bundling the
+dates fix into that commit would make the baseline diff harder to read.
+
+Do **not** fold the Footer translation itself into this fix — only the
+date-formatting bug. Phase 1 still owns translating the Footer's Spanish
+strings (`Inicio`, `Última actualización`, `Hecho con ❤️ por`, etc.) once the
+switcher lands.
 
 ---
 
@@ -111,10 +146,11 @@ to `users` the UI never awaits (lines 141-157). Mirror it.
   Spanish.
 - The app is **already mixed-language**: `AuctionContext.jsx:377,389` and ~12
   sites in `Admin.jsx` show English errors to users today.
-- `packages/ui/src/components/Footer.tsx:19,23` hardcode `Mundial 2026 • 11 de
-  junio – 19 de julio de 2026` and a Spanish `LAST_UPDATED` — WC-specific copy in
-  the *shared* package, and a UCL bug too (wrong the moment UCL goes live). Store
-  ISO dates, format at render.
+- `packages/ui/src/components/Footer.tsx:1,20` hardcode a Spanish
+  `LAST_UPDATED` and `Mundial 2026 • 11 de junio – 19 de julio de 2026` —
+  WC-specific copy in the *shared* package, and a UCL bug too (wrong the
+  moment UCL goes live 2026-09-08). **Carved out as a standalone pre-Phase-1
+  fix, see the section above** — not part of this phase's translation work.
 - Date formatting is inconsistent: polla hardcodes `'es-ES'` (4 sites), fantasy
   passes no locale at all (13 sites).
 
@@ -201,22 +237,31 @@ ordinary keys.
 ### 3. `competitionCopy.js` × locale — the crux
 
 `apps/fantasy/src/config/competitionCopy.js` is a second copy-resolution layer
-keyed by **competition slug**; i18n is keyed by **locale**. They compose as
-**slug × locale, locale nested inside slug**, and the file stays where it is:
+keyed by **competition slug**; i18n is keyed by **locale**. It is **73 lines
+with two slugs today** (`world-cup-2026` and `ucl-2026-27`, the latter landed
+by the H2H group-stage work, `0de94cf`) — not the 46-line single-slug file this
+plan was originally written against. They compose as **slug × locale, locale
+nested inside slug**, and the file stays where it is:
 
 ```js
-BY_SLUG = { 'world-cup-2026': { es: {…}, en: {…} } }
+BY_SLUG = {
+  'world-cup-2026': { es: {…}, en: {…} },
+  'ucl-2026-27':    { es: {…}, en: {…} },
+}
 FALLBACK = { es: {…}, en: {…} }
 competitionCopy(competition, lang) →
   { ...FALLBACK[lang], ...(BY_SLUG[competition?.slug]?.[lang] ?? {}) }
 ```
 
-46 lines → ~90, mechanical. Call sites `Bracket.jsx:7,160` and `Rules.jsx:3,24`
-take a `lang` argument.
+UCL has **12 `calendarRows`** (WC has 4) and **4 knockout rounds** (WC has 3).
+Nested slug × locale lands around **150 lines**, and Phase 5's English-copy
+budget is now 16 calendar rows + 7 `knockoutRealStages` + 7 `bracketSubtitles`
+— roughly 2.5× the work this section originally scoped. Call sites
+`Bracket.jsx:8,67` and `Rules.jsx:3,24` take a `lang` argument.
 
 **Why locale nests inside slug:** `calendarRows`, `knockoutRealStages` and
 `bracketSubtitles` are *facts about a real tournament*, not generic copy. Keeping
-them under `'world-cup-2026'` means adding UCL later is one entry in one file;
+them under the slug means adding a competition later is one entry in one file;
 hoisting them into the locale catalogues would scatter one tournament's facts
 across two files in another package and make "add a competition" a four-file
 edit.
@@ -225,18 +270,24 @@ Because `FALLBACK[lang]` is the merge base, a slug entry missing its `en` twin
 degrades to **neutral English** ("the tournament") — never to Spanish stranded
 inside an English sentence.
 
-**The possessive.** `Rules.jsx:65` reads `La fantasy sigue el calendario
+**The possessive.** `Rules.jsx:71` reads `La fantasy sigue el calendario
 {copy.tournamentPossessive}` — Spanish glues article+preposition into the noun
 phrase (`del Mundial`); English puts an attributive noun before the head (`the
 World Cup calendar`). No shared template produces both. Parallel locale
 components solve it directly: **each locale's component writes its own sentence,
 and the slug×locale table supplies the noun phrase in the form that language
 needs** — `tournament` (`el Mundial` / `the World Cup`) and `tournamentOf`
-(`del Mundial` / `World Cup`). Same for `Rules.jsx:68,78,83,271,340`.
+(`del Mundial` / `World Cup`). UCL contributes `tournament: 'la Champions'` /
+`tournamentPossessive: 'de la Champions'`, whose English attributive form is
+`Champions League` — the `tournament`/`tournamentOf` pair must be filled for
+**both** slugs. Six `copy.tournamentPossessive` sites total, all in `Rules.jsx`:
+**71, 84, 114, 293, 362**.
 
 Note `calendarRows` and `bracketSubtitles` are **hardcoded app copy, so they
 translate** ("Dieciseisavos de final del Mundial" → "World Cup round of 32").
 Contrast `competitions.stage_labels`, which comes from the DB and does not.
+`copy.calendarRows` is also read at `Rules.jsx:74/89` and
+`copy.knockoutRealStages` at `Rules.jsx:292/306/307`.
 
 ### 4. Persistence, precedence, toggle
 
@@ -342,11 +393,12 @@ anything untranslated, so partial completion is never broken, only unfinished.
 and an empty EN; `lang` in both middlewares + both `env.d.ts`; `<html lang>` in
 both layouts and `apps/fantasy/index.html`; `LangProvider` into `App.jsx`.
 
-**Phase 1 — Switcher + `packages/ui` + all of gateway · 4–6 h.** Dual-mode
-switcher in `Header.tsx`; translate `Header`, `Footer` (including the WC-specific
-line), `LoginForm`; then the entire ~285-line gateway app, with `index.astro`'s
-Premiación block as parallel locale components. **All architectural risk is spent
-by the end of this phase.**
+**Phase 1 — Switcher + `packages/ui` + all of gateway · 4–6 h.** (Assumes the
+standalone Footer competition-dates fix above has already shipped.) Dual-mode
+switcher in `Header.tsx`; translate `Header`, `Footer`, `LoginForm`; then the
+entire ~285-line gateway app, with `index.astro`'s Premiación block as parallel
+locale components. **All architectural risk is spent by the end of this
+phase.**
 
 **Phase 2 — polla · 5–7 h.** Five `.astro` pages, `Sidebar.astro`, and the four
 islands — `PredictionForm.tsx` (740, incl. `STAGE_LABELS:94-101` and both
@@ -354,11 +406,46 @@ islands — `PredictionForm.tsx` (740, incl. `STAGE_LABELS:94-101` and both
 `AdminTable.tsx` (444), `LeaderboardTable.tsx` (148). `rules.astro` as parallel
 components. Every island gains a `lang` prop.
 
-**Phase 3 — fantasy chrome + small pages · 4–6 h.** `Sidebar`, `MobileNav`,
-`Layout`, `CompetitionGate` (`CompetitionContext.jsx:172,181`), `App.jsx:31`'s
-`Cargando…`, `NotFound`, `Dashboard`, `Leaderboard`, `PointsBreakdownModal`,
-`lib/statColumns.js`, and **`FilterBar.jsx` including the `'Todos'` sentinel fix
-(risk A)**.
+**Phase 3 — fantasy chrome + small pages · 6–8 h** (bumped from 4–6 h — see
+below). `Sidebar`, `MobileNav`, `Layout`, `CompetitionGate`
+(`CompetitionContext.jsx:172,181`), `App.jsx:31`'s `Cargando…`, `NotFound`,
+`Dashboard`, `Leaderboard`, `PointsBreakdownModal`, `lib/statColumns.js`
+(translate both `label` and `abbrev`, risk A), `components/bracket/MatchCard.jsx`
+(translate here — its earlier consumer, see note below), and **`FilterBar.jsx`
+including the `'Todos'` sentinel fix (risk A)**.
+
+`Leaderboard.jsx` is no longer a "small page" — it is **482 lines** with a
+full H2H branch (`2142dcb`, `34ecf17`), and carries strings this phase didn't
+originally account for:
+- Header abbrevs `PJ G E P Pts PF GS` (lines 254-264), each with a Spanish
+  `title` tooltip (`Partidos jugados`, `Ganados`, `Empatados`, `Perdidos`,
+  `Puntos fantásticos totales`). Under H2H the column set is
+  `Pld W D L Pts FP GF` (risk A, above).
+- `BracketBadge` (lines 38-57): `Directo` / `Camp` / `Play-off` / `Desc`.
+- Fixtures panel (lines 390-441): the `Jornada {n}` heading, the matchday
+  `<select>`, `Enfrentamiento {n}` card labels, and the
+  `Calendario aún no sorteado para esta jornada.` empty state.
+- **Two variants each** of the tiebreaker note (lines 447/448) and the
+  league-complete note (lines 459/464) — H2H vs cumulative.
+
+Pre-existing inconsistencies fixed in passing, in addition to the ones listed
+below: the H2H commits shipped **new** mixed-language strings —
+`Leaderboard.jsx:197,201,208,212` render literal English
+`Positions 1–{n} → Cuadro de campeonato`, and `:262` is
+`title="Goals scored (tiebreaker)"` in an otherwise Spanish table.
+
+`components/bracket/MatchCard.jsx` (91 lines, extracted from `Bracket.jsx` by
+`34ecf17`) is now consumed by **both** `Leaderboard.jsx` (this phase) and
+`Bracket.jsx` (Phase 4) — translate it here, in its earlier consumer, and keep
+`label` caller-supplied so each caller passes its own already-translated
+string. `lib/brackets.js`'s `generateChampionshipBracket` emits
+`'Match A'…'Match D'` labels — already English, feeding `Bracket.jsx`. It
+holds `'TBD'` (line 15/16) and `'· en vivo'` (line 42); its local `fmt()`
+(line 12) duplicates the rounding `fmtPts` does in `lib/utils.js:1` (both
+round to one decimal, though `fmtPts` always shows the trailing `.0` via
+`toFixed(1)` while `MatchCard`'s `fmt` drops it for integers) — the app is
+already inconsistent about decimal display, so folding `MatchCard` onto
+`formatDecimal` (§5) is a cleanup as much as a translation.
 
 **Phase 4 — fantasy player pages · 10–14 h.** `MyTeam`, `Auction`, `Market`,
 `Negotiations`, `History`, `Bracket`, plus `PlayerRow`, `BenchList`, `PlayerSlot`,
@@ -370,9 +457,29 @@ and are undercounted by JSX-text greps.
 `Rules.es`/`Rules.en` sharing one data hook, the slug × locale restructure, the
 possessive rewrites, `COMPOSITE_STAT_LABELS:8-20`, the scoring tables.
 
-**Phase 6 — `Admin.jsx` · 12–18 h.** 3,676 lines, 18 sections. Deliberately last:
-admin-only, highest volume, and the file all three UCL Phase-5 commits touched.
-**One `<Section>` per commit** so `git diff --stat` stays small.
+**Phase 6 — `Admin.jsx` · 13–19 h.** 3,881 lines (not 3,676 — the H2H work
+added a **19th section**, "Calendario de la fase de liga", `47c4c2b`: ~20
+strings — heading, two long conditional explanation paragraphs, the `canDraw`
+precondition sentence, the re-draw-locked notice, four button/saving states —
+`Sortear calendario`, `Confirmar sorteo`, `Guardando…`, `Re-sortear
+calendario`, `Sorteando…` — and a `✓ Calendario guardado — {n} partidos
+creados.` result line). Also pick up `lib/brackets.js`'s three Spanish
+`throw new Error(…)` in `generateGroupSchedule` (lines ~29-38, one
+interpolated: `` `generateGroupSchedule: como máximo hay ${n - 1} jornadas
+posibles para ${n} equipos.` ``), which surface **verbatim in the Admin draw
+UI** via `catch (err) { setDrawError(err.message) }` — this is the first
+Spanish copy inside `lib/`, and no earlier phase has a natural slot for it.
+Throw a key + params and translate at the Admin call site — keeps `lib/`
+locale-free and unit-testable, and avoids giving a pure-logic module a
+catalogue dependency. Deliberately last: admin-only, highest volume, and the
+file all UCL Phase-5/H2H commits touched. **One `<Section>` per commit** so
+`git diff --stat` stays small.
+
+`lib/standings.js` (131 lines, added by `2142dcb`) needs **no Phase 6 work** —
+zero user-facing strings; `'W'`/`'D'`/`'L'` returned by `h2hResult` are
+internal result codes consumed only by CSS-class branches
+(`Leaderboard.jsx:319-326`). Recorded here so a later reader doesn't re-audit
+it.
 
 **Phase 7 (optional, out of scope by decision) — SQL error messages.** 41 Spanish
 strings returned by RPCs (`063:115,212,222,…`, `064:51,63,…`, `067:59-85`) reach
@@ -383,7 +490,9 @@ is a day plus regression risk and is **not** recommended.
 
 ### Effort and the one-go call
 
-**~45–65 h total. Do not do it in one go.** Phases 0–3 (~12–18 h) ship a complete,
+**~47–68 h total** (revised up from ~45–65 h after the H2H group-stage work —
+see Phase 3 and Phase 6 above). **Do not do it in one go.** Phases 0–3
+(~14–20 h) ship a complete,
 honest toggle across the login flow, the dashboard, all of polla, and fantasy's
 whole navigation surface — everything a new user touches in their first five
 minutes. Phases 4–6 are grind with no design decisions left. If the motivation is
@@ -441,7 +550,7 @@ line** and Phase 6 can stay open indefinitely.
   label silently breaks both the position and country filters. Fix in Phase 3:
   the sentinel becomes `''`/`null` in state; `'Todos'`/`'All'` becomes
   render-only.
-- `Admin.jsx:1143` — `match.match_label === 'Final'` compares a **DB value**.
+- `Admin.jsx:1215` — `match.match_label === 'Final'` compares a **DB value**.
   Never translate.
 - `Admin.jsx:2163` — `md.phase === 'knockout' ? 'Eliminatoria' : 'Liga'`: the
   condition is an enum (safe), the two outputs are copy (translate).
@@ -453,9 +562,52 @@ line** and Phase 6 can stay open indefinitely.
   Form *labels* translate; the *values* must not.
 - `Rules.jsx:101` displays `PT, DEF, MED, DEL` — Spanish *display* abbrevs that
   differ from the `POSITIONS` codes, so they are copy → `GK, DEF, MID, FWD`.
-- `lib/statColumns.js` — translate `label`, keep `abbrev` (`TaP`, `FdJ`, `Atj`)
-  as-is; they're compact headers learned positionally next to a translated
-  tooltip. **The one judgement call worth confirming during Phase 3.**
+- **`Rules.jsx:35` — `copy.calendarRows?.filter(([phase]) => phase.startsWith('Liga')).length ?? 3`**,
+  added by the H2H group-stage work (`0de94cf`). A Spanish string literal in a
+  **logic comparison over `competitionCopy` data**. Rank it second-worst after
+  `'Todos'` below, and mark it as the first item where **i18n itself
+  introduces** the failure rather than merely tripping over an existing one:
+  §3 nests locale inside slug, so under EN `calendarRows` reads
+  `['League — Matchday 1', …]`, the filter returns `0`, `?? 3` fires, and every
+  English UCL reader is told the league phase is 3 matchdays instead of 8. No
+  crash, no missing-key warning — a silently wrong number on the rules page.
+  Fix in **Phase 5**: the count must come from data, not from parsing display
+  copy — add a locale-independent phase tag as a third tuple element
+  (`'league' | 'knockout'`, mirroring `matchdays.phase`), or hoist a
+  `leagueMatchdayCount` field onto the slug entry *above* the locale split.
+  The tuple destructure at `Rules.jsx:89` (`([phase, real, users])`) changes
+  with it.
+- **`apps/fantasy/src/components/auction/AuctionPlayerRow.jsx:37` —**
+  ```js
+  const isMine = ownerLabel === 'En tu plantilla';
+  ```
+  A rendered Spanish label compared as a sentinel, then re-rendered at line 44
+  as `{isMine ? '★ En tu plantilla' : ownerLabel}`. The producer is
+  `Auction.jsx:668` (`const ownerLabel = !isOwned ? null : …`). Translating
+  that label silently kills the ★ highlight. Same disease as `'Todos'` below,
+  second file, **not previously in this plan**. Fix in **Phase 4**: pass a
+  boolean `isMine` prop alongside `ownerLabel`. Aside: `Auction.jsx:95-96`
+  already uses an English `'All'` sentinel while `FilterBar` uses `'Todos'` —
+  the codebase is inconsistent about this today.
+- **`Leaderboard.jsx:244` —**
+  ```js
+  {md.name.replace(/matchday\s*/i, 'JD').replace(/group stage /i, '')}
+  ```
+  Rewrites an **English DB value** into a **Spanish display abbrev**. The
+  regexes match DB text (never translate); the `'JD'` replacement is copy and
+  must become `'MD'` under EN. Matchday names in the DB are English while the
+  UI is Spanish — another instance of the "already mixed-language" point above.
+- `lib/statColumns.js` — **translate both `label` and `abbrev`** (e.g.
+  `TaP`→`SoT`, `TfP`→`SoffT`, `Blq`→`Blk`, `Ent`→`Tkl`, `Pas`→`Pass`,
+  `Cen`→`Crs`, `FaF`→`FW`, `FaC`→`FC`, `FdJ`→`Off`, `PenG`→`PenW`, `Atj`→`Sav`,
+  `PenAt`→`PenSv`, `PenF`→`PenM`, `GenC`→`GA`, `TA`→`YC`, `TR`→`RC`, `AaP`→`OG`,
+  `Por`→`CS`). **Settled by the user — not a judgement call anymore** (see
+  Phase 3 note below); treat these as suggestions for Phase 3 to finalise.
+  `abbrev` is confirmed display-only: the identifier is `field`, used by
+  `Market.jsx:529` as the sort key (`sort.key === col.field`) and by
+  `PlayerRow.jsx:140`/`MyTeam.jsx:876` to index rows; `MyTeam.jsx:811` and
+  `Market.jsx:529` render `col.abbrev` into JSX text only. H2H added a second
+  abbrev set: `Leaderboard.jsx` H2H columns `Pld W D L Pts FP GF`.
 
 **B. Hydration mismatch on `lang`** — mitigated by the props rule. One sentence to
 hold onto: *islands never read the cookie; they take `lang` as a prop.*
@@ -466,7 +618,7 @@ navigation check.
 **D. React leaking into the middleware bundle** — `index.ts` must not re-export
 `./react`. Check the Netlify function bundle size after Phase 0.
 
-**E. `Admin.jsx` scale** — 3,676 lines invites a find/replace that hits a DB field
+**E. `Admin.jsx` scale** — 3,881 lines invites a find/replace that hits a DB field
 name. Per-section commits.
 
 **F. `competitionCopy` composition** — someone adds a slug entry and forgets the
@@ -486,6 +638,5 @@ Short list, handed over at Phases 1 and 5 rather than left unwritten:
 - `gateway/src/pages/index.astro:42-74` — the prize rules. Fully translatable as
   written, but it hardcodes the World Cup, 12 participants and COP amounts, so it
   needs a *content* update for UCL regardless of language.
-- `statColumns.js` abbrevs (risk A, last bullet).
 - Any house term in `Rules.jsx` that is a league convention rather than a football
   term.
