@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStandings } from '../hooks/useStandings';
 import { useAuth } from '@predictor/supabase';
+import { useCompetition } from '../context/CompetitionContext';
 import { useLeague } from '../context/LeagueContext';
 import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
+import { h2hResult } from '../lib/standings';
 import { fmtPts } from '../lib/utils';
 
 const CHAMPIONSHIP_SPOTS = 8;
 const RELEGATION_SPOTS = 4;
 
-function getBracketInfo(rank, total) {
+function getBracketInfo(rank, total, format) {
   if (total < 8) return null; // not enough participants for bracket split
+  if (format === 'h2h') {
+    const direct = Math.max(0, 16 - total);
+    return rank <= direct ? 'direct' : 'playoff';
+  }
   if (rank <= CHAMPIONSHIP_SPOTS) return 'championship';
   if (rank > total - RELEGATION_SPOTS) return 'relegation';
   return null;
@@ -20,8 +26,9 @@ function RankBadge({ rank, bracket }) {
   if (rank === 1) return <span className={`${base} bg-tertiary text-primary`}>{rank}</span>;
   if (rank === 2) return <span className={`${base} bg-border-strong text-primary`}>{rank}</span>;
   if (rank === 3) return <span className={`${base} bg-warning text-primary`}>{rank}</span>;
-  if (bracket === 'championship')
+  if (bracket === 'championship' || bracket === 'direct')
     return <span className={`${base} bg-tertiary text-primary`}>{rank}</span>;
+  if (bracket === 'playoff') return <span className={`${base} bg-warning/20 text-warning`}>{rank}</span>;
   if (bracket === 'relegation')
     return <span className={`${base} bg-error/10 text-error`}>{rank}</span>;
   return <span className={`${base} bg-border text-secondary`}>{rank}</span>;
@@ -29,10 +36,16 @@ function RankBadge({ rank, bracket }) {
 
 function BracketBadge({ bracket }) {
   if (!bracket) return null;
-  if (bracket === 'championship')
+  if (bracket === 'championship' || bracket === 'direct')
     return (
       <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-tertiary/15 text-tertiary border border-tertiary/40">
-        Camp
+        {bracket === 'direct' ? 'Directo' : 'Camp'}
+      </span>
+    );
+  if (bracket === 'playoff')
+    return (
+      <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/40">
+        Play-off
       </span>
     );
   return (
@@ -43,13 +56,16 @@ function BracketBadge({ bracket }) {
 }
 
 export default function Leaderboard() {
-  const { standings, matchdays, loading } = useStandings();
+  const { standings, matchdays, fixtures, format, loading } = useStandings();
   const { user } = useAuth();
+  const { competition } = useCompetition();
   const { activeMatchday } = useLeague();
 
   const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
   const openTeam = (entry, matchdayId, matchdayName) =>
     setViewing({ entry, matchdayId, matchdayName });
+
+  const isH2H = format === 'h2h';
 
   const hasScores = standings.some((s) => s.total_points > 0);
   const totalParticipants = standings.length;
@@ -59,12 +75,53 @@ export default function Leaderboard() {
     !!activeMatchday && !matchdays.find((md) => md.id === activeMatchday.id)?.is_completed;
 
   // League phase = every matchday that feeds the table (3 for the WC group stage,
-  // 8 for a UCL-style Swiss league phase). No `.slice(0, 3)` and no `>= 3`: both
+  // 8 for a UCL-style H2H league phase). No `.slice(0, 3)` and no `>= 3`: both
   // would truncate any competition whose league phase isn't three matchdays long.
   const leagueMatchdays = matchdays.filter((md) => md.phase === 'league');
   const leagueComplete = leagueMatchdays.length > 0 && leagueMatchdays.every((md) => md.is_completed);
   // Per-matchday point columns show every league matchday.
   const groupMatchdays = leagueMatchdays;
+
+  const cfg = useMemo(
+    () => ({
+      h2h_win_points: competition?.h2h_win_points,
+      h2h_draw_points: competition?.h2h_draw_points,
+      h2h_narrow_loss_points: competition?.h2h_narrow_loss_points,
+      h2h_narrow_loss_margin: competition?.h2h_narrow_loss_margin,
+    }),
+    [competition]
+  );
+
+  // matchday_id -> team_id -> opponent team_id, for coloring each per-matchday
+  // chip W/D/L without a second query — matchday_points is already loaded.
+  const fixtureLookup = useMemo(() => {
+    const map = {};
+    for (const fx of fixtures) {
+      map[fx.matchday_id] ??= {};
+      map[fx.matchday_id][fx.team_a_id] = fx.team_b_id;
+      map[fx.matchday_id][fx.team_b_id] = fx.team_a_id;
+    }
+    return map;
+  }, [fixtures]);
+
+  const standingsByTeamId = useMemo(
+    () => Object.fromEntries(standings.map((s) => [s.team_id, s])),
+    [standings]
+  );
+
+  // Fixed-width columns beyond `#` (2rem) and `Manager` (1fr). Kept in sync
+  // between the header and every row via the same computed style.
+  const matchdayColCount = groupMatchdays.length > 0 ? groupMatchdays.length : 3;
+  const fixedCols = isH2H
+    ? [...Array(matchdayColCount).fill(2.5), 2.25, 2.25, 2.25, 2.25, 2.75, 2.75, 2.5]
+    : [...Array(matchdayColCount).fill(2.5), 3, 2.5];
+  const gridTemplateColumns = ['2rem', '1fr', ...fixedCols.map((r) => `${r}rem`)].join(' ');
+  // Manager gets a 19rem floor — matches the old hardcoded `min-w-[34rem]`
+  // exactly for the WC's 3-matchday cumulative layout (2 + 19 + 13 = 34).
+  const gridStyle = {
+    gridTemplateColumns,
+    minWidth: `${2 + 19 + fixedCols.reduce((sum, r) => sum + r, 0)}rem`,
+  };
 
   if (loading) {
     return (
@@ -73,6 +130,8 @@ export default function Leaderboard() {
       </div>
     );
   }
+
+  const directSpots = Math.max(0, 16 - totalParticipants);
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -103,7 +162,7 @@ export default function Leaderboard() {
           <p className="text-xs text-muted uppercase tracking-wider">Jornadas</p>
           <p className="text-2xl font-bold text-primary mt-1">
             {matchdays.filter((md) => md.is_completed).length}
-            <span className="text-sm text-muted font-normal"> / {Math.max(6, matchdays.length)}</span>
+            <span className="text-sm text-muted font-normal"> / {matchdays.length}</span>
           </p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
@@ -117,14 +176,29 @@ export default function Leaderboard() {
       {/* ── Bracket key ── */}
       {totalParticipants >= 8 && (
         <div className="flex items-center gap-4 text-xs text-secondary flex-wrap">
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
-            Positions 1–{CHAMPIONSHIP_SPOTS} → Cuadro de campeonato
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-error/10 inline-block" />
-            Positions {totalParticipants - RELEGATION_SPOTS + 1}–{totalParticipants} → Cuadro de descenso
-          </span>
+          {isH2H ? (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
+                Positions 1–{directSpots} → Clasificado directo a cuartos
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-warning/30 inline-block" />
+                Positions {directSpots + 1}–{totalParticipants} → Play-off
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
+                Positions 1–{CHAMPIONSHIP_SPOTS} → Cuadro de campeonato
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-error/10 inline-block" />
+                Positions {totalParticipants - RELEGATION_SPOTS + 1}–{totalParticipants} → Cuadro de descenso
+              </span>
+            </>
+          )}
         </div>
       )}
 
@@ -144,7 +218,10 @@ export default function Leaderboard() {
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
           {/* Table header */}
-          <div className="grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] min-w-[34rem] gap-x-2 px-4 py-2.5 border-b border-border text-label-caps font-semibold text-muted uppercase tracking-wider">
+          <div
+            style={gridStyle}
+            className="grid gap-x-2 px-4 py-2.5 border-b border-border text-label-caps font-semibold text-muted uppercase tracking-wider"
+          >
             <span>#</span>
             <span>Manager</span>
             {groupMatchdays.length > 0
@@ -158,7 +235,16 @@ export default function Leaderboard() {
                     JD{n}
                   </span>
                 ))}
+            {isH2H && (
+              <>
+                <span className="text-center" title="Partidos jugados">PJ</span>
+                <span className="text-center" title="Ganados">G</span>
+                <span className="text-center" title="Empatados">E</span>
+                <span className="text-center" title="Perdidos">P</span>
+              </>
+            )}
             <span className="text-center">Pts</span>
+            {isH2H && <span className="text-center" title="Puntos fantásticos totales">PF</span>}
             <span className="text-center" title="Goals scored (tiebreaker)">
               GS
             </span>
@@ -168,19 +254,14 @@ export default function Leaderboard() {
           <div className="divide-y divide-border">
             {standings.map((entry, idx) => {
               const rank = idx + 1;
-              const bracket = getBracketInfo(rank, totalParticipants);
-              const isCurrentUser = entry.team_id !== undefined &&
-                // We identify by display_name since we don't expose team.user_id here
-                // A more robust check would compare user IDs — done via useAuth
-                false; // placeholder; real check below
-
-              // Check if this is the logged-in user's team
-              // We rely on display_name matching user profile (best effort without user_id in entry)
-              const rowIsMe = entry.display_name && user; // resolved below
+              const bracket = getBracketInfo(rank, totalParticipants, format);
+              const rowIsMe = !!user && entry.user_id === user.id;
 
               const leftBorder =
-                bracket === 'championship'
+                bracket === 'championship' || bracket === 'direct'
                   ? 'border-l-2 border-l-tertiary'
+                  : bracket === 'playoff'
+                  ? 'border-l-2 border-l-warning'
                   : bracket === 'relegation'
                   ? 'border-l-2 border-l-error'
                   : 'border-l-2 border-l-transparent';
@@ -189,14 +270,21 @@ export default function Leaderboard() {
                 <div
                   key={entry.team_id}
                   onClick={() => openTeam(entry, activeMatchday?.id ?? null, activeMatchday?.name ?? null)}
-                  className={`grid grid-cols-[2rem_1fr_repeat(3,2.5rem)_3rem_2.5rem] min-w-[34rem] gap-x-2 px-4 py-3 items-center cursor-pointer hover:bg-surface-hover transition-colors ${leftBorder}`}
+                  style={gridStyle}
+                  className={`grid gap-x-2 px-4 py-3 items-center cursor-pointer hover:bg-surface-hover transition-colors ${leftBorder} ${
+                    rowIsMe ? 'bg-tertiary/5' : ''
+                  }`}
                 >
                   {/* Rank */}
                   <RankBadge rank={rank} bracket={bracket} />
 
                   {/* Manager name + badge */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium text-primary truncate">
+                    <span
+                      className={`text-sm truncate ${
+                        rowIsMe ? 'font-bold text-tertiary' : 'font-medium text-primary'
+                      }`}
+                    >
                       {entry.display_name}
                     </span>
                     <BracketBadge bracket={bracket} />
@@ -205,8 +293,25 @@ export default function Leaderboard() {
                   {/* Per-matchday points */}
                   {groupMatchdays.length > 0
                     ? groupMatchdays.map((md) => {
-                        const pts = entry.matchday_points[md.id];
-                        const hasPts = pts != null;
+                        const ownPts = entry.matchday_points[md.id];
+                        const hasPts = ownPts != null;
+
+                        let resultClass = '';
+                        if (isH2H && hasPts) {
+                          const oppId = fixtureLookup[md.id]?.[entry.team_id];
+                          const oppPts =
+                            oppId != null ? standingsByTeamId[oppId]?.matchday_points?.[md.id] : undefined;
+                          if (oppPts != null) {
+                            const { result } = h2hResult(ownPts, oppPts, cfg);
+                            resultClass =
+                              result === 'W'
+                                ? 'bg-success/10 text-success'
+                                : result === 'D'
+                                ? 'bg-warning/10 text-warning'
+                                : 'bg-error/10 text-error';
+                          }
+                        }
+
                         return (
                           <span
                             key={md.id}
@@ -214,11 +319,17 @@ export default function Leaderboard() {
                               e.stopPropagation();
                               if (hasPts) openTeam(entry, md.id, md.name);
                             }}
-                            className={`text-center text-sm text-secondary ${
-                              hasPts ? 'hover:text-primary cursor-pointer' : 'cursor-default'
-                            }`}
+                            className={
+                              isH2H
+                                ? `text-center text-sm rounded font-medium py-0.5 ${
+                                    resultClass || 'text-secondary'
+                                  } ${hasPts ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'}`
+                                : `text-center text-sm text-secondary ${
+                                    hasPts ? 'hover:text-primary cursor-pointer' : 'cursor-default'
+                                  }`
+                            }
                           >
-                            {fmtPts(pts)}
+                            {fmtPts(ownPts)}
                           </span>
                         );
                       })
@@ -228,14 +339,27 @@ export default function Leaderboard() {
                         </span>
                       ))}
 
-                  {/* Total points */}
+                  {isH2H && (
+                    <>
+                      <span className="text-center text-xs text-secondary">{entry.played ?? 0}</span>
+                      <span className="text-center text-xs text-secondary">{entry.won ?? 0}</span>
+                      <span className="text-center text-xs text-secondary">{entry.drawn ?? 0}</span>
+                      <span className="text-center text-xs text-secondary">{entry.lost ?? 0}</span>
+                    </>
+                  )}
+
+                  {/* League/total points */}
                   <span
                     className={`text-center text-sm font-bold ${
                       hasScores ? 'text-tertiary' : 'text-muted'
                     }`}
                   >
-                    {fmtPts(entry.total_points)}
+                    {isH2H ? fmtPts(entry.h2h_points) : fmtPts(entry.total_points)}
                   </span>
+
+                  {isH2H && (
+                    <span className="text-center text-xs text-muted">{fmtPts(entry.total_points)}</span>
+                  )}
 
                   {/* Goals scored (tiebreaker) */}
                   <span className="text-center text-xs text-muted">
@@ -252,7 +376,9 @@ export default function Leaderboard() {
       {/* ── Tiebreaker note ── */}
       {hasScores && (
         <p className="text-xs text-muted">
-          Desempate: goles marcados por jugadores. La columna GS muestra el valor de desempate.
+          {isH2H
+            ? 'Desempate: puntos fantásticos totales → goles marcados → puntos de capitán.'
+            : 'Desempate: goles marcados por jugadores. La columna GS muestra el valor de desempate.'}
         </p>
       )}
 
@@ -261,8 +387,17 @@ export default function Leaderboard() {
         <div className="bg-tertiary/5 border border-tertiary/40 rounded-xl p-4 text-sm">
           <p className="text-tertiary font-semibold">Fase de liga completada</p>
           <p className="text-secondary mt-1">
-            Los mejores {CHAMPIONSHIP_SPOTS} avanzan al cuadro de campeonato. Los últimos{' '}
-            {RELEGATION_SPOTS} entran al cuadro de descenso. Ventana de fichajes 1 abierta.
+            {isH2H ? (
+              <>
+                Los mejores {directSpots} avanzan directo a cuartos de final. El resto disputa el
+                play-off. Ventana de fichajes 1 abierta.
+              </>
+            ) : (
+              <>
+                Los mejores {CHAMPIONSHIP_SPOTS} avanzan al cuadro de campeonato. Los últimos{' '}
+                {RELEGATION_SPOTS} entran al cuadro de descenso. Ventana de fichajes 1 abierta.
+              </>
+            )}
           </p>
         </div>
       )}
