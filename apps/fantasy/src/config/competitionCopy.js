@@ -14,6 +14,9 @@ const BY_SLUG = {
   'world-cup-2026': {
     tournament: 'el Mundial',
     tournamentPossessive: 'del Mundial',
+    // Footer competition-dates line. ISO; formatted at render (Footer.tsx).
+    startDate: '2026-06-11',
+    endDate: '2026-07-19',
     // Fantasy phase → real stage → participants still active.
     calendarRows: [
       ['Liga — Partidos jugados 1-3', 'Fase de grupos (Partidos jugados 1-3)', '12'],
@@ -33,6 +36,11 @@ const BY_SLUG = {
   'ucl-2026-27': {
     tournament: 'la Champions',
     tournamentPossessive: 'de la Champions',
+    // Footer competition-dates line. Start = league-phase MD1
+    // (matches_schedule.csv); end = the 2027 final, Estadio Metropolitano,
+    // Madrid (uefa.com, confirmed 2026-09-02).
+    startDate: '2026-09-08',
+    endDate: '2027-06-05',
     // Fantasy phase → real stage → participants still active.
     calendarRows: [
       ['Liga — Jornada 1', 'Fase de liga (J1)', '12'],
@@ -66,6 +74,8 @@ const FALLBACK = {
   calendarRows: null,
   knockoutRealStages: null,
   bracketSubtitles: null,
+  startDate: null,
+  endDate: null,
 };
 
 export function competitionCopy(competition) {

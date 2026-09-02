@@ -73,7 +73,7 @@ apps — recommend keeping it on a branch until MD1 has run.
 
 ---
 
-## Standalone pre-Phase-1 fix: Footer competition dates (user decision)
+## Standalone pre-Phase-1 fix: Footer competition dates (user decision) — ✅ DONE 2026-09-02, uncommitted
 
 `packages/ui/src/components/Footer.tsx:1,20` hardcodes
 `const LAST_UPDATED = '17 de junio de 2026'` and
@@ -96,6 +96,23 @@ Do **not** fold the Footer translation itself into this fix — only the
 date-formatting bug. Phase 1 still owns translating the Footer's Spanish
 strings (`Inicio`, `Última actualización`, `Hecho con ❤️ por`, etc.) once the
 switcher lands.
+
+**Implemented as:** `Footer.tsx` now takes optional `competitionLabel` /
+`startDateISO` / `endDateISO` props, defaulting to the WC's ISO dates
+(`2026-06-11`/`2026-07-19`) so gateway and polla — both WC-only, no props
+passed — render byte-identical output to before. `LAST_UPDATED` became
+`LAST_UPDATED_ISO` formatted the same way. `competitionCopy.js` gained
+`startDate`/`endDate` per slug (UCL: `2026-09-08` league-phase MD1 from
+`matches_schedule.csv`, `2027-06-05` final at Estadio Metropolitano, Madrid —
+[uefa.com](https://www.uefa.com/uefachampionsleague/news/029d-1eb2d5faf53c-d67c9fed04fa-1000--2027-uefa-champions-league-final-estadio-metropolitano-m/),
+confirmed 2026-09-02) and `null`/`null` on `FALLBACK`, so a competition with
+no entry omits the date line rather than showing the wrong tournament — same
+philosophy as `calendarRows`/`bracketSubtitles`. `Layout.jsx` reads
+`useCompetition()` + `competitionCopy()` and passes them through; verified by
+rendering `Footer` standalone via `react-dom/server` for the WC-default,
+UCL, and no-entry-fallback cases, plus `pnpm --filter fantasy build` and
+`apps/polla` `astro build`, both clean. Not yet committed or browser-tested
+live (needs an authenticated session to view either app).
 
 ---
 

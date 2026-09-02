@@ -4,9 +4,13 @@ import { Header, Footer } from '@predictor/ui';
 import fantasyIcon from '@predictor/ui/icons/fantasy.svg';
 import pollaIcon from '@predictor/ui/icons/polla.svg';
 import { useAuth } from '@predictor/supabase';
+import { useCompetition } from '../../context/CompetitionContext';
+import { competitionCopy } from '../../config/competitionCopy';
 
 export default function Layout({ children }) {
   const { user, profile } = useAuth();
+  const { competition } = useCompetition();
+  const copy = competitionCopy(competition);
 
   return (
     <div className="min-h-screen bg-neutral text-primary flex flex-col">
@@ -27,7 +31,11 @@ export default function Layout({ children }) {
         </main>
       </div>
       <MobileNav />
-      <Footer />
+      <Footer
+        competitionLabel={competition?.short_label}
+        startDateISO={copy.startDate}
+        endDateISO={copy.endDate}
+      />
     </div>
   );
 }
