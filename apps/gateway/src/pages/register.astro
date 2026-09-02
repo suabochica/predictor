@@ -1,23 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import RegisterForm from '../components/RegisterForm';
+import { createT } from '@predictor/i18n';
 
 if (Astro.locals.user) {
   return Astro.redirect('/');
 }
+
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Registrarse">
+<Layout title={t('gateway.register.title')}>
   <main class="flex min-h-screen items-center justify-center p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
         <span class="text-5xl">⚽</span>
-        <h1 class="mt-4 font-heading text-h2 font-semibold text-primary">Crear cuenta</h1>
-        <p class="mt-1 text-secondary text-body-sm">Únete a la liga de predicciones del Mundial 2026</p>
+        <h1 class="mt-4 font-heading text-h2 font-semibold text-primary">{t('gateway.register.heading')}</h1>
+        <p class="mt-1 text-secondary text-body-sm">{t('gateway.register.subtitle')}</p>
       </div>
-      <RegisterForm client:load />
+      <RegisterForm client:load lang={lang} />
       <p class="mt-6 text-center text-body-sm text-muted">
-        ¿Ya tienes cuenta? <a href="/login" class="text-tertiary hover:underline">Iniciar sesión</a>
+        {t('gateway.register.hasAccountPrompt')} <a href="/login" class="text-tertiary hover:underline">{t('common.header.login')}</a>
       </p>
     </div>
   </main>

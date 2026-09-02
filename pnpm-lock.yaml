@@ -219,6 +219,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@predictor/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@predictor/supabase':
         specifier: workspace:*
         version: link:../supabase

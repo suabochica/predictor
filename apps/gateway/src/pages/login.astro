@@ -1,25 +1,29 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { LoginForm } from '@predictor/ui';
+import { createT } from '@predictor/i18n';
 
 // Redirect if already logged in
 if (Astro.locals.user) {
   return Astro.redirect('/');
 }
+
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Iniciar sesión">
+<Layout title={t('gateway.login.title')}>
   <main class="flex min-h-screen items-center justify-center p-6">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
         <h1 class="mt-4 font-atomic text-h2 text-primary">Predictor</h1>
-        <p class="mt-1 text-secondary text-body-sm">Inicia sesión para hacer tus predicciones</p>
+        <p class="mt-1 text-secondary text-body-sm">{t('gateway.login.subtitle')}</p>
       </div>
       <div class="rounded-md border border-border bg-surface p-5">
-        <LoginForm client:load />
+        <LoginForm client:load lang={lang} />
       </div>
       <p class="mt-6 text-center text-body-sm text-muted">
-        ¿No tienes cuenta? <a href="/register" class="text-tertiary hover:underline">Registrarse</a>
+        {t('gateway.login.noAccountPrompt')} <a href="/register" class="text-tertiary hover:underline">{t('gateway.login.registerLink')}</a>
       </p>
     </div>
   </main>

@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
 import { supabase } from '@predictor/supabase';
+import { createT, type Locale } from '@predictor/i18n';
 
 import { Button } from './Button';
 import { Input } from './Input';
 
-export function LoginForm({ redirectTo = '/' }: { redirectTo?: string }) {
+interface LoginFormProps {
+  redirectTo?: string;
+  /** Islands take `lang` as a prop and translate themselves — no provider
+   * wraps this component in gateway's Astro page. */
+  lang?: Locale;
+}
+
+export function LoginForm({ redirectTo = '/', lang = 'es' }: LoginFormProps) {
+  const { t } = createT(lang);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -36,25 +45,25 @@ export function LoginForm({ redirectTo = '/' }: { redirectTo?: string }) {
       <Input
         id="email"
         type="email"
-        label="Correo electrónico"
+        label={t('common.auth.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="tu@ejemplo.com"
+        placeholder={t('common.auth.emailPlaceholder')}
         required
         disabled={loading}
       />
       <Input
         id="password"
         type="password"
-        label="Contraseña"
+        label={t('common.auth.password')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="••••••••"
+        placeholder={t('common.auth.passwordPlaceholder')}
         required
         disabled={loading}
       />
       <Button type="submit" disabled={loading}>
-        {loading ? 'Iniciando sesión…' : 'Iniciar sesión'}
+        {loading ? t('common.auth.loggingIn') : t('common.auth.loginButton')}
       </Button>
     </form>
   );

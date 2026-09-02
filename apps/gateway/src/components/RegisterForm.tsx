@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import { Button, Input } from '@predictor/ui';
+import { createT, type Locale } from '@predictor/i18n';
 
-export default function RegisterForm() {
+export default function RegisterForm({ lang = 'es' }: { lang?: Locale }) {
+  const { t } = createT(lang);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,8 +36,8 @@ export default function RegisterForm() {
   if (success) {
     return (
       <div className="rounded-md border border-border bg-surface p-5 text-center">
-        <p className="text-body-md text-primary">Revisa tu correo para confirmar tu cuenta.</p>
-        <a href="/login" className="mt-4 inline-block text-body-sm text-tertiary hover:underline">Volver al inicio de sesión</a>
+        <p className="text-body-md text-primary">{t('gateway.register.successMessage')}</p>
+        <a href="/login" className="mt-4 inline-block text-body-sm text-tertiary hover:underline">{t('gateway.register.backToLogin')}</a>
       </div>
     );
   }
@@ -48,36 +50,36 @@ export default function RegisterForm() {
       <Input
         id="displayName"
         type="text"
-        label="Nombre visible"
+        label={t('common.auth.displayName')}
         value={displayName}
         onChange={(e) => setDisplayName(e.target.value)}
-        placeholder="Tu nombre"
+        placeholder={t('common.auth.displayNamePlaceholder')}
         required
         disabled={loading}
       />
       <Input
         id="email"
         type="email"
-        label="Correo electrónico"
+        label={t('common.auth.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="tu@ejemplo.com"
+        placeholder={t('common.auth.emailPlaceholder')}
         required
         disabled={loading}
       />
       <Input
         id="password"
         type="password"
-        label="Contraseña"
+        label={t('common.auth.password')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="••••••••"
+        placeholder={t('common.auth.passwordPlaceholder')}
         minLength={6}
         required
         disabled={loading}
       />
       <Button type="submit" disabled={loading}>
-        {loading ? 'Creando cuenta…' : 'Crear cuenta'}
+        {loading ? t('gateway.register.submitting') : t('gateway.register.submit')}
       </Button>
     </form>
   );

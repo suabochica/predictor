@@ -11,6 +11,7 @@
   },
   "main": "./src/index.ts",
   "dependencies": {
+    "@predictor/i18n": "workspace:*",
     "@predictor/supabase": "workspace:*"
   },
   "peerDependencies": {

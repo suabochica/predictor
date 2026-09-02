@@ -1,37 +1,42 @@
 ---
 import { BUTTON_PRIMARY_CLASSES } from "@predictor/ui";
+import { createT } from "@predictor/i18n";
 import pollaIcon from "@predictor/ui/icons/polla.svg";
 import fantasyIcon from "@predictor/ui/icons/fantasy.svg";
 
 import Layout from "../layouts/Layout.astro";
 import AppCard from "../components/AppCard";
+import PremiacionEs from "../components/Premiacion.es.astro";
+import PremiacionEn from "../components/Premiacion.en.astro";
 
 const displayName = Astro.locals.displayName;
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Inicio">
+<Layout title={t("gateway.home.title")}>
   <main
     class="flex min-h-screen flex-col items-center justify-center gap-10 p-6"
   >
     <div class="text-center">
       <h1 class="font-heading text-h2 font-semibold text-primary">
-        Bienvenido {displayName ? `, ${displayName}` : ""}
+        {t("gateway.home.welcome")}{displayName ? `, ${displayName}` : ""}
       </h1>
       <p class="mt-2 text-secondary text-body-sm">
-        Elige una modalidad de predicción para continuar
+        {t("gateway.home.subtitle")}
       </p>
     </div>
 
     <div class="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
       <AppCard
         name="Polla"
-        description="Predice los resultados del Mundial y sube en la clasificación"
+        description={t("gateway.home.pollaDescription")}
         href="/polla/"
         icon={pollaIcon.src}
       />
       <AppCard
         name="Fantasy"
-        description="Ficha jugadores, gestiona tu plantilla y domina la clasificación"
+        description={t("gateway.home.fantasyDescription")}
         href="/fantasy/"
         icon={fantasyIcon.src}
       />
@@ -39,45 +44,14 @@ const displayName = Astro.locals.displayName;
 
     <div class="max-w-[520px]">
       <h2 class="font-heading text-h3 font-semibold text-primary">
-        Premiación
+        {t("gateway.home.premiacionHeading")}
       </h2>
-      <p class="mt-2 text-secondary text-body-sm">
-        La inscripción para participar en la competición es de <b>50.000 COP</b
-        >, que serán transferidos al administrador de la aplicación. La
-        repartición del monto será; <b>30.000 COP</b> para el modo Polla y <b
-          >20.000 COP</b
-        > para el modo Fantasy.
-      </p>
-      <p class="mt-2 text-secondary text-body-sm">
-        La competencia se cerrará el día del partido final del Mundial, y los
-        premios se entregarán a los ganadores dentro de los <b>7 días siguientes al
-        cierre de la competición</b>. Contaremos con un <b>máximo de 12 participantes</b> y
-        todos los participantes deben estar inscritos antes del inicio del
-        primer partido del Mundial para ser elegibles para los premios. Todos
-        los participantes competirán en las 2 modalidades, Polla y Fantasy, y el
-        monto recaudado se dividirá entre ambas modalidades según lo establecido
-        anteriormente.
-      </p>
-      <p class="mt-2 text-secondary text-body-sm">
-        Cada aplicación tendrá su tabla de posiciones y el dinero se repartirá
-        en premios para el primer y segundo puesto de cada modalidad de la
-        siguiente manera: el segundo puesto recibirá el costo de la inscripción
-        por modalidad y el primer puesto recibirá el resto del monto.
-      </p>
-      <p class="mt-2 text-secondary text-body-sm">
-        <i>Ejemplo:</i> Con <b>12</b> participantes, el monto total recaudado sería
-        de <b>600.000 COP</b>. De este monto, <b>360.000 COP</b>
-        se asignarían a la modalidad Polla y <b>240.000 COP</b> a la modalidad Fantasy.
-        En la modalidad de Polla, el segundo puesto recibiría <b>30.000 COP</b> y
-        el primer puesto recibiría <b>330.000 COP</b>. En la modalidad de
-        Fantasy, el segundo puesto recibiría <b>20.000 COP</b> y el primer puesto
-        recibiría <b>220.000 COP</b>.
-      </p>
+      {lang === "en" ? <PremiacionEn /> : <PremiacionEs />}
     </div>
 
     <form method="POST" action="/auth/signout">
       <button type="submit" class={BUTTON_PRIMARY_CLASSES}>
-        Cerrar sesión
+        {t("common.header.logout")}
       </button>
     </form>
   </main>

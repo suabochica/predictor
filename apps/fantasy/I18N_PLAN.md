@@ -417,6 +417,56 @@ entire ~285-line gateway app, with `index.astro`'s Premiación block as parallel
 locale components. **All architectural risk is spent by the end of this
 phase.**
 
+**✅ DONE 2026-09-02, uncommitted.** Built exactly as scoped:
+- `Header.tsx` gained a dual-mode switcher (`LOCALES`/`buildLangHref` from
+  `@predictor/i18n`, new): plain `<a href="?lang=…">` anchors when `currentUrl`
+  is passed (Astro pages, no hydration), buttons calling `onLangChange` when
+  it's passed instead (fantasy SPA, no reload). Every other hardcoded string
+  in `Header`/`Footer` became a label prop with a Spanish default (back-compat
+  if a caller doesn't pass one); `Footer` also gained a `lang` prop so its
+  date line formats with `localeTag(lang)` instead of a hardcoded `'es-ES'`.
+- `LoginForm.tsx` (and gateway's own `RegisterForm.tsx`) are **islands**, not
+  prop-driven `ui` components — per the plan's own island rule, each takes
+  `lang` and calls `createT(lang)` itself rather than receiving per-string
+  props. New shared `common.auth.*` catalogue keys cover both.
+- `packages/i18n`'s `es`/`en` `common.ts` filled in (`header`, `footer`,
+  `auth`); `gateway.ts` filled in (`home`, `login`, `register`). The
+  Premiación block became `Premiacion.es.astro`/`Premiacion.en.astro`
+  (parallel components, no data hook needed — it's fully static prose),
+  picked by `lang` in `index.astro`, exactly as decided.
+- Gateway's `Layout.astro` has no `Header` (gateway never rendered one) so it
+  got its own minimal switcher — same `buildLangHref` anchors, inline.
+- `packages/ui`'s `package.json` gained `@predictor/i18n` as a dependency
+  (the direction the plan's placement section already argued for); `pnpm
+  install` linked it.
+- Fantasy's DB↔cookie reconciliation (deferred from Phase 0's bare
+  `LangProvider` mount) is now wired: new `context/LangSync.jsx` exports
+  `FantasyLangProvider`, which supplies `onPersist` (writes `users.language`,
+  optimistic/non-blocking, mirrors `CompetitionContext.jsx`'s pattern) and
+  reconciles on auth resolve — cookie present wins and is written back to the
+  DB; cookie absent adopts `profile.language`. Replaces the bare
+  `<LangProvider>` in `App.jsx` between `AuthProvider` and
+  `CompetitionProvider`, per the plan's provider order.
+- **Verified:** `pnpm build` clean on all three apps; `pnpm --filter fantasy
+  lint` at the exact documented baseline (29 errors/39 warnings, no new
+  issues); `curl` with/without `Cookie: predictor.lang=en` against the
+  gateway dev server confirms the **first byte** is right on `/login` and
+  `/register` — `<html lang>`, page `<title>`, and the hydrated `LoginForm`
+  island all flip, with no i18n fallback (every EN string used was actually
+  filled in, not falling back to ES). Leftover-Spanish tripwire grep on
+  `apps/gateway/src` and the touched `ui` components: clean except the
+  Spanish-only `Premiacion.es.astro` (by design) and the two components'
+  Spanish default prop values (by design, matches the "fallback renders
+  Spanish" philosophy).
+- **Not yet verified:** the plan's own "single most important check" —
+  toggle on `/login`, then click through gateway → `/polla/` → `/fantasy/`
+  authenticated, confirming the language holds across the Netlify-proxy
+  origin boundary. Needs a real login; no browser tool available this
+  session. Also not yet: polla's and fantasy's switcher UI seen live
+  (rendering behind auth), the DB reconciliation exercised with a real user
+  row, and `@astrojs/check` type-checking gateway/polla (skipped — would have
+  added a new devDependency without being asked).
+
 **Phase 2 — polla · 5–7 h.** Five `.astro` pages, `Sidebar.astro`, and the four
 islands — `PredictionForm.tsx` (740, incl. `STAGE_LABELS:94-101` and both
 `'es-ES'` sites), `KnockoutAdmin.tsx` (582, incl. `STAGES:29-36`),

@@ -63,3 +63,16 @@ export function writeLangCookie(lang: Locale) {
   if (typeof document === 'undefined') return;
   document.cookie = `${COOKIE_NAME}=${lang}; path=/; max-age=31536000; samesite=lax`;
 }
+
+/**
+ * Astro-mode switcher href: sets/replaces `?lang=` on the current page,
+ * keeping every other query param. Pure string ops — no DOM/URL globals —
+ * so it works identically at Astro build/SSR time and in the browser.
+ * `pathAndSearch` is `Astro.url.pathname + Astro.url.search`.
+ */
+export function buildLangHref(pathAndSearch: string, lang: Locale): string {
+  const [path, search = ''] = pathAndSearch.split('?');
+  const params = new URLSearchParams(search);
+  params.set('lang', lang);
+  return `${path}?${params.toString()}`;
+}
