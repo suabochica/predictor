@@ -367,18 +367,25 @@ to drop, not part of 068.
   complete.** Full write-path exercise of the remaining 8 tables rides on
   UCL's first real auction/transfer/negotiation window, not a synthetic test.
 
-### `ucl-2026-27` entry in `competitionCopy.js`
-- ⚠️ **Coupled to the deferred i18n plan** (`apps/fantasy/I18N_PLAN.md`, §3):
-      that plan restructures this file to **slug × locale**
-      (`BY_SLUG[slug][lang]`, with a per-locale `FALLBACK` merge base). Whichever
-      project lands second must write the entry in the final shape — otherwise
-      the `ucl-2026-27` entry gets written twice. If UCL goes first (the agreed
-      order), just be aware the entry will be re-nested one level later.
-- [ ] Needs Lucas's input, not code. The slug-keyed copy holds the one thing the
-      `competitions` row cannot express: which *fantasy* round rides on which
-      *real* UCL stage (Rules calendar table, Rules knockout column, Bracket
-      subtitles). Until the 2026/27 format is known, UCL renders neutral
-      fallbacks — correct, just vague. Once known this is ~15 lines.
+### `ucl-2026-27` entry in `competitionCopy.js` — ✅ done (Phase A6, 2026-09-02)
+- [x] Added the `ucl-2026-27` entry to `BY_SLUG` (`tournament`/
+      `tournamentPossessive` = "la Champions"/"de la Champions", 8-row Liga
+      J1–J8 + Play-off/Cuartos/Semis/Final `calendarRows`, 4-stage
+      `knockoutRealStages`, `bracketSubtitles` keyed 1–4). Added the H2H
+      scoring rules to `Rules.jsx`'s "Fase de liga" section, gated on
+      `competition.group_format === 'h2h'` — win/draw/narrow-loss/margin read
+      live from the competition row (no hardcoded 3/1/0.5/5.0) and the
+      4-level tiebreak (league pts → fantasy pts → goals → captain pts)
+      matches `rankStandings()` in `lib/standings.js`. Build passes; not
+      browser-tested (Rules page renders identically for the WC either way —
+      no regression risk there, but UCL's own H2H copy is unverified).
+- ⚠️ **Still coupled to the deferred i18n plan** (`apps/fantasy/I18N_PLAN.md`,
+      §3) exactly as before: that plan will re-nest `BY_SLUG` to
+      **slug × locale** (`BY_SLUG[slug][lang]`) and must fold this entry in
+      rather than overwrite it, since UCL landed first.
+
+**This was the last open dev item on this TODO — the list below is deferrals
+only.**
 
 ### Deferrals — deliberate, still open
 - [ ] Admin auction sections do not follow the admin selector. Would need an

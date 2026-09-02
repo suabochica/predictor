@@ -27,6 +27,12 @@ export default function HowToPlay() {
   const budget          = money(competition?.budget ?? 105);
   const minIncrement    = money(competition?.min_bid_increment ?? 0.3);
   const knockoutCap     = competition?.transfer_cap_knockout ?? 5;
+  const isH2H           = competition?.group_format === 'h2h';
+  const h2hWinPts        = money(competition?.h2h_win_points ?? 3.0);
+  const h2hDrawPts       = money(competition?.h2h_draw_points ?? 1.0);
+  const h2hNarrowLossPts = money(competition?.h2h_narrow_loss_points ?? 0.5);
+  const h2hNarrowMargin  = money(competition?.h2h_narrow_loss_margin ?? 5.0);
+  const leagueMatchdayCount = copy.calendarRows?.filter(([phase]) => phase.startsWith('Liga')).length ?? 3;
 
   return (
     <div className="space-y-8 max-w-3xl pb-8">
@@ -250,11 +256,27 @@ export default function HowToPlay() {
 
       {/* Clasificación de liga */}
       <Section title="Fase de liga">
-        <ul className="space-y-2 text-secondary">
-          <li><Bullet />Los 12 participantes acumulan puntos durante <strong className="text-primary">3 jornadas</strong> (JJ1-JJ3, fase de grupos).</li>
-          <li><Bullet />Clasificación por puntos totales. En caso de empate: número de goles anotados por los jugadores propios en el torneo.</li>
-          <li><Bullet />Los <strong className="text-primary">8 primeros</strong> pasan a la eliminatoria. Los 4 últimos quedan eliminados de la competición.</li>
-        </ul>
+        {isH2H ? (
+          <ul className="space-y-2 text-secondary">
+            <li><Bullet />Los {maxParticipants} participantes juegan una liga <strong className="text-primary">cabeza a cabeza (H2H)</strong> durante <strong className="text-primary">{leagueMatchdayCount} jornadas</strong>: cada jornada te enfrentas a un rival distinto y nunca repites rival en toda la fase.</li>
+            <li><Bullet />En cada enfrentamiento se comparan los puntos fantasy de <strong className="text-primary">esa jornada</strong> (no el total acumulado):
+              <ul className="mt-1 ml-4 space-y-0.5">
+                <li>Ganas el enfrentamiento → <strong className="text-primary">{h2hWinPts} pts</strong></li>
+                <li>Empate → <strong className="text-primary">{h2hDrawPts} pt</strong></li>
+                <li>Pierdes por un margen de hasta {h2hNarrowMargin} pts → <strong className="text-primary">{h2hNarrowLossPts} pt</strong></li>
+                <li>Pierdes por más de {h2hNarrowMargin} pts → <strong className="text-primary">0 pts</strong></li>
+              </ul>
+            </li>
+            <li><Bullet />Clasificación por puntos de liga. En caso de empate: (1) puntos fantasy totales de la fase de liga, (2) goles anotados por los jugadores propios, (3) puntos del capitán acumulados en la fase de liga.</li>
+            <li><Bullet />Los <strong className="text-primary">8 primeros</strong> pasan a la eliminatoria. Los últimos quedan eliminados de la competición.</li>
+          </ul>
+        ) : (
+          <ul className="space-y-2 text-secondary">
+            <li><Bullet />Los {maxParticipants} participantes acumulan puntos durante <strong className="text-primary">{leagueMatchdayCount} jornadas</strong> (JJ1-JJ3, fase de grupos).</li>
+            <li><Bullet />Clasificación por puntos totales. En caso de empate: número de goles anotados por los jugadores propios en el torneo.</li>
+            <li><Bullet />Los <strong className="text-primary">8 primeros</strong> pasan a la eliminatoria. Los 4 últimos quedan eliminados de la competición.</li>
+          </ul>
+        )}
       </Section>
 
       {/* Eliminatoria */}
