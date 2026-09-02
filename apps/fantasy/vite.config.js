@@ -6,6 +6,6 @@ export default defineConfig(() => ({
   base: '/fantasy/',
   plugins: [tailwindcss(), react()],
   optimizeDeps: {
-    exclude: ['@predictor/supabase', '@predictor/ui', '@predictor/types'],
+    exclude: ['@predictor/supabase', '@predictor/ui', '@predictor/types', '@predictor/i18n'],
   },
 }));

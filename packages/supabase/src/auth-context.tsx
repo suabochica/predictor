@@ -9,6 +9,9 @@ interface UserProfile {
   is_admin: boolean;
   /** Fantasy competition switcher preference (migration 066). */
   active_competition_id: number | null;
+  /** ES/EN UI language preference (migration 069). Cross-device fallback — the
+   *  predictor.lang cookie wins when present. */
+  language: 'es' | 'en';
 }
 
 interface AuthContextValue {

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@predictor/supabase';
+import { LangProvider } from '@predictor/i18n/react';
 import { CompetitionProvider, CompetitionGate, useCompetition } from './context/CompetitionContext';
 import { LeagueProvider } from './context/LeagueContext';
 import { AuctionProvider } from './context/AuctionContext';
@@ -90,13 +91,15 @@ export default function App() {
   return (
     <BrowserRouter basename="/fantasy">
       <AuthProvider>
-        <CompetitionProvider>
-          <CompetitionGate>
-            <CompetitionScopedProviders>
-              <AppRoutes />
-            </CompetitionScopedProviders>
-          </CompetitionGate>
-        </CompetitionProvider>
+        <LangProvider>
+          <CompetitionProvider>
+            <CompetitionGate>
+              <CompetitionScopedProviders>
+                <AppRoutes />
+              </CompetitionScopedProviders>
+            </CompetitionGate>
+          </CompetitionProvider>
+        </LangProvider>
       </AuthProvider>
     </BrowserRouter>
   );

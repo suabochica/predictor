@@ -2,6 +2,7 @@
 /// <reference types="astro/client" />
 
 import type { User } from '@supabase/supabase-js';
+import type { Locale } from '@predictor/i18n';
 
 declare namespace App {
   interface Locals {
@@ -10,5 +11,6 @@ declare namespace App {
     isAdmin: boolean;
     leaderboardRank: number | null;
     totalPoints: number | null;
+    lang: Locale;
   }
 }

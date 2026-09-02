@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@predictor/i18n": "workspace:*",
     "@predictor/supabase": "workspace:*",
     "@predictor/types": "workspace:*",
     "@predictor/ui": "workspace:*",

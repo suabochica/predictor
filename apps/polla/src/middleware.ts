@@ -1,9 +1,22 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createServerClient } from '@supabase/ssr';
+import { resolveServerLang } from '@predictor/i18n';
 
 const PUBLIC_PATHS = ['/polla/register', '/polla/auth'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Above the PUBLIC_PATHS early return — /polla/register is public and still
+  // needs translating.
+  const { lang, shouldWriteCookie } = resolveServerLang({
+    queryLang: context.url.searchParams.get('lang'),
+    cookieHeader: context.request.headers.get('cookie'),
+    acceptLanguageHeader: context.request.headers.get('accept-language'),
+  });
+  context.locals.lang = lang;
+  if (shouldWriteCookie) {
+    context.cookies.set('predictor.lang', lang, { path: '/', maxAge: 31536000, sameSite: 'lax' });
+  }
+
   if (PUBLIC_PATHS.some((p) => context.url.pathname.startsWith(p))) {
     return next();
   }

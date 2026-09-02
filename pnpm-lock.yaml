@@ -10,6 +10,9 @@ importers:
 
   apps/fantasy:
     dependencies:
+      '@predictor/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@predictor/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
@@ -77,6 +80,9 @@ importers:
       '@astrojs/react':
         specifier: ^4.0.0
         version: 4.4.2(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(jiti@2.6.1)(lightningcss@1.32.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(yaml@2.9.0)
+      '@predictor/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@predictor/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
@@ -126,6 +132,9 @@ importers:
       '@astrojs/react':
         specifier: ^4.0.0
         version: 4.4.2(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(jiti@2.6.1)(lightningcss@1.32.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(yaml@2.9.0)
+      '@predictor/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@predictor/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
@@ -184,6 +193,12 @@ importers:
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
+
+  packages/i18n:
+    dependencies:
+      react:
+        specifier: '>=18'
+        version: 19.2.5
 
   packages/supabase:
     dependencies:
