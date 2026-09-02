@@ -4,6 +4,7 @@ import { useAuth } from '@predictor/supabase';
 import { useCompetition } from '../context/CompetitionContext';
 import { useLeague } from '../context/LeagueContext';
 import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
+import MatchCard from '../components/bracket/MatchCard';
 import { h2hResult } from '../lib/standings';
 import { fmtPts } from '../lib/utils';
 
@@ -65,6 +66,8 @@ export default function Leaderboard() {
   const openTeam = (entry, matchdayId, matchdayName) =>
     setViewing({ entry, matchdayId, matchdayName });
 
+  const [selectedFixturesMd, setSelectedFixturesMd] = useState(null);
+
   const isH2H = format === 'h2h';
 
   const hasScores = standings.some((s) => s.total_points > 0);
@@ -108,6 +111,17 @@ export default function Leaderboard() {
     () => Object.fromEntries(standings.map((s) => [s.team_id, s])),
     [standings]
   );
+
+  // Fixtures panel: default to the active league matchday, falling back to the
+  // last one once the league phase is over. `selectedFixturesMd` overrides once
+  // the user picks a matchday from the dropdown.
+  const activeLeagueMdId = groupMatchdays.find((md) => md.id === activeMatchday?.id)?.id ?? null;
+  const lastLeagueMdId = groupMatchdays[groupMatchdays.length - 1]?.id ?? null;
+  const fixturesMdId = isH2H ? selectedFixturesMd ?? activeLeagueMdId ?? lastLeagueMdId : null;
+  const fixturesMd = groupMatchdays.find((md) => md.id === fixturesMdId) ?? null;
+  const panelFixtures = isH2H
+    ? fixtures.filter((fx) => fx.matchday_id === fixturesMdId).sort((a, b) => a.slot - b.slot)
+    : [];
 
   // Fixed-width columns beyond `#` (2rem) and `Manager` (1fr). Kept in sync
   // between the header and every row via the same computed style.
@@ -371,6 +385,59 @@ export default function Leaderboard() {
           </div>
           </div>
         </div>
+      )}
+
+      {/* ── Fixtures panel ── */}
+      {isH2H && groupMatchdays.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-base font-bold text-primary">
+              Jornada{fixturesMd ? ` ${groupMatchdays.findIndex((md) => md.id === fixturesMd.id) + 1}` : ''}
+            </h2>
+            <select
+              value={fixturesMdId ?? ''}
+              onChange={(e) => setSelectedFixturesMd(Number(e.target.value))}
+              className="text-sm bg-surface border border-border rounded-lg px-2 py-1 text-secondary"
+            >
+              {groupMatchdays.map((md) => (
+                <option key={md.id} value={md.id}>
+                  {md.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {panelFixtures.length === 0 ? (
+            <div className="bg-surface/50 border border-border rounded-xl p-4 text-sm text-muted text-center">
+              Calendario aún no sorteado para esta jornada.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {panelFixtures.map((fx, i) => {
+                const a = standingsByTeamId[fx.team_a_id];
+                const b = standingsByTeamId[fx.team_b_id];
+                const pointsA = a?.matchday_points?.[fixturesMdId] ?? null;
+                const pointsB = b?.matchday_points?.[fixturesMdId] ?? null;
+                return (
+                  <MatchCard
+                    key={fx.id}
+                    label={`Enfrentamiento ${i + 1}`}
+                    teamA={a ? { id: a.team_id, name: a.display_name } : null}
+                    teamB={b ? { id: b.team_id, name: b.display_name } : null}
+                    pointsA={pointsA}
+                    pointsB={pointsB}
+                    winnerId={null}
+                    provisional={!fixturesMd?.is_completed && (pointsA != null || pointsB != null)}
+                    onTeamClick={(team) => {
+                      const entry = standingsByTeamId[team.id];
+                      if (entry) openTeam(entry, fixturesMdId, fixturesMd?.name ?? null);
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
       )}
 
       {/* ── Tiebreaker note ── */}
