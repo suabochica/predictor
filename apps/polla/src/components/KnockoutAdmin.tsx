@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@predictor/supabase";
+import { createT, type Locale } from "@predictor/i18n";
 import { countries } from "../data/matches";
 
 interface KnockoutMatch {
@@ -26,14 +27,14 @@ interface MatchForm {
   actual_score_b: string;
 }
 
-const STAGES: { key: string; label: string }[] = [
-  { key: "round_of_32", label: "Dieciseisavos de final" },
-  { key: "round_of_16", label: "Octavos de final" },
-  { key: "quarterfinal", label: "Cuartos de final" },
-  { key: "semifinal", label: "Semifinal" },
-  { key: "third_place", label: "Tercer lugar" },
-  { key: "final", label: "Final" },
-];
+const STAGE_KEYS = [
+  "round_of_32",
+  "round_of_16",
+  "quarterfinal",
+  "semifinal",
+  "third_place",
+  "final",
+] as const;
 
 const STATUS_OPTIONS = ["upcoming", "live", "finished"] as const;
 
@@ -69,7 +70,12 @@ function newForm(match?: KnockoutMatch): MatchForm {
   };
 }
 
-export default function KnockoutAdmin() {
+export default function KnockoutAdmin({ lang = "es" }: { lang?: Locale }) {
+  const { t, tPlural } = createT(lang);
+  const STAGES = STAGE_KEYS.map((key) => ({
+    key,
+    label: t(`polla.admin.knockout.stageLabels.${key}`),
+  }));
   const [matches, setMatches] = useState<KnockoutMatch[]>([]);
   const [forms, setForms] = useState<Record<string, MatchForm>>({});
   const [predictionsByCode, setPredictionsByCode] = useState<
@@ -148,7 +154,7 @@ export default function KnockoutAdmin() {
         setPredictionsByCode(byCode);
       }
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Error al cargar datos");
+      setErrorMsg(err?.message ?? t("polla.admin.knockout.loadError"));
     } finally {
       setLoading(false);
     }
@@ -175,7 +181,7 @@ export default function KnockoutAdmin() {
     if (!form) return;
 
     if (!form.match_code.trim()) {
-      setErrorMsg("El código del partido es obligatorio");
+      setErrorMsg(t("polla.admin.knockout.codeRequired"));
       return;
     }
 
@@ -208,18 +214,18 @@ export default function KnockoutAdmin() {
 
       if (error) throw error;
 
-      setSuccessMsg(`Partido ${form.match_code} actualizado`);
+      setSuccessMsg(t("polla.admin.knockout.matchUpdated", { code: form.match_code }));
       setTimeout(() => setSuccessMsg(null), 3000);
       loadData();
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Error al guardar");
+      setErrorMsg(err?.message ?? t("polla.admin.knockout.saveError"));
     } finally {
       setSaving(null);
     }
   }
 
   async function handleDelete(match: KnockoutMatch) {
-    if (!confirm(`¿Eliminar partido ${match.match_code}?`)) return;
+    if (!confirm(t("polla.admin.knockout.confirmDelete", { code: match.match_code }))) return;
 
     setDeleting(match.id);
     setErrorMsg(null);
@@ -232,11 +238,11 @@ export default function KnockoutAdmin() {
 
       if (error) throw error;
 
-      setSuccessMsg(`Partido ${match.match_code} eliminado`);
+      setSuccessMsg(t("polla.admin.knockout.matchDeleted", { code: match.match_code }));
       setTimeout(() => setSuccessMsg(null), 3000);
       setMatches((prev) => prev.filter((m) => m.id !== match.id));
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Error al eliminar");
+      setErrorMsg(err?.message ?? t("polla.admin.knockout.deleteError"));
     } finally {
       setDeleting(null);
     }
@@ -288,8 +294,7 @@ export default function KnockoutAdmin() {
               <h3 className="font-heading text-body-md font-semibold text-primary">
                 {label}
                 <span className="text-muted font-normal text-body-sm ml-2">
-                  {stageMatches.length} partido
-                  {stageMatches.length !== 1 ? "s" : ""}
+                  {tPlural("polla.admin.knockout.matchCount", stageMatches.length)}
                 </span>
               </h3>
               <svg
@@ -309,7 +314,7 @@ export default function KnockoutAdmin() {
               <div className="border-t border-border px-4 py-3">
                 {stageMatches.length === 0 && (
                   <p className="text-body-sm text-muted py-4 text-center">
-                    No hay partidos en esta fase.
+                    {t("polla.admin.knockout.noMatches")}
                   </p>
                 )}
 
@@ -328,7 +333,7 @@ export default function KnockoutAdmin() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                           <div>
                             <label className="block text-label-caps font-semibold text-muted uppercase tracking-wider mb-1">
-                              Código
+                              {t("polla.admin.knockout.code")}
                             </label>
                             <input
                               type="text"
@@ -347,7 +352,7 @@ export default function KnockoutAdmin() {
 
                           <div>
                             <label className="block text-label-caps font-semibold text-muted uppercase tracking-wider mb-1">
-                              Fecha
+                              {t("polla.admin.knockout.date")}
                             </label>
                             <input
                               type="datetime-local"
@@ -365,7 +370,7 @@ export default function KnockoutAdmin() {
 
                           <div>
                             <label className="block text-label-caps font-semibold text-muted uppercase tracking-wider mb-1">
-                              Estadio
+                              {t("polla.admin.knockout.stadium")}
                             </label>
                             <input
                               type="text"
@@ -377,14 +382,14 @@ export default function KnockoutAdmin() {
                                   e.target.value,
                                 )
                               }
-                              placeholder="Estadio"
+                              placeholder={t("polla.admin.knockout.stadium")}
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             />
                           </div>
 
                           <div>
                             <label className="block text-label-caps font-semibold text-muted uppercase tracking-wider mb-1">
-                              Estado
+                              {t("polla.admin.knockout.status")}
                             </label>
                             <select
                               value={form.status}
@@ -409,7 +414,7 @@ export default function KnockoutAdmin() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                           <div>
                             <label className="block text-label-caps font-semibold text-muted uppercase tracking-wider mb-1">
-                              Equipo A
+                              {t("polla.admin.knockout.teamA")}
                             </label>
                             <select
                               value={form.team_a}
@@ -422,7 +427,7 @@ export default function KnockoutAdmin() {
                               }
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             >
-                              <option value="TBD">— TBD —</option>
+                              <option value="TBD">{t("polla.admin.knockout.tbdOption")}</option>
                               {countryOptions.map((c) => (
                                 <option key={c.code} value={c.code}>
                                   {c.label}
@@ -433,7 +438,7 @@ export default function KnockoutAdmin() {
 
                           <div>
                             <label className="block text-label-caps font-semibold text-muted uppercase tracking-wider mb-1">
-                              Equipo B
+                              {t("polla.admin.knockout.teamB")}
                             </label>
                             <select
                               value={form.team_b}
@@ -446,7 +451,7 @@ export default function KnockoutAdmin() {
                               }
                               className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-body-sm text-primary focus:border-tertiary focus:outline-none"
                             >
-                              <option value="TBD">— TBD —</option>
+                              <option value="TBD">{t("polla.admin.knockout.tbdOption")}</option>
                               {countryOptions.map((c) => (
                                 <option key={c.code} value={c.code}>
                                   {c.label}
@@ -458,7 +463,7 @@ export default function KnockoutAdmin() {
 
                         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-border">
                           <span className="font-label text-label-caps text-muted uppercase tracking-wider">
-                            Resultado:
+                            {t("polla.admin.knockout.result")}
                           </span>
                           <input
                             type="text"
@@ -503,7 +508,7 @@ export default function KnockoutAdmin() {
                               disabled={isSaving || isDeleting}
                               className="rounded-sm bg-success/15 px-3 py-1 font-label text-label-caps text-success transition-colors hover:bg-success/25 disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                              {isSaving ? "Guardando..." : "Guardar"}
+                              {isSaving ? t("polla.admin.knockout.saving") : t("polla.admin.knockout.save")}
                             </button>
                             <button
                               type="button"
@@ -511,7 +516,7 @@ export default function KnockoutAdmin() {
                               disabled={isSaving || isDeleting}
                               className="rounded-sm bg-error/10 px-3 py-1 font-label text-label-caps text-error transition-colors hover:bg-error/20 disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                              {isDeleting ? "Eliminando..." : "Eliminar"}
+                              {isDeleting ? t("polla.admin.knockout.deleting") : t("polla.admin.knockout.delete")}
                             </button>
                           </div>
                         </div>
@@ -526,7 +531,7 @@ export default function KnockoutAdmin() {
                               <thead className="bg-neutral">
                                 <tr>
                                   <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                                    Usuario
+                                    {t("polla.admin.knockout.user")}
                                   </th>
                                   <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                                     {teamA?.name || match.team_a}
@@ -564,7 +569,7 @@ export default function KnockoutAdmin() {
                           </div>
                         ) : (
                           <div className="mt-3 rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
-                            Aún no hay predicciones para este partido.
+                            {t("polla.admin.knockout.noPredictionsYet")}
                           </div>
                         );
                       })()}

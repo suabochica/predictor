@@ -1,19 +1,23 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import PredictionForm from "../components/PredictionForm";
+import { createT } from "@predictor/i18n";
 
 const userId = Astro.locals.user?.id as string | undefined;
 const totalPoints = Astro.locals.totalPoints ?? 0;
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Predicciones">
+<Layout title={t("polla.predictions.pageTitle")}>
   <div class="max-w-4xl">
-    <h1 class="text-2xl font-bold text-primary">Predicciones</h1>
+    <h1 class="text-2xl font-bold text-primary">{t("polla.predictions.heading")}</h1>
     <p class="text-secondary text-body-sm mt-1 mb-6">
-      Ingresa tus marcadores (0–9). Guarda antes de salir. Tu puntaje total son <span
-        class="font-bold text-tertiary">{totalPoints} puntos</span>
+      {t("polla.predictions.description")} <span
+        class="font-bold text-tertiary">{totalPoints} {t("polla.predictions.pointsSuffix")}</span
+      >
     </p>
 
-    <PredictionForm client:load currentUser={userId} />
+    <PredictionForm client:load currentUser={userId} lang={lang} />
   </div>
 </Layout>

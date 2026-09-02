@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@predictor/supabase";
 import { Button, BUTTON_PRIMARY_CLASSES } from "@predictor/ui";
+import { createT, formatDateLong, formatTime, type Locale } from "@predictor/i18n";
 
 import type { Match } from "../types";
 import { countries } from "../data/matches";
@@ -32,23 +33,6 @@ interface ModalPrediction {
   predicted_score_a: number;
   predicted_score_b: number;
   points_earned: number;
-}
-
-function formatDateLabel(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("es-ES", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString("es-ES", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
 }
 
 function dateKey(dateStr: string): string {
@@ -91,18 +75,9 @@ function dbToMatch(row: DbMatch): Match {
   };
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  round_of_32: "Ronda de 32",
-  round_of_16: "Octavos de final",
-  quarterfinal: "Cuartos de final",
-  semifinal: "Semifinal",
-  third_place: "Tercer lugar",
-  final: "Final",
-};
-
-function stageLabel(match: Match): string | null {
+function stageLabel(match: Match, t: ReturnType<typeof createT>["t"]): string | null {
   if (match.group) return match.group;
-  if (match.stage && match.stage !== "group") return STAGE_LABELS[match.stage] ?? match.stage;
+  if (match.stage && match.stage !== "group") return t(`polla.stages.${match.stage}`);
   return null;
 }
 
@@ -112,9 +87,12 @@ function isKnockout(match: Match): boolean {
 
 export default function PredictionForm({
   currentUser,
+  lang = "es",
 }: {
   currentUser?: string;
+  lang?: Locale;
 }) {
+  const { t } = createT(lang);
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchUuidMap, setMatchUuidMap] = useState<Record<string, string>>({});
   const [predictions, setPredictions] = useState<PredictionState>({});
@@ -296,10 +274,10 @@ export default function PredictionForm({
         disabled={saving || !currentUser}
       >
         {saving
-          ? "Guardando..."
+          ? t("polla.predictions.saving")
           : saved
-            ? "✓ ¡Guardado!"
-            : "Guardar predicciones"}
+            ? t("polla.predictions.saved")
+            : t("polla.predictions.saveButton")}
       </Button>
     </div>
   );
@@ -319,8 +297,8 @@ export default function PredictionForm({
       <div className="rounded-sm border border-warning/30 bg-warning/10 px-6 py-8 text-center">
         <p className="text-warning text-body-md">
           {usingFallback
-            ? "No se puede conectar a la base de datos. Ejecuta el script de importación o verifica tu conexión."
-            : "No hay partidos de fase de grupos en la base de datos todavía. Ejecuta el script de importación para cargarlos:"}
+            ? t("polla.predictions.emptyOffline")
+            : t("polla.predictions.emptyNoMatches")}
         </p>
         {!usingFallback && (
           <code className="mt-3 block text-body-sm text-warning font-label">
@@ -342,7 +320,7 @@ export default function PredictionForm({
       {sortedDates.map((date) => (
         <div key={date} className="space-y-4">
           <h2 className="font-heading text-h2 font-semibold text-primary">
-            {formatDateLabel(matchesByDate[date][0].match_date)}
+            {formatDateLong(matchesByDate[date][0].match_date, lang)}
           </h2>
 
           {/* Mobile cards */}
@@ -370,16 +348,18 @@ export default function PredictionForm({
                   }
                   title={
                     isLocked
-                      ? "Click para ver predicciones de todos los jugadores"
+                      ? t("polla.predictions.viewAllTooltip")
                       : undefined
                   }
                 >
                   <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
                     <span className="text-xs text-muted">
-                      {formatTime(match.match_date)}
+                      {formatTime(match.match_date, lang)}
                     </span>
                     <span className="text-xs font-label text-muted">
-                      {isKnockout(match) ? `Fase · ${stageLabel(match)}` : `Grupo ${match.group}`}
+                      {isKnockout(match)
+                        ? `${t("polla.predictions.phasePrefix")} · ${stageLabel(match, t)}`
+                        : `${t("polla.predictions.groupPrefix")} ${match.group}`}
                     </span>
                   </div>
 
@@ -409,10 +389,10 @@ export default function PredictionForm({
                           placeholder="-"
                           title={
                             isLocked
-                              ? "Las predicciones se bloquean 30 minutos antes del partido"
+                              ? t("polla.predictions.lockedTooltip")
                               : undefined
                           }
-                          aria-label={`Marcador de ${teamA?.name || match.team_a}`}
+                          aria-label={t("polla.predictions.scoreAriaLabel", { team: teamA?.name || match.team_a })}
                         />
                         {hasActualScore && (
                           <span className="text-xs font-label font-semibold text-tertiary">
@@ -447,10 +427,10 @@ export default function PredictionForm({
                           placeholder="-"
                           title={
                             isLocked
-                              ? "Las predicciones se bloquean 30 minutos antes del partido"
+                              ? t("polla.predictions.lockedTooltip")
                               : undefined
                           }
-                          aria-label={`Marcador de ${teamB?.name || match.team_b}`}
+                          aria-label={t("polla.predictions.scoreAriaLabel", { team: teamB?.name || match.team_b })}
                         />
                         {hasActualScore && (
                           <span className="text-xs font-label font-semibold text-tertiary">
@@ -463,7 +443,7 @@ export default function PredictionForm({
                     {pred.points_earned != null && (
                       <div className="text-right">
                         <span className="text-xs font-semibold text-tertiary">
-                          +{pred.points_earned} pts
+                          +{pred.points_earned} {t("polla.predictions.modal.points").toLowerCase()}
                         </span>
                       </div>
                     )}
@@ -480,32 +460,34 @@ export default function PredictionForm({
               <thead className="bg-neutral">
                 <tr>
                   <th className="px-2 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Hora
+                    {t("polla.predictions.table.time")}
                   </th>
                   <th
                     colSpan={2}
                     className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider"
                   >
-                    Local
+                    {t("polla.predictions.table.home")}
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Marcador
+                    {t("polla.predictions.table.score")}
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider" />
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Marcador
+                    {t("polla.predictions.table.score")}
                   </th>
                   <th
                     colSpan={2}
                     className="px-3 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider"
                   >
-                    Visitante
+                    {t("polla.predictions.table.away")}
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    {matchesByDate[date].some(isKnockout) ? "Fase" : "Grupo"}
+                    {matchesByDate[date].some(isKnockout)
+                      ? t("polla.predictions.table.stage")
+                      : t("polla.predictions.table.group")}
                   </th>
                   <th className="px-3 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                    Puntos
+                    {t("polla.predictions.table.points")}
                   </th>
                 </tr>
               </thead>
@@ -532,12 +514,12 @@ export default function PredictionForm({
                       }
                       title={
                         isLocked
-                          ? "Click para ver predicciones de todos los jugadores"
+                          ? t("polla.predictions.viewAllTooltip")
                           : undefined
                       }
                     >
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
-                        {formatTime(match.match_date)}
+                        {formatTime(match.match_date, lang)}
                       </td>
 
                       <td className="whitespace-nowrap px-1 py-2 text-right">
@@ -566,10 +548,10 @@ export default function PredictionForm({
                             placeholder="-"
                             title={
                               isLocked
-                                ? "Las predicciones se bloquean 30 minutos antes del partido"
+                                ? t("polla.predictions.lockedTooltip")
                                 : undefined
                             }
-                            aria-label={`Marcador de ${teamA?.name || match.team_a}`}
+                            aria-label={t("polla.predictions.scoreAriaLabel", { team: teamA?.name || match.team_a })}
                           />
                         </div>
                       </td>
@@ -608,10 +590,10 @@ export default function PredictionForm({
                           placeholder="-"
                           title={
                             isLocked
-                              ? "Las predicciones se bloquean 30 minutos antes del partido"
+                              ? t("polla.predictions.lockedTooltip")
                               : undefined
                           }
-                          aria-label={`Marcador de ${teamB?.name || match.team_b}`}
+                          aria-label={t("polla.predictions.scoreAriaLabel", { team: teamB?.name || match.team_b })}
                         />
                       </td>
 
@@ -623,7 +605,7 @@ export default function PredictionForm({
                       </td>
 
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm text-muted">
-                        {stageLabel(match)}
+                        {stageLabel(match, t)}
                       </td>
                       <td className="whitespace-nowrap px-2 py-2 text-center text-body-sm font-semibold">
                         {pred.points_earned != null ? (
@@ -657,16 +639,16 @@ export default function PredictionForm({
                   {modalTeamB?.flag} {modalTeamB?.name || modalMatch.team_b}
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  {formatTime(modalMatch.match_date)} ·{" "}
+                  {formatTime(modalMatch.match_date, lang)} ·{" "}
                   {isKnockout(modalMatch)
-                    ? `Fase · ${stageLabel(modalMatch)}`
-                    : `Grupo ${modalMatch.group || "N/D"}`}
+                    ? `${t("polla.predictions.phasePrefix")} · ${stageLabel(modalMatch, t)}`
+                    : `${t("polla.predictions.groupPrefix")} ${modalMatch.group || t("polla.notAvailable")}`}
                 </p>
               </div>
               <button
                 onClick={() => setModalMatch(null)}
                 className="text-muted hover:text-primary text-xl leading-none px-2 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary"
-                aria-label="Cerrar"
+                aria-label={t("polla.predictions.modal.close")}
               >
                 ×
               </button>
@@ -678,14 +660,14 @@ export default function PredictionForm({
               </div>
             ) : modalPredictions.length === 0 ? (
               <p className="text-center text-muted text-body-sm p-6">
-                No hay predicciones para este partido.
+                {t("polla.predictions.modal.noPredictions")}
               </p>
             ) : (
               <table className="w-full">
                 <thead className="bg-neutral border-b border-border">
                   <tr>
                     <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                      Jugador
+                      {t("polla.predictions.modal.player")}
                     </th>
                     <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                       {modalTeamA?.name || modalMatch.team_a}
@@ -694,7 +676,7 @@ export default function PredictionForm({
                       {modalTeamB?.name || modalMatch.team_b}
                     </th>
                     <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                      Pts
+                      {t("polla.predictions.modal.points")}
                     </th>
                   </tr>
                 </thead>
@@ -723,7 +705,7 @@ export default function PredictionForm({
               modalMatch.actual_score_b != null && (
                 <div className="border-t border-border px-5 py-3">
                   <span className="text-body-sm text-muted">
-                    Resultado real:{" "}
+                    {t("polla.predictions.modal.actualResult")}{" "}
                     <span className="font-semibold text-primary">
                       {modalMatch.actual_score_a} - {modalMatch.actual_score_b}
                     </span>

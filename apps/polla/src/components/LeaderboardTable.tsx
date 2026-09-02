@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
+import { createT, type Locale } from '@predictor/i18n';
 
 import type { LeaderboardEntry, LeaderboardRow } from '../types';
 import { users as fallbackUsers } from '../data/users';
 
-export default function LeaderboardTable({ currentUser }: { currentUser?: string }) {
+export default function LeaderboardTable({ currentUser, lang = 'es' }: { currentUser?: string; lang?: Locale }) {
+  const { t } = createT(lang);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
@@ -78,7 +80,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
     <div>
       {usingFallback && (
         <div className="mb-4 rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
-          Usando datos offline — tabla de posiciones en vivo no disponible.
+          {t('polla.leaderboard.offline')}
         </div>
       )}
 
@@ -87,16 +89,16 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
           <thead className="bg-neutral">
             <tr>
               <th className="px-4 py-3 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                Pos.
+                {t('polla.leaderboard.position')}
               </th>
               <th className="px-4 py-3 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                Jugador
+                {t('polla.leaderboard.player')}
               </th>
               <th className="px-4 py-3 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                Puntos
+                {t('polla.leaderboard.points')}
               </th>
               <th className="px-4 py-3 text-center font-label text-label-caps text-muted uppercase tracking-wider">
-                Predicciones
+                {t('polla.leaderboard.predictions')}
               </th>
             </tr>
           </thead>
@@ -104,7 +106,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
             {entries.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center text-muted">
-                  Aún no hay jugadores. ¡Sé el primero en enviar predicciones!
+                  {t('polla.leaderboard.empty')}
                 </td>
               </tr>
             )}
@@ -126,7 +128,7 @@ export default function LeaderboardTable({ currentUser }: { currentUser?: string
                       </span>
                       {isCurrentUser && (
                         <span className="rounded-sm bg-success/15 px-2 py-0.5 font-label text-label-caps text-success">
-                          Tú
+                          {t('polla.leaderboard.you')}
                         </span>
                       )}
                     </div>

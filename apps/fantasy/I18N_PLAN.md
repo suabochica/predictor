@@ -473,6 +473,54 @@ islands — `PredictionForm.tsx` (740, incl. `STAGE_LABELS:94-101` and both
 `AdminTable.tsx` (444), `LeaderboardTable.tsx` (148). `rules.astro` as parallel
 components. Every island gains a `lang` prop.
 
+**✅ DONE 2026-09-02, uncommitted.** Built exactly as scoped:
+- New `polla` namespace catalogue (100 keys, ES/EN parity verified) covers all
+  five pages, `Sidebar.astro`'s nav + player-label, and all four islands.
+  `polla.stages.*` (PredictionForm's compact stage abbreviation, e.g. "Ronda
+  de 32") and `polla.admin.knockout.stageLabels.*` (the admin panel's more
+  formal section headers, e.g. "Dieciseisavos de final") are **deliberately
+  separate keys** — same `matches.stage` enum, two different Spanish display
+  conventions that don't collapse into one EN string reuse.
+- `rules.astro`'s prose became `Rules.es.astro`/`Rules.en.astro` (parallel
+  locale components, mirroring gateway's `Premiacion.*.astro`), picked by
+  `lang` in `rules.astro`; only the page `<title>` (`polla.rules.pageTitle`)
+  goes through `t()`.
+- `Sidebar.astro` (rendered without a `client:*` directive, so it takes `lang`
+  as an Astro prop like `Header`/`Footer`) is now called from `Layout.astro`
+  as `<Sidebar lang={lang} />`.
+- All four islands (`PredictionForm`, `KnockoutAdmin`, `AdminTable`,
+  `LeaderboardTable`) take `lang?: Locale = 'es'` and call `createT(lang)`
+  themselves, per the island rule; all four Astro pages that mount them now
+  pass `lang={lang}`.
+- `PredictionForm.tsx` and `AdminTable.tsx`'s hardcoded `'es-ES'`
+  `formatDateLabel`/`formatTime` helpers are gone — both now call
+  `formatDateLong`/`formatTime` from `@predictor/i18n`. `KnockoutAdmin.tsx`'s
+  match-count plural (`"{n} partido(s)"`) now goes through `tPlural`, the
+  first real consumer of that helper outside its own module.
+- `group_name`/`stage` **values** from the DB stay untouched everywhere (e.g.
+  `match.group` renders as `"Grupo A"` in both languages) — only the label
+  *prefixes* ("Fase"/"Stage", "Grupo"/"Group") and the `STAGE_LABELS` lookup
+  values translate, per the plan's Risk-A guidance. No sentinel-comparison
+  traps found in polla (unlike fantasy's `'Todos'`/`'En tu plantilla'`) — this
+  phase had none to fix.
+- Country names in `data/matches.ts` were already English source data, out of
+  scope, untouched.
+- **Verified:** `pnpm build` clean on all three apps (only the pre-existing,
+  unrelated `Duplicate key "cookies"` esbuild warning); leftover-Spanish
+  tripwire grep on `apps/polla/src` clean except the by-design
+  Spanish-only `Rules.es.astro`; a script cross-check confirmed every
+  `t()`/`tPlural()` key used in polla's code — including the two dynamic
+  template-literal lookups (`polla.stages.${stage}`,
+  `polla.admin.knockout.stageLabels.${key}`) — resolves to a key that exists
+  in both the ES and EN catalogues, with zero orphaned or dangling keys;
+  `curl -sI 'http://localhost:4322/polla/?lang=en'` confirms the middleware's
+  `Set-Cookie: predictor.lang=en` fires even on the unauthenticated redirect
+  (lang resolution runs before the auth gate, as designed).
+- **Not yet verified:** authenticated browser click-through of all five pages
+  in EN (needs a real login — same gap as Phase 1's still-open cross-app
+  check); `apps/polla` has no Jest tests today (pre-existing, not a
+  regression) so the plan's Jest gate is a no-op.
+
 **Phase 3 — fantasy chrome + small pages · 6–8 h** (bumped from 4–6 h — see
 below). `Sidebar`, `MobileNav`, `Layout`, `CompetitionGate`
 (`CompetitionContext.jsx:172,181`), `App.jsx:31`'s `Cargando…`, `NotFound`,

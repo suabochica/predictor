@@ -1,14 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import LeaderboardTable from '../components/LeaderboardTable';
+import { createT } from '@predictor/i18n';
 
 const userId = Astro.locals.user?.id as string | undefined;
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Tabla de posiciones">
+<Layout title={t("polla.leaderboard.pageTitle")}>
   <div class="space-y-6 max-w-4xl">
-    <h1 class="text-2xl font-bold text-primary">Tabla de posiciones</h1>
+    <h1 class="text-2xl font-bold text-primary">{t("polla.leaderboard.heading")}</h1>
 
-    <LeaderboardTable client:load currentUser={userId} />
+    <LeaderboardTable client:load currentUser={userId} lang={lang} />
   </div>
 </Layout>

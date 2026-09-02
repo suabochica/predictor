@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
+import { createT, formatDateLong, formatTime, type Locale } from '@predictor/i18n';
 
 import { countries } from '../data/matches';
 
@@ -45,23 +46,6 @@ interface ScoreFormState {
   scoreB: string;
 }
 
-function formatDateLabel(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('es-ES', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  });
-}
-
 function dateKey(dateStr: string): string {
   const d = new Date(dateStr);
   return [d.getFullYear(), d.getMonth() + 1, d.getDate()]
@@ -84,7 +68,8 @@ function groupByCode<T extends { match_code: string }>(items: T[]): Record<strin
   }, {} as Record<string, T[]>);
 }
 
-export default function AdminTable() {
+export default function AdminTable({ lang = 'es' }: { lang?: Locale }) {
+  const { t } = createT(lang);
   const [predictions, setPredictions] = useState<AdminPrediction[]>([]);
   const [allMatches, setAllMatches] = useState<AllMatch[]>([]);
   const [matchInfo, setMatchInfo] = useState<Record<string, MatchInfo>>({});
@@ -245,7 +230,7 @@ export default function AdminTable() {
         [matchCode]: { ...prev[matchCode], actual_score_a: scoreA, actual_score_b: scoreB, status: 'finished' },
       }));
 
-      setSuccessMsg(`Resultado guardado: ${matchCode}`);
+      setSuccessMsg(t('polla.admin.groupStage.resultSaved', { code: matchCode }));
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       console.error('Error saving match result:', err?.message ?? err);
@@ -271,7 +256,7 @@ export default function AdminTable() {
     return (
       <div className="rounded-sm border border-warning/30 bg-warning/10 px-6 py-8 text-center">
         <p className="text-warning text-body-md">
-          No se encontraron partidos disponibles.
+          {t('polla.admin.groupStage.noMatches')}
         </p>
       </div>
     );
@@ -329,14 +314,14 @@ export default function AdminTable() {
                   {' vs '}
                   {teamB?.flag} {teamB?.name || match.team_b}
                     <span className="text-muted font-normal text-body-sm ml-2">
-                      {code} · {formatTime(match.match_date)} · {match.group_name || match.stage || 'N/D'}
+                      {code} · {formatTime(match.match_date, lang)} · {match.group_name || match.stage || t('polla.notAvailable')}
                     </span>
                 </h3>
 
                 <div className="mb-3 rounded-sm border border-border bg-neutral/30 p-3">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="font-label text-label-caps text-muted uppercase tracking-wider">
-                      Resultado real:
+                      {t('polla.admin.groupStage.actualResult')}
                     </span>
 
                     <input
@@ -369,12 +354,12 @@ export default function AdminTable() {
                       disabled={!canSubmit}
                       className="rounded-sm bg-success/15 px-3 py-1 font-label text-label-caps text-success transition-colors hover:bg-success/25 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      {isSaving ? 'Guardando...' : 'Guardar'}
+                      {isSaving ? t('polla.admin.groupStage.saving') : t('polla.admin.groupStage.save')}
                     </button>
 
                     {alreadyScored && (
                       <span className="text-body-sm text-success font-medium">
-                        Guardado
+                        {t('polla.admin.groupStage.saved')}
                       </span>
                     )}
                   </div>
@@ -386,7 +371,7 @@ export default function AdminTable() {
                       <thead className="bg-neutral">
                         <tr>
                           <th className="px-4 py-2 text-left font-label text-label-caps text-muted uppercase tracking-wider">
-                            Usuario
+                            {t('polla.admin.groupStage.user')}
                           </th>
                           <th className="px-4 py-2 text-center font-label text-label-caps text-muted uppercase tracking-wider">
                             {teamA?.name || match.team_a}
@@ -422,7 +407,7 @@ export default function AdminTable() {
                   </div>
                 ) : (
                   <div className="rounded-sm border border-warning/30 bg-warning/10 px-4 py-2 text-body-sm text-warning">
-                    Aún no hay predicciones para este partido.
+                    {t('polla.admin.groupStage.noPredictionsYet')}
                   </div>
                 )}
               </div>
@@ -432,7 +417,7 @@ export default function AdminTable() {
           return (
             <div key={date} className="space-y-4">
               <h2 className="font-heading text-h2 font-semibold text-primary">
-                {formatDateLabel(dateMatches[0].match_date)}
+                {formatDateLong(dateMatches[0].match_date, lang)}
               </h2>
 
               {codes.map(renderMatch)}

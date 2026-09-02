@@ -5,25 +5,27 @@ import rulesIcon from "@predictor/ui/icons/rules.svg";
 import adminIcon from "@predictor/ui/icons/admin.svg";
 
 import Layout from "../layouts/Layout.astro";
+import { createT } from "@predictor/i18n";
 
 // Server-side session check (middleware also guards this route)
 const user = Astro.locals.user;
 const displayName = Astro.locals.displayName;
 const isAdmin = Astro.locals.isAdmin as boolean;
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Inicio">
+<Layout title={t("polla.home.pageTitle")}>
   <div class="max-w-4xl">
     {
       user && (
         <div class="mb-8">
           <h1 class="text-2xl font-bold text-primary">
-            ¡Bienvenido de nuevo, {displayName}!
+            {t("polla.home.welcomeBack", { name: displayName ?? "" })}
           </h1>
-          <p class="text-secondary mt-1">FIFA World Cup 2026 Polla</p>
+          <p class="text-secondary mt-1">{t("polla.home.tagline")}</p>
           <p class="mt-1 text-secondary text-body-sm">
-            Predice los resultados y compite con amigos. ¡Gana puntos según tu
-            precisión!
+            {t("polla.home.description")}
           </p>
         </div>
       )
@@ -36,7 +38,7 @@ const isAdmin = Astro.locals.isAdmin as boolean;
       >
         <img src={predictionsIcon.src} class="w-8 h-8" alt="" />
         <span class="font-label text-label-md font-medium"
-          >Hacer predicciones</span
+          >{t("polla.home.predictionsCard")}</span
         >
       </a>
       <a
@@ -44,14 +46,14 @@ const isAdmin = Astro.locals.isAdmin as boolean;
         class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
       >
         <img src={standingsIcon.src} class="w-8 h-8" alt="" />
-        <span class="font-label text-label-md font-medium">Tabla de posiciones</span>
+        <span class="font-label text-label-md font-medium">{t("polla.home.leaderboardCard")}</span>
       </a>
       <a
         href="/polla/rules"
         class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
       >
         <img src={rulesIcon.src} class="w-8 h-8" alt="" />
-        <span class="font-label text-label-md font-medium">Reglas de puntuación</span>
+        <span class="font-label text-label-md font-medium">{t("polla.home.rulesCard")}</span>
       </a>
       {
         isAdmin && (
@@ -60,7 +62,7 @@ const isAdmin = Astro.locals.isAdmin as boolean;
             class="flex flex-col items-center gap-2 rounded-md border border-border bg-surface p-5 hover:border-tertiary transition-colors"
           >
             <img src={adminIcon.src} class="w-8 h-8" alt="" />
-            <span class="font-label text-label-md font-medium">Admin</span>
+            <span class="font-label text-label-md font-medium">{t("polla.home.adminCard")}</span>
           </a>
         )
       }

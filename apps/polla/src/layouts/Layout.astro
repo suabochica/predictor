@@ -43,7 +43,7 @@ const { t } = createT(lang);
       currentUrl={currentUrl}
     />
     <div class="flex flex-1">
-      {user && <Sidebar />}
+      {user && <Sidebar lang={lang} />}
       <main class={`flex-1 p-4 md:p-6 ${user ? 'max-w-full' : ''}`}>
         <slot />
       </main>

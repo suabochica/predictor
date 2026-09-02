@@ -1,86 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import RulesEs from "../components/Rules.es.astro";
+import RulesEn from "../components/Rules.en.astro";
+import { createT } from "@predictor/i18n";
+
+const lang = Astro.locals.lang;
+const { t } = createT(lang);
 ---
 
-<Layout title="Reglas de puntuación">
-  <div class="space-y-8 max-w-3xl">
-    <h1 class="text-2xl font-bold text-primary">Reglas de puntuación</h1>
-
-    <section>
-      <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
-        Estructura del torneo
-      </h2>
-      <p class="text-secondary text-body-md">
-        Los torneos de fútbol se estructuran con una fase de grupos inicial o
-        todos contra todos, seguida de rondas eliminatorias. Para todos los
-        partidos, los usuarios pueden predecir el resultado.
-      </p>
-    </section>
-
-    <section>
-      <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
-        Reglas de predicción
-      </h2>
-      <ul class="list-disc list-inside space-y-2 text-secondary text-body-md">
-        <li>
-          Puedes cambiar tu predicción hasta <strong class="text-primary font-semibold"
-            >30 minutos antes</strong
-          > de que comience el partido.
-        </li>
-        <li>
-          Las predicciones cubren <strong class="text-primary font-semibold">90 minutos</strong> de
-          tiempo reglamentario + descuento (excluye prórroga y penales).
-        </li>
-      </ul>
-    </section>
-
-    <section>
-      <h2 class="font-heading text-h2 font-semibold text-primary mb-3">
-        Resumen de puntuación
-      </h2>
-      <div class="overflow-x-auto rounded-md border border-border">
-        <table class="w-full text-body-sm">
-          <thead class="bg-neutral">
-            <tr>
-              <th class="px-4 py-3 text-left text-label-caps text-secondary uppercase tracking-wider">Categoría</th>
-              <th class="px-4 py-3 text-center text-label-caps text-secondary uppercase tracking-wider">Primera ronda</th>
-              <th class="px-4 py-3 text-center text-label-caps text-secondary uppercase tracking-wider">Eliminatorias</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-border">
-            <tr
-              ><td class="px-4 py-3">Resultado correcto (ganador/empate)</td><td
-                class="px-4 py-3 text-center font-semibold">5</td
-              ><td class="px-4 py-3 text-center font-semibold">10</td></tr
-            >
-            <tr
-              ><td class="px-4 py-3">Goles del equipo local correctos</td><td
-                class="px-4 py-3 text-center font-semibold">2</td
-              ><td class="px-4 py-3 text-center font-semibold">4</td></tr
-            >
-            <tr
-              ><td class="px-4 py-3">Goles del equipo visitante correctos</td><td
-                class="px-4 py-3 text-center font-semibold">2</td
-              ><td class="px-4 py-3 text-center font-semibold">4</td></tr
-            >
-            <tr
-              ><td class="px-4 py-3">Diferencia de goles correcta</td><td
-                class="px-4 py-3 text-center font-semibold">1</td
-              ><td class="px-4 py-3 text-center font-semibold">2</td></tr
-            >
-            <tr class="bg-neutral"
-              ><td class="px-4 py-3 font-bold text-primary">MÁX. TOTAL</td><td
-                class="px-4 py-3 text-center font-bold text-primary">10</td
-              ><td class="px-4 py-3 text-center font-bold text-primary"
-                >20</td
-              ></tr
-            >
-          </tbody>
-        </table>
-      </div>
-      <p class="text-secondary text-body-md">
-        La tabla de puntuación se actualizara automáticamente 30 minutos después de que termine el último partido de la fecha 
-      </p>
-    </section>
-  </div>
+<Layout title={t("polla.rules.pageTitle")}>
+  {lang === "en" ? <RulesEn /> : <RulesEs />}
 </Layout>
