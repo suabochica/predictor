@@ -1,12 +1,42 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@predictor/supabase';
 import { useCompetition } from './CompetitionContext';
+import { createDb } from '../lib/db';
 import { MAX_SQUAD_SIZE, MIN_BID_INCREMENT } from '../config/constants';
 
 const AuctionContext = createContext(null);
 
-export function AuctionProvider({ children }) {
-  const { db, competitionId, competition } = useCompetition();
+/**
+ * Auction state for ONE competition.
+ *
+ * By default that is the sidebar competition, from `useCompetition()` — the
+ * player-facing binding, mounted once in `App.jsx`.
+ *
+ * `competitionId` overrides it: Admin mounts a second instance bound to the
+ * panel's own selector, so the auction controls always act on the competition
+ * the panel header names. Same pattern as `usePlayers(filters, dbOverride)`.
+ * Both mount sites KEY the provider on that id, which is what lets the
+ * subscribe effect below keep its `[]` dep array.
+ *
+ * `scope` only names the realtime channel. Two instances on the same
+ * competition would otherwise share a topic and collide (see LeagueContext).
+ */
+export function AuctionProvider({ children, competitionId: overrideId = null, scope = 'app' }) {
+  const {
+    db: activeDb,
+    competitionId: activeId,
+    competition: activeCompetition,
+    competitions,
+  } = useCompetition();
+  const competitionId = overrideId ?? activeId;
+  const db = useMemo(
+    () => (overrideId == null ? activeDb : createDb(overrideId)),
+    [overrideId, activeDb]
+  );
+  const competition =
+    overrideId == null
+      ? activeCompetition
+      : competitions.find((c) => c.id === overrideId) ?? null;
   // Squad size and bid increment are per-competition config (060); the constants
   // survive only as the fallback while a competition row is still resolving.
   const maxSquadSize = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
@@ -26,22 +56,22 @@ export function AuctionProvider({ children }) {
     // Every binding is filtered, not just the channel renamed: without the filter
     // the server pushes every row change on the table, and the auction_state
     // handler below would blindly replace this competition's state with another's.
-    const scope = `competition_id=eq.${competitionId}`;
+    const rowFilter = `competition_id=eq.${competitionId}`;
     const channel = supabase
-      .channel(`auction-bids-${competitionId}`)
+      .channel(`auction-${scope}-${competitionId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'auction_bids', filter: scope },
+        { event: 'INSERT', schema: 'public', table: 'auction_bids', filter: rowFilter },
         () => { fetchBids(); }
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'auction_bids', filter: scope },
+        { event: 'UPDATE', schema: 'public', table: 'auction_bids', filter: rowFilter },
         () => { fetchBids(); }
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'auction_state', filter: scope },
+        { event: 'UPDATE', schema: 'public', table: 'auction_state', filter: rowFilter },
         (payload) => {
           setAuctionState(payload.new);
           fetchBids();
@@ -51,7 +81,7 @@ export function AuctionProvider({ children }) {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'team_players', filter: scope },
+        { event: 'INSERT', schema: 'public', table: 'team_players', filter: rowFilter },
         () => {
           fetchOwnedPlayerIds();
           fetchPlayerOwners();

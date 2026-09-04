@@ -388,9 +388,17 @@ to drop, not part of 068.
 only.**
 
 ### Deferrals — deliberate, still open
-- [ ] Admin auction sections do not follow the admin selector. Would need an
-      optional `competitionId` prop on `AuctionProvider`, mounted a second time
-      only while diverged.
+- [x] ~~Admin auction sections do not follow the admin selector.~~ **DONE
+      2026-09-04**: `AuctionProvider` takes an optional `competitionId` (plus a
+      `scope` that names its realtime channel) and `Admin` mounts a second,
+      keyed instance around `AdminPanel`. `auctionInSync` is gone — the sections
+      always act on the administered competition. This also closed three latent
+      bugs: the scoring-system toggle silently no-op'd while diverged, `Calcular
+      posiciones` would have scored UCL with the WC's system, and the knockout /
+      negotiation sections showed for UCL off the WC's `completed` auction.
+      Still needs the browser pass, including the first real write-path traffic
+      through `auction_state`/`auction_bids` under `competition_id` — the first
+      slice of the remaining-8-tables exercise deferred in Phase 6 above.
 - [ ] Admins bypass the archived-write guard via the pre-existing "Admins can
       manage all teams" policy — the WC is not truly frozen for an admin.
 - [ ] `lib/validation.js` still imports `TOTAL_BUDGET` with no callers; left for

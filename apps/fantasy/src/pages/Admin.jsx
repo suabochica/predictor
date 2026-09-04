@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useAuction } from '../context/AuctionContext';
+import { AuctionProvider, useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
@@ -55,16 +55,15 @@ const POSITION_BADGE = {
  *
  * `adb` is that binding: a scoped client for the *administered* competition, used
  * in place of the `db` every other page takes from `useCompetition()`. The parent
- * keys this component on the same id, so a switch remounts it and every one of its
- * ~40 useState hooks starts clean rather than showing the previous competition's
- * rows under the new competition's name.
+ * keys the wrapper on the same id, so a switch remounts this whole subtree and
+ * every one of its ~40 useState hooks starts clean rather than showing the
+ * previous competition's rows under the new competition's name.
  *
- * `auctionInSync` is false while the selector and the sidebar disagree. The auction
- * sections read `useAuction()`, which is wired to the *sidebar* competition and
- * cannot be re-pointed from here, so they are hidden rather than shown pointing
- * somewhere other than the panel header claims.
+ * The auction sections follow the same binding: the parent wraps this component
+ * in its own `AuctionProvider` scoped to `adminCompetitionId`, so `useAuction()`
+ * here returns the administered competition's auction, not the sidebar's.
  */
-function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
+function AdminPanel({ adminCompetitionId, adminCompetition }) {
   const adb = useMemo(() => createDb(adminCompetitionId), [adminCompetitionId]);
   const {
     auctionState,
@@ -212,10 +211,10 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
     setAutoBidRunning(false);
   }
 
-  // Fires for the SIDEBAR competition's auction (that is where auctionState and
-  // runAutoBids come from), and deliberately keeps firing even while the admin
-  // selector points elsewhere: a live auction must not stall because the admin
-  // stepped away to set up another competition.
+  // Fires for the ADMINISTERED competition's auction — auctionState and
+  // runAutoBids both come from the AuctionProvider the parent scopes to
+  // `adminCompetitionId`, so the ticker follows the panel selector. Switching
+  // the selector remounts the panel and re-points the ticker with it.
   useEffect(() => {
     if (!auctionState) return;
     const { status, current_round, round_started_at } = auctionState;
@@ -1647,14 +1646,15 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  // These two gates are about the auction sections only, and those come from
-  // useAuction() — the SIDEBAR competition. While the selector points somewhere
-  // else the auction sections are hidden anyway, so a missing or still-loading
-  // auction state must not block the rest of the panel.
-  if (auctionInSync && loading) {
+  // Past these two gates `auctionState` is guaranteed non-null, which is what
+  // lets the scoring-system reads below dereference it directly. Blacking out
+  // the panel is safe: the selector, the banners and the Competencias section
+  // all live in the parent and survive this return, so a competition with no
+  // auction_state row can still be fixed from here.
+  if (loading) {
     return <div className="text-secondary p-6">Cargando estado de subasta…</div>;
   }
-  if (auctionInSync && !auctionState) {
+  if (!auctionState) {
     return (
       <div className="text-error p-6">
         No se encontró estado de subasta. Ejecuta el seed SQL en Supabase.
@@ -1715,7 +1715,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
         <h2 className="text-xl font-bold text-primary">
           {adminCompetition?.name ?? `Competencia #${adminCompetitionId}`}
         </h2>
-        {auctionInSync && status && (
+        {status && (
           <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${STATUS_BADGE[status]}`}>
             {status}
           </span>
@@ -1733,7 +1733,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
           )}
         </div>
 
-        {auctionInSync && isCompleted && (
+        {isCompleted && (
           <p className="text-xs text-muted bg-surface-hover rounded-lg px-3 py-2">
             Subasta completada. Los nuevos inscritos accederán a jugadores no ganados vía el mercado libre.
           </p>
@@ -1800,22 +1800,6 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
         )}
       </section>
 
-      {/* The auction sections are driven by AuctionContext, which is bound to the
-          competition selected in the SIDEBAR — it cannot be re-pointed from here.
-          Rather than show controls that would start, resolve or auto-bid a
-          different competition than the one this panel names, hide them and say so. */}
-      {!auctionInSync && (
-        <section className="bg-surface rounded-xl p-6 space-y-2">
-          <h2 className="text-lg font-semibold text-primary">Control de subasta</h2>
-          <p className="text-sm text-secondary">
-            Las secciones de subasta (control, resolución de ronda y pujas en vivo) operan sobre la
-            competencia activa de la app, no sobre la seleccionada aquí. Cambia la competencia de la
-            app para administrarlas.
-          </p>
-        </section>
-      )}
-
-      {auctionInSync && (<>
       {/* ── Auction Controls ─────────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-5">
         <h2 className="text-lg font-semibold text-primary">Control de subasta</h2>
@@ -2133,7 +2117,6 @@ function AdminPanel({ adminCompetitionId, adminCompetition, auctionInSync }) {
           )}
         </section>
       )}
-      </>)}
 
       {/* ── Matchday Management ─────────────────────────────────────────── */}
       <section className="bg-surface rounded-xl p-6 space-y-6">
@@ -3815,7 +3798,7 @@ export default function Admin() {
             <span className="font-semibold">{adminCompetition?.short_label ?? `#${adminCompetitionId}`}</span>,
             pero la app está mostrando{' '}
             <span className="font-semibold">{activeCompetition?.short_label ?? `#${competitionId}`}</span>.
-            Todo lo que hagas aquí abajo afecta a la primera.
+            Todo lo que hagas aquí abajo —subasta incluida— afecta a la primera.
           </p>
           <button
             onClick={() => setCompetition(adminCompetitionId)}
@@ -3842,13 +3825,16 @@ export default function Admin() {
         onAdminister={setAdminCompetitionId}
       />
 
+      {/* The panel's auction sections read useAuction(); this second, scoped
+          provider is what makes them act on the administered competition rather
+          than the sidebar's. Keyed so a switch remounts both. */}
       {adminCompetitionId != null && (
-        <AdminPanel
-          key={adminCompetitionId}
-          adminCompetitionId={adminCompetitionId}
-          adminCompetition={adminCompetition}
-          auctionInSync={!diverged}
-        />
+        <AuctionProvider key={adminCompetitionId} competitionId={adminCompetitionId} scope="admin">
+          <AdminPanel
+            adminCompetitionId={adminCompetitionId}
+            adminCompetition={adminCompetition}
+          />
+        </AuctionProvider>
       )}
     </div>
   );
