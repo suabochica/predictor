@@ -6,8 +6,6 @@ import fantasyIcon from "@predictor/ui/icons/fantasy.svg";
 
 import Layout from "../layouts/Layout.astro";
 import AppCard from "../components/AppCard";
-import PremiacionEs from "../components/Premiacion.es.astro";
-import PremiacionEn from "../components/Premiacion.en.astro";
 
 const displayName = Astro.locals.displayName;
 const lang = Astro.locals.lang;
@@ -42,12 +40,10 @@ const { t } = createT(lang);
       />
     </div>
 
-    <div class="max-w-[520px]">
-      <h2 class="font-heading text-h3 font-semibold text-primary">
-        {t("gateway.home.premiacionHeading")}
-      </h2>
-      {lang === "en" ? <PremiacionEn /> : <PremiacionEs />}
-    </div>
+    {/* Prizes section hidden: the copy still describes the 2026 World Cup
+        entry fee and payout split, which does not apply to UCL 2026/27.
+        Premiacion.{es,en}.astro are kept so the text can be updated and this
+        block restored, rather than rewritten. */}
 
     <form method="POST" action="/auth/signout">
       <button type="submit" class={BUTTON_PRIMARY_CLASSES}>
