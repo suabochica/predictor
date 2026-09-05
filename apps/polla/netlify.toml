@@ -3,7 +3,9 @@
   publish = "dist"
   # Polla imports shared packages, so rebuild when those change too —
   # not just apps/polla (Netlify's default).
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../../packages ../../pnpm-lock.yaml ../../pnpm-workspace.yaml"
+  # Build if: (a) there are changes since last deploy, OR (b) there's no prior
+  # deploy to compare against (CACHED == COMMIT means fresh clone / no cache).
+  ignore = "if [ \"$CACHED_COMMIT_REF\" = \"$COMMIT_REF\" ]; then exit 1; fi; git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../../packages ../../pnpm-lock.yaml ../../pnpm-workspace.yaml"
 
 [build.environment]
   NODE_VERSION = "22"
