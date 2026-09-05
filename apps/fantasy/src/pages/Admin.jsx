@@ -2020,7 +2020,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
               <p className="text-error text-sm font-semibold">Errores de resolución — ronda no avanzada:</p>
               {resolveErrors.map((e, i) => (
                 <p key={i} className="text-error text-xs">
-                  Player #{e.playerId}: {e.reason}
+                  {e.playerId != null ? `Player #${e.playerId}: ` : ''}{e.reason}
                 </p>
               ))}
             </div>

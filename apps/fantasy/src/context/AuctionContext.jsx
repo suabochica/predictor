@@ -218,14 +218,35 @@ export function AuctionProvider({ children, competitionId: overrideId = null, sc
     // Read fresh from the DB rather than React state: realtime may not have
     // delivered this round's bids (or a round advance) into local state yet,
     // which previously caused contested players to be lost on early/quick resolves.
-    const { data: freshState } = await db
+    // Every read below reports its error instead of coalescing to `?? []`: a
+    // failed read here otherwise leaves `roundBids` empty, the loop never runs,
+    // and resolveRound() returns zero errors — which the caller reads as "nobody
+    // bid this round" and advances the round, awarding nothing. That is exactly
+    // how the UCL round-1 resolve silently no-op'd (the `players(...)` embed
+    // below was missing the FK hint c535b2f added everywhere else, so PostgREST
+    // rejected it as ambiguous — see migration 061's dual FKs).
+    const { data: freshState, error: stateErr } = await db
       .from('auction_state').select('current_round').order('id').limit(1).single();
+    if (stateErr) {
+      return {
+        resolved: [],
+        contested: [],
+        errors: [{ playerId: null, reason: `Could not read auction state: ${stateErr.message}` }],
+      };
+    }
     const round = freshState?.current_round ?? auctionState.current_round;
 
-    const { data: freshBids } = await db
+    const { data: freshBids, error: bidsErr } = await db
       .from('auction_bids')
-      .select('*, players(name, position, price), users(display_name)')
+      .select('*, players!auction_bids_player_id_fkey(name, position, price), users(display_name)')
       .eq('round_number', round);
+    if (bidsErr) {
+      return {
+        resolved: [],
+        contested: [],
+        errors: [{ playerId: null, reason: `Could not read round ${round} bids: ${bidsErr.message}` }],
+      };
+    }
     const roundBids = freshBids ?? [];
     const playerIds = [...new Set(roundBids.map((b) => b.player_id))];
 
@@ -245,122 +266,147 @@ export function AuctionProvider({ children, competitionId: overrideId = null, sc
     const errors    = [];
 
     for (const playerId of playerIds) {
-      // Skip players already resolved in a previous resolveRound() call.
-      if (roundBids.some((b) => b.player_id === playerId && b.is_winning)) continue;
+      // A throw anywhere below would otherwise abort the whole round mid-way,
+      // leaving the players already handled awarded and the rest untouched with
+      // nothing to show for it. Record it against this player and carry on; the
+      // non-empty errors array stops the caller from advancing the round.
+      try {
+        // Skip players already resolved in a previous resolveRound() call.
+        if (roundBids.some((b) => b.player_id === playerId && b.is_winning)) continue;
 
-      const playerBids    = roundBids.filter((b) => b.player_id === playerId);
-      const uniqueBidders = new Set(playerBids.map((b) => b.user_id));
+        const playerBids    = roundBids.filter((b) => b.player_id === playerId);
+        const uniqueBidders = new Set(playerBids.map((b) => b.user_id));
 
-      // Multiple bidders → contested, carry over to next round.
-      if (uniqueBidders.size > 1) {
-        const topBid = highestOf(playerId);
-        contested.push({
-          playerId,
-          playerName: topBid?.players?.name ?? `Player #${playerId}`,
-          amount: topBid?.bid_amount ?? 0,
-        });
-        if (topBid) {
-          // Carry the top bid into the next round, owned by the top bidder.
-          // upsert + ignoreDuplicates against auction_bids_unique_user_player_round
-          // (migration 021) keeps a re-run of resolveRound() on the same round idempotent.
-          const { error: coErr } = await db.from('auction_bids').upsert(
-            {
-              user_id: topBid.user_id,
-              player_id: playerId,
-              bid_amount: topBid.bid_amount,
-              round_number: round + 1,
-              is_carryover: true,
-            },
-            { onConflict: 'user_id,player_id,round_number', ignoreDuplicates: true }
-          );
-          if (coErr) errors.push({ playerId, reason: `Carry-over failed: ${coErr.message}` });
-        }
-        continue;
-      }
-
-      const winner = highestOf(playerId);
-      if (!winner) continue;
-
-      // 1. Mark winning bid
-      const { error: bidErr } = await db
-        .from('auction_bids')
-        .update({ is_winning: true })
-        .eq('id', winner.id);
-
-      if (bidErr) {
-        errors.push({ playerId, reason: `Bid update failed: ${bidErr.message}` });
-        continue;
-      }
-
-      // 2. Look up winner's team
-      const { data: team, error: teamErr } = await db
-        .from('teams')
-        .select('id, budget_remaining')
-        .eq('user_id', winner.user_id)
-        .single();
-
-      if (teamErr || !team) {
-        errors.push({ playerId, reason: 'Winner has no team registered.' });
-        continue;
-      }
-
-      // 3. Safety net: skip if team already has a full squad. Also fetch positions for GK check.
-      const { data: currentSquad } = await db
-        .from('team_players')
-        .select('player_id, players(position)')
-        .eq('team_id', team.id);
-
-      const currentSquadSize = currentSquad?.length ?? 0;
-
-      if (currentSquadSize >= maxSquadSize) {
-        errors.push({ playerId, reason: `Squad is full (${maxSquadSize}/${maxSquadSize}) — player skipped.` });
-        continue;
-      }
-
-      // GK safety net: if awarding a non-GK would fill the squad while the team has no GK, skip.
-      if (winner.players?.position !== 'GK') {
-        const hasGK = (currentSquad ?? []).some((tp) => tp.players?.position === 'GK');
-        if (!hasGK && currentSquadSize + 1 >= maxSquadSize) {
-          errors.push({ playerId, reason: `Squad would be full with no goalkeeper — player skipped.` });
+        // Multiple bidders → contested, carry over to next round.
+        if (uniqueBidders.size > 1) {
+          const topBid = highestOf(playerId);
+          contested.push({
+            playerId,
+            playerName: topBid?.players?.name ?? `Player #${playerId}`,
+            amount: topBid?.bid_amount ?? 0,
+          });
+          if (topBid) {
+            // Carry the top bid into the next round, owned by the top bidder.
+            // upsert + ignoreDuplicates against auction_bids_unique_user_player_round
+            // (migration 021) keeps a re-run of resolveRound() on the same round idempotent.
+            const { error: coErr } = await db.from('auction_bids').upsert(
+              {
+                user_id: topBid.user_id,
+                player_id: playerId,
+                bid_amount: topBid.bid_amount,
+                round_number: round + 1,
+                is_carryover: true,
+              },
+              { onConflict: 'user_id,player_id,round_number', ignoreDuplicates: true }
+            );
+            if (coErr) errors.push({ playerId, reason: `Carry-over failed: ${coErr.message}` });
+          }
           continue;
         }
+
+        const winner = highestOf(playerId);
+        if (!winner) continue;
+
+        // 1. Mark winning bid
+        const { error: bidErr } = await db
+          .from('auction_bids')
+          .update({ is_winning: true })
+          .eq('id', winner.id);
+
+        if (bidErr) {
+          errors.push({ playerId, reason: `Bid update failed: ${bidErr.message}` });
+          continue;
+        }
+
+        // 2. Look up winner's team
+        const { data: team, error: teamErr } = await db
+          .from('teams')
+          .select('id, budget_remaining')
+          .eq('user_id', winner.user_id)
+          .single();
+
+        if (teamErr || !team) {
+          errors.push({ playerId, reason: 'Winner has no team registered.' });
+          continue;
+        }
+
+        // 3. Safety net: skip if team already has a full squad. Also fetch positions for GK check.
+        const { data: currentSquad, error: squadErr } = await db
+          .from('team_players')
+          .select('player_id, players(position)')
+          .eq('team_id', team.id);
+
+        if (squadErr) {
+          errors.push({ playerId, reason: `Squad check failed: ${squadErr.message}` });
+          continue;
+        }
+
+        const currentSquadSize = currentSquad?.length ?? 0;
+
+        if (currentSquadSize >= maxSquadSize) {
+          errors.push({ playerId, reason: `Squad is full (${maxSquadSize}/${maxSquadSize}) — player skipped.` });
+          continue;
+        }
+
+        // GK safety net: if awarding a non-GK would fill the squad while the team has no GK, skip.
+        if (winner.players?.position !== 'GK') {
+          const hasGK = (currentSquad ?? []).some((tp) => tp.players?.position === 'GK');
+          if (!hasGK && currentSquadSize + 1 >= maxSquadSize) {
+            errors.push({ playerId, reason: `Squad would be full with no goalkeeper — player skipped.` });
+            continue;
+          }
+        }
+
+        // 4. Assign player to team (ignore if already assigned from a re-run)
+        const { error: tpErr } = await db.from('team_players').upsert(
+          {
+            team_id: team.id,
+            player_id: playerId,
+            acquisition_price: winner.bid_amount,
+          },
+          { onConflict: 'team_id,player_id', ignoreDuplicates: true }
+        );
+
+        if (tpErr) {
+          errors.push({ playerId, reason: `Team assignment failed: ${tpErr.message}` });
+          continue;
+        }
+
+        // 5. Persist winning bid as current_price (price never reverts after auction)
+        const { error: priceErr } = await db
+          .from('players')
+          .update({ current_price: winner.bid_amount })
+          .eq('id', playerId);
+
+        if (priceErr) {
+          errors.push({ playerId, reason: `Price update failed: ${priceErr.message}` });
+        }
+
+        // 6. Deduct from team budget. Reported but not retried on a re-run: step
+        // 1 already marked the bid winning, so a second pass skips this player.
+        const { error: budgetErr } = await db
+          .from('teams')
+          .update({
+            budget_remaining: +(team.budget_remaining - winner.bid_amount).toFixed(1),
+          })
+          .eq('id', team.id);
+
+        if (budgetErr) {
+          errors.push({
+            playerId,
+            reason: `Player awarded but budget NOT deducted (£${winner.bid_amount.toFixed(1)}) — fix manually: ${budgetErr.message}`,
+          });
+        }
+
+        resolved.push({
+          playerId,
+          playerName: winner.players?.name ?? `Player #${playerId}`,
+          winnerName: winner.users?.display_name ?? '?',
+          amount: winner.bid_amount,
+        });
+      } catch (err) {
+        errors.push({ playerId, reason: `Unexpected failure: ${err?.message ?? err}` });
       }
-
-      // 4. Assign player to team (ignore if already assigned from a re-run)
-      const { error: tpErr } = await db.from('team_players').upsert(
-        {
-          team_id: team.id,
-          player_id: playerId,
-          acquisition_price: winner.bid_amount,
-        },
-        { onConflict: 'team_id,player_id', ignoreDuplicates: true }
-      );
-
-      if (tpErr) {
-        errors.push({ playerId, reason: `Team assignment failed: ${tpErr.message}` });
-        continue;
-      }
-
-      // 5. Persist winning bid as current_price (price never reverts after auction)
-      await db
-        .from('players')
-        .update({ current_price: winner.bid_amount })
-        .eq('id', playerId);
-
-      // 6. Deduct from team budget
-      await db
-        .from('teams')
-        .update({
-          budget_remaining: +(team.budget_remaining - winner.bid_amount).toFixed(1),
-        })
-        .eq('id', team.id);
-
-      resolved.push({
-        playerId,
-        playerName: winner.players?.name ?? `Player #${playerId}`,
-        winnerName: winner.users?.display_name ?? '?',
-        amount: winner.bid_amount,
-      });
     }
 
     fetchBids();
