@@ -373,11 +373,26 @@ refiring and adding bids to the rewound round.
 This is the heaviest write path — `auto_complete_squads` + default lineups +
 matchday activation. Only do it if you're willing to run the full teardown.
 
-- [ ] **Completar subasta**. Expect warnings listing teams under the squad size
+- [x] **Completar subasta**. Expect warnings listing teams under the squad size
       — that's correct for a two-player dry run, not a failure.
-- [ ] Status badge → `completed`. **Cuadro eliminatorio** and **Negociación de
+- [x] Status badge → `completed`. Admin shows *Subasta completada. No hay más
+      acciones disponibles.* **Cuadro eliminatorio** and **Negociación de
       traspasos** now appear for UCL (correctly this time — off UCL's own state).
-- [ ] The first UCL matchday flips to **activa**.
+- [x] The first UCL matchday flips to **activa**.
+
+**Passed 2026-09-05.** `auto_complete_squads` filled both teams to **15/15** and
+default lineups were built for both: 11/11 starters, exactly one GK each, 4 on
+the bench, a captain assigned, and the header reads **"Lineup for: Liga MD1"** —
+the `matchdays.phase` taxonomy naming UCL's league phase instead of falling back
+to World Cup group-stage copy. Remaining budgets £23.0M and £12.0M.
+
+**Do not raise the odd-looking formations as a bug.** The default XIs came out
+`2-2-6` and `0-8-2` (zero defenders, two DEFs on the bench). That is the
+designed output, not a UCL-specific fault: `lib/defaultLineup.js:13` reserves
+one GK and then fills the XI with the most expensive **outfielders regardless of
+position**, and the only formation rule anywhere in the app — client side and in
+migration 049's `save_lineup` guard — is "exactly one GK starts". There is no
+min-DEF / max-FWD constraint, and the World Cup behaved the same way.
 
 ```sql
 WITH c AS (SELECT id FROM competitions WHERE slug = 'ucl-2026-27')
