@@ -563,12 +563,24 @@ SET is_active    = false,
     is_completed = false
 WHERE competition_id = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27');
 
--- Inspect the verification below BEFORE committing.
--- COMMIT;
--- ROLLBACK;
+COMMIT;
 ```
 
-Run **D3** while the transaction is still open, then `COMMIT;`.
+> ⚠️ **Keep `BEGIN;` and `COMMIT;` inside the same Run.** The Supabase SQL
+> Editor does **not** hold a transaction across separate Run clicks — each run
+> is its own session. An earlier version of this file told you to run D1, then
+> inspect D3, then `COMMIT;` as three separate runs; that silently discards
+> everything D1 did (2026-09-05: it surfaced as `DELETE FROM teams` failing with
+> `fantasy_standings_team_id_fkey` on a row D1 had "already deleted"). The batch
+> is atomic either way — any statement erroring rolls the whole thing back — so
+> run D3 **after** committing, and if it comes back wrong, fix forward rather
+> than expecting a rollback. If you want a dry look first, replace the final
+> `COMMIT;` with `ROLLBACK;` and read the row counts the editor reports.
+
+> If you are also running D2 (removing the test teams), fold its `DELETE FROM
+> teams` into this same batch, immediately after the `proxy_targets` delete and
+> before the `UPDATE` statements — the budget reset on `teams` is then dead work
+> and can be dropped.
 
 > Every statement repeats the slug sub-select rather than sharing one CTE (a
 > `WITH` binds only to the single statement that follows it). That's deliberate:
@@ -576,19 +588,20 @@ Run **D3** while the transaction is still open, then `COMMIT;`.
 
 ## D2 · Level B — also remove the test teams
 
-Only if you enrolled accounts you do **not** want in the real league. Run D1
-first (it clears everything that references `teams`), then:
+Only if you enrolled accounts you do **not** want in the real league. **Prefer
+folding this into D1's batch** (see the note above) rather than running it as a
+second batch — it must land in the same transaction as the deletes that clear
+everything referencing `teams`, or the FK will reject it:
 
 ```sql
-BEGIN;
 DELETE FROM teams
 WHERE competition_id = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27');
--- verify with D3, then:
--- COMMIT;
 ```
 
-If this errors with a foreign-key violation, something still references those
-teams — find it rather than cascading:
+If this errors with a foreign-key violation, either D1's deletes were never
+committed (the separate-runs trap above — this is the likely cause), or
+something outside D1's list still references those teams. Find it rather than
+cascading:
 
 ```sql
 SELECT 'transfers' src, count(*) FROM transfers WHERE team_id IN
