@@ -404,19 +404,40 @@ SELECT
 
 ## B13 · Scoring is scoped (the wrong-numbers bug)
 
-- [ ] Selector on UCL, sidebar still on the World Cup. Run **Calcular
+- [x] Selector on UCL, sidebar still on the World Cup. Run **Calcular
       posiciones** for the active UCL matchday.
-- [ ] It uses **UCL's** `scoring_system` (the one you set in B3), not the World
+- [x] It uses **UCL's** `scoring_system` (the one you set in B3), not the World
       Cup's. With no player stats uploaded it should write zeros or refuse —
       either is fine; what matters is where the rows land:
+
+**No stats upload is needed for this step.** `calculateTeamMatchdayPoints`
+(`lib/matchday.js:21`) scores a starter with no stats row as 0 rather than
+throwing or skipping, and `hasStats` gates only the auto-recompute-after-upload
+path (`Admin.jsx:379`), never the manual flow. Zero-point rows prove placement
+just as well as real ones — and placement is what the wrong-numbers bug was
+about. The cost is that FPL and composite both yield 0, so the numbers alone
+can't show which `scoring_system` ran; the *SISTEMA ACTIVO* label above the
+preview is what evidences that. This step also exercises the null-lineup
+carry-forward-and-stamp path, since B12 wrote its lineups with
+`matchday_id: null`.
 
 ```sql
 SELECT c.slug, count(*) FROM fantasy_standings fs
   JOIN competitions c ON c.id = fs.competition_id GROUP BY c.slug;
 ```
 
-- [ ] Rows appear under `ucl-2026-27` only. **The World Cup count is unchanged
+- [x] Rows appear under `ucl-2026-27` only. **The World Cup count is unchanged
       from A3/A4.**
+
+**Passed 2026-09-05:** `ucl-2026-27` = 2, `world-cup-2026` = 72 (the Phase 0
+baseline count). Preview showed *SISTEMA ACTIVO: COMPUESTO (FPL+)* — UCL's own
+setting, not the World Cup's FPL — both teams listed with no "no lineup found"
+errors, 0 / 0.0 / 0.0.
+
+Cosmetic, not a bug: the *Jornada* dropdown reads "Liga MD1 — Liga MD1" because
+the matchday's `name` and `wc_stage` were both given that string at creation.
+Nothing reads `wc_stage` for UCL any more (`matchdays.phase` replaced it), so
+it is purely a label — worth avoiding when creating the real UCL matchdays.
 
 ## B14 · World Cup regression
 
