@@ -484,6 +484,16 @@ DELETE FROM transfers
 WHERE team_id IN (SELECT id FROM teams WHERE competition_id
                   = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27'));
 
+-- Also UNSCOPED, reachable only through matchdays. A no-op unless you uploaded
+-- stats during the dry run (B13 needs none), but it must be here: player_stats
+-- is keyed by matchday_id, not competition_id, so anything uploaded to a UCL
+-- matchday would otherwise survive the teardown and land in the real draft's
+-- first scoring run. `player_tournament_totals` is a VIEW over this table
+-- (migration 043) — it needs no delete of its own and clears with this one.
+DELETE FROM player_stats
+WHERE matchday_id IN (SELECT id FROM matchdays WHERE competition_id
+                      = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27'));
+
 DELETE FROM negotiation_offers
 WHERE window_id IN (SELECT id FROM negotiation_windows WHERE competition_id
                     = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27'));
@@ -588,7 +598,9 @@ SELECT
   (SELECT count(*) FROM knockout_matches    WHERE competition_id = (SELECT id FROM c)) AS knockout,
   (SELECT count(*) FROM negotiation_windows WHERE competition_id = (SELECT id FROM c)) AS neg_windows,
   (SELECT count(*) FROM lineups
-     WHERE team_id IN (SELECT id FROM teams WHERE competition_id = (SELECT id FROM c))) AS lineups;
+     WHERE team_id IN (SELECT id FROM teams WHERE competition_id = (SELECT id FROM c))) AS lineups,
+  (SELECT count(*) FROM player_stats
+     WHERE matchday_id IN (SELECT id FROM matchdays WHERE competition_id = (SELECT id FROM c))) AS player_stats;
 
 -- (b) Auction state is virgin; the World Cup row is untouched.
 SELECT c.slug, a.status, a.current_round, a.round_started_at, a.scoring_system
@@ -606,7 +618,9 @@ FROM teams t JOIN competitions comp ON comp.id = t.competition_id
 WHERE comp.slug = 'ucl-2026-27' AND t.budget_remaining <> comp.budget;
 ```
 
-- (a) all zeros, matching what you wrote down at A3
+- (a) all zeros, matching what you wrote down at A3. `player_stats` is the one
+  column A3 didn't capture (it was added to the teardown later) — it must be 0
+  regardless, since UCL has never had a stats upload
 - (b) UCL `pending` / `0` / `NULL`; World Cup still `completed`
 - (c) both columns 0
 - (d) **no rows**
