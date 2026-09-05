@@ -287,13 +287,23 @@ selector**, not the sidebar.
 
 - [x] **Resolver ronda**. Uncontested player is awarded — but only after the fix
       below; the first attempt awarded nothing and said nothing. Round 1 had no
-      contested player, so **carry-over is still untested** — round 2's contested
-      player is what proves it.
+      contested player, so carry-over was proven separately in round 2.
 - [x] Winner's *Presupuesto* in *Participantes* drops by exactly the bid.
-- [ ] `Siguiente ronda` → Ronda 2, and the carried-over player now has a
+- [x] `Siguiente ronda` → Ronda 2, and the carried-over player now has a
       **minimum bid above the previous high** on the participant's screen.
-- [ ] Place one bid in round 2, then use **Terminar ronda** (end early) — the
+- [x] Place one bid in round 2, then use **Terminar ronda** (end early) — the
       timer reads 0 for everyone and bidding stops without resolving.
+
+**Carry-over verified (round 2 → 3).** Erling Haaland, listed £11.0, drew 2 bids
+and was correctly flagged *Disputado* / *Contested* on both the admin panel and
+the participant's browse page. Resolving round 2 awarded nothing for him (right)
+and wrote the `is_carryover` bid into round 3 at the top bid, £11.3 to Sergio
+Benítez. Round 3 then shows him on the participant's *My bids* list with the
+`↔ R2` badge, *Leading*, and the browse row reads `floor £11.3` — i.e. the next
+bid must **exceed** the previous high, not match it. Resolving round 3 with no
+rival bid awards him at £11.3, which is the designed end of the carry-over path.
+Budgets reconcile exactly: Sergio £105.0 − 9.5 (Lautaro, round 1) = £95.5M, with
+*Effective £84.2M* = 95.5 − 11.3 while the bid is active.
 
 ```sql
 WITH c AS (SELECT id FROM competitions WHERE slug = 'ucl-2026-27')
