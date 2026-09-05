@@ -512,6 +512,12 @@ WHERE competition_id = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27');
 DELETE FROM knockout_matches
 WHERE competition_id = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27');
 
+-- The H2H league-phase draw (migration 070). Its team FKs are ON DELETE
+-- CASCADE, so D2 would clear it implicitly — but a D1-only reset must drop it
+-- explicitly or the real draft inherits the test schedule.
+DELETE FROM group_fixtures
+WHERE competition_id = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27');
+
 DELETE FROM fantasy_standings
 WHERE competition_id = (SELECT id FROM competitions WHERE slug = 'ucl-2026-27');
 
@@ -608,7 +614,8 @@ SELECT
   (SELECT count(*) FROM lineups
      WHERE team_id IN (SELECT id FROM teams WHERE competition_id = (SELECT id FROM c))) AS lineups,
   (SELECT count(*) FROM player_stats
-     WHERE matchday_id IN (SELECT id FROM matchdays WHERE competition_id = (SELECT id FROM c))) AS player_stats;
+     WHERE matchday_id IN (SELECT id FROM matchdays WHERE competition_id = (SELECT id FROM c))) AS player_stats,
+  (SELECT count(*) FROM group_fixtures WHERE competition_id = (SELECT id FROM c)) AS group_fixtures;
 
 -- (b) Auction state is virgin; the World Cup row is untouched.
 SELECT c.slug, a.status, a.current_round, a.round_started_at, a.scoring_system
@@ -626,9 +633,10 @@ FROM teams t JOIN competitions comp ON comp.id = t.competition_id
 WHERE comp.slug = 'ucl-2026-27' AND t.budget_remaining <> comp.budget;
 ```
 
-- (a) all zeros, matching what you wrote down at A3. `player_stats` is the one
-  column A3 didn't capture (it was added to the teardown later) — it must be 0
-  regardless, since UCL has never had a stats upload
+- (a) all zeros, matching what you wrote down at A3. `player_stats` and
+  `group_fixtures` are the two columns A3 didn't capture (both were added to the
+  teardown later) — they must be 0 regardless: UCL has never had a stats upload
+  and the dry run never drew an H2H schedule
 - (b) UCL `pending` / `0` / `NULL`; World Cup still `completed`
 - (c) both columns 0
 - (d) **no rows**
