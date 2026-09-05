@@ -441,10 +441,18 @@ it is purely a label — worth avoiding when creating the real UCL matchdays.
 
 ## B14 · World Cup regression
 
-- [ ] Re-run `apps/fantasy/.phase0-baseline/layer1_checksums_v2.sql` and diff
+- [x] Re-run `apps/fantasy/.phase0-baseline/layer1_checksums_v2.sql` and diff
       against `layer1_baseline.txt`. Every World Cup table identical.
-- [ ] Switch the sidebar to Mundial 2026 and click through Dashboard, Mi Equipo,
+- [x] Switch the sidebar to Mundial 2026 and click through Dashboard, Mi Equipo,
       Mercado, Clasificación, Bracket, Historial. Nothing changed.
+
+**Passed 2026-09-05 — Part B is complete.** The dry run found exactly one real
+defect (B11's silent resolve, fixed in `747fbec`) and confirmed the rest of the
+competition scoping end to end: a full auction cycle — bids, auto-bids,
+contested carry-over, awards, budgets, `auto_complete_squads`, default lineups,
+matchday activation and scoring — ran on UCL with the World Cup archive
+byte-identical throughout. The 8 `competition_id` tables that migration 068's
+tripwire could only be verified by a real cycle have now had one.
 
 ---
 
