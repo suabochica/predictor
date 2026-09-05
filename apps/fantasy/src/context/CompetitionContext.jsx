@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@predictor/supabase';
+import { useT } from '@predictor/i18n/react';
 import { createDb, unscopedFrom } from '../lib/db';
 
 const CompetitionContext = createContext(null);
@@ -170,6 +171,7 @@ export function CompetitionProvider({ children }) {
 export function CompetitionGate({ children }) {
   const { loading, competitionId } = useCompetition();
   const { user, loading: authLoading } = useAuth();
+  const t = useT();
 
   // No session: let the routes render so they can redirect to the gateway.
   if (!authLoading && !user) return children;
@@ -177,7 +179,7 @@ export function CompetitionGate({ children }) {
   if (!loading && competitionId == null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-neutral text-secondary px-6 text-center text-sm">
-        No hay ninguna competencia disponible.
+        {t('fantasy.competitionGate.noneAvailable')}
       </div>
     );
   }
@@ -185,7 +187,7 @@ export function CompetitionGate({ children }) {
   if (loading || competitionId == null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-neutral text-primary">
-        Cargando…
+        {t('common.loading')}
       </div>
     );
   }

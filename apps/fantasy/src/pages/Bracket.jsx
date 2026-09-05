@@ -6,24 +6,25 @@ import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
 import MatchCard from '../components/bracket/MatchCard';
 import { useCompetition } from '../context/CompetitionContext';
 import { competitionCopy } from '../config/competitionCopy';
+import { useLang } from '@predictor/i18n/react';
 
 // ── Seeded preview card (from standings) ─────────────────────────────────
 
-function PreviewMatchCard({ label, teamA, teamB, seedA, seedB }) {
+function PreviewMatchCard({ label, teamA, teamB, seedA, seedB, t }) {
   return (
     <div className="bg-surface border border-dashed border-border rounded-xl p-3 min-w-[180px] opacity-80">
       <span className="text-label-caps text-muted block mb-2">{label}</span>
       <div className="flex items-center gap-1.5 py-1">
         <span className="text-label-caps text-muted">({seedA})</span>
         <span className="text-xs text-secondary truncate">
-          {teamA?.display_name ?? 'TBD'}
+          {teamA?.display_name ?? t('fantasy.bracket.tbd')}
         </span>
       </div>
       <div className="border-t border-border my-0.5" />
       <div className="flex items-center gap-1.5 py-1">
         <span className="text-label-caps text-muted">({seedB})</span>
         <span className="text-xs text-secondary truncate">
-          {teamB?.display_name ?? 'TBD'}
+          {teamB?.display_name ?? t('fantasy.bracket.tbd')}
         </span>
       </div>
     </div>
@@ -59,12 +60,13 @@ function Connector() {
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function Bracket() {
+  const { t, lang } = useLang();
   const { db, competition } = useCompetition();
   const { matches, loading: matchesLoading } = useKnockout();
   const { standings, matchdays, loading: standingsLoading } = useStandings();
   // The real stages a fantasy round rides on are competition-specific copy; a
   // competition with none defined yet simply shows no subtitle.
-  const subtitle = (round) => competitionCopy(competition).bracketSubtitles?.[round];
+  const subtitle = (round) => competitionCopy(competition, lang).bracketSubtitles?.[round];
   const leagueMatchdays = matchdays.filter((md) => md.phase === 'league').length;
   const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
   // Live H2H points for unresolved, jornada-linked matches: `${mdId}:${teamId}` → matchday_points
@@ -112,7 +114,7 @@ export default function Bracket() {
   if (matchesLoading || standingsLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Cargando cuadro…
+        {t('fantasy.bracket.loading')}
       </div>
     );
   }
@@ -155,16 +157,16 @@ export default function Bracket() {
     <div className="space-y-8 max-w-5xl">
       {/* ── Header ── */}
       <div>
-        <h1 className="text-2xl font-bold text-primary">Cuadro</h1>
-        <p className="text-secondary text-sm mt-0.5">Eliminación directa — puntos H2H por jornada</p>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.bracket.title')}</h1>
+        <p className="text-secondary text-sm mt-0.5">{t('fantasy.bracket.subtitle')}</p>
       </div>
 
       {/* ── Not seeded yet ── */}
       {!hasMatches && !hasEnoughStandings && (
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
-          <p className="text-secondary font-semibold">Cuadro no configurado aún</p>
+          <p className="text-secondary font-semibold">{t('fantasy.bracket.notSeeded.heading')}</p>
           <p className="text-muted text-sm mt-1">
-            El cuadro eliminatorio se define al completar la fase de liga ({leagueMatchdays} jornadas).
+            {t('fantasy.bracket.notSeeded.body', { n: leagueMatchdays })}
           </p>
         </div>
       )}
@@ -173,30 +175,31 @@ export default function Bracket() {
       {!hasMatches && hasEnoughStandings && (
         <>
           <div className="bg-warning/5 border border-warning/30 rounded-xl p-3 text-sm text-tertiary">
-            Vista previa basada en posiciones actuales — el cuadro se bloquea al finalizar la fase de liga.
+            {t('fantasy.bracket.previewNotice')}
           </div>
 
           <div className="flex items-start gap-2 overflow-x-auto pb-2">
-            <RoundColumn title="Cuartos de final" subtitle={subtitle(1)}>
+            <RoundColumn title={t('fantasy.bracket.rounds.quarterFinals')} subtitle={subtitle(1)}>
               {generateChampionshipBracket(standings).map((m, i) => (
                 <PreviewMatchCard
                   key={m.label}
-                  label={m.label}
+                  label={t(`fantasy.bracket.matchLabels.${['a', 'b', 'c', 'd'][i]}`)}
                   teamA={m.teamA}
                   teamB={m.teamB}
                   seedA={[1, 4, 2, 3][i]}
                   seedB={[8, 5, 7, 6][i]}
+                  t={t}
                 />
               ))}
             </RoundColumn>
             <Connector />
-            <RoundColumn title="Semifinales" subtitle={subtitle(2)}>
-              <PreviewMatchCard label="Semi A" teamA={null} teamB={null} seedA="GA" seedB="GB" />
-              <PreviewMatchCard label="Semi B" teamA={null} teamB={null} seedA="GC" seedB="GD" />
+            <RoundColumn title={t('fantasy.bracket.rounds.semiFinals')} subtitle={subtitle(2)}>
+              <PreviewMatchCard label="Semi A" teamA={null} teamB={null} seedA="GA" seedB="GB" t={t} />
+              <PreviewMatchCard label="Semi B" teamA={null} teamB={null} seedA="GC" seedB="GD" t={t} />
             </RoundColumn>
             <Connector />
-            <RoundColumn title="Final" subtitle={subtitle(3)}>
-              <PreviewMatchCard label="Final" teamA={null} teamB={null} seedA="G Semi A" seedB="G Semi B" />
+            <RoundColumn title={t('fantasy.bracket.rounds.final')} subtitle={subtitle(3)}>
+              <PreviewMatchCard label="Final" teamA={null} teamB={null} seedA={t('fantasy.bracket.seedFinal.semiAWinner')} seedB={t('fantasy.bracket.seedFinal.semiBWinner')} t={t} />
             </RoundColumn>
           </div>
         </>
@@ -207,8 +210,13 @@ export default function Bracket() {
         <>
           <div className="flex items-start gap-2 overflow-x-auto pb-3">
             {/* Round 1: Quarter-finals */}
-            <RoundColumn title="Cuartos de final" subtitle={subtitle(1)}>
-              {[{ key: 'Match A', display: 'Partido A' }, { key: 'Match B', display: 'Partido B' }, { key: 'Match C', display: 'Partido C' }, { key: 'Match D', display: 'Partido D' }].map(({ key, display }, i) => {
+            <RoundColumn title={t('fantasy.bracket.rounds.quarterFinals')} subtitle={subtitle(1)}>
+              {[
+                { key: 'Match A', display: t('fantasy.bracket.matchLabels.a') },
+                { key: 'Match B', display: t('fantasy.bracket.matchLabels.b') },
+                { key: 'Match C', display: t('fantasy.bracket.matchLabels.c') },
+                { key: 'Match D', display: t('fantasy.bracket.matchLabels.d') },
+              ].map(({ key, display }, i) => {
                 const m = getMatch('championship', 1, key);
                 const seeds = [{ a: 1, b: 8 }, { a: 4, b: 5 }, { a: 2, b: 7 }, { a: 3, b: 6 }];
                 return (
@@ -226,7 +234,7 @@ export default function Bracket() {
             <Connector />
 
             {/* Round 2: Semi-finals */}
-            <RoundColumn title="Semifinales" subtitle={subtitle(2)}>
+            <RoundColumn title={t('fantasy.bracket.rounds.semiFinals')} subtitle={subtitle(2)}>
               {['Semi A', 'Semi B'].map((label) => {
                 const m = getMatch('championship', 2, label);
                 return (
@@ -243,7 +251,7 @@ export default function Bracket() {
             <Connector />
 
             {/* Round 3: Final */}
-            <RoundColumn title="Final" subtitle={subtitle(3)}>
+            <RoundColumn title={t('fantasy.bracket.rounds.final')} subtitle={subtitle(3)}>
               {(() => {
                 const m = getMatch('championship', 3, 'Final');
                 return (
@@ -266,22 +274,22 @@ export default function Bracket() {
               finalMatch.winner_id === finalMatch.team_a?.id
                 ? finalMatch.team_b
                 : finalMatch.team_a;
-            const teamName = (t) => t?.users?.display_name ?? t?.name ?? 'TBD';
+            const teamName = (team) => team?.users?.display_name ?? team?.name ?? t('fantasy.bracket.tbd');
             return (
               <section>
-                <h2 className="text-base font-bold text-primary mb-4">Clasificación final</h2>
+                <h2 className="text-base font-bold text-primary mb-4">{t('fantasy.bracket.finalResult.heading')}</h2>
                 <div className="flex flex-col gap-2 max-w-xs">
                   <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3">
                     <span className="text-lg font-black text-tertiary flex-shrink-0">🏆</span>
                     <div>
-                      <p className="text-label-caps text-muted">Campeón</p>
+                      <p className="text-label-caps text-muted">{t('fantasy.bracket.finalResult.champion')}</p>
                       <p className="text-sm font-medium text-primary">{teamName(champion)}</p>
                     </div>
                   </div>
                   <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3">
                     <span className="text-sm font-black text-muted flex-shrink-0 w-6 text-center">2.</span>
                     <div>
-                      <p className="text-label-caps text-muted">Subcampeón</p>
+                      <p className="text-label-caps text-muted">{t('fantasy.bracket.finalResult.runnerUp')}</p>
                       <p className="text-sm font-medium text-primary">{teamName(runnerUp)}</p>
                     </div>
                   </div>
@@ -294,9 +302,9 @@ export default function Bracket() {
 
       {/* ── H2H scoring rules ── */}
       <div className="bg-surface/50 border border-border/50 rounded-xl p-4 text-xs text-muted space-y-1">
-        <p className="font-semibold text-secondary">Reglas de puntuación H2H</p>
-        <p>Ganador = más puntos en la jornada. Desempate: puntos del capitán → goles marcados → puesto en liga.</p>
-        <p>Solo cuentan los puntos de la jornada actual — no el total acumulado de la temporada.</p>
+        <p className="font-semibold text-secondary">{t('fantasy.bracket.rules.heading')}</p>
+        <p>{t('fantasy.bracket.rules.tiebreak')}</p>
+        <p>{t('fantasy.bracket.rules.scope')}</p>
       </div>
 
       {viewing && (

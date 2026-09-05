@@ -1,11 +1,9 @@
 # ES/EN language selector — side plan
 
-> **Status: IN PROGRESS — Phase 0 done 2026-09-02.** `UCL_TODO.md` was closed
-> out the same day (H2H group-stage Phase A6), which is what unblocked this.
-> Phase 0 (migration `069`, `packages/i18n` skeleton, `lang` in both
-> middlewares + `<html lang>` everywhere, `LangProvider` mounted in
-> `App.jsx`) is invisible by design — nothing renders differently yet.
-> Phases 1–6 remain. **Do this one phase at a time; do not try to do the
+> **Status: IN PROGRESS — Phases 0–5 done (0 and 1–3 2026-09-02, 4–5
+> 2026-09-03), all uncommitted.** `UCL_TODO.md` was closed out 2026-09-02
+> (H2H group-stage Phase A6), which is what unblocked this. Phase 6
+> remains — `Admin.jsx`. **Do this one phase at a time; do not try to do the
 > whole plan in one sitting** (~47–68 h total, see "Effort and the one-go
 > call" below).
 >
@@ -562,15 +560,242 @@ round to one decimal, though `fmtPts` always shows the trailing `.0` via
 already inconsistent about decimal display, so folding `MatchCard` onto
 `formatDecimal` (§5) is a cleanup as much as a translation.
 
+**✅ DONE 2026-09-02, uncommitted.** Built exactly as scoped:
+- New `fantasy` namespace catalogue covers `Sidebar`, `MobileNav`,
+  `CompetitionGate`, `NotFound`, `Dashboard`, the full `Leaderboard.jsx`
+  (header, summary cards, bracket key, standings table incl. the H2H
+  column set, fixtures panel, both tiebreaker/league-complete note variants),
+  `PointsBreakdownModal`, `FilterBar`, and `MatchCard`. All of it is a
+  straight `useT()` call inside each SPA component — no `lang` prop plumbing
+  needed here, unlike polla's Astro islands (Risk B only applies to
+  SSR/hydration boundaries, which fantasy's client-only routes don't have).
+- **The H2H column-set translation is exact per plan**: `PJ G E P Pts PF GS`
+  → `Pld W D L Pts FP GF` under EN, each with its own tooltip key
+  (`fantasy.leaderboard.columns.*`). `matchdayAbbrev` (`JD`→`MD`) now flows
+  through the `.replace(/matchday\s*/i, …)` call instead of being hardcoded,
+  and `BracketBadge`'s `Directo/Camp/Play-off/Desc` → `Direct/Champ/Play-off/Rel`.
+- **Both mixed-language bugs flagged above are fixed, not just translated
+  around**: the four `Positions 1–{n} → …` strings (`Leaderboard.jsx:197-212`)
+  now read `Posiciones…` under ES instead of leaking literal English into a
+  Spanish UI, and the `GS` header's `title="Goals scored (tiebreaker)"`
+  (`:262`) is now `Goles marcados (desempate)` under ES / the same text under
+  EN via the catalogue instead of a hardcoded English attribute.
+- **`FilterBar.jsx`'s `'Todos'` sentinel (Risk A) is fixed, not routed
+  around**: position/country pills now map over `{ value, label }` pairs with
+  `''` as the explicit "no filter" sentinel and the translated label
+  render-only, instead of comparing the rendered Spanish word against itself.
+  Verified the active-pill highlight still matches the original truthy check
+  (`!filters.position`) for the initial `undefined` state, not just the
+  filtering logic (which was already sentinel-safe via `''`).
+- **`lib/statColumns.js` → `getStatColumns(t)`**, translating every `abbrev`
+  per the user's settled EN mapping (`TaP→SoT`, `Ent→Tkl`, `GenC→GA`, etc.)
+  and every `label`. Its three consumers — `PlayerRow.jsx`, `Market.jsx`,
+  `MyTeam.jsx` — are Phase 4 files not otherwise touched this phase; each got
+  the minimal one-line swap (`statColumns` import → `getStatColumns(t)` call)
+  needed to keep the shared data module working, with no other string in
+  those three files translated yet.
+- `MatchCard.jsx` translates its own `'· en vivo'` → `'· live'` via a new
+  `fantasy.matchCard.live` key (not nested under `leaderboard`, since
+  `Bracket.jsx` becomes its second consumer in Phase 4). `'TBD'` stays
+  untouched, confirmed already-English per the plan. The `fmt()`/`formatDecimal`
+  cleanup aside was left alone — out of scope for a translation pass.
+- **Verified:** `pnpm build` clean on all three apps (same pre-existing
+  `Duplicate key "cookies"` esbuild warning as Phase 2, unrelated);
+  `pnpm --filter fantasy lint` at the exact documented baseline (29
+  errors/39 warnings, no new issues); a script cross-check confirmed all 158
+  `t()` key lookups used across the ten touched files resolve in both the ES
+  and EN `fantasy`/`common` catalogues with zero orphans; leftover-Spanish
+  tripwire grep on `apps/fantasy/src` shows Spanish only in Phase 4+ files
+  (`PlayerRow`/`Market`/`MyTeam`'s untouched strings, `TeamLineupModal`,
+  `BenchList`, `LineupGrid`, `Admin`, `Auction`, `Bracket`, `History`,
+  `Negotiations`, `Rules`) plus one Spanish word inside a `MobileNav.jsx`
+  code comment (not user-facing).
+- **Not yet verified:** the plan's own Phase-3 check — toggle in fantasy with
+  no reload, `document.documentElement.lang` following, sidebar/`MobileNav`
+  fit at 375px — needs a real browser session, same gap every phase has left
+  open so far.
+
 **Phase 4 — fantasy player pages · 10–14 h.** `MyTeam`, `Auction`, `Market`,
 `Negotiations`, `History`, `Bracket`, plus `PlayerRow`, `BenchList`, `PlayerSlot`,
 `AuctionPlayerRow`, `AuctionTimer`, `TeamLineupModal`. The remaining date helpers
 land here. Read every `setError`/`throw` by hand — those strings live inside `{}`
 and are undercounted by JSX-text greps.
 
+**✅ DONE 2026-09-03, uncommitted.** Built exactly as scoped, plus a few sites
+the original inventory missed:
+- `MyTeam.jsx` (967 lines): every loading/empty state, header, matchday
+  selector, formation controls, live-stats badges, captain/rolling-lock
+  notices, save validation, and every inline swap/captain `setError` message
+  now goes through `t()`. `normalizeSquad` takes `t` so its `'Desconocido'`
+  fallback translates too.
+- `PlayerSlot.jsx`, `LineupGrid.jsx`, `BenchList.jsx` — title/aria-label text
+  and the bench order-note footer.
+- `lib/scoring.js` — the `BASE_LABELS`/`BONUS_LABELS` hardcoded dictionaries
+  became a `LABEL_KEYS` map + `labelFor(key, t)` resolving into
+  `fantasy.scoring.labels.*`; threaded as an optional `t` through
+  `basePointsBreakdown`/`compositeBreakdown`/`breakdownPoints`/
+  `aggregateBreakdown` (falls back to the raw ES key when `t` is omitted, so
+  the point-total-only callers — `calculatePlayerPoints`, `applyCaptainMultiplier`,
+  etc. — needed no change). `PointsBreakdownModal.jsx` just threads `t` through
+  its two call sites; its own UI copy was already Phase 3.
+- `TeamLineupModal.jsx` — close button, loading/error/no-lineup states,
+  `'Error desconocido'` fallback.
+- `Auction.jsx` (720 lines) — switched to `useLang()` for `tPlural`;
+  `STATUS_BANNER` (text+class) split into `STATUS_BANNER_CLS` (class only) +
+  `t(\`fantasy.auction.statusBanner.${status}\`)`; every header/banner/
+  team-summary/auto-bid/tabs/bids/table-header string translated. **Fixed the
+  plan's Risk-A item**: `AuctionPlayerRow.jsx:37`'s
+  `ownerLabel === 'En tu plantilla'` sentinel is gone — `Auction.jsx` now
+  computes `isMine` as a real boolean alongside `ownerLabel` and passes it
+  down as a prop; `AuctionPlayerRow` no longer derives it from rendered text.
+  Also caught (not in the plan): the auto-bid-list `.map((t, idx) => …)` loop
+  variable shadowed the new `t` translation function — renamed to `target`.
+- `Market.jsx` (701 lines) + `PlayerRow.jsx` — header, transfer-window banner,
+  squad picker, recent-swap toast, filtered-empty state, every sortable
+  column header, the confirm-swap modal, and the transfer-history section
+  (including the `formatDate(t.created_at, lang)` site the plan flagged —
+  which meant renaming that loop's `t` to `tr`, the same shadowing bug as
+  Auction's). `PlayerRow.jsx`'s action label/disabled-reason ladder now reads
+  from `fantasy.playerRow.actions.*`/`reasons.*`.
+- `Negotiations.jsx` + `useNegotiation.js` — countdown banner, my-offers list,
+  offer modal, negotiation history (including `formatDateTimeShort`/
+  `formatDate` at the three sites the plan named). `useNegotiation.js` calls
+  `useT()` internally (it's a hook, so nesting is fine) to translate its own
+  `'No hay ventana de negociación abierta.'` client-side error and the
+  `` `Equipo #${id}` `` history fallback — both left in Spanish by the
+  original inventory since neither was a component-level string.
+- `History.jsx` — **fixed the `StatLine` mixed-language bug**: `CS`/`TA`/`TR`/
+  `OG` were hardcoded English abbreviations inside an otherwise-Spanish
+  breakdown row; they now read `fantasy.statColumns.{cleanSheets,yellowCards,
+  redCards,ownGoals}.abbrev` (reusing Phase 3's stat-column translations
+  instead of a parallel set), with `saves` alone going through the
+  already-added `history.stats.saves` key, exactly as the handoff called it.
+- `Bracket.jsx` + `MatchCard.jsx` — header, not-seeded/preview states, round
+  titles, quarter-final match labels (now shared between the preview and the
+  real bracket via `fantasy.bracket.matchLabels.*` instead of the preview
+  loop rendering the untranslated internal `'Match A'` key), final-result
+  card, H2H rules footer. `MatchCard.jsx`'s `'TBD'` fallback — confirmed
+  "already English" by Phase 3 but never actually pointed at a catalogue key
+  — now uses a new `bracket.tbd` key (`'Por definir'`/`'TBD'`) so it isn't
+  silently English-only under a Spanish UI. Caught another shadowed-`t`: the
+  final-result section's `const teamName = (t) => …` param hid the
+  translation function; renamed to `team`.
+- `Dashboard.jsx:93` — the one Phase-3 leftover site — now calls
+  `formatDateTimeShort(activeTransferWindow.closes_at, lang)` instead of a
+  bare `toLocaleString()`.
+- New catalogue keys the original inventory didn't anticipate, added to both
+  `es`/`en` `fantasy.ts`: `common.unknownPlayer`, `common.teamFallback`,
+  `auction.loading`, `auction.table.loading`, `history.loading`, `bracket.tbd`.
+- **Verified:** `pnpm build` clean on all three apps; `pnpm --filter fantasy
+  lint` at the exact documented baseline (29 errors/39 warnings — two new
+  `useMemo` exhaustive-deps warnings surfaced mid-phase from adding `t` to a
+  dependency array that didn't need it, fixed by depending on `t` alone, not
+  `lang` alongside it); a script-based ES/EN parity check (`checkCatalogParity`)
+  found **zero** keys missing from EN; a second script cross-check resolved
+  all 448 literal `t()`/`tPlural()` call sites in `apps/fantasy/src` against
+  the ES catalogue with zero misses, and the four dynamic template-literal
+  lookups this phase introduced or touched
+  (`auctionPlayerRow.bidsStatusWord.${status}`, `auction.statusBanner.${status}`,
+  `scoring.labels.${LABEL_KEYS[key]}`, `bracket.matchLabels.${a|b|c|d}`) were
+  each checked by hand against every value the driving enum/lookup table can
+  actually take; leftover-Spanish tripwire grep on `apps/fantasy/src` is now
+  clean everywhere except `Admin.jsx`/`Rules.jsx` (Phase 5–6, untouched by
+  design), a Spanish word inside a `MobileNav.jsx` code comment (not
+  user-facing, pre-existing), and `lib/brackets.js`'s three internal
+  `throw new Error(…)` messages (dev-facing, never rendered — Phase 6 already
+  scopes translating these at the `Admin.jsx` catch site, not in `lib/`).
+- **Not yet verified:** the plan's own Phase-4 check — place a bid, save a
+  lineup, open a negotiation in EN and confirm the error copy is translated —
+  needs a real authenticated browser session, the same gap every phase has
+  left open so far.
+
 **Phase 5 — `Rules.jsx` + `competitionCopy.js` · 6–8 h.** Parallel
 `Rules.es`/`Rules.en` sharing one data hook, the slug × locale restructure, the
 possessive rewrites, `COMPOSITE_STAT_LABELS:8-20`, the scoring tables.
+
+**✅ DONE 2026-09-03, uncommitted.** Built as scoped, plus a content-accuracy
+pass the user asked for alongside the translation:
+- `pages/Rules.jsx` is now a thin orchestrator: it computes every dynamic
+  value once (`competition` fields, `competitionCopy(competition, lang)`,
+  the composite-bonus table) and renders `components/rules/Rules.es.jsx` or
+  `Rules.en.jsx` — full parallel locale components, per the plan's decision
+  not to key-extract this file. `components/rules/RulesLayout.jsx` holds the
+  `Section`/`Bullet` helpers both share.
+- **`competitionCopy.js` restructured to slug × locale exactly as designed**:
+  `BY_SLUG[slug] = { startDate, endDate, leagueMatchdayCount, es: {…}, en: {…} }`,
+  `competitionCopy(competition, lang = 'es')` merges shared fallback → locale
+  fallback → slug's locale entry. `Bracket.jsx` (switched `useT()` → `useLang()`
+  for `lang`) and `Layout.jsx` (already had `lang` in scope) now pass it
+  through, so bracket subtitles and the Rules tables actually flip language —
+  before this phase they were English-UI-but-Spanish-copy on both pages, since
+  Phase 4 deferred the restructure here by design.
+- **Risk A fixed, not just translated around**: `Rules.jsx:35`'s old
+  `copy.calendarRows?.filter(([phase]) => phase.startsWith('Liga')).length`
+  parsed *Spanish display text* to derive a count — under the new EN
+  `calendarRows` ("League — Matchday 1", …) that filter would have silently
+  returned 0 and every English UCL reader would have been told the league
+  phase is 3 matchdays instead of 8. Fixed exactly as the plan's fallback
+  suggested: `leagueMatchdayCount` is now a locale-independent field on the
+  slug entry (WC: 3, UCL: 8), read directly — no parsing.
+- **`money()` → `formatDecimal(n, lang)`**: budget, min bid increment, and all
+  four H2H point values now render with a real decimal comma under ES and a
+  decimal point under EN (`0,3` / `0.3`), not just a string `.`→`,` swap. The
+  composite bonus-weight table (`0.02`, `-0.2`, …) gets the same treatment —
+  the plan only named `money()` explicitly, but the same bug existed one
+  table down and got fixed for free.
+- **`COMPOSITE_STAT_LABELS` deleted, not translated**: those 11 labels are the
+  exact same stats already in `fantasy.statColumns.*.label` (Phase 3). The
+  composite table now reuses that catalogue via a `col → statColumns key` map
+  in the orchestrator, so there's one source for "Tackles"/"Entradas" instead
+  of two slightly-differently-worded copies.
+- **Four content bugs fixed at the user's request, found by cross-checking
+  Rules' copy against the actual scoring/transfer code, not just translating
+  it**:
+  1. The transfer-windows table hardcoded "2 por ventana" / "5 por ventana"
+     regardless of a competition's actual `transfer_cap_league` /
+     `transfer_cap_knockout` — now reads the competition row (falling back to
+     `TRANSFER_CAP_ROUND_ROBIN`/`TRANSFER_CAP_KNOCKOUT`), matching what
+     `LeagueContext.jsx:112` and `Admin.jsx:740` already use for enforcement.
+  2. The same table's budget bullet hardcoded "105 M" instead of the `budget`
+     variable already computed two lines above it.
+  3. The league-stage section hardcoded "Los 4 últimos quedan eliminados" —
+     correct only when `max_participants` is exactly 12. Now
+     `{maxParticipants - 8}`, and added to the H2H branch too (which
+     previously said "the last ones" with no number at all) for symmetry.
+  4. Verified the FPL base-scoring table's 15 rows against `scoring.json`
+     line by line (all correct, no drift) and the "penalty misses don't apply
+     under Composite" claim against `scoring.js`/`Admin.jsx` — true in
+     practice: the ODS/Opta upload path (`Admin.jsx:1465,1474`) hardcodes
+     `penalty_misses: 0`, so the composite breakdown never actually deducts
+     for it even though the code doesn't special-case exclude it. Left
+     unchanged; recorded here so a later reader doesn't re-litigate it.
+  One item was investigated and deliberately **not** changed: UCL's
+  `knockoutRealStages`/`bracketSubtitles` carry 4 real-stage entries
+  (Play-off → Semifinales) but the fantasy bracket is always exactly 3 rounds
+  (top 8, single elimination) regardless of competition, so only the first 3
+  are ever read — `Semifinales`/`bracketSubtitles[4]` are unused by
+  construction, not a bug. Kept at 4 (both `es`/`en`) to record the real
+  stage sequence in full; noted in a code comment.
+- Position abbreviations translated per plan Risk A: `PT, DEF, MED, DEL` →
+  `GK, DEF, MID, FWD`, plus every table header, FPL/Composite row label, and
+  the `Ventana`/`Ronda`/`Fase` column headers.
+- **Verified:** `pnpm build` clean on all three apps (same pre-existing
+  `Duplicate key "cookies"` esbuild warning as every prior phase, unrelated);
+  `pnpm --filter fantasy lint` at the exact documented baseline (29
+  errors/39 warnings, no new issues); leftover-Spanish tripwire grep on
+  `apps/fantasy/src` shows Spanish only in `Rules.es.jsx` (by design),
+  `Admin.jsx` (Phase 6, untouched), `lib/brackets.js` (Phase 6, untouched),
+  and the pre-existing `MobileNav.jsx` code comment — `Rules.jsx`,
+  `Rules.en.jsx`, and `competitionCopy.js`'s `en` blocks are all clean. No
+  new catalogue keys were added this phase (the composite table reuses
+  Phase 3's `statColumns` keys), so there's nothing new for the parity/orphan
+  scripts to check.
+- **Not yet verified:** the plan's own Phase-5 check — read `/rules` end to
+  end in both languages, then point at a competition slug with no `BY_SLUG`
+  entry and confirm the fallback says "the tournament" — needs a real
+  authenticated browser session, the same gap every phase has left open so
+  far. `Bracket.jsx`'s subtitle fix is also unverified live (the code path is
+  exercised by existing usage, but not click-through in EN).
 
 **Phase 6 — `Admin.jsx` · 13–19 h.** 3,881 lines (not 3,676 — the H2H work
 added a **19th section**, "Calendario de la fase de liga", `47c4c2b`: ~20
@@ -755,3 +980,13 @@ Short list, handed over at Phases 1 and 5 rather than left unwritten:
   needs a *content* update for UCL regardless of language.
 - Any house term in `Rules.jsx` that is a league convention rather than a football
   term.
+
+**Phase 5 flagged terms** (judgment calls, not football vocabulary with an
+obvious English equivalent):
+- "Lista de Pujas Automáticas" → **"Auto-Bid List"**; "Subasta Automática" →
+  **"Auto-Bid"**.
+- "Negociaciones a puerta cerrada" → **"Closed-door negotiations"**.
+- "Ofertas selladas" → **"Sealed offers"**.
+- `tournamentPossessive`'s English form is the bare noun ("World Cup",
+  "Champions League") used attributively, per the plan's own `tournamentOf`
+  example — e.g. "the World Cup calendar", not "the World Cup's calendar".

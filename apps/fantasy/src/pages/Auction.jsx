@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@predictor/supabase';
 import { Table, Thead, Tbody, Th } from '@predictor/ui';
+import { useLang } from '@predictor/i18n/react';
 import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTeam } from '../hooks/useTeam';
@@ -16,21 +17,6 @@ import {
   POSITIONS,
 } from '../config/constants';
 
-const STATUS_BANNER = {
-  pending: {
-    text: 'La subasta aún no ha comenzado. Vuelve pronto.',
-    cls: 'bg-surface-hover text-secondary',
-  },
-  paused: {
-    text: 'Subasta en pausa. Las pujas están temporalmente suspendidas.',
-    cls: 'bg-warning/10 text-warning border border-warning/30',
-  },
-  completed: {
-    text: 'La subasta ha terminado. Todas las plantillas han sido finalizadas.',
-    cls: 'bg-info/10 text-info border border-info/30',
-  },
-};
-
 const POSITION_BADGE = {
   GK:  'bg-warning/15 text-warning',
   DEF: 'bg-info/15 text-info',
@@ -38,9 +24,16 @@ const POSITION_BADGE = {
   FWD: 'bg-error/10 text-error',
 };
 
+const STATUS_BANNER_CLS = {
+  pending: 'bg-surface-hover text-secondary',
+  paused: 'bg-warning/10 text-warning border border-warning/30',
+  completed: 'bg-info/10 text-info border border-info/30',
+};
+
 
 export default function Auction() {
   const { user } = useAuth();
+  const { t, tPlural } = useLang();
   const { competition } = useCompetition();
   // Per-competition config (060); the constants are the resolving-state fallback.
   const maxSquadSize    = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
@@ -65,7 +58,7 @@ export default function Auction() {
   useEffect(() => { setRoundExpired(false); }, [auctionState?.current_round, auctionState?.round_started_at]);
 
   if (loading || !auctionState) {
-    return <div className="text-secondary p-6">Cargando subasta…</div>;
+    return <div className="text-secondary p-6">{t('fantasy.auction.loading')}</div>;
   }
 
   const { status, current_round, round_duration_seconds, round_started_at } = auctionState;
@@ -108,7 +101,7 @@ export default function Auction() {
 
   async function handleBid(playerId) {
     if (!team) {
-      setErrors((prev) => ({ ...prev, [playerId]: 'Debes tener un equipo registrado para pujar.' }));
+      setErrors((prev) => ({ ...prev, [playerId]: t('fantasy.auction.errors.noTeam') }));
       return;
     }
 
@@ -117,7 +110,7 @@ export default function Auction() {
     const minBid = minBidFor(player);
 
     if (isNaN(amount) || amount < minBid) {
-      setErrors((prev) => ({ ...prev, [playerId]: `Puja mín: £${minBid.toFixed(1)}` }));
+      setErrors((prev) => ({ ...prev, [playerId]: t('fantasy.auction.errors.belowMin', { min: minBid.toFixed(1) }) }));
       return;
     }
 
@@ -141,7 +134,7 @@ export default function Auction() {
         refreshBids();
       }
     } catch {
-      setErrors((prev) => ({ ...prev, [playerId]: 'Error al realizar la puja. Intenta de nuevo.' }));
+      setErrors((prev) => ({ ...prev, [playerId]: t('fantasy.auction.errors.bidFailed') }));
     } finally {
       setSubmitting((prev) => { const n = new Set(prev); n.delete(playerId); return n; });
     }
@@ -169,9 +162,9 @@ export default function Auction() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Sala de subasta</h1>
+          <h1 className="text-2xl font-bold text-primary">{t('fantasy.auction.title')}</h1>
           {isActive && (
-            <p className="text-muted text-sm mt-1">Ronda {current_round}</p>
+            <p className="text-muted text-sm mt-1">{t('fantasy.auction.roundLabel', { n: current_round })}</p>
           )}
         </div>
 
@@ -189,23 +182,23 @@ export default function Auction() {
                   /{freeSlots}
                 </span>
               </p>
-              <p className="text-xs text-muted mt-0.5">pujas esta ronda</p>
+              <p className="text-xs text-muted mt-0.5">{t('fantasy.auction.bidsThisRound')}</p>
             </div>
           </div>
         )}
       </div>
 
       {/* ── Status banner (pending / paused / completed) ──────────────── */}
-      {STATUS_BANNER[status] && (
-        <div className={`rounded-xl px-5 py-4 text-sm font-medium ${STATUS_BANNER[status].cls}`}>
-          {STATUS_BANNER[status].text}
+      {STATUS_BANNER_CLS[status] && (
+        <div className={`rounded-xl px-5 py-4 text-sm font-medium ${STATUS_BANNER_CLS[status]}`}>
+          {t(`fantasy.auction.statusBanner.${status}`)}
         </div>
       )}
 
       {/* ── Round expired banner ──────────────────────────────────────── */}
       {isActive && roundExpired && (
         <div className="rounded-xl px-5 py-4 text-sm font-medium bg-warning/10 text-warning border border-warning/30">
-          La ronda {current_round} ha terminado — pujas bloqueadas. Esperando que el admin avance.
+          {t('fantasy.auction.roundExpired', { n: current_round })}
         </div>
       )}
 
@@ -215,36 +208,36 @@ export default function Auction() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Budget */}
             <div className="space-y-1">
-              <p className="text-xs text-muted uppercase tracking-wider font-medium">Presupuesto</p>
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">{t('fantasy.auction.summary.budget')}</p>
               <p className="text-xl font-bold text-primary tabular-nums">
                 £{team.budget_remaining.toFixed(1)}M
               </p>
               {isActive && myBids.length > 0 && (
                 <p className="text-xs text-secondary">
-                  Efectivo:{' '}
+                  {t('fantasy.auction.summary.effective')}{' '}
                   <span className={`font-semibold ${effectiveBudget < 0 ? 'text-error' : 'text-tertiary'}`}>
                     £{effectiveBudget.toFixed(1)}M
                   </span>{' '}
-                  <span className="text-muted">después de pujas activas</span>
+                  <span className="text-muted">{t('fantasy.auction.summary.effectiveSuffix')}</span>
                 </p>
               )}
             </div>
 
             {/* Squad progress */}
             <div className="space-y-1">
-              <p className="text-xs text-muted uppercase tracking-wider font-medium">Plantilla</p>
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">{t('fantasy.auction.summary.squad')}</p>
               <p className="text-xl font-bold text-primary tabular-nums">
                 {squadSize}
                 <span className="text-muted text-base font-normal">/{maxSquadSize}</span>
               </p>
               <p className="text-xs text-secondary">
-                {freeSlots} cupo{freeSlots !== 1 ? 's' : ''} restante{freeSlots !== 1 ? 's' : ''}
+                {tPlural('fantasy.auction.summary.slotsRemaining', freeSlots)}
               </p>
             </div>
 
             {/* By Position — informational only, warn if no GK */}
             <div className="space-y-1">
-              <p className="text-xs text-muted uppercase tracking-wider font-medium">Por posición</p>
+              <p className="text-xs text-muted uppercase tracking-wider font-medium">{t('fantasy.auction.summary.byPosition')}</p>
               <div className="grid grid-cols-2 gap-1.5 pt-0.5">
                 {POSITIONS.map((pos) => {
                   const acquired   = (teamPlayers ?? []).filter((tp) => tp.players?.position === pos).length;
@@ -257,7 +250,7 @@ export default function Auction() {
                       <span className={isGkMissing ? 'text-error font-semibold' : 'text-primary'}>
                         {acquired}
                       </span>
-                      {isGkMissing && <span className="text-error text-xs">Necesita ≥1 POR</span>}
+                      {isGkMissing && <span className="text-error text-xs">{t('fantasy.auction.summary.needsGk')}</span>}
                     </div>
                   );
                 })}
@@ -269,7 +262,7 @@ export default function Auction() {
           {squadSize > 0 && (
             <details>
               <summary className="cursor-pointer text-xs text-muted hover:text-secondary font-medium select-none">
-                Mostrar {squadSize} jugador{squadSize !== 1 ? 'es' : ''} adquirido{squadSize !== 1 ? 's' : ''}
+                {tPlural('fantasy.auction.summary.showAcquired', squadSize)}
               </summary>
               <div className="mt-3 space-y-1">
                 {[...teamPlayers]
@@ -287,7 +280,7 @@ export default function Auction() {
                         >
                           {tp.players?.position ?? '—'}
                         </span>
-                        <span className="text-primary">{tp.players?.name ?? `Player #${tp.player_id}`}</span>
+                        <span className="text-primary">{tp.players?.name ?? t('fantasy.common.playerFallback', { id: tp.player_id })}</span>
                       </div>
                       <span className="text-secondary tabular-nums">
                         £{(tp.acquisition_price ?? 0).toFixed(1)}M
@@ -305,11 +298,11 @@ export default function Auction() {
         <section className="bg-surface rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h2 className="text-base font-semibold text-primary">Lista de Pujas Automáticas</h2>
+              <h2 className="text-base font-semibold text-primary">{t('fantasy.auction.autoBid.heading')}</h2>
               <p className="text-xs text-muted mt-0.5">
                 {isPending
-                  ? `Elige hasta ${MAX_PROXY_TARGETS} jugadores con un precio máximo. El sistema pujará automáticamente en el minuto 1:30 de cada ronda.`
-                  : 'Subasta en progreso — la lista está bloqueada.'}
+                  ? t('fantasy.auction.autoBid.pendingHint', { n: MAX_PROXY_TARGETS })
+                  : t('fantasy.auction.autoBid.lockedHint')}
               </p>
             </div>
 
@@ -327,13 +320,13 @@ export default function Auction() {
                   }`}
                 />
               </div>
-              <span className="text-sm font-medium text-primary">Subasta Automática</span>
+              <span className="text-sm font-medium text-primary">{t('fantasy.auction.autoBid.toggleLabel')}</span>
             </label>
           </div>
 
           {targets.length === 0 ? (
             <p className="text-muted text-sm italic">
-              {isPending ? 'Ningún jugador añadido aún. Usa "+ Lista" en la tabla.' : 'No configuraste tu lista antes de la subasta.'}
+              {isPending ? t('fantasy.auction.autoBid.emptyPending') : t('fantasy.auction.autoBid.emptyMissed')}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -341,49 +334,49 @@ export default function Auction() {
                 <thead>
                   <tr className="text-left text-muted border-b border-border">
                     <th className="pb-2 pr-2 font-medium w-8">#</th>
-                    <th className="pb-2 pr-4 font-medium">Jugador</th>
-                    <th className="pb-2 pr-4 font-medium">Pos</th>
-                    <th className="pb-2 pr-4 font-medium">Precio</th>
-                    <th className="pb-2 pr-2 font-medium">Máx.</th>
-                    {isPending && <th className="pb-2 font-medium">Orden / Quitar</th>}
+                    <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.autoBid.columns.player')}</th>
+                    <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.autoBid.columns.position')}</th>
+                    <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.autoBid.columns.price')}</th>
+                    <th className="pb-2 pr-2 font-medium">{t('fantasy.auction.autoBid.columns.max')}</th>
+                    {isPending && <th className="pb-2 font-medium">{t('fantasy.auction.autoBid.columns.orderRemove')}</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {targets.map((t, idx) => (
-                    <tr key={t.id} className="hover:bg-surface-hover/40">
-                      <td className="py-2 pr-2 text-muted text-xs tabular-nums">{t.priority}</td>
+                  {targets.map((target, idx) => (
+                    <tr key={target.id} className="hover:bg-surface-hover/40">
+                      <td className="py-2 pr-2 text-muted text-xs tabular-nums">{target.priority}</td>
                       <td className="py-2 pr-4 font-medium text-primary">
-                        {t.players?.name ?? `Player #${t.player_id}`}
+                        {target.players?.name ?? t('fantasy.common.playerFallback', { id: target.player_id })}
                       </td>
                       <td className="py-2 pr-4">
                         <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
-                          POSITION_BADGE[t.players?.position] ?? 'bg-border text-secondary'
+                          POSITION_BADGE[target.players?.position] ?? 'bg-border text-secondary'
                         }`}>
-                          {t.players?.position ?? '—'}
+                          {target.players?.position ?? '—'}
                         </span>
                       </td>
                       <td className="py-2 pr-4 text-secondary text-xs">
-                        £{(t.players?.current_price ?? t.players?.price ?? 0).toFixed(1)}
+                        £{(target.players?.current_price ?? target.players?.price ?? 0).toFixed(1)}
                       </td>
                       <td className="py-2 pr-2">
                         {isPending ? (
                           <input
                             type="number"
                             step="0.1"
-                            min={t.players?.current_price ?? t.players?.price ?? 0}
-                            value={maxPriceDraft[t.id] ?? t.max_price}
-                            onChange={(e) => setMaxPriceDraft((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                            min={target.players?.current_price ?? target.players?.price ?? 0}
+                            value={maxPriceDraft[target.id] ?? target.max_price}
+                            onChange={(e) => setMaxPriceDraft((prev) => ({ ...prev, [target.id]: e.target.value }))}
                             onBlur={(e) => {
                               const val = parseFloat(e.target.value);
                               if (!isNaN(val) && val > 0) {
-                                setMaxPrice(t.id, val);
-                                setMaxPriceDraft((prev) => { const n = { ...prev }; delete n[t.id]; return n; });
+                                setMaxPrice(target.id, val);
+                                setMaxPriceDraft((prev) => { const n = { ...prev }; delete n[target.id]; return n; });
                               }
                             }}
                             className="w-20 bg-surface-hover border border-border rounded px-2 py-1 text-primary text-xs focus:outline-none focus:border-tertiary"
                           />
                         ) : (
-                          <span className="text-secondary text-xs">£{t.max_price.toFixed(1)}</span>
+                          <span className="text-secondary text-xs">£{target.max_price.toFixed(1)}</span>
                         )}
                       </td>
                       {isPending && (
@@ -414,7 +407,7 @@ export default function Auction() {
                               ↓
                             </button>
                             <button
-                              onClick={() => removeTarget(t.id)}
+                              onClick={() => removeTarget(target.id)}
                               className="px-2 py-0.5 rounded text-xs bg-error/10 hover:bg-error/20 text-error border border-error/30"
                             >
                               ✕
@@ -431,7 +424,7 @@ export default function Auction() {
 
           {isPending && targets.length > 0 && (
             <p className="text-xs text-muted">
-              {targets.length}/{MAX_PROXY_TARGETS} jugadores · El precio máx. se edita en la columna Máx.
+              {t('fantasy.auction.autoBid.footerNote', { n: targets.length, max: MAX_PROXY_TARGETS })}
             </p>
           )}
         </section>
@@ -450,7 +443,7 @@ export default function Auction() {
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >
-              Mis pujas {myBidCount > 0 && `(${myBidCount})`}
+              {t('fantasy.auction.tabs.myBidsLabel')} {myBidCount > 0 && `(${myBidCount})`}
             </button>
             <button
               onClick={() => setBidsTab('all')}
@@ -460,7 +453,7 @@ export default function Auction() {
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >
-              Todas las pujas {currentRoundBids.length > 0 && `(${currentRoundBids.length})`}
+              {t('fantasy.auction.tabs.allBidsLabel')} {currentRoundBids.length > 0 && `(${currentRoundBids.length})`}
             </button>
           </div>
 
@@ -468,21 +461,21 @@ export default function Auction() {
           {bidsTab === 'my' && (
             <>
               {myBidCount === 0 ? (
-                <p className="text-muted text-sm">Aún no hay pujas en esta ronda.</p>
+                <p className="text-muted text-sm">{t('fantasy.auction.noBidsThisRound')}</p>
               ) : (
                 <>
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-base font-semibold text-primary">
-                      Mis pujas — Ronda {current_round}
+                      {t('fantasy.auction.myBidsHeading', { n: current_round })}
                     </h2>
                     <div className="flex gap-4 text-xs font-medium">
                       <span className="text-tertiary">
-                        {myBids.filter((b) => getHighestBid(b.player_id)?.user_id === user?.id).length} liderando
+                        {t('fantasy.auction.leadingCount', { n: myBids.filter((b) => getHighestBid(b.player_id)?.user_id === user?.id).length })}
                       </span>
                       <span className="text-error">
-                        {myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length} superado{myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length !== 1 ? 's' : ''}
+                        {tPlural('fantasy.auction.outbidCount', myBids.filter((b) => getHighestBid(b.player_id)?.user_id !== user?.id).length)}
                       </span>
-                      <span className="text-muted">{myBidCount}/{freeSlots} cupos</span>
+                      <span className="text-muted">{t('fantasy.auction.slotsUsedOfFree', { n: myBidCount, max: freeSlots })}</span>
                     </div>
                   </div>
 
@@ -510,11 +503,11 @@ export default function Auction() {
                               {player?.position ?? '—'}
                             </span>
                             <span className="text-primary font-medium truncate">
-                              {player?.name ?? `Player #${bid.player_id}`}
+                              {player?.name ?? t('fantasy.common.playerFallback', { id: bid.player_id })}
                             </span>
                             {bid.is_carryover && (
                               <span
-                                title={`Arrastrada de la ronda ${bid.round_number - 1}`}
+                                title={t('fantasy.auction.carriedFromRound', { n: bid.round_number - 1 })}
                                 className="shrink-0 text-xs font-medium px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30"
                               >
                                 ↩ R{bid.round_number - 1}
@@ -524,16 +517,16 @@ export default function Auction() {
 
                           <div className="flex items-center gap-4 shrink-0 ml-3">
                             <span className="text-secondary text-xs">
-                              Tu puja:{' '}
+                              {t('fantasy.auction.myBid')}{' '}
                               <span className="text-primary font-semibold">£{bid.bid_amount.toFixed(1)}</span>
                             </span>
                             {isLeading ? (
                               <span className="text-tertiary text-xs font-semibold w-20 text-right">
-                                Liderando
+                                {t('fantasy.auction.leadingBadge')}
                               </span>
                             ) : (
                               <span className="text-error text-xs font-semibold w-20 text-right">
-                                Superado £{highBid?.bid_amount.toFixed(1)}
+                                {t('fantasy.auction.outbidBadge', { amount: `£${highBid?.bid_amount.toFixed(1)}` })}
                               </span>
                             )}
                           </div>
@@ -550,24 +543,24 @@ export default function Auction() {
           {bidsTab === 'all' && (
             <>
               {allBidsByPlayer.length === 0 ? (
-                <p className="text-muted text-sm">Aún no hay pujas en esta ronda.</p>
+                <p className="text-muted text-sm">{t('fantasy.auction.noBidsThisRound')}</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-muted border-b border-border">
-                        <th className="pb-2 pr-4 font-medium">Jugador</th>
-                        <th className="pb-2 pr-4 font-medium">Pos</th>
-                        <th className="pb-2 pr-4 font-medium">Mejor puja</th>
-                        <th className="pb-2 pr-4 font-medium">Líder</th>
-                        <th className="pb-2 font-medium">Estado</th>
+                        <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.allBidsColumns.player')}</th>
+                        <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.allBidsColumns.position')}</th>
+                        <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.allBidsColumns.highBid')}</th>
+                        <th className="pb-2 pr-4 font-medium">{t('fantasy.auction.allBidsColumns.leader')}</th>
+                        <th className="pb-2 font-medium">{t('fantasy.auction.allBidsColumns.status')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {allBidsByPlayer.map(({ playerId, player, highBid, uniqueBidders }) => (
                         <tr key={playerId} className="text-secondary hover:bg-surface-hover/40">
                           <td className="py-2 pr-4 font-medium text-primary">
-                            {player?.name ?? `Player #${playerId}`}
+                            {player?.name ?? t('fantasy.common.playerFallback', { id: playerId })}
                           </td>
                           <td className="py-2 pr-4">
                             <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${POSITION_BADGE[player?.position] ?? 'bg-border text-secondary'}`}>
@@ -583,10 +576,10 @@ export default function Auction() {
                           <td className="py-2">
                             {uniqueBidders > 1 ? (
                               <span className="text-xs font-medium px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
-                                ⚡ Disputada ({uniqueBidders})
+                                {t('fantasy.auction.contestedBadge', { n: uniqueBidders })}
                               </span>
                             ) : (
-                              <span className="text-xs text-tertiary font-medium">Liderando</span>
+                              <span className="text-xs text-tertiary font-medium">{t('fantasy.auction.leadingBadge')}</span>
                             )}
                           </td>
                         </tr>
@@ -605,7 +598,7 @@ export default function Auction() {
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Buscar jugador…"
+        placeholder={t('fantasy.filterBar.searchPlaceholder')}
         className="w-full max-w-xs bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-tertiary"
       />
 
@@ -647,28 +640,29 @@ export default function Auction() {
 
       {/* ── Player table ─────────────────────────────────────────────── */}
       {playersLoading ? (
-        <p className="text-muted text-sm">Cargando jugadores…</p>
+        <p className="text-muted text-sm">{t('fantasy.auction.table.loading')}</p>
       ) : (
         <Table>
           <Thead className="sticky top-0 z-10">
             <tr>
-              <Th>Pos</Th>
-              <Th>Jugador</Th>
-              <Th>País</Th>
-              <Th className="text-right">Listado</Th>
-              <Th className="text-right">Mejor puja</Th>
-              <Th>Estado</Th>
-              <Th>Pujar</Th>
+              <Th>{t('fantasy.auction.table.columns.position')}</Th>
+              <Th>{t('fantasy.auction.table.columns.player')}</Th>
+              <Th>{t('fantasy.auction.table.columns.country')}</Th>
+              <Th className="text-right">{t('fantasy.auction.table.columns.listed')}</Th>
+              <Th className="text-right">{t('fantasy.auction.table.columns.highBid')}</Th>
+              <Th>{t('fantasy.auction.table.columns.status')}</Th>
+              <Th>{t('fantasy.auction.table.columns.bid')}</Th>
             </tr>
           </Thead>
           <Tbody>
             {filteredPlayers.map((player) => {
               const isOwned       = ownedPlayerIds.has(player.id);
               const ownerInfo     = playerOwners.get(player.id);
+              const isMine        = isOwned && ownerInfo?.userId === user?.id;
               const ownerLabel    = !isOwned ? null
-                : ownerInfo?.userId === user?.id
-                  ? 'En tu plantilla'
-                  : `Dueño: ${ownerInfo?.teamName ?? 'Otro equipo'}`;
+                : isMine
+                  ? t('fantasy.auction.ownerLabel.mine')
+                  : t('fantasy.auction.ownerLabel.otherTeam', { name: ownerInfo?.teamName ?? t('fantasy.auction.ownerLabel.fallback') });
               const highBid       = getHighestBid(player.id);
               const contestFloor  = getContestFloor(player.id);
               const isContested   = contestFloor !== null;
@@ -688,6 +682,7 @@ export default function Auction() {
                   key={player.id}
                   player={player}
                   ownerLabel={ownerLabel}
+                  isMine={isMine}
                   isLeading={isLeading}
                   contestFloor={contestFloor}
                   isContested={isContested}

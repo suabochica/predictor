@@ -11,8 +11,8 @@ import { competitionCopy } from '../../config/competitionCopy';
 export default function Layout({ children }) {
   const { user, profile } = useAuth();
   const { competition } = useCompetition();
-  const copy = competitionCopy(competition);
   const { lang, setLang, t } = useLang();
+  const copy = competitionCopy(competition, lang);
 
   return (
     <div className="min-h-screen bg-neutral text-primary flex flex-col">

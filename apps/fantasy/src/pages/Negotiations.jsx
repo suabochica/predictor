@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTeam } from '../hooks/useTeam';
 import { useNegotiation } from '../hooks/useNegotiation';
+import { useLang } from '@predictor/i18n/react';
+import { formatDateTimeShort, formatDate } from '@predictor/i18n';
 import { formatPrice, getPositionColor } from '../lib/utils';
 
 export default function Negotiations() {
+  const { t, tPlural, lang } = useLang();
   const { team, players: squadRows, loading: teamLoading } = useTeam();
   const {
     window: negWindow,
@@ -32,12 +35,12 @@ export default function Negotiations() {
     () =>
       squadRows.map((tp) => ({
         id: tp.player_id,
-        name: tp.players?.name ?? 'Desconocido',
+        name: tp.players?.name ?? t('fantasy.common.unknownPlayer'),
         country: tp.players?.country ?? '',
         position: tp.players?.position ?? 'FWD',
         current_price: tp.players?.current_price ?? tp.acquisition_price ?? 0,
       })),
-    [squadRows]
+    [squadRows, t]
   );
 
   const budget = team?.budget_remaining ?? 0;
@@ -85,7 +88,7 @@ export default function Negotiations() {
   if (teamLoading || loading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Cargando negociaciones…
+        {t('fantasy.negotiations.loading')}
       </div>
     );
   }
@@ -93,62 +96,62 @@ export default function Negotiations() {
   return (
     <div className="space-y-5 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Negociaciones</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.negotiations.title')}</h1>
         <p className="text-secondary text-sm mt-0.5">
-          Ventana cerrada de traspasos con jugadores de equipos eliminados
+          {t('fantasy.negotiations.subtitle')}
         </p>
       </div>
 
       {eliminated && (
         <div className="bg-surface border border-error/30 rounded-xl p-4 text-center">
-          <p className="text-error font-semibold">Estás eliminado — solo lectura</p>
+          <p className="text-error font-semibold">{t('fantasy.common.eliminatedReadOnly')}</p>
           <p className="text-secondary text-sm mt-1">
-            Tu equipo quedó fuera del torneo y no puede ofertar.
+            {t('fantasy.negotiations.eliminatedBody')}
           </p>
         </div>
       )}
 
       {!negWindow || !isOpen ? (
         <div className="bg-surface border border-border rounded-xl p-6 text-center text-secondary">
-          No hay negociaciones activas.
+          {t('fantasy.negotiations.noneActive')}
         </div>
       ) : (
         <>
-          <NegotiationCountdown closesAt={negWindow.closes_at} />
+          <NegotiationCountdown closesAt={negWindow.closes_at} t={t} lang={lang} />
 
           {!eliminated && (
             <div className="bg-surface border border-border rounded-xl px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <p className="text-label-caps text-muted uppercase tracking-wider">Presupuesto disponible</p>
+                <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.negotiations.availableBudget')}</p>
                 <p className="text-base font-bold text-tertiary">{formatPrice(budget - committedCash)}</p>
                 {committedCash > 0 && (
-                  <p className="text-xs text-muted mt-0.5">{formatPrice(committedCash)} comprometido</p>
+                  <p className="text-xs text-muted mt-0.5">{t('fantasy.common.amountCommitted', { amount: formatPrice(committedCash) })}</p>
                 )}
               </div>
               <div className="text-right">
-                <p className="text-label-caps text-muted uppercase tracking-wider">Ofertas restantes</p>
+                <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.negotiations.offersRemaining')}</p>
                 <p className="text-base font-bold text-primary">{offersRemaining}</p>
               </div>
             </div>
           )}
 
-          {/* Mis ofertas */}
+          {/* My offers */}
           {activeOffers.length > 0 && (
             <div className="bg-surface border border-border rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
-                <h3 className="text-sm font-semibold text-secondary">Mis ofertas</h3>
+                <h3 className="text-sm font-semibold text-secondary">{t('fantasy.negotiations.myOffers')}</h3>
               </div>
               <div className="divide-y divide-border">
                 {activeOffers.map((o) => (
                   <div key={o.id} className="px-4 py-3 flex items-center gap-3 flex-wrap text-sm">
                     <span className="text-tertiary font-medium">
-                      {o.target?.name ?? `Jugador #${o.target_player_id}`}
+                      {o.target?.name ?? t('fantasy.common.playerFallback', { id: o.target_player_id })}
                     </span>
                     <span className="text-muted">←</span>
-                    <span className="text-error">{o.offered?.name ?? `Jugador #${o.offered_player_id}`}</span>
+                    <span className="text-error">{o.offered?.name ?? t('fantasy.common.playerFallback', { id: o.offered_player_id })}</span>
                     <span className="text-secondary">+ {formatPrice(o.cash)}</span>
                     <span className="text-xs text-muted ml-auto">
-                      {new Date(o.created_at).toLocaleString()}
+                      {formatDateTimeShort(o.created_at, lang)}
                     </span>
                     {!eliminated &&
                       (confirmWithdraw === o.id ? (
@@ -158,13 +161,13 @@ export default function Negotiations() {
                             disabled={withdrawingId === o.id}
                             className="text-xs font-semibold text-error hover:underline disabled:opacity-50"
                           >
-                            {withdrawingId === o.id ? 'Retirando…' : 'Confirmar'}
+                            {withdrawingId === o.id ? t('fantasy.negotiations.withdrawing') : t('fantasy.negotiations.confirm')}
                           </button>
                           <button
                             onClick={() => setConfirmWithdraw(null)}
                             className="text-xs text-secondary hover:underline"
                           >
-                            Cancelar
+                            {t('fantasy.common.cancel')}
                           </button>
                         </span>
                       ) : (
@@ -172,7 +175,7 @@ export default function Negotiations() {
                           onClick={() => setConfirmWithdraw(o.id)}
                           className="text-xs font-semibold text-secondary hover:text-error hover:underline"
                         >
-                          Retirar
+                          {t('fantasy.negotiations.withdraw')}
                         </button>
                       ))}
                   </div>
@@ -184,7 +187,7 @@ export default function Negotiations() {
           {/* Pool */}
           {pool.length === 0 ? (
             <div className="text-center py-12 text-muted">
-              No hay jugadores disponibles para negociar.
+              {t('fantasy.negotiations.poolEmpty')}
             </div>
           ) : (
             <div className="space-y-4">
@@ -209,11 +212,11 @@ export default function Negotiations() {
                           <span className="text-tertiary font-semibold">{formatPrice(p.current_price)}</span>
                           {count > 0 && (
                             <span className="text-label-caps text-info font-semibold text-xs px-2 py-0.5 rounded-full bg-info/10">
-                              {count} {count === 1 ? 'oferta' : 'ofertas'}
+                              {tPlural('fantasy.negotiations.offerCount', count, { n: count })}
                             </span>
                           )}
                           {myActiveOffer && (
-                            <span className="text-label-caps text-tertiary font-semibold text-xs">Tu oferta</span>
+                            <span className="text-label-caps text-tertiary font-semibold text-xs">{t('fantasy.negotiations.yourOffer')}</span>
                           )}
                           {!eliminated && (
                             <button
@@ -221,7 +224,7 @@ export default function Negotiations() {
                               disabled={!!myActiveOffer || offersRemaining <= 0}
                               className="ml-auto text-xs font-semibold px-3 py-1.5 rounded-lg bg-tertiary hover:brightness-90 text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                              {myActiveOffer ? 'Ofertado' : 'Ofertar'}
+                              {myActiveOffer ? t('fantasy.negotiations.offered') : t('fantasy.negotiations.makeOffer')}
                             </button>
                           )}
                         </div>
@@ -235,7 +238,7 @@ export default function Negotiations() {
         </>
       )}
 
-      {history.length > 0 && <NegotiationHistory groups={history} />}
+      {history.length > 0 && <NegotiationHistory groups={history} t={t} lang={lang} />}
 
       {/* Offer modal */}
       {offerTarget && (
@@ -244,9 +247,9 @@ export default function Negotiations() {
           onClick={(e) => e.target === e.currentTarget && !submitting && closeOfferModal()}
         >
           <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-primary">Ofertar por {offerTarget.name}</h2>
+            <h2 className="text-lg font-bold text-primary">{t('fantasy.negotiations.modal.heading', { name: offerTarget.name })}</h2>
             <p className="text-xs text-muted">
-              Oferta sellada: nadie ve tu monto ni tu identidad hasta que se resuelva la ventana.
+              {t('fantasy.negotiations.modal.sealedNotice')}
             </p>
 
             <div className="bg-tertiary/5 border border-tertiary/40 rounded-xl p-3 flex items-center gap-3">
@@ -256,7 +259,7 @@ export default function Negotiations() {
                 {offerTarget.position}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-label-caps text-tertiary font-semibold mb-0.5">Objetivo</p>
+                <p className="text-label-caps text-tertiary font-semibold mb-0.5">{t('fantasy.negotiations.modal.target')}</p>
                 <p className="text-sm font-semibold text-primary truncate">{offerTarget.name}</p>
               </div>
               <span className="text-sm font-bold text-tertiary flex-shrink-0">
@@ -265,7 +268,7 @@ export default function Negotiations() {
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-label-caps text-muted uppercase tracking-wider">Tu jugador</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.negotiations.modal.yourPlayer')}</p>
               <div className="max-h-40 overflow-y-auto space-y-0.5">
                 {squad
                   .filter((p) => !committedPlayerIds.has(p.id))
@@ -291,7 +294,7 @@ export default function Negotiations() {
 
             <div className="space-y-1.5">
               <label className="text-label-caps text-muted uppercase tracking-wider" htmlFor="neg-cash">
-                Efectivo adicional
+                {t('fantasy.negotiations.modal.additionalCash')}
               </label>
               <input
                 id="neg-cash"
@@ -303,18 +306,18 @@ export default function Negotiations() {
                 onChange={(e) => setCash(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-primary text-sm focus:outline-none focus:ring-2 focus:ring-tertiary"
               />
-              <p className="text-xs text-muted">Máximo disponible: {formatPrice(maxCash)}</p>
+              <p className="text-xs text-muted">{t('fantasy.negotiations.modal.maxAvailable', { amount: formatPrice(maxCash) })}</p>
             </div>
 
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-secondary">
-                <span>Total ofertado</span>
+                <span>{t('fantasy.negotiations.modal.totalOffered')}</span>
                 <span className={meetsMin ? 'text-tertiary font-semibold' : 'text-error font-semibold'}>
                   {formatPrice(total)}
                 </span>
               </div>
               <div className="flex justify-between text-secondary">
-                <span>Mínimo requerido</span>
+                <span>{t('fantasy.negotiations.modal.minRequired')}</span>
                 <span className="text-primary">{formatPrice(offerTarget.current_price)}</span>
               </div>
             </div>
@@ -331,14 +334,14 @@ export default function Negotiations() {
                 disabled={submitting}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50"
               >
-                Cancelar
+                {t('fantasy.common.cancel')}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={submitting || !offerOut || !meetsMin || cashNum > maxCash || cashNum < 0}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:brightness-90 text-primary transition-colors disabled:opacity-50"
               >
-                {submitting ? 'Enviando…' : 'Enviar oferta'}
+                {submitting ? t('fantasy.negotiations.modal.sending') : t('fantasy.negotiations.modal.submit')}
               </button>
             </div>
           </div>
@@ -348,7 +351,7 @@ export default function Negotiations() {
   );
 }
 
-function NegotiationCountdown({ closesAt }) {
+function NegotiationCountdown({ closesAt, t, lang }) {
   const [remaining, setRemaining] = useState(() => new Date(closesAt).getTime() - Date.now());
 
   useEffect(() => {
@@ -364,8 +367,8 @@ function NegotiationCountdown({ closesAt }) {
   return (
     <div className="bg-info/10 border border-info/30 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
       <div>
-        <p className="text-info font-semibold">Ventana de negociación abierta</p>
-        <p className="text-secondary text-sm mt-0.5">Cierra {new Date(closesAt).toLocaleString()}</p>
+        <p className="text-info font-semibold">{t('fantasy.negotiations.windowOpen')}</p>
+        <p className="text-secondary text-sm mt-0.5">{t('fantasy.negotiations.closesAt', { date: formatDateTimeShort(closesAt, lang) })}</p>
       </div>
       <span className="text-2xl font-mono font-bold tabular-nums text-info">
         {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
@@ -374,12 +377,12 @@ function NegotiationCountdown({ closesAt }) {
   );
 }
 
-function NegotiationHistory({ groups }) {
+function NegotiationHistory({ groups, t, lang }) {
   const [expandedId, setExpandedId] = useState(groups[0]?.windowId ?? null);
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-bold text-primary">Historial de negociaciones</h2>
+      <h2 className="text-lg font-bold text-primary">{t('fantasy.negotiations.history.heading')}</h2>
       <div className="space-y-3">
         {groups.map((g) => {
           const expanded = expandedId === g.windowId;
@@ -390,10 +393,10 @@ function NegotiationHistory({ groups }) {
                 className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-surface-hover transition-colors"
               >
                 <h3 className="text-sm font-semibold text-secondary">
-                  Ronda {g.fantasyRound}
+                  {t('fantasy.negotiations.history.round', { n: g.fantasyRound })}
                   {g.resolvedAt && (
                     <span className="text-xs text-muted font-normal ml-2">
-                      resuelta {new Date(g.resolvedAt).toLocaleDateString()}
+                      {t('fantasy.negotiations.history.resolvedOn', { date: formatDate(g.resolvedAt, lang) })}
                     </span>
                   )}
                 </h3>
@@ -402,7 +405,7 @@ function NegotiationHistory({ groups }) {
               {expanded && (
                 <div className="divide-y divide-border">
                   {g.sales.length === 0 ? (
-                    <p className="px-4 py-3 text-sm text-muted">Sin ventas en esta ronda.</p>
+                    <p className="px-4 py-3 text-sm text-muted">{t('fantasy.negotiations.history.noSales')}</p>
                   ) : (
                     g.sales.map((sale) => (
                       <div key={sale.target?.name ?? Math.random()} className="px-4 py-3 space-y-2 text-sm">
@@ -418,10 +421,10 @@ function NegotiationHistory({ groups }) {
                           <span className="text-secondary">+ {formatPrice(sale.winner.cash)}</span>
                           <span className="text-tertiary font-semibold">= {formatPrice(sale.winner.total)}</span>
                         </div>
-                        <p className="text-xs text-tertiary font-semibold">vendido a {sale.winner.teamName}</p>
+                        <p className="text-xs text-tertiary font-semibold">{t('fantasy.negotiations.history.soldTo', { name: sale.winner.teamName })}</p>
                         {sale.losers.length > 0 && (
                           <div className="pl-2 space-y-1">
-                            <p className="text-label-caps text-muted uppercase tracking-wider">Otras ofertas</p>
+                            <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.negotiations.history.otherOffers')}</p>
                             {sale.losers.map((l, i) => (
                               <p key={i} className="text-xs text-muted">
                                 {l.teamName} — {l.offered?.name} + {formatPrice(l.cash)} = {formatPrice(l.total)}

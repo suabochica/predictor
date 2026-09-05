@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
+import { useT } from '@predictor/i18n/react';
 import { useLeague } from '../../context/LeagueContext';
 import { useCompetition } from '../../context/CompetitionContext';
 import { classNames, isKnockout } from '../../lib/utils';
@@ -15,17 +16,18 @@ import historyIcon from '@predictor/ui/icons/history.svg';
 import rulesIcon from '@predictor/ui/icons/rules.svg';
 import adminIcon from '@predictor/ui/icons/admin.svg';
 
-const tabla = { to: '/leaderboard', icon: standingsIcon, label: 'Tabla' };
-const cuadros = { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' };
-
 export default function MobileNav() {
   const { user, isAdmin } = useAuth();
   const { activeMatchday } = useLeague();
   const { competitions, competitionId, setCompetition } = useCompetition();
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+  const t = useT();
 
   if (!user) return null;
+
+  const tabla = { to: '/leaderboard', icon: standingsIcon, label: t('fantasy.mobileNav.nav.leaderboard') };
+  const cuadros = { to: '/bracket', icon: bracketsIcon, label: t('fantasy.mobileNav.nav.bracket') };
 
   // The Tabla/Cuadros pair share one bottom-bar slot. While viewing either page
   // the slot points at the other; elsewhere it follows the tournament stage.
@@ -46,18 +48,18 @@ export default function MobileNav() {
   }
 
   const primaryNavItems = [
-    { to: '/dashboard', icon: homeIcon, label: 'Inicio' },
-    { to: '/my-team', icon: teamIcon, label: 'Equipo' },
+    { to: '/dashboard', icon: homeIcon, label: t('fantasy.mobileNav.nav.home') },
+    { to: '/my-team', icon: teamIcon, label: t('fantasy.mobileNav.nav.myTeam') },
     slotItem,
-    { to: '/market', icon: marketIcon, label: 'Mercado' },
+    { to: '/market', icon: marketIcon, label: t('fantasy.mobileNav.nav.market') },
   ];
 
   const moreNavItems = [
-    { to: '/auction', icon: auctionIcon, label: 'Subasta' },
-    { to: '/negotiations', icon: negotiationsIcon, label: 'Negociaciones' },
+    { to: '/auction', icon: auctionIcon, label: t('fantasy.mobileNav.nav.auction') },
+    { to: '/negotiations', icon: negotiationsIcon, label: t('fantasy.mobileNav.nav.negotiations') },
     otherItem,
-    { to: '/history', icon: historyIcon, label: 'Históricos' },
-    { to: '/rules', icon: rulesIcon, label: 'Reglas' },
+    { to: '/history', icon: historyIcon, label: t('fantasy.mobileNav.nav.history') },
+    { to: '/rules', icon: rulesIcon, label: t('fantasy.mobileNav.nav.rules') },
   ];
 
   return (
@@ -76,7 +78,7 @@ export default function MobileNav() {
             {competitions.length > 1 && (
               <div className="px-4 py-3 border-b border-border">
                 <label htmlFor="competition-switcher-mobile" className="block text-xs text-muted uppercase tracking-wider mb-1">
-                  Competencia
+                  {t('fantasy.common.competitionSwitcher')}
                 </label>
                 <select
                   id="competition-switcher-mobile"
@@ -122,7 +124,7 @@ export default function MobileNav() {
                   }
                 >
                   <img src={adminIcon} className="w-5 h-5" alt="" />
-                  <span>Panel de admin</span>
+                  <span>{t('fantasy.mobileNav.adminPanel')}</span>
                 </NavLink>
               </>
             )}
@@ -160,7 +162,7 @@ export default function MobileNav() {
               <circle cx="10" cy="10" r="1.6" />
               <circle cx="16" cy="10" r="1.6" />
             </svg>
-            <span>Más</span>
+            <span>{t('fantasy.mobileNav.more')}</span>
           </button>
         </div>
       </nav>

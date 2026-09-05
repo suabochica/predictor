@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@predictor/supabase';
+import { useT } from '@predictor/i18n/react';
 import { useLeague } from '../context/LeagueContext';
 import { TRANSFER_CAP_KNOCKOUT } from '../config/constants';
 import { useCompetition } from '../context/CompetitionContext';
 
 export function useNegotiation() {
+  const t = useT();
   const { db, competition, competitionId } = useCompetition();
   const { team } = useLeague();
   const [negWindow, setNegWindow] = useState(null);
@@ -101,7 +103,7 @@ export function useNegotiation() {
     }
     const toEntry = (o) => {
       const total = Number((Number(o.offered?.current_price ?? 0) + Number(o.cash)).toFixed(1));
-      return { teamName: o.bidder?.name ?? `Equipo #${o.bidder_team_id}`, offered: o.offered, cash: Number(o.cash), total };
+      return { teamName: o.bidder?.name ?? t('fantasy.common.teamFallback', { id: o.bidder_team_id }), offered: o.offered, cash: Number(o.cash), total };
     };
     return windows.map((w) => {
       const windowOffers = offersByWindow.get(w.id) ?? [];
@@ -121,7 +123,7 @@ export function useNegotiation() {
         }));
       return { windowId: w.id, fantasyRound: w.fantasy_round, resolvedAt: w.resolved_at, sales };
     });
-  }, [fetchResolvedWindows, fetchHistoryOffers]);
+  }, [fetchResolvedWindows, fetchHistoryOffers, t]);
 
   const fetchTransfersUsed = useCallback(
     async (matchdayId) => {
@@ -200,7 +202,7 @@ export function useNegotiation() {
     : 0;
 
   async function submitOffer(targetPlayerId, offeredPlayerId, cash) {
-    if (!negWindow) return { error: 'No hay ventana de negociación abierta.' };
+    if (!negWindow) return { error: t('fantasy.negotiations.errors.noWindowOpen') };
     const { data, error } = await supabase.rpc('submit_negotiation_offer', {
       p_window_id: negWindow.id,
       p_target_player_id: targetPlayerId,

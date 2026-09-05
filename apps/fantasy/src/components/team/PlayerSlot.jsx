@@ -1,6 +1,8 @@
+import { useT } from '@predictor/i18n/react';
 import { getPositionColor, fmtPts } from '../../lib/utils';
 
 export default function PlayerSlot({ player, isCaptain, isSelected, onClick, points, totalPoints, onInfoClick }) {
+  const t = useT();
   const displayName = player.name.split(' ').slice(-1)[0];
   const countryCode =
     player.country_code ?? player.country?.slice(0, 3).toUpperCase() ?? '???';
@@ -29,7 +31,7 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
         <span
           className={`absolute -top-2 -left-1.5 bg-surface border border-tertiary/60 text-tertiary text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow${onInfoClick ? ' cursor-pointer hover:border-tertiary hover:bg-tertiary/10 transition-colors' : ''}`}
           onClick={onInfoClick ? (e) => { e.stopPropagation(); onInfoClick(player); } : undefined}
-          title={onInfoClick ? 'Ver desglose de puntos' : undefined}
+          title={onInfoClick ? t('fantasy.common.viewBreakdown') : undefined}
         >
           {fmtPts(points)}
         </span>
@@ -40,7 +42,7 @@ export default function PlayerSlot({ player, isCaptain, isSelected, onClick, poi
         <span
           className={`absolute -bottom-2 -left-1.5 bg-surface border border-info/60 text-info text-label-caps font-extrabold min-w-4 h-4 px-0.5 rounded flex items-center justify-center z-10 shadow${onInfoClick ? ' cursor-pointer hover:border-info hover:bg-info/10 transition-colors' : ''}`}
           onClick={onInfoClick ? (e) => { e.stopPropagation(); onInfoClick(player); } : undefined}
-          title={onInfoClick ? 'Puntos totales (todas las jornadas) — clic para desglose' : 'Puntos totales (todas las jornadas)'}
+          title={onInfoClick ? t('fantasy.playerSlot.totalPointsClickable') : t('fantasy.playerSlot.totalPoints')}
         >
           {fmtPts(totalPoints)}
         </span>

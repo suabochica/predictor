@@ -1,6 +1,8 @@
+import { useT } from '@predictor/i18n/react';
 import PlayerSlot from './PlayerSlot';
 
 function EmptySlot({ onClick, isTargetable }) {
+  const t = useT();
   return (
     <button
       onClick={onClick}
@@ -12,7 +14,7 @@ function EmptySlot({ onClick, isTargetable }) {
       }`}
     >
       <span className={`text-label-caps font-semibold ${isTargetable ? 'text-tertiary' : 'text-tertiary'}`}>
-        {isTargetable ? '+ aquí' : 'Agregar al XI'}
+        {isTargetable ? t('fantasy.common.addHere') : t('fantasy.lineupGrid.addToXi')}
       </span>
     </button>
   );

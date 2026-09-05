@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@predictor/supabase';
+import { useLang } from '@predictor/i18n/react';
+import { formatDateTimeShort } from '@predictor/i18n';
 import teamIcon from '@predictor/ui/icons/team.svg';
 import auctionIcon from '@predictor/ui/icons/auction.svg';
 import standingsIcon from '@predictor/ui/icons/standings.svg';
@@ -20,24 +22,25 @@ export default function Dashboard() {
   const { competition } = useCompetition();
   const { activeMatchday, activeTransferWindow } = useLeague();
   const { team, players } = useTeam();
+  const { t, lang } = useLang();
 
   const quickActions = [
-    { to: '/my-team', icon: teamIcon, label: 'Alineación' },
-    { to: '/auction', icon: auctionIcon, label: 'Sala de subasta' },
-    { to: '/leaderboard', icon: standingsIcon, label: 'Tabla de posiciones' },
-    { to: '/market', icon: marketIcon, label: 'Mercado de jugadores' },
-    { to: '/negotiations', icon: negotiationsIcon, label: 'Negociaciones' },
-    { to: '/bracket', icon: bracketsIcon, label: 'Cuadros' },
-    { to: '/history', icon: historyIcon, label: 'Históricos' },
-    { to: '/rules', icon: rulesIcon, label: 'Reglas' },
-    ...(isAdmin ? [{ to: '/admin', icon: adminIcon, label: 'Panel de admin' }] : []),
+    { to: '/my-team', icon: teamIcon, label: t('fantasy.dashboard.actions.lineup') },
+    { to: '/auction', icon: auctionIcon, label: t('fantasy.dashboard.actions.auctionRoom') },
+    { to: '/leaderboard', icon: standingsIcon, label: t('fantasy.dashboard.actions.leaderboard') },
+    { to: '/market', icon: marketIcon, label: t('fantasy.dashboard.actions.market') },
+    { to: '/negotiations', icon: negotiationsIcon, label: t('fantasy.dashboard.actions.negotiations') },
+    { to: '/bracket', icon: bracketsIcon, label: t('fantasy.dashboard.actions.bracket') },
+    { to: '/history', icon: historyIcon, label: t('fantasy.dashboard.actions.history') },
+    { to: '/rules', icon: rulesIcon, label: t('fantasy.dashboard.actions.rules') },
+    ...(isAdmin ? [{ to: '/admin', icon: adminIcon, label: t('fantasy.dashboard.actions.adminPanel') }] : []),
   ];
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-primary">
-          ¡Bienvenido de nuevo, {profile?.display_name ?? 'Manager'}!
+          {t('fantasy.dashboard.welcomeBack', { name: profile?.display_name ?? 'Manager' })}
         </h1>
         <p className="text-secondary mt-1">
           {competition?.name ? `${competition.name} Fantasy League` : 'Fantasy League'}
@@ -47,9 +50,9 @@ export default function Dashboard() {
       {/* Status cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-xs text-muted uppercase tracking-wider">Fase actual</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.dashboard.currentPhase')}</p>
           <p className="text-lg font-semibold text-primary mt-1">
-            {activeMatchday ? activeMatchday.name : 'Pretemporada'}
+            {activeMatchday ? activeMatchday.name : t('fantasy.common.preseason')}
           </p>
           {activeMatchday && (
             <p className="text-xs text-tertiary mt-1">{activeMatchday.wc_stage}</p>
@@ -57,19 +60,19 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-xs text-muted uppercase tracking-wider">Presupuesto restante</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.dashboard.remainingBudget')}</p>
           <p className="text-lg font-semibold text-tertiary mt-1">
             {team ? formatPrice(team.budget_remaining) : '—'}
           </p>
-          <p className="text-xs text-muted mt-1">de 105.0M total</p>
+          <p className="text-xs text-muted mt-1">{t('fantasy.dashboard.totalBudgetSuffix', { amount: '105.0' })}</p>
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-5">
-          <p className="text-xs text-muted uppercase tracking-wider">Tamaño de plantilla</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.dashboard.squadSize')}</p>
           <p className="text-lg font-semibold text-primary mt-1">
             {players.length} / 15
           </p>
-          <p className="text-xs text-muted mt-1">jugadores registrados</p>
+          <p className="text-xs text-muted mt-1">{t('fantasy.dashboard.playersRegistered')}</p>
         </div>
       </div>
 
@@ -80,19 +83,19 @@ export default function Dashboard() {
           <div>
             <p className="font-semibold text-info">
               {activeTransferWindow.is_preseason
-                ? 'Pretemporada — Fichajes ilimitados'
-                : `Ventana de fichajes ${activeTransferWindow.matchday_name}`}
+                ? t('fantasy.dashboard.preseasonUnlimitedTransfers')
+                : t('fantasy.dashboard.transferWindowFor', { name: activeTransferWindow.matchday_name })}
             </p>
             <p className="text-sm text-secondary mt-0.5">
               {activeTransferWindow.max_transfers != null
-                ? `${activeTransferWindow.max_transfers} fichajes permitidos. `
-                : 'Fichajes ilimitados. '}
+                ? t('fantasy.dashboard.transfersAllowed', { n: activeTransferWindow.max_transfers })
+                : t('fantasy.dashboard.unlimitedTransfers')}
               {activeTransferWindow.closes_at
-                ? `La ventana cierra ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
-                : 'Jugadores se bloquean al inicio del partido'}
+                ? t('fantasy.dashboard.windowClosesAt', { date: formatDateTimeShort(activeTransferWindow.closes_at, lang) })
+                : t('fantasy.dashboard.playersLockAtKickoff')}
             </p>
             <Link to="/market" className="text-sm text-info hover:text-info mt-1 inline-block">
-              Ir al mercado →
+              {t('fantasy.dashboard.goToMarket')}
             </Link>
           </div>
         </div>
@@ -100,7 +103,7 @@ export default function Dashboard() {
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">Acciones rápidas</h2>
+        <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">{t('fantasy.dashboard.quickActions')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map(({ to, icon, label }) => (
             <Link

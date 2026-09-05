@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useT } from '@predictor/i18n/react';
 import { breakdownPoints, aggregateBreakdown } from '../../lib/scoring';
 import { fmtPts, getPositionColor } from '../../lib/utils';
 import { useCompetition } from '../../context/CompetitionContext';
 
 export default function PointsBreakdownModal({ player, activeMatchdayId, isCaptain, onClose }) {
   const { db } = useCompetition();
+  const t = useT();
   const [allStats, setAllStats] = useState(null);
   const [scoringSystem, setScoringSystem] = useState('opta');
   const [loading, setLoading] = useState(true);
@@ -28,11 +30,11 @@ export default function PointsBreakdownModal({ player, activeMatchdayId, isCapta
   const sorted = [...(allStats ?? [])].sort((a, b) => b.matchday_id - a.matchday_id);
   const currentRow = sorted.find(s => s.matchday_id === activeMatchdayId) ?? sorted[0] ?? null;
 
-  const currentItems = currentRow ? breakdownPoints(currentRow, player.position, scoringSystem) : [];
+  const currentItems = currentRow ? breakdownPoints(currentRow, player.position, scoringSystem, t) : [];
   const currentBase = Math.round(currentItems.reduce((sum, item) => sum + item.points, 0) * 10) / 10;
   const currentDisplay = isCaptain ? Math.round(currentBase * 2 * 10) / 10 : currentBase;
 
-  const cumItems = allStats ? aggregateBreakdown(allStats, player.position, scoringSystem) : [];
+  const cumItems = allStats ? aggregateBreakdown(allStats, player.position, scoringSystem, t) : [];
   const cumTotal = Math.round(cumItems.reduce((sum, item) => sum + item.points, 0) * 10) / 10;
 
   return (
@@ -53,28 +55,28 @@ export default function PointsBreakdownModal({ player, activeMatchdayId, isCapta
                 <span className="text-label-caps bg-tertiary text-primary font-bold px-1.5 py-0.5 rounded">C</span>
               )}
             </div>
-            <p className="text-xs text-muted mt-0.5">Desglose de puntos</p>
+            <p className="text-xs text-muted mt-0.5">{t('fantasy.pointsBreakdown.subtitle')}</p>
           </div>
           <button
             onClick={onClose}
             className="text-muted hover:text-primary text-xl leading-none px-2 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary"
-            aria-label="Cerrar"
+            aria-label={t('fantasy.pointsBreakdown.close')}
           >
             ×
           </button>
         </div>
 
         {loading ? (
-          <p className="text-secondary text-sm p-6 text-center">Cargando…</p>
+          <p className="text-secondary text-sm p-6 text-center">{t('common.loading')}</p>
         ) : (
           <div className="p-5 space-y-5">
             {/* Current matchday */}
             <section>
               <h4 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
-                Jornada actual
+                {t('fantasy.pointsBreakdown.currentMatchday')}
               </h4>
               {!currentRow ? (
-                <p className="text-muted text-sm">Sin estadísticas para esta jornada.</p>
+                <p className="text-muted text-sm">{t('fantasy.pointsBreakdown.noStatsThisMatchday')}</p>
               ) : (
                 <>
                   <BreakdownTable
@@ -82,12 +84,12 @@ export default function PointsBreakdownModal({ player, activeMatchdayId, isCapta
                   />
                   {isCaptain && (
                     <div className="mt-2 pt-2 border-t border-border/50 flex justify-between text-sm">
-                      <span className="text-muted">Capitán ×2</span>
+                      <span className="text-muted">{t('fantasy.pointsBreakdown.captainDouble')}</span>
                       <span className="text-secondary font-semibold">{fmtPts(currentBase)} × 2</span>
                     </div>
                   )}
                   <div className="mt-2 pt-2 border-t border-border flex justify-between">
-                    <span className="text-sm font-semibold text-secondary">Total jornada</span>
+                    <span className="text-sm font-semibold text-secondary">{t('fantasy.pointsBreakdown.matchdayTotal')}</span>
                     <span className="text-tertiary font-bold">{fmtPts(currentDisplay)} pts</span>
                   </div>
                 </>
@@ -97,17 +99,17 @@ export default function PointsBreakdownModal({ player, activeMatchdayId, isCapta
             {/* Cumulative */}
             <section>
               <h4 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-3">
-                Torneo completo
+                {t('fantasy.pointsBreakdown.fullTournament')}
               </h4>
               {cumItems.length === 0 ? (
-                <p className="text-muted text-sm">Sin estadísticas aún.</p>
+                <p className="text-muted text-sm">{t('fantasy.pointsBreakdown.noStatsYet')}</p>
               ) : (
                 <>
                   <BreakdownTable
                     items={cumItems.filter(item => item.points !== 0 || item.key === 'minutes')}
                   />
                   <div className="mt-2 pt-2 border-t border-border flex justify-between">
-                    <span className="text-sm font-semibold text-secondary">Total torneo</span>
+                    <span className="text-sm font-semibold text-secondary">{t('fantasy.pointsBreakdown.tournamentTotal')}</span>
                     <span className="text-info font-bold">{fmtPts(cumTotal)} pts</span>
                   </div>
                 </>

@@ -3,8 +3,9 @@ import { useTeam } from '../hooks/useTeam';
 import { useLeague } from '../context/LeagueContext';
 import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
+import { useT } from '@predictor/i18n/react';
 import { getPositionColor, formatPrice, fmtPts } from '../lib/utils';
-import { statColumns } from '../lib/statColumns';
+import { getStatColumns } from '../lib/statColumns';
 import { usePlayerTotals } from '../hooks/usePlayerTotals';
 import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { getActivePoints } from '../lib/scoring.js';
@@ -14,11 +15,11 @@ import PointsBreakdownModal from '../components/team/PointsBreakdownModal';
 import { useCompetition } from '../context/CompetitionContext';
 
 // Flatten team_players rows into usable player objects
-function normalizeSquad(teamPlayers) {
+function normalizeSquad(teamPlayers, t) {
   return teamPlayers.map((tp) => ({
     id: tp.player_id,
     teamPlayerId: tp.id,
-    name: tp.players?.name ?? 'Desconocido',
+    name: tp.players?.name ?? t('fantasy.common.unknownPlayer'),
     country: tp.players?.country ?? '',
     country_code: tp.players?.country_code ?? null,
     position: tp.players?.position ?? 'FWD',
@@ -30,6 +31,8 @@ function normalizeSquad(teamPlayers) {
 
 
 export default function MyTeam() {
+  const t = useT();
+  const statColumns = getStatColumns(t);
   const { db, competitionId } = useCompetition();
   const { team, players, loading: teamLoading, refresh: refreshSquad } = useTeam();
   const { totals: totalsById } = usePlayerTotals();
@@ -60,7 +63,7 @@ export default function MyTeam() {
   const [completedMatchdays, setCompletedMatchdays] = useState([]);
   const [historicalStats, setHistoricalStats] = useState({});
 
-  const squad = normalizeSquad(players);
+  const squad = normalizeSquad(players, t);
 
   // Per-country kickoff times for the selected matchday — drives player locks
   const { lockTimeFor, kickoffByCode } = useMatchdayLocks(selectedMatchday?.id ?? null);
@@ -291,21 +294,21 @@ export default function MyTeam() {
     if (p1IsStarter && !p2IsStarter) {
       // Locked captain cannot leave the XI
       if (captainId === p1.id && isGameLocked(p1)) {
-        setSwapError(`Tu capitán (${p1.name}) ya jugó — no puede salir del XI.`);
+        setSwapError(t('fantasy.myTeam.errors.captainPlayedCannotLeave', { name: p1.name }));
         return;
       }
       // p2 (bench) enters the XI — block if locked
       if (isGameLocked(p2)) {
-        setSwapError(`El partido de ${p2.name} ya inició — no puede entrar al XI.`);
+        setSwapError(t('fantasy.myTeam.errors.matchStartedCannotEnter', { name: p2.name }));
         return;
       }
       const remainingStarters = starters.filter((s) => s.id !== p1.id);
       if (p2.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
-        setSwapError(`No se puede mover a ${p2.name} al XI — solo 1 POR permitido en el XI titular.`);
+        setSwapError(t('fantasy.myTeam.errors.onlyOneGkMove', { name: p2.name }));
         return;
       }
       if (p1.position === 'GK' && p2.position !== 'GK') {
-        setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
+        setSwapError(t('fantasy.myTeam.errors.gkToBenchBlocked'));
         return;
       }
       newStarters = remainingStarters.concat(p2);
@@ -314,21 +317,21 @@ export default function MyTeam() {
     } else if (!p1IsStarter && p2IsStarter) {
       // Locked captain cannot leave the XI
       if (captainId === p2.id && isGameLocked(p2)) {
-        setSwapError(`Tu capitán (${p2.name}) ya jugó — no puede salir del XI.`);
+        setSwapError(t('fantasy.myTeam.errors.captainPlayedCannotLeave', { name: p2.name }));
         return;
       }
       // p1 (bench) enters the XI — block if locked
       if (isGameLocked(p1)) {
-        setSwapError(`El partido de ${p1.name} ya inició — no puede entrar al XI.`);
+        setSwapError(t('fantasy.myTeam.errors.matchStartedCannotEnter', { name: p1.name }));
         return;
       }
       const remainingStarters = starters.filter((s) => s.id !== p2.id);
       if (p1.position === 'GK' && remainingStarters.some((s) => s.position === 'GK')) {
-        setSwapError(`No se puede mover a ${p1.name} al XI — solo 1 POR permitido en el XI titular.`);
+        setSwapError(t('fantasy.myTeam.errors.onlyOneGkMove', { name: p1.name }));
         return;
       }
       if (p2.position === 'GK' && p1.position !== 'GK') {
-        setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
+        setSwapError(t('fantasy.myTeam.errors.gkToBenchBlocked'));
         return;
       }
       newStarters = remainingStarters.concat(p1);
@@ -354,7 +357,7 @@ export default function MyTeam() {
   function handleEmptySlotClick() {
     if (!selectedPlayer) return;
     if (isGameLocked(selectedPlayer)) {
-      setSwapError(`El partido de ${selectedPlayer.name} ya inició — no se puede mover.`);
+      setSwapError(t('fantasy.myTeam.errors.matchStartedCannotMove', { name: selectedPlayer.name }));
       return;
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
@@ -362,7 +365,7 @@ export default function MyTeam() {
       return;
     }
     if (selectedPlayer.position === 'GK' && starters.some((s) => s.position === 'GK')) {
-      setSwapError(`No se puede agregar a ${selectedPlayer.name} al XI — solo 1 POR permitido en el XI titular.`);
+      setSwapError(t('fantasy.myTeam.errors.onlyOneGkAdd', { name: selectedPlayer.name }));
       return;
     }
     setStarters([...starters, selectedPlayer]);
@@ -379,12 +382,12 @@ export default function MyTeam() {
     }
     if (starters.some((s) => s.id === selectedPlayer.id)) {
       if (captainId === selectedPlayer.id && isGameLocked(selectedPlayer)) {
-        setSwapError(`Tu capitán ya jugó — no se puede sacar del XI.`);
+        setSwapError(t('fantasy.myTeam.errors.captainPlayedCannotBench'));
         setSelectedPlayer(null);
         return;
       }
       if (selectedPlayer.position === 'GK') {
-        setSwapError(`No se puede mover al POR a la banca — intercambia con un POR de la banca.`);
+        setSwapError(t('fantasy.myTeam.errors.gkToBenchBlocked'));
         setSelectedPlayer(null);
         return;
       }
@@ -400,12 +403,12 @@ export default function MyTeam() {
   function handleSetCaptain(player) {
     const currentCaptain = captainId ? starters.find((s) => s.id === captainId) : null;
     if (currentCaptain && currentCaptain.id !== player.id && isGameLocked(currentCaptain)) {
-      setSwapError(`El partido de tu capitán (${currentCaptain.name}) ya inició — no se puede cambiar el capitán.`);
+      setSwapError(t('fantasy.myTeam.errors.captainMatchStartedChange', { name: currentCaptain.name }));
       setSelectedPlayer(null);
       return;
     }
     if (isGameLocked(player) && captainId !== player.id) {
-      setSwapError(`El partido de ${player.name} ya inició — no puede ser nombrado capitán.`);
+      setSwapError(t('fantasy.myTeam.errors.matchStartedCannotCaptain', { name: player.name }));
       setSelectedPlayer(null);
       return;
     }
@@ -511,7 +514,7 @@ export default function MyTeam() {
   if (teamLoading || lineupLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Cargando plantilla…
+        {t('fantasy.myTeam.loading')}
       </div>
     );
   }
@@ -519,10 +522,10 @@ export default function MyTeam() {
   if (!team) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Mi equipo</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.myTeam.title')}</h1>
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
           <p className="text-secondary">
-            Aún no estás inscrito en la liga. Pide a un admin que te agregue.
+            {t('fantasy.common.notRegistered')}
           </p>
         </div>
       </div>
@@ -532,11 +535,11 @@ export default function MyTeam() {
   if (squad.length === 0) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Mi equipo</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.myTeam.title')}</h1>
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
-          <p className="text-secondary font-medium mb-1">Aún sin jugadores</p>
+          <p className="text-secondary font-medium mb-1">{t('fantasy.myTeam.noPlayersHeading')}</p>
           <p className="text-muted text-sm">
-            Gana jugadores en la subasta o ficha en el mercado libre para construir tu plantilla.
+            {t('fantasy.myTeam.noPlayersBody')}
           </p>
         </div>
       </div>
@@ -548,22 +551,22 @@ export default function MyTeam() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Mi equipo</h1>
+          <h1 className="text-2xl font-bold text-primary">{t('fantasy.myTeam.title')}</h1>
           <p className="text-secondary text-sm mt-0.5">
-            {selectedMatchday ? `Alineación para: ${selectedMatchday.name}` : 'Alineación de pretemporada'}
+            {selectedMatchday ? t('fantasy.myTeam.lineupFor', { name: selectedMatchday.name }) : t('fantasy.myTeam.preseasonLineup')}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-muted uppercase tracking-wider">Presupuesto restante</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.myTeam.remainingBudget')}</p>
           <p className="text-lg font-bold text-tertiary">{formatPrice(team.budget_remaining)}</p>
-          <p className="text-xs text-muted">{squad.length} / 15 jugadores</p>
+          <p className="text-xs text-muted">{t('fantasy.myTeam.squadCount', { count: squad.length })}</p>
         </div>
       </div>
 
       {/* ── Matchday selector ── */}
       {allMatchdays.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted uppercase tracking-wider font-semibold">Jornada:</span>
+          <span className="text-xs text-muted uppercase tracking-wider font-semibold">{t('fantasy.myTeam.matchdaySelectorLabel')}</span>
           {allMatchdays.map((md) => (
             <button
               key={md.id}
@@ -584,12 +587,12 @@ export default function MyTeam() {
       {/* ── Formation label ── */}
       <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
         <div>
-          <p className="text-xs font-semibold text-secondary uppercase tracking-wider">Formación</p>
+          <p className="text-xs font-semibold text-secondary uppercase tracking-wider">{t('fantasy.myTeam.formationLabel')}</p>
           <p className="text-lg font-bold text-tertiary mt-0.5">
             {starters.length > 0 ? derivedFormation : '—'}
           </p>
         </div>
-        <p className="text-xs text-muted ml-auto">{starters.length} / 11 titulares</p>
+        <p className="text-xs text-muted ml-auto">{t('fantasy.myTeam.startersCount', { count: starters.length })}</p>
       </div>
 
       {/* ── Live matchday stats panel (always shows active matchday) ── */}
@@ -600,21 +603,21 @@ export default function MyTeam() {
         return (
           <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-6 flex-wrap">
             <div>
-              <p className="text-label-caps text-muted uppercase tracking-wider">Pts en vivo</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.myTeam.liveStats.points')}</p>
               <p className="text-xl font-bold text-tertiary">{fmtPts(livePts)}</p>
             </div>
             <div>
-              <p className="text-label-caps text-muted uppercase tracking-wider">Jugaron</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.myTeam.liveStats.played')}</p>
               <p className="text-sm font-semibold text-primary">{played.length} / {starters.length}</p>
             </div>
             <div>
-              <p className="text-label-caps text-muted uppercase tracking-wider">Por jugar</p>
+              <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.myTeam.liveStats.toPlay')}</p>
               <p className={`text-sm font-semibold ${notPlayed.length > 0 ? 'text-tertiary' : 'text-muted'}`}>
                 {notPlayed.length}
               </p>
             </div>
             <p className="text-label-caps text-muted ml-auto hidden sm:block">
-              C ×2 aplicado · titulares definitivos
+              {t('fantasy.myTeam.liveStats.captainNote')}
             </p>
           </div>
         );
@@ -623,14 +626,14 @@ export default function MyTeam() {
       {/* ── Captain warning ── */}
       {captainGameLocked && (
         <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-sm text-warning" role="alert">
-          El partido de tu capitán ya inició. Si no juega, sumarás 0 × 2 = 0 pts — el XI es definitivo, sin promoción de banca.
+          {t('fantasy.myTeam.captainLockedWarning')}
         </div>
       )}
 
       {/* ── Rolling lockout notice ── */}
       {selectedMatchday && Object.keys(kickoffByCode).length > 0 && (
         <div className="bg-surface-hover/60 border border-border rounded-xl p-3 text-xs text-secondary" role="alert">
-          Bloqueo progresivo activo — los jugadores se bloquean 10 min antes de su partido. Un titular bloqueado puede salir al banquillo (un jugador desbloqueado entra en su lugar); los bloqueados no pueden entrar al XI.
+          {t('fantasy.myTeam.rollingLockNotice')}
         </div>
       )}
 
@@ -648,14 +651,14 @@ export default function MyTeam() {
           disabled={saving || !canSave}
           className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-tertiary hover:bg-tertiary text-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
         >
-          {saving ? 'Guardando…' : 'Guardar alineación'}
+          {saving ? t('fantasy.myTeam.saving') : t('fantasy.myTeam.saveButton')}
         </button>
 
         {!canSave && !saving && (
           <p className="text-xs text-muted">
-            {starters.length !== 11 && `Se necesitan exactamente 11 titulares (hay ${starters.length}). `}
-            {starters.length === 11 && gkCount !== 1 && 'Se necesita exactamente 1 POR en el XI titular. '}
-            {!captainIsStarter && 'Selecciona un capitán entre tus titulares. '}
+            {starters.length !== 11 && t('fantasy.myTeam.validation.needStarters', { count: starters.length })}
+            {starters.length === 11 && gkCount !== 1 && t('fantasy.myTeam.validation.needOneGk')}
+            {!captainIsStarter && t('fantasy.myTeam.validation.needCaptain')}
           </p>
         )}
 
@@ -664,7 +667,7 @@ export default function MyTeam() {
         )}
 
         {saveSuccess && (
-          <p className="text-xs text-tertiary font-medium" role="status">¡Alineación guardada!</p>
+          <p className="text-xs text-tertiary font-medium" role="status">{t('fantasy.myTeam.saveSuccess')}</p>
         )}
       </div>
 
@@ -720,10 +723,10 @@ export default function MyTeam() {
                 {formatPrice(selectedPlayer.acquisition_price)}
               </span>
               {selectedIsStarter && (
-                <span className="text-label-caps text-muted">Titular</span>
+                <span className="text-label-caps text-muted">{t('fantasy.myTeam.selectedPanel.starter')}</span>
               )}
               {!selectedIsStarter && (
-                <span className="text-label-caps text-muted">En banca</span>
+                <span className="text-label-caps text-muted">{t('fantasy.myTeam.selectedPanel.onBench')}</span>
               )}
             </div>
           </div>
@@ -739,20 +742,20 @@ export default function MyTeam() {
                     : 'bg-border text-tertiary hover:bg-warning/15 border border-warning/30'
                 }`}
               >
-                {selectedIsCaptain ? 'Capitán ✓' : 'Hacer capitán'}
+                {selectedIsCaptain ? t('fantasy.myTeam.selectedPanel.captainSet') : t('fantasy.myTeam.selectedPanel.makeCaptain')}
               </button>
             )}
 
             {/* Swap hint */}
             <span className="text-xs text-muted italic">
-              Haz clic en otro jugador para intercambiar
+              {t('fantasy.myTeam.selectedPanel.swapHint')}
             </span>
 
             {/* Deselect */}
             <button
               onClick={() => setSelectedPlayer(null)}
               className="px-2 py-1.5 rounded-lg text-xs text-secondary hover:text-primary hover:bg-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-              aria-label="Deseleccionar jugador"
+              aria-label={t('fantasy.myTeam.selectedPanel.deselect')}
             >
               ✕
             </button>
@@ -764,7 +767,7 @@ export default function MyTeam() {
       {unassigned.length > 0 && (
         <div className="bg-surface border border-warning/30 rounded-xl p-4">
           <p className="text-xs font-semibold text-warning uppercase tracking-wider mb-2">
-            Fuera de alineación ({unassigned.length})
+            {t('fantasy.myTeam.unassigned.heading', { count: unassigned.length })}
           </p>
           <div className="flex flex-wrap gap-2">
             {unassigned.map((p) => (
@@ -787,7 +790,7 @@ export default function MyTeam() {
             ))}
           </div>
           <p className="text-body-sm text-muted mt-2">
-            Selecciona uno de estos, luego haz clic en banca/titular para intercambiarlo.
+            {t('fantasy.myTeam.unassigned.hint')}
           </p>
         </div>
       )}
@@ -795,17 +798,17 @@ export default function MyTeam() {
       {/* ── Squad overview table ── */}
       <div className="bg-surface border border-border rounded-xl overflow-x-auto">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between min-w-max">
-          <h3 className="text-sm font-semibold text-secondary">Plantilla completa</h3>
-          <span className="text-xs text-muted">{squad.length} jugadores</span>
+          <h3 className="text-sm font-semibold text-secondary">{t('fantasy.myTeam.squadTable.heading')}</h3>
+          <span className="text-xs text-muted">{t('fantasy.myTeam.squadTable.count', { count: squad.length })}</span>
         </div>
         {/* Stat header row */}
         <div className="flex items-center gap-3 px-4 py-1.5 border-b border-border/50 min-w-max">
           <span className="w-8 flex-shrink-0" />
-          <span className="text-xs text-muted flex-shrink-0 w-[140px]">Jugador</span>
-          <span className="text-xs text-muted flex-shrink-0 w-8">País</span>
-          <span className="text-xs text-muted flex-shrink-0 w-12 text-right">Precio</span>
-          {activeMatchday && <span className="text-xs text-muted flex-shrink-0 w-14 text-right">En vivo</span>}
-          <span className="text-xs text-muted flex-shrink-0 w-16 text-right">Estado</span>
+          <span className="text-xs text-muted flex-shrink-0 w-[140px]">{t('fantasy.myTeam.squadTable.columns.player')}</span>
+          <span className="text-xs text-muted flex-shrink-0 w-8">{t('fantasy.myTeam.squadTable.columns.country')}</span>
+          <span className="text-xs text-muted flex-shrink-0 w-12 text-right">{t('fantasy.myTeam.squadTable.columns.price')}</span>
+          {activeMatchday && <span className="text-xs text-muted flex-shrink-0 w-14 text-right">{t('fantasy.myTeam.squadTable.columns.live')}</span>}
+          <span className="text-xs text-muted flex-shrink-0 w-16 text-right">{t('fantasy.myTeam.squadTable.columns.status')}</span>
           {statColumns.map((col) => (
             <span key={col.field} className="text-xs text-muted flex-shrink-0 w-10 text-right" title={col.label}>
               {col.abbrev}
@@ -855,20 +858,20 @@ export default function MyTeam() {
                       {liveCapPts === null
                         ? '—'
                         : mdStats.minutes_played > 0
-                        ? `${fmtPts(liveCapPts)} pts`
-                        : '0.0 pts'}
+                        ? t('fantasy.myTeam.squadTable.ptsSuffix', { pts: fmtPts(liveCapPts) })
+                        : t('fantasy.myTeam.squadTable.ptsSuffix', { pts: '0.0' })}
                     </span>
                   )}
                   <span className="text-label-caps flex-shrink-0 w-16 text-right flex items-center justify-end gap-1">
                     {isGameLocked(p) && (
-                      <span title="Bloqueado — partido iniciado">🔒</span>
+                      <span title={t('fantasy.myTeam.squadTable.locked')}>🔒</span>
                     )}
                     {isCaptain ? (
-                      <span className="text-tertiary font-semibold">Capitán</span>
+                      <span className="text-tertiary font-semibold">{t('fantasy.myTeam.squadTable.captainLabel')}</span>
                     ) : isStarter ? (
-                      <span className="text-tertiary">Titular</span>
+                      <span className="text-tertiary">{t('fantasy.myTeam.squadTable.starterLabel')}</span>
                     ) : benchIdx >= 0 ? (
-                      <span className="text-info">Banca {benchIdx + 1}</span>
+                      <span className="text-info">{t('fantasy.myTeam.squadTable.benchLabel', { n: benchIdx + 1 })}</span>
                     ) : (
                       <span className="text-warning">—</span>
                     )}
@@ -889,20 +892,20 @@ export default function MyTeam() {
       {completedMatchdays.length > 0 && (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-semibold text-secondary">Historial del jugador</h3>
-            <p className="text-xs text-muted mt-0.5">Puntos por jornada de los jugadores de tu plantilla</p>
+            <h3 className="text-sm font-semibold text-secondary">{t('fantasy.myTeam.history.heading')}</h3>
+            <p className="text-xs text-muted mt-0.5">{t('fantasy.myTeam.history.subheading')}</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left border-b border-border">
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted min-w-[140px]">Jugador</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-muted min-w-[140px]">{t('fantasy.myTeam.history.columns.player')}</th>
                   {completedMatchdays.map(md => (
                     <th key={md.id} className="px-3 py-2.5 text-xs font-medium text-muted text-center whitespace-nowrap">
                       {md.name.replace(/matchday\s*/i, 'MD').replace(/group stage /i, '')}
                     </th>
                   ))}
-                  <th className="px-3 py-2.5 text-xs font-medium text-muted text-center">Total</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-muted text-center">{t('fantasy.myTeam.history.columns.total')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -930,7 +933,7 @@ export default function MyTeam() {
                                 {pts === null ? (
                                   <span className="text-secondary">—</span>
                                 ) : s.minutes_played === 0 ? (
-                                  <span className="text-muted text-xs" title="No jugó">0</span>
+                                  <span className="text-muted text-xs" title={t('fantasy.myTeam.history.notPlayed')}>0</span>
                                 ) : (
                                   <span className={`font-semibold text-xs ${pts > 0 ? 'text-tertiary' : 'text-error'}`}>
                                     {fmtPts(pts)}
@@ -952,8 +955,7 @@ export default function MyTeam() {
             </table>
           </div>
           <p className="px-4 py-2 text-label-caps text-muted border-t border-border">
-            Los puntos mostrados son puntos base del jugador — el ×2 del capitán se aplica a nivel de equipo durante la puntuación.
-            "—" significa que no hay estadísticas cargadas para esa jornada de este jugador.
+            {t('fantasy.myTeam.history.footnote')}
           </p>
         </div>
       )}

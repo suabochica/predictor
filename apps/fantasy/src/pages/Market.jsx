@@ -7,8 +7,10 @@ import { usePlayerTotals } from '../hooks/usePlayerTotals';
 import { useTransfers } from '../hooks/useTransfers';
 import { useMatchdayLocks } from '../hooks/useMatchdayLocks';
 import { supabase } from '@predictor/supabase';
+import { useLang } from '@predictor/i18n/react';
+import { formatDateTimeShort, formatDate } from '@predictor/i18n';
 import { formatPrice, getPositionColor } from '../lib/utils';
-import { statColumns } from '../lib/statColumns';
+import { getStatColumns } from '../lib/statColumns';
 import { MAX_SQUAD_SIZE } from '../config/constants';
 import { Table, Thead, Tbody, Th } from '@predictor/ui';
 import FilterBar from '../components/market/FilterBar';
@@ -16,6 +18,8 @@ import PlayerRow from '../components/market/PlayerRow';
 import { useCompetition } from '../context/CompetitionContext';
 
 export default function Market() {
+  const { t, lang } = useLang();
+  const statColumns = getStatColumns(t);
   const { db, competitionId, competition } = useCompetition();
   const maxSquadSize = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
   const { team, players: squadRows, loading: teamLoading, refresh: refreshSquad } = useTeam();
@@ -42,7 +46,7 @@ export default function Market() {
     () =>
       squadRows.map((tp) => ({
         id: tp.player_id,
-        name: tp.players?.name ?? 'Desconocido',
+        name: tp.players?.name ?? t('fantasy.common.unknownPlayer'),
         country: tp.players?.country ?? '',
         country_code: tp.players?.country_code ?? null,
         position: tp.players?.position ?? 'FWD',
@@ -50,7 +54,7 @@ export default function Market() {
         current_price: tp.players?.current_price ?? tp.acquisition_price ?? 0,
         acquisition_price: tp.acquisition_price,
       })),
-    [squadRows]
+    [squadRows, t]
   );
 
   // Unique country list for the filter pills (same as Auction)
@@ -204,27 +208,27 @@ export default function Market() {
 
     // Fast client-side pre-checks (UX only — server enforces authoritatively)
     if (noTransfersLeft) {
-      setSwapError('Sin fichajes restantes en esta ventana.');
+      setSwapError(t('fantasy.market.errors.noTransfersLeft'));
       setSwapping(false);
       return;
     }
     if (isPlayerLocked(playerOut)) {
-      setSwapError(`${playerOut.name} está bloqueado — su partido ya inició.`);
+      setSwapError(t('fantasy.market.errors.playerLocked', { name: playerOut.name }));
       setSwapping(false);
       return;
     }
     if (isPlayerLocked(playerIn)) {
-      setSwapError(`${playerIn.name} está bloqueado — su partido ya inició.`);
+      setSwapError(t('fantasy.market.errors.playerLocked', { name: playerIn.name }));
       setSwapping(false);
       return;
     }
     if (committedPlayerIds.has(playerOut.id)) {
-      setSwapError('Ese jugador está comprometido en una oferta de negociación activa.');
+      setSwapError(t('fantasy.market.errors.committedInNegotiation'));
       setSwapping(false);
       return;
     }
     if (budgetAfterSwap < committedCash) {
-      setSwapError('Presupuesto insuficiente para este cambio (tienes efectivo comprometido en negociaciones).');
+      setSwapError(t('fantasy.market.errors.insufficientBudgetCommitted'));
       setSwapping(false);
       return;
     }
@@ -233,7 +237,7 @@ export default function Market() {
       (playerOut.position === 'GK' ? 1 : 0) +
       (playerIn.position === 'GK' ? 1 : 0);
     if (gksAfter < 1) {
-      setSwapError('Cambio rechazado: tu plantilla debe tener siempre al menos 1 portero.');
+      setSwapError(t('fantasy.market.errors.needGk'));
       setSwapping(false);
       return;
     }
@@ -263,7 +267,7 @@ export default function Market() {
   if (teamLoading || playersLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Cargando mercado…
+        {t('fantasy.market.loading')}
       </div>
     );
   }
@@ -271,9 +275,9 @@ export default function Market() {
   if (!team) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.market.title')}</h1>
         <div className="bg-surface border border-border rounded-xl p-6 text-center text-secondary">
-          Aún no estás inscrito en la liga. Pide a un admin que te agregue.
+          {t('fantasy.common.notRegistered')}
         </div>
       </div>
     );
@@ -282,11 +286,11 @@ export default function Market() {
   if (!marketOpen) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.market.title')}</h1>
         <div className="bg-surface border border-warning/30 rounded-xl p-6 text-center">
-          <p className="text-warning font-semibold">Mercado cerrado</p>
+          <p className="text-warning font-semibold">{t('fantasy.market.closedHeading')}</p>
           <p className="text-secondary text-sm mt-1">
-            El mercado abre al completar la subasta.
+            {t('fantasy.market.closedBody')}
           </p>
         </div>
       </div>
@@ -296,11 +300,11 @@ export default function Market() {
   if (team.status === 'eliminated') {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.market.title')}</h1>
         <div className="bg-surface border border-error/30 rounded-xl p-6 text-center">
-          <p className="text-error font-semibold">Estás eliminado — solo lectura</p>
+          <p className="text-error font-semibold">{t('fantasy.common.eliminatedReadOnly')}</p>
           <p className="text-secondary text-sm mt-1">
-            Tu equipo quedó fuera del torneo y ya no puede fichar. Revisa Negociaciones si hay una ventana abierta.
+            {t('fantasy.market.eliminatedBody')}
           </p>
         </div>
       </div>
@@ -312,23 +316,23 @@ export default function Market() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Mercado de jugadores</h1>
+          <h1 className="text-2xl font-bold text-primary">{t('fantasy.market.title')}</h1>
           <p className="text-secondary text-sm mt-0.5">
-            Intercambia jugadores durante las ventanas de fichajes
+            {t('fantasy.market.subtitle')}
           </p>
         </div>
         <div className="flex gap-3">
           <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
             <p className="text-label-caps text-muted uppercase tracking-wider">
-              Presupuesto{negWindow ? ' disponible' : ''}
+              {negWindow ? t('fantasy.market.budgetAvailable') : t('fantasy.market.budget')}
             </p>
             <p className="text-base font-bold text-tertiary">{formatPrice(effectiveBudget)}</p>
             {negWindow && committedCash > 0 && (
-              <p className="text-xs text-muted mt-0.5">{formatPrice(committedCash)} comprometido</p>
+              <p className="text-xs text-muted mt-0.5">{t('fantasy.common.amountCommitted', { amount: formatPrice(committedCash) })}</p>
             )}
           </div>
           <div className="bg-surface border border-border rounded-xl px-4 py-3 text-center">
-            <p className="text-label-caps text-muted uppercase tracking-wider">Plantilla</p>
+            <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.market.squadLabel')}</p>
             <p className="text-base font-bold text-primary">
               {squad.length}
               <span className="text-muted font-normal text-sm">/{maxSquadSize}</span>
@@ -340,25 +344,25 @@ export default function Market() {
       {/* ── Transfer window banner ── */}
       {!activeTransferWindow ? (
         <div className="bg-surface border border-border rounded-xl p-5 text-center">
-          <p className="text-secondary font-semibold">Temporada finalizada</p>
-          <p className="text-muted text-sm mt-1">No hay más ventanas de fichajes abiertas.</p>
+          <p className="text-secondary font-semibold">{t('fantasy.market.seasonOver')}</p>
+          <p className="text-muted text-sm mt-1">{t('fantasy.market.noMoreWindows')}</p>
         </div>
       ) : (
         <div className={`border rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap ${noTransfersLeft ? 'bg-warning/5 border-warning/30' : 'bg-info/10 border-info/30'}`}>
           <div>
             <p className={`font-semibold ${noTransfersLeft ? 'text-warning' : 'text-info'}`}>
               {noTransfersLeft
-                ? 'Sin fichajes restantes'
+                ? t('fantasy.market.noTransfersLeftHeading')
                 : activeTransferWindow.is_preseason
-                ? 'Pretemporada — Fichajes ilimitados'
-                : `Ventana ${activeTransferWindow.matchday_name}`}
+                ? t('fantasy.market.preseasonUnlimited')
+                : t('fantasy.market.windowFor', { name: activeTransferWindow.matchday_name })}
             </p>
             <p className="text-secondary text-sm mt-0.5">
               {noTransfersLeft
-                ? 'Tendrás fichajes nuevos en la próxima ventana'
+                ? t('fantasy.market.newTransfersNextWindow')
                 : activeTransferWindow.closes_at
-                ? `La ventana cierra ${new Date(activeTransferWindow.closes_at).toLocaleString()}`
-                : 'Los jugadores se bloquean al iniciar su partido'}
+                ? t('fantasy.market.windowCloses', { date: formatDateTimeShort(activeTransferWindow.closes_at, lang) })
+                : t('fantasy.market.playersLockAtKickoff')}
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -366,21 +370,21 @@ export default function Market() {
               <>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary">{transfersRemaining}</p>
-                  <p className="text-label-caps text-muted uppercase tracking-wider">Restantes</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.market.transferStats.remaining')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-secondary">{transfersUsedThisWindow}</p>
-                  <p className="text-label-caps text-muted uppercase tracking-wider">Usados</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.market.transferStats.used')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-muted">{activeTransferWindow.max_transfers}</p>
-                  <p className="text-label-caps text-muted uppercase tracking-wider">Máx</p>
+                  <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.market.transferStats.max')}</p>
                 </div>
               </>
             ) : (
               <div className="text-center">
                 <p className="text-2xl font-bold text-tertiary">∞</p>
-                <p className="text-label-caps text-muted uppercase tracking-wider">Ilimitado</p>
+                <p className="text-label-caps text-muted uppercase tracking-wider">{t('fantasy.market.transferStats.unlimited')}</p>
               </div>
             )}
           </div>
@@ -394,12 +398,12 @@ export default function Market() {
             <div>
               <h3 className="text-sm font-semibold text-secondary">
                 {offerOut
-                  ? `Ofreciendo: ${offerOut.name}`
-                  : 'Mi plantilla — elige uno para ofrecer'}
+                  ? t('fantasy.market.offering', { name: offerOut.name })
+                  : t('fantasy.market.pickToOffer')}
               </h3>
               {offerOut && (
                 <p className="text-xs text-muted mt-0.5">
-                  Ahora selecciona un agente libre para intercambiar
+                  {t('fantasy.market.selectFreeAgent')}
                 </p>
               )}
             </div>
@@ -408,7 +412,7 @@ export default function Market() {
                 onClick={() => { setOfferOut(null); setSwapError(null); }}
                 className="text-xs text-secondary hover:text-primary px-2 py-1 rounded hover:bg-surface-hover transition-colors"
               >
-                Cancelar
+                {t('fantasy.common.cancel')}
               </button>
             )}
           </div>
@@ -437,10 +441,10 @@ export default function Market() {
                     </span>
                     <span className="text-sm text-primary flex-1 truncate">{p.name}</span>
                     {committed && (
-                      <span className="text-label-caps text-info font-semibold text-xs flex-shrink-0">EN NEGOCIACIÓN</span>
+                      <span className="text-label-caps text-info font-semibold text-xs flex-shrink-0">{t('fantasy.market.inNegotiation')}</span>
                     )}
                     {!committed && locked && (
-                      <span className="text-label-caps text-warning font-semibold text-xs flex-shrink-0">BLOQUEADO</span>
+                      <span className="text-label-caps text-warning font-semibold text-xs flex-shrink-0">{t('fantasy.market.lockedTag')}</span>
                     )}
                     <span className="text-xs text-tertiary flex-shrink-0">
                       {formatPrice(p.current_price)}
@@ -458,7 +462,7 @@ export default function Market() {
         <div className="bg-tertiary/10 border border-tertiary/40 rounded-xl p-3 text-sm text-tertiary flex items-center gap-2" role="status">
           <span>✓</span>
           <span>
-            <strong>{recentAction.outName}</strong> intercambiado por{' '}
+            <strong>{recentAction.outName}</strong> {t('fantasy.market.swapConnector')}{' '}
             <strong>{recentAction.inName}</strong>
           </span>
         </div>
@@ -475,32 +479,32 @@ export default function Market() {
       {/* ── Player table ── */}
       {filteredPlayers.length === 0 ? (
         <div className="text-center py-12 text-muted">
-          Ningún jugador coincide con tus filtros.
+          {t('fantasy.market.noMatches')}
         </div>
       ) : (
         <Table>
           <Thead className="sticky top-0 z-10">
             <tr>
               <Th onClick={() => toggleSort('position')} className="cursor-pointer select-none">
-                Pos {sort.key === 'position' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.position')} {sort.key === 'position' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('name')} className="cursor-pointer select-none">
-                Jugador {sort.key === 'name' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.player')} {sort.key === 'name' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('country')} className="hidden sm:table-cell cursor-pointer select-none">
-                País {sort.key === 'country' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.country')} {sort.key === 'country' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('gp')} className="hidden sm:table-cell text-center cursor-pointer select-none">
-                PJ {sort.key === 'gp' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.gp')} {sort.key === 'gp' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('goals')} className="hidden sm:table-cell text-center cursor-pointer select-none">
-                G {sort.key === 'goals' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.goals')} {sort.key === 'goals' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('assists')} className="hidden sm:table-cell text-center cursor-pointer select-none">
-                A {sort.key === 'assists' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.assists')} {sort.key === 'assists' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('total_points')} className="text-center cursor-pointer select-none">
-                Pts {sort.key === 'total_points' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.points')} {sort.key === 'total_points' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               {matchdayColumns.map((col) => (
                 <Th
@@ -513,12 +517,12 @@ export default function Market() {
                 </Th>
               ))}
               <Th onClick={() => toggleSort('current_price')} className="text-right cursor-pointer select-none">
-                Precio {sort.key === 'current_price' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.price')} {sort.key === 'current_price' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
               <Th onClick={() => toggleSort('owner')} className="hidden sm:table-cell cursor-pointer select-none">
-                Dueño {sort.key === 'owner' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                {t('fantasy.market.columns.owner')} {sort.key === 'owner' ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
               </Th>
-              <Th>Acción</Th>
+              <Th>{t('fantasy.market.columns.action')}</Th>
               {statColumns.map((col) => (
                 <Th
                   key={col.field}
@@ -566,7 +570,7 @@ export default function Market() {
           onClick={(e) => e.target === e.currentTarget && !swapping && setConfirmSwapIn(null)}
         >
           <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-primary">Confirmar fichaje</h2>
+            <h2 className="text-lg font-bold text-primary">{t('fantasy.market.confirmModal.heading')}</h2>
 
             <div className="space-y-2">
               {/* Out */}
@@ -577,7 +581,7 @@ export default function Market() {
                   {offerOut.position}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-label-caps text-error font-semibold mb-0.5">Sale</p>
+                  <p className="text-label-caps text-error font-semibold mb-0.5">{t('fantasy.market.confirmModal.out')}</p>
                   <p className="text-sm font-semibold text-primary truncate">{offerOut.name}</p>
                 </div>
                 <span className="text-sm font-bold text-secondary flex-shrink-0">
@@ -595,7 +599,7 @@ export default function Market() {
                   {confirmSwapIn.position}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-label-caps text-tertiary font-semibold mb-0.5">Entra</p>
+                  <p className="text-label-caps text-tertiary font-semibold mb-0.5">{t('fantasy.market.confirmModal.in')}</p>
                   <p className="text-sm font-semibold text-primary truncate">{confirmSwapIn.name}</p>
                 </div>
                 <span className="text-sm font-bold text-tertiary flex-shrink-0">
@@ -606,25 +610,25 @@ export default function Market() {
 
             {confirmSwapIn.is_eliminated && (
               <div className="bg-error/10 border border-error/40 rounded-xl p-3 text-sm text-error font-medium">
-                ⚠ Estás fichando a un jugador de un país ELIMINADO — no sumará puntos en las próximas jornadas.
+                {t('fantasy.market.confirmModal.eliminatedWarning')}
               </div>
             )}
 
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-secondary">
-                <span>Presupuesto antes</span>
+                <span>{t('fantasy.market.confirmModal.budgetBefore')}</span>
                 <span className="text-primary">{formatPrice(budget)}</span>
               </div>
               <div className="flex justify-between text-secondary">
-                <span>Recibido por {offerOut.name}</span>
+                <span>{t('fantasy.market.confirmModal.receivedFor', { name: offerOut.name })}</span>
                 <span className="text-tertiary">+{formatPrice(offerOut.current_price)}</span>
               </div>
               <div className="flex justify-between text-secondary">
-                <span>Costo de {confirmSwapIn.name}</span>
+                <span>{t('fantasy.market.confirmModal.costOf', { name: confirmSwapIn.name })}</span>
                 <span className="text-error">−{formatPrice(confirmSwapIn.current_price)}</span>
               </div>
               <div className="flex justify-between font-semibold border-t border-border pt-1.5">
-                <span className="text-secondary">Presupuesto después</span>
+                <span className="text-secondary">{t('fantasy.market.confirmModal.budgetAfter')}</span>
                 <span className={budgetAfterSwap >= 0 ? 'text-tertiary' : 'text-error'}>
                   {formatPrice(budgetAfterSwap)}
                 </span>
@@ -641,14 +645,14 @@ export default function Market() {
                 disabled={swapping}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-hover text-secondary hover:bg-border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                Cancelar
+                {t('fantasy.common.cancel')}
               </button>
               <button
                 onClick={executeSwap}
                 disabled={swapping || budgetAfterSwap < 0}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-tertiary hover:brightness-90 text-primary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
               >
-                {swapping ? 'Fichando…' : 'Confirmar fichaje'}
+                {swapping ? t('fantasy.market.confirmModal.submitting') : t('fantasy.market.confirmModal.confirmButton')}
               </button>
             </div>
           </div>
@@ -659,33 +663,33 @@ export default function Market() {
       {transfers.length > 0 && (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-semibold text-secondary">Historial de fichajes</h3>
+            <h3 className="text-sm font-semibold text-secondary">{t('fantasy.market.transferHistory.heading')}</h3>
           </div>
           <div className="divide-y divide-border">
-            {transfers.map((t) => (
-              <div key={t.id} className="px-4 py-3 flex items-center gap-3 flex-wrap text-sm">
+            {transfers.map((tr) => (
+              <div key={tr.id} className="px-4 py-3 flex items-center gap-3 flex-wrap text-sm">
                 <span className="text-label-caps font-semibold px-2 py-0.5 rounded bg-surface-hover text-secondary">
-                  {t.matchday_id ? `MD${t.matchday_id}` : `W${t.window_number}`}
+                  {tr.matchday_id ? `MD${tr.matchday_id}` : `W${tr.window_number}`}
                 </span>
                 <span className="text-error">
-                  {t.player_out?.name ?? `Jugador #${t.player_out_id}`}
+                  {tr.player_out?.name ?? t('fantasy.common.playerFallback', { id: tr.player_out_id })}
                 </span>
                 <span className="text-muted">→</span>
                 <span className="text-tertiary">
-                  {t.player_in?.name ?? `Jugador #${t.player_in_id}`}
+                  {tr.player_in?.name ?? t('fantasy.common.playerFallback', { id: tr.player_in_id })}
                 </span>
-                {t.price_difference != null && (
+                {tr.price_difference != null && (
                   <span
                     className={`text-xs ml-auto ${
-                      t.price_difference >= 0 ? 'text-tertiary' : 'text-error'
+                      tr.price_difference >= 0 ? 'text-tertiary' : 'text-error'
                     }`}
                   >
-                    {t.price_difference >= 0 ? '+' : ''}
-                    {Number(t.price_difference).toFixed(1)}M
+                    {tr.price_difference >= 0 ? '+' : ''}
+                    {Number(tr.price_difference).toFixed(1)}M
                   </span>
                 )}
                 <span className="text-xs text-muted w-full sm:w-auto sm:ml-auto">
-                  {new Date(t.created_at).toLocaleDateString()}
+                  {formatDate(tr.created_at, lang)}
                 </span>
               </div>
             ))}

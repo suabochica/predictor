@@ -1,6 +1,7 @@
 import { Td } from '@predictor/ui';
+import { useT } from '@predictor/i18n/react';
 import { getPositionColor, formatPrice, fmtPts } from '../../lib/utils';
-import { statColumns } from '../../lib/statColumns';
+import { getStatColumns } from '../../lib/statColumns';
 
 function StatTd({ value, className = '' }) {
   return (
@@ -24,38 +25,41 @@ export default function PlayerRow({
   matchdayColumns = [],
   mdPoints,
 }) {
-  let actionLabel = 'Elige jugador para intercambiar';
+  const t = useT();
+  const statColumns = getStatColumns(t);
+
+  let actionLabel = t('fantasy.playerRow.actions.pickToSwap');
   let disabled = true;
   let disabledReason = '';
   let actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
   let rowOpacity = '';
 
   if (isMine) {
-    actionLabel = '✓ En plantilla';
+    actionLabel = t('fantasy.playerRow.actions.inSquad');
     actionStyle = 'bg-tertiary/10 text-tertiary cursor-default border border-tertiary/40';
     rowOpacity = 'opacity-70';
   } else if (owner) {
-    actionLabel = `Dueño: ${owner.teamName}`;
-    disabledReason = `Propiedad de ${owner.teamName}`;
+    actionLabel = t('fantasy.playerRow.actions.ownedBy', { name: owner.teamName });
+    disabledReason = t('fantasy.playerRow.reasons.ownedBy', { name: owner.teamName });
     actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
     rowOpacity = 'opacity-60';
   } else if (isLocked) {
-    actionLabel = 'Bloqueado';
-    disabledReason = 'Partido iniciado';
+    actionLabel = t('fantasy.playerRow.actions.locked');
+    disabledReason = t('fantasy.playerRow.reasons.matchStarted');
     actionStyle = 'bg-warning/10 text-warning cursor-not-allowed border border-warning/30';
   } else if (noTransfersLeft) {
-    actionLabel = 'Sin fichajes';
-    disabledReason = 'Sin fichajes restantes en esta ventana';
+    actionLabel = t('fantasy.playerRow.actions.noTransfers');
+    disabledReason = t('fantasy.playerRow.reasons.noTransfersLeft');
     actionStyle = 'bg-surface-hover text-muted cursor-not-allowed border border-border';
   } else if (!windowOpen) {
-    actionLabel = 'Sin ventana abierta';
-    disabledReason = 'No hay ventana de fichajes abierta';
+    actionLabel = t('fantasy.playerRow.actions.noWindow');
+    disabledReason = t('fantasy.playerRow.reasons.noWindowOpen');
   } else if (offerOutName) {
     if (!canAfford) {
-      actionLabel = 'Sin presupuesto';
-      disabledReason = 'Presupuesto insuficiente para este cambio';
+      actionLabel = t('fantasy.playerRow.actions.noBudget');
+      disabledReason = t('fantasy.playerRow.reasons.insufficientBudget');
     } else {
-      actionLabel = `Intercambiar con ${offerOutName}`;
+      actionLabel = t('fantasy.playerRow.actions.swapWith', { name: offerOutName });
       disabled = false;
       actionStyle = 'bg-tertiary hover:brightness-90 text-primary cursor-pointer';
     }
@@ -82,7 +86,7 @@ export default function PlayerRow({
           <span className="block truncate font-semibold text-primary">{player.name}</span>
           {player.is_eliminated && (
             <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-semibold bg-error/10 text-error border border-error/30 whitespace-nowrap">
-              Eliminado
+              {t('fantasy.common.eliminated')}
             </span>
           )}
         </Td>

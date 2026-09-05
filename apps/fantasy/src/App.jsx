@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@predictor/supabase';
+import { useT } from '@predictor/i18n/react';
 import { FantasyLangProvider } from './context/LangSync';
 import { CompetitionProvider, CompetitionGate, useCompetition } from './context/CompetitionContext';
 import { LeagueProvider } from './context/LeagueContext';
@@ -26,10 +27,11 @@ function redirectToGateway() {
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
+  const t = useT();
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-neutral text-primary">
-        Cargando…
+        {t('common.loading')}
       </div>
     );
   }

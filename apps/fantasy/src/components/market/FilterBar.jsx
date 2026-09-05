@@ -1,6 +1,14 @@
+import { useT } from '@predictor/i18n/react';
 import { POSITIONS } from '../../config/constants';
 
+// `''` is the sentinel for "no filter" in `filters.position`/`filters.country` —
+// never the translated 'Todos'/'All' label. See I18N_PLAN.md Risk A.
+const ALL_VALUE = '';
+
 export default function FilterBar({ filters, onChange, resultCount, countries = [] }) {
+  const t = useT();
+  const allLabel = t('fantasy.filterBar.all');
+
   function set(key, value) {
     onChange({ ...filters, [key]: value });
   }
@@ -9,17 +17,17 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
     <div className="bg-surface border border-border rounded-xl p-4 space-y-3">
       {/* Position pills */}
       <div className="flex flex-wrap gap-2">
-        {['Todos', ...POSITIONS].map((pos) => (
+        {[{ value: ALL_VALUE, label: allLabel }, ...POSITIONS.map((pos) => ({ value: pos, label: pos }))].map((opt) => (
           <button
-            key={pos}
-            onClick={() => set('position', pos === 'Todos' ? '' : pos)}
+            key={opt.value || 'all'}
+            onClick={() => set('position', opt.value)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              (pos === 'Todos' && !filters.position) || filters.position === pos
+              (opt.value === ALL_VALUE ? !filters.position : filters.position === opt.value)
                 ? 'bg-tertiary text-primary'
                 : 'bg-surface-hover text-secondary hover:bg-border border border-border'
             }`}
           >
-            {pos}
+            {opt.label}
           </button>
         ))}
       </div>
@@ -27,17 +35,17 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
       {/* Country pills */}
       {countries.length > 1 && (
         <div className="flex flex-wrap gap-2">
-          {['Todos', ...countries].map((c) => (
+          {[{ value: ALL_VALUE, label: allLabel }, ...countries.map((c) => ({ value: c, label: c }))].map((opt) => (
             <button
-              key={c}
-              onClick={() => set('country', c === 'Todos' ? '' : c)}
+              key={opt.value || 'all'}
+              onClick={() => set('country', opt.value)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                (c === 'Todos' && !filters.country) || filters.country === c
+                (opt.value === ALL_VALUE ? !filters.country : filters.country === opt.value)
                   ? 'bg-info text-on-info'
                   : 'bg-surface-hover text-secondary hover:bg-border'
               }`}
             >
-              {c}
+              {opt.label}
             </button>
           ))}
         </div>
@@ -48,7 +56,7 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
         {/* Name search */}
         <input
           type="text"
-          placeholder="Buscar jugador…"
+          placeholder={t('fantasy.filterBar.searchPlaceholder')}
           value={filters.search ?? ''}
           onChange={(e) => set('search', e.target.value)}
           className="bg-surface-hover border border-border rounded-lg px-3 py-1.5 text-sm text-primary placeholder-muted focus:outline-none focus:border-tertiary w-44"
@@ -56,13 +64,13 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
 
         {/* Max price */}
         <div className="flex items-center gap-1.5">
-          <label className="text-xs text-muted whitespace-nowrap">Precio máx.</label>
+          <label className="text-xs text-muted whitespace-nowrap">{t('fantasy.filterBar.maxPrice')}</label>
           <input
             type="number"
             min="0"
             max="20"
             step="0.5"
-            placeholder="Cualquiera"
+            placeholder={t('fantasy.filterBar.anyPrice')}
             value={filters.maxPrice ?? ''}
             onChange={(e) =>
               set('maxPrice', e.target.value === '' ? '' : Number(e.target.value))
@@ -80,7 +88,7 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
             onChange={(e) => set('affordableOnly', e.target.checked)}
             className="accent-tertiary w-3.5 h-3.5"
           />
-          <span className="text-xs text-secondary">Solo asequibles</span>
+          <span className="text-xs text-secondary">{t('fantasy.filterBar.affordableOnly')}</span>
         </label>
 
         {/* Free agents only toggle */}
@@ -91,7 +99,7 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
             onChange={(e) => set('freeAgentsOnly', e.target.checked)}
             className="accent-tertiary w-3.5 h-3.5"
           />
-          <span className="text-xs text-secondary">Solo agentes libres</span>
+          <span className="text-xs text-secondary">{t('fantasy.filterBar.freeAgentsOnly')}</span>
         </label>
 
         {/* Hide eliminated toggle */}
@@ -102,10 +110,10 @@ export default function FilterBar({ filters, onChange, resultCount, countries = 
             onChange={(e) => set('hideEliminated', e.target.checked)}
             className="accent-tertiary w-3.5 h-3.5"
           />
-          <span className="text-xs text-secondary">Ocultar eliminados</span>
+          <span className="text-xs text-secondary">{t('fantasy.filterBar.hideEliminated')}</span>
         </label>
 
-        <span className="text-xs text-muted ml-auto">{resultCount} jugadores</span>
+        <span className="text-xs text-muted ml-auto">{t('fantasy.filterBar.resultCount', { n: resultCount })}</span>
       </div>
     </div>
   );

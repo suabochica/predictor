@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useT } from '@predictor/i18n/react';
 import LineupGrid from '../team/LineupGrid';
 import BenchList from '../team/BenchList';
 import PointsBreakdownModal from '../team/PointsBreakdownModal';
@@ -12,6 +13,7 @@ const noop = () => {};
 
 export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClose }) {
   const { db } = useCompetition();
+  const t = useT();
   const [rows, setRows] = useState(null); // null = loading, [] = none found
   const [scoringSystem, setScoringSystem] = useState('opta');
   const [liveStats, setLiveStats] = useState({});
@@ -73,7 +75,7 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
         }
       } catch (err) {
         console.error('TeamLineupModal load error:', err);
-        if (!cancelled) setError(err.message ?? 'Error desconocido');
+        if (!cancelled) setError(err.message ?? t('fantasy.teamLineupModal.unknownError'));
       }
     }
 
@@ -160,21 +162,21 @@ export default function TeamLineupModal({ entry, matchdayId, matchdayName, onClo
           <button
             onClick={onClose}
             className="text-muted hover:text-primary text-xl leading-none px-2 -mr-2"
-            aria-label="Cerrar"
+            aria-label={t('fantasy.common.close')}
           >
             ×
           </button>
         </div>
 
         {rows === null && !error ? (
-          <p className="text-secondary text-sm py-8 text-center">Cargando alineación…</p>
+          <p className="text-secondary text-sm py-8 text-center">{t('fantasy.teamLineupModal.loading')}</p>
         ) : error ? (
           <p className="text-error text-sm py-8 text-center">
-            Error al cargar la alineación: {error}
+            {t('fantasy.teamLineupModal.loadError', { error })}
           </p>
         ) : players.length === 0 ? (
           <p className="text-secondary text-sm py-8 text-center">
-            Este equipo aún no ha guardado una alineación.
+            {t('fantasy.teamLineupModal.noLineup')}
           </p>
         ) : (
           <>

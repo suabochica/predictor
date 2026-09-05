@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStandings } from '../hooks/useStandings';
 import { useAuth } from '@predictor/supabase';
+import { useT } from '@predictor/i18n/react';
 import { useCompetition } from '../context/CompetitionContext';
 import { useLeague } from '../context/LeagueContext';
 import TeamLineupModal from '../components/leaderboard/TeamLineupModal';
@@ -36,22 +37,23 @@ function RankBadge({ rank, bracket }) {
 }
 
 function BracketBadge({ bracket }) {
+  const t = useT();
   if (!bracket) return null;
   if (bracket === 'championship' || bracket === 'direct')
     return (
       <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-tertiary/15 text-tertiary border border-tertiary/40">
-        {bracket === 'direct' ? 'Directo' : 'Camp'}
+        {bracket === 'direct' ? t('fantasy.leaderboard.bracketBadge.direct') : t('fantasy.leaderboard.bracketBadge.championship')}
       </span>
     );
   if (bracket === 'playoff')
     return (
       <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/40">
-        Play-off
+        {t('fantasy.leaderboard.bracketBadge.playoff')}
       </span>
     );
   return (
     <span className="hidden sm:inline text-label-caps font-semibold px-1.5 py-0.5 rounded bg-error/10 text-error border border-error/30">
-      Desc
+      {t('fantasy.leaderboard.bracketBadge.relegation')}
     </span>
   );
 }
@@ -61,6 +63,7 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const { competition } = useCompetition();
   const { activeMatchday } = useLeague();
+  const t = useT();
 
   const [viewing, setViewing] = useState(null); // { entry, matchdayId, matchdayName }
   const openTeam = (entry, matchdayId, matchdayName) =>
@@ -140,7 +143,7 @@ export default function Leaderboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-secondary">
-        Cargando posiciones…
+        {t('fantasy.leaderboard.loading')}
       </div>
     );
   }
@@ -151,17 +154,17 @@ export default function Leaderboard() {
     <div className="space-y-5 max-w-3xl">
       {/* ── Header ── */}
       <div>
-        <h1 className="text-2xl font-bold text-primary">Tabla de posiciones</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('fantasy.leaderboard.pageTitle')}</h1>
         <p className="text-secondary text-sm mt-0.5">
           {activeMatchday
-            ? `Activo: ${activeMatchday.name}`
+            ? t('fantasy.leaderboard.activeLabel', { name: activeMatchday.name })
             : leagueComplete
-            ? 'Fase de liga completada — cuadros bloqueados'
-            : 'Pretemporada'}
+            ? t('fantasy.leaderboard.leagueStageComplete')
+            : t('fantasy.common.preseason')}
         </p>
         {provisionalActive && hasScores && (
           <p className="text-xs text-muted mt-1">
-            Los puntos de la jornada en curso son provisionales y pueden cambiar hasta que se finalice la jornada.
+            {t('fantasy.leaderboard.provisionalNotice')}
           </p>
         )}
       </div>
@@ -169,18 +172,18 @@ export default function Leaderboard() {
       {/* ── Summary cards ── */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Managers</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.leaderboard.managers')}</p>
           <p className="text-2xl font-bold text-primary mt-1">{totalParticipants}</p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Jornadas</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.leaderboard.matchdays')}</p>
           <p className="text-2xl font-bold text-primary mt-1">
             {matchdays.filter((md) => md.is_completed).length}
             <span className="text-sm text-muted font-normal"> / {matchdays.length}</span>
           </p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Líder</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('fantasy.leaderboard.leader')}</p>
           <p className="text-sm font-bold text-tertiary mt-1 truncate">
             {standings[0]?.display_name ?? '—'}
           </p>
@@ -194,22 +197,25 @@ export default function Leaderboard() {
             <>
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
-                Positions 1–{directSpots} → Clasificado directo a cuartos
+                {t('fantasy.leaderboard.bracketKey.directQuarterfinal', { n: directSpots })}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-warning/30 inline-block" />
-                Positions {directSpots + 1}–{totalParticipants} → Play-off
+                {t('fantasy.leaderboard.bracketKey.playoff', { from: directSpots + 1, to: totalParticipants })}
               </span>
             </>
           ) : (
             <>
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
-                Positions 1–{CHAMPIONSHIP_SPOTS} → Cuadro de campeonato
+                {t('fantasy.leaderboard.bracketKey.championship', { n: CHAMPIONSHIP_SPOTS })}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-error/10 inline-block" />
-                Positions {totalParticipants - RELEGATION_SPOTS + 1}–{totalParticipants} → Cuadro de descenso
+                {t('fantasy.leaderboard.bracketKey.relegation', {
+                  from: totalParticipants - RELEGATION_SPOTS + 1,
+                  to: totalParticipants,
+                })}
               </span>
             </>
           )}
@@ -219,14 +225,14 @@ export default function Leaderboard() {
       {/* ── Pre-tournament notice ── */}
       {!hasScores && (
         <div className="bg-surface/50 border border-border rounded-xl p-4 text-sm text-secondary text-center">
-          Aún sin puntuaciones — la tabla se actualizará al completar la primera jornada.
+          {t('fantasy.leaderboard.noScoresYet')}
         </div>
       )}
 
       {/* ── Standings table ── */}
       {standings.length === 0 ? (
         <div className="bg-surface border border-border rounded-xl p-6 text-center text-muted">
-          Aún no hay participantes inscritos.
+          {t('fantasy.leaderboard.noParticipants')}
         </div>
       ) : (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
@@ -241,26 +247,38 @@ export default function Leaderboard() {
             {groupMatchdays.length > 0
               ? groupMatchdays.map((md) => (
                   <span key={md.id} className="text-center truncate" title={md.name}>
-                    {md.name.replace(/matchday\s*/i, 'JD').replace(/group stage /i, '')}
+                    {md.name.replace(/matchday\s*/i, t('fantasy.leaderboard.matchdayAbbrev')).replace(/group stage /i, '')}
                   </span>
                 ))
               : [1, 2, 3].map((n) => (
                   <span key={n} className="text-center text-secondary">
-                    JD{n}
+                    {t('fantasy.leaderboard.matchdayAbbrev')}{n}
                   </span>
                 ))}
             {isH2H && (
               <>
-                <span className="text-center" title="Partidos jugados">PJ</span>
-                <span className="text-center" title="Ganados">G</span>
-                <span className="text-center" title="Empatados">E</span>
-                <span className="text-center" title="Perdidos">P</span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.played.title')}>
+                  {t('fantasy.leaderboard.columns.played.abbrev')}
+                </span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.won.title')}>
+                  {t('fantasy.leaderboard.columns.won.abbrev')}
+                </span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.drawn.title')}>
+                  {t('fantasy.leaderboard.columns.drawn.abbrev')}
+                </span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.lost.title')}>
+                  {t('fantasy.leaderboard.columns.lost.abbrev')}
+                </span>
               </>
             )}
-            <span className="text-center">Pts</span>
-            {isH2H && <span className="text-center" title="Puntos fantásticos totales">PF</span>}
-            <span className="text-center" title="Goals scored (tiebreaker)">
-              GS
+            <span className="text-center">{t('fantasy.leaderboard.columns.points')}</span>
+            {isH2H && (
+              <span className="text-center" title={t('fantasy.leaderboard.columns.fantasyPoints.title')}>
+                {t('fantasy.leaderboard.columns.fantasyPoints.abbrev')}
+              </span>
+            )}
+            <span className="text-center" title={t('fantasy.leaderboard.columns.goalsScored.title')}>
+              {t('fantasy.leaderboard.columns.goalsScored.abbrev')}
             </span>
           </div>
 
@@ -392,7 +410,11 @@ export default function Leaderboard() {
         <section className="space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-base font-bold text-primary">
-              Jornada{fixturesMd ? ` ${groupMatchdays.findIndex((md) => md.id === fixturesMd.id) + 1}` : ''}
+              {fixturesMd
+                ? t('fantasy.leaderboard.fixtures.heading', {
+                    n: groupMatchdays.findIndex((md) => md.id === fixturesMd.id) + 1,
+                  })
+                : t('fantasy.leaderboard.fixtures.heading', { n: '' })}
             </h2>
             <select
               value={fixturesMdId ?? ''}
@@ -409,7 +431,7 @@ export default function Leaderboard() {
 
           {panelFixtures.length === 0 ? (
             <div className="bg-surface/50 border border-border rounded-xl p-4 text-sm text-muted text-center">
-              Calendario aún no sorteado para esta jornada.
+              {t('fantasy.leaderboard.fixtures.notDrawnYet')}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -421,7 +443,7 @@ export default function Leaderboard() {
                 return (
                   <MatchCard
                     key={fx.id}
-                    label={`Enfrentamiento ${i + 1}`}
+                    label={t('fantasy.leaderboard.fixtures.matchLabel', { n: i + 1 })}
                     teamA={a ? { id: a.team_id, name: a.display_name } : null}
                     teamB={b ? { id: b.team_id, name: b.display_name } : null}
                     pointsA={pointsA}
@@ -444,27 +466,22 @@ export default function Leaderboard() {
       {hasScores && (
         <p className="text-xs text-muted">
           {isH2H
-            ? 'Desempate: puntos fantásticos totales → goles marcados → puntos de capitán.'
-            : 'Desempate: goles marcados por jugadores. La columna GS muestra el valor de desempate.'}
+            ? t('fantasy.leaderboard.tiebreakerH2h')
+            : t('fantasy.leaderboard.tiebreakerCumulative', { abbrev: t('fantasy.leaderboard.columns.goalsScored.abbrev') })}
         </p>
       )}
 
       {/* ── League stage note ── */}
       {leagueComplete && (
         <div className="bg-tertiary/5 border border-tertiary/40 rounded-xl p-4 text-sm">
-          <p className="text-tertiary font-semibold">Fase de liga completada</p>
+          <p className="text-tertiary font-semibold">{t('fantasy.leaderboard.leagueStageCompleteNotice')}</p>
           <p className="text-secondary mt-1">
-            {isH2H ? (
-              <>
-                Los mejores {directSpots} avanzan directo a cuartos de final. El resto disputa el
-                play-off. Ventana de fichajes 1 abierta.
-              </>
-            ) : (
-              <>
-                Los mejores {CHAMPIONSHIP_SPOTS} avanzan al cuadro de campeonato. Los últimos{' '}
-                {RELEGATION_SPOTS} entran al cuadro de descenso. Ventana de fichajes 1 abierta.
-              </>
-            )}
+            {isH2H
+              ? t('fantasy.leaderboard.afterLeagueH2h', { n: directSpots })
+              : t('fantasy.leaderboard.afterLeagueCumulative', {
+                  championship: CHAMPIONSHIP_SPOTS,
+                  relegation: RELEGATION_SPOTS,
+                })}
           </p>
         </div>
       )}

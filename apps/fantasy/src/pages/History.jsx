@@ -3,6 +3,7 @@ import { useTeam } from '../hooks/useTeam';
 import { calculatePlayerPoints } from '../lib/scoring';
 import PointsBreakdownModal from '../components/team/PointsBreakdownModal';
 import { useCompetition } from '../context/CompetitionContext';
+import { useLang } from '@predictor/i18n/react';
 
 const POSITION_COLOR = {
   GK:  'bg-warning/15 text-warning',
@@ -12,6 +13,7 @@ const POSITION_COLOR = {
 };
 
 export default function History() {
+  const { t } = useLang();
   const { db } = useCompetition();
   const { team } = useTeam();
 
@@ -77,7 +79,7 @@ export default function History() {
     const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
     if (!lineupRows?.length) {
-      setBreakdown({ error: 'No se encontró alineación para esta jornada.' });
+      setBreakdown({ error: t('fantasy.history.modal.noLineup') });
       setBreakdownLoading(false);
       return;
     }
@@ -117,7 +119,7 @@ export default function History() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="text-secondary p-6">Cargando…</div>;
+    return <div className="text-secondary p-6">{t('fantasy.history.loading')}</div>;
   }
 
   // Build a lookup: matchday_id → team_id → standing row
@@ -128,17 +130,17 @@ export default function History() {
   }
 
   // All unique teams across standings
-  const teamsInStandings = [...new Map(standings.map(s => [s.team_id, s.teams?.name ?? `Team ${s.team_id}`])).entries()];
+  const teamsInStandings = [...new Map(standings.map(s => [s.team_id, s.teams?.name ?? t('fantasy.common.teamFallback', { id: s.team_id })])).entries()];
 
   const completedMatchdays = matchdays.filter(md => md.is_completed || md.is_active);
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <h1 className="text-2xl font-bold text-primary">Historial de jornadas</h1>
+      <h1 className="text-2xl font-bold text-primary">{t('fantasy.history.title')}</h1>
 
       {completedMatchdays.length === 0 ? (
         <div className="bg-surface rounded-xl p-6 text-center text-secondary">
-          Aún no hay jornadas completadas.
+          {t('fantasy.history.noneYet')}
         </div>
       ) : (
         <div className="space-y-6">
@@ -153,26 +155,26 @@ export default function History() {
                   <span className="text-xs text-muted">{md.wc_stage}</span>
                   {md.is_completed ? (
                     <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-info/15 text-info border border-info/40">
-                      Final
+                      {t('fantasy.history.finalBadge')}
                     </span>
                   ) : (
                     <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/40">
-                      Provisional
+                      {t('fantasy.history.provisionalBadge')}
                     </span>
                   )}
                 </div>
 
                 {!hasScores ? (
-                  <p className="text-muted text-sm">Posiciones aún no calculadas para esta jornada.</p>
+                  <p className="text-muted text-sm">{t('fantasy.history.notCalculated')}</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-muted border-b border-border">
-                          <th className="pb-3 pr-4 font-medium">Equipo</th>
-                          <th className="pb-3 pr-4 font-medium text-right">Pts jornada</th>
-                          <th className="pb-3 pr-4 font-medium text-right">Pts totales</th>
-                          <th className="pb-3 font-medium text-right">Goles</th>
+                          <th className="pb-3 pr-4 font-medium">{t('fantasy.history.columns.team')}</th>
+                          <th className="pb-3 pr-4 font-medium text-right">{t('fantasy.history.columns.matchdayPoints')}</th>
+                          <th className="pb-3 pr-4 font-medium text-right">{t('fantasy.history.columns.totalPoints')}</th>
+                          <th className="pb-3 font-medium text-right">{t('fantasy.history.columns.goals')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -188,7 +190,7 @@ export default function History() {
                                 className={`hover:bg-surface-hover/40 ${isMyTeam ? 'bg-tertiary/5/30' : ''}`}
                               >
                                 <td className={`py-2.5 pr-4 font-medium ${isMyTeam ? 'text-tertiary' : 'text-primary'}`}>
-                                  {teamName}{isMyTeam && ' (tú)'}
+                                  {teamName}{isMyTeam && t('fantasy.history.youSuffix')}
                                 </td>
                                 <td className="py-2.5 pr-4 text-right">
                                   <button
@@ -233,7 +235,7 @@ export default function History() {
               <button
                 onClick={() => { setModal(null); setPlayerBreakdown(null); }}
                 className="text-muted hover:text-primary text-xl transition-colors ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary focus-visible:ring-offset-2"
-                aria-label="Cerrar"
+                aria-label={t('fantasy.common.close')}
               >
                 ✕
               </button>
@@ -242,7 +244,7 @@ export default function History() {
             {/* Body */}
             <div className="overflow-y-auto p-6 space-y-3">
               {breakdownLoading ? (
-                <p className="text-secondary text-sm">Cargando desglose…</p>
+                <p className="text-secondary text-sm">{t('fantasy.history.modal.loading')}</p>
               ) : breakdown?.error ? (
                 <p className="text-error text-sm" role="alert">{breakdown.error}</p>
               ) : breakdown ? (
@@ -253,11 +255,12 @@ export default function History() {
                       row={row}
                       captainId={breakdown.captainId}
                       onInfoClick={(player, isCaptain) => setPlayerBreakdown({ player, isCaptain })}
+                      t={t}
                     />
                   ))}
 
                   <div className="border-t border-border pt-3 flex items-center justify-between">
-                    <span className="text-secondary text-sm font-medium">Total</span>
+                    <span className="text-secondary text-sm font-medium">{t('fantasy.history.modal.total')}</span>
                     <span className="text-tertiary text-xl font-bold">{breakdown.total} pts</span>
                   </div>
                 </>
@@ -279,9 +282,9 @@ export default function History() {
   );
 }
 
-function BreakdownRow({ row, onInfoClick }) {
+function BreakdownRow({ row, onInfoClick, t }) {
   const { player, stats, base, final, isCap, onBench } = row;
-  const name = player?.name ?? `Player #${row.player?.id}`;
+  const name = player?.name ?? t('fantasy.common.playerFallback', { id: row.player?.id });
   const pos  = player?.position ?? '?';
 
   if (onBench) {
@@ -289,11 +292,11 @@ function BreakdownRow({ row, onInfoClick }) {
       <div
         className="flex items-center gap-3 py-2 opacity-40 cursor-pointer hover:opacity-60 transition-opacity rounded-lg px-1 -mx-1"
         onClick={() => player && onInfoClick?.(player, false)}
-        title="Ver desglose de puntos"
+        title={t('fantasy.common.viewBreakdown')}
       >
         <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
         <span className="flex-1 text-secondary text-sm">{name}</span>
-        <span className="text-xs text-muted">Banca</span>
+        <span className="text-xs text-muted">{t('fantasy.history.benchTag')}</span>
         <span className="w-10 text-right text-muted text-sm">—</span>
       </div>
     );
@@ -303,7 +306,7 @@ function BreakdownRow({ row, onInfoClick }) {
     <div
       className="flex items-center gap-3 py-2 cursor-pointer hover:bg-surface-hover/40 rounded-lg px-1 -mx-1 transition-colors"
       onClick={() => player && onInfoClick?.(player, isCap)}
-      title="Ver desglose de puntos"
+      title={t('fantasy.common.viewBreakdown')}
     >
       <span className={`text-label-caps font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${POSITION_COLOR[pos] ?? 'bg-surface-hover text-secondary'}`}>{pos}</span>
 
@@ -312,7 +315,7 @@ function BreakdownRow({ row, onInfoClick }) {
           <span className="text-primary text-sm truncate">{name}</span>
           {isCap && <span className="text-label-caps bg-tertiary text-primary font-bold px-1.5 py-0.5 rounded">C</span>}
         </div>
-        <StatLine stats={stats} />
+        <StatLine stats={stats} t={t} />
       </div>
 
       <div className="text-right flex-shrink-0 w-16">
@@ -327,19 +330,19 @@ function BreakdownRow({ row, onInfoClick }) {
   );
 }
 
-function StatLine({ stats }) {
+function StatLine({ stats, t }) {
   if (!stats || Object.keys(stats).length === 0) {
-    return <span className="text-body-sm text-muted">Sin estadísticas</span>;
+    return <span className="text-body-sm text-muted">{t('fantasy.history.stats.none')}</span>;
   }
   const parts = [];
   if (stats.minutes_played != null) parts.push(`${stats.minutes_played}'`);
-  if (stats.goals)          parts.push(`${stats.goals}G`);
-  if (stats.assists)        parts.push(`${stats.assists}A`);
-  if (stats.clean_sheet)    parts.push('CS');
-  if (stats.saves)          parts.push(`${stats.saves} atajadas`);
-  if (stats.yellow_cards)   parts.push('TA');
-  if (stats.red_cards)      parts.push('TR');
-  if (stats.own_goals)      parts.push(`${stats.own_goals} OG`);
+  if (stats.goals)          parts.push(`${stats.goals}${t('fantasy.statColumns.goals.abbrev')}`);
+  if (stats.assists)        parts.push(`${stats.assists}${t('fantasy.statColumns.assists.abbrev')}`);
+  if (stats.clean_sheet)    parts.push(t('fantasy.statColumns.cleanSheets.abbrev'));
+  if (stats.saves)          parts.push(t('fantasy.history.stats.saves', { n: stats.saves }));
+  if (stats.yellow_cards)   parts.push(t('fantasy.statColumns.yellowCards.abbrev'));
+  if (stats.red_cards)      parts.push(t('fantasy.statColumns.redCards.abbrev'));
+  if (stats.own_goals)      parts.push(`${stats.own_goals} ${t('fantasy.statColumns.ownGoals.abbrev')}`);
   return (
     <span className="text-body-sm text-muted">{parts.join(' · ') || '—'}</span>
   );

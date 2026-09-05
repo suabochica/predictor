@@ -1,4 +1,7 @@
+import { useT } from '@predictor/i18n/react';
+
 export default function MatchCard({ label, teamA, teamB, pointsA, pointsB, winnerId, seed, onTeamClick, provisional }) {
+  const t = useT();
   const hasResult = pointsA != null || pointsB != null;
   const aWon = winnerId && teamA && winnerId === teamA.id;
   const bWon = winnerId && teamB && winnerId === teamB.id;
@@ -12,8 +15,8 @@ export default function MatchCard({ label, teamA, teamB, pointsA, pointsB, winne
   const fmt = (n) => (n == null ? '' : Number.isInteger(n) ? n : Math.round(n * 10) / 10);
 
   function teamName(team) {
-    if (!team) return 'TBD';
-    return team.users?.display_name ?? team.name ?? 'TBD';
+    if (!team) return t('fantasy.bracket.tbd');
+    return team.users?.display_name ?? team.name ?? t('fantasy.bracket.tbd');
   }
 
   const clickProps = (team) =>
@@ -39,7 +42,7 @@ export default function MatchCard({ label, teamA, teamB, pointsA, pointsB, winne
       {label && (
         <span className="text-label-caps text-muted block mb-2">
           {label}
-          {provisional && <span className="ml-1.5 text-tertiary normal-case">· en vivo</span>}
+          {provisional && <span className="ml-1.5 text-tertiary normal-case">{t('fantasy.matchCard.live')}</span>}
         </span>
       )}
 

@@ -1,4 +1,5 @@
 import { Td } from '@predictor/ui';
+import { useT } from '@predictor/i18n/react';
 
 const POSITION_BADGE = {
   GK:  'bg-warning/15 text-warning',
@@ -10,6 +11,7 @@ const POSITION_BADGE = {
 export default function AuctionPlayerRow({
   player,
   ownerLabel,
+  isMine,
   isLeading,
   isContested,
   contestFloor,
@@ -32,39 +34,39 @@ export default function AuctionPlayerRow({
   listFull,
   onAddToList,
 }) {
+  const t = useT();
   let statusPill = null;
   if (ownerLabel) {
-    const isMine = ownerLabel === 'En tu plantilla';
     statusPill = (
       <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
         isMine
           ? 'bg-tertiary/10 text-tertiary border border-tertiary/40'
           : 'bg-surface-hover text-muted border border-border'
       }`}>
-        {isMine ? '★ En tu plantilla' : ownerLabel}
+        {isMine ? t('fantasy.auctionPlayerRow.mine') : ownerLabel}
       </span>
     );
   } else if (isContested) {
     statusPill = (
       <div className="space-y-0.5">
         <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning border border-warning/30 whitespace-nowrap">
-          ⚡ Disputado
+          {t('fantasy.auctionPlayerRow.contested')}
         </span>
         {contestFloor !== null && (
-          <p className="text-xs text-muted">piso £{contestFloor.toFixed(1)}</p>
+          <p className="text-xs text-muted">{t('fantasy.auctionPlayerRow.floorPrice', { price: contestFloor.toFixed(1) })}</p>
         )}
       </div>
     );
   } else if (myBidOnPlayer && isLeading) {
     statusPill = (
       <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-tertiary/10 text-tertiary border border-tertiary/40 whitespace-nowrap">
-        ✓ Liderando
+        {t('fantasy.auctionPlayerRow.leading')}
       </span>
     );
   } else if (myBidOnPlayer && !isLeading) {
     statusPill = (
       <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-error/10 text-error border border-error/30 whitespace-nowrap">
-        ✗ Superado
+        {t('fantasy.auctionPlayerRow.outbid')}
       </span>
     );
   }
@@ -74,7 +76,7 @@ export default function AuctionPlayerRow({
     if (isInList) {
       bidCell = (
         <span className="text-xs font-medium px-2 py-0.5 rounded bg-tertiary/10 text-tertiary border border-tertiary/40 whitespace-nowrap">
-          ✓ En lista
+          {t('fantasy.auctionPlayerRow.inList')}
         </span>
       );
     } else if (!listFull) {
@@ -83,7 +85,7 @@ export default function AuctionPlayerRow({
           onClick={onAddToList}
           className="px-3 py-1 rounded bg-surface-hover hover:bg-border text-secondary text-xs font-medium border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary whitespace-nowrap"
         >
-          + Lista
+          {t('fantasy.auction.autoBid.addToList')}
         </button>
       );
     }
@@ -104,22 +106,22 @@ export default function AuctionPlayerRow({
           disabled={isSubmitting}
           className="px-3 py-1 rounded bg-tertiary hover:brightness-90 disabled:opacity-50 text-primary text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary shrink-0"
         >
-          {isSubmitting ? '…' : 'Pujar'}
+          {isSubmitting ? '…' : t('fantasy.auctionPlayerRow.bidButton')}
         </button>
       </div>
     );
   } else if (isActive && isGkReserved) {
     bidCell = (
-      <span className="text-xs text-warning italic">Último cupo reservado para POR.</span>
+      <span className="text-xs text-warning italic">{t('fantasy.auctionPlayerRow.gkReserved')}</span>
     );
   } else if (isActive && !myBidOnPlayer && myBidCount >= freeSlots) {
     bidCell = (
-      <span className="text-xs text-muted italic">Sin cupos disponibles.</span>
+      <span className="text-xs text-muted italic">{t('fantasy.auctionPlayerRow.noSlots')}</span>
     );
   } else if (!isActive && !myBidOnPlayer) {
     bidCell = (
       <span className="text-xs text-secondary italic">
-        Pujas {status === 'pending' ? 'no iniciadas' : status}.
+        {t('fantasy.auctionPlayerRow.bidsClosed', { status: t(`fantasy.auctionPlayerRow.bidsStatusWord.${status}`) })}
       </span>
     );
   }
@@ -136,7 +138,7 @@ export default function AuctionPlayerRow({
           <span className="block truncate font-semibold text-primary">{player.name}</span>
           {player.is_eliminated && (
             <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-semibold bg-error/10 text-error border border-error/30 whitespace-nowrap">
-              Eliminado
+              {t('fantasy.common.eliminated')}
             </span>
           )}
         </Td>
@@ -151,7 +153,7 @@ export default function AuctionPlayerRow({
               <span className="text-muted ml-1">— {highBid.users?.display_name ?? '?'}</span>
             </>
           ) : (
-            <span className="text-muted italic">Sin pujas</span>
+            <span className="text-muted italic">{t('fantasy.auctionPlayerRow.noBids')}</span>
           )}
         </Td>
         <Td className="py-2 whitespace-nowrap">{statusPill}</Td>
