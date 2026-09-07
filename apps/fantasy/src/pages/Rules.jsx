@@ -47,6 +47,8 @@ export default function HowToPlay() {
   // silently broke under English.
   const leagueMatchdayCount = copy.leagueMatchdayCount ?? 3;
   const eliminatedCount = maxParticipants - 8;
+  // Con n participantes sólo hay n-1 rivales distintos (ver lib/brackets.js).
+  const rivalsRepeat = leagueMatchdayCount > maxParticipants - 1;
 
   const compositeRows = Object.entries(compositeScoringConfig.bonuses).map(([col, weights]) => ({
     key: col,
@@ -72,6 +74,7 @@ export default function HowToPlay() {
     h2hNarrowMargin,
     leagueMatchdayCount,
     eliminatedCount,
+    rivalsRepeat,
     copy,
     compositeRows,
   };

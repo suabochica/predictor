@@ -2694,15 +2694,37 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
           leagueMatchdays.some(m => m.is_completed) ||
           knockoutStandingsData.some(s => leagueMdIds.has(s.matchday_id));
         const canDraw = knockoutTeams.length >= 4 && knockoutTeams.length % 2 === 0
-          && leagueMatchdays.length > 0 && leagueMatchdays.length <= knockoutTeams.length - 1;
+          && leagueMatchdays.length > 0;
+        // Con n equipos sólo hay n-1 rivales distintos; más jornadas que eso repiten rival.
+        // 0 mientras los equipos aún no han cargado, para no anunciar "con 0 equipos…".
+        const repeatRounds = knockoutTeams.length >= 4
+          ? Math.max(0, leagueMatchdays.length - (knockoutTeams.length - 1))
+          : 0;
+        // Marca cada emparejamiento que ya apareció en una jornada anterior.
+        const markRematches = rounds => {
+          const seen = new Set();
+          return rounds.map(pairs => pairs.map(([a, b]) => {
+            const key = `${Math.min(a, b)}-${Math.max(a, b)}`;
+            const rematch = seen.has(key);
+            seen.add(key);
+            return rematch;
+          }));
+        };
+        const previewRematches = drawPreview ? markRematches(drawPreview) : null;
+        const savedByMatchday = leagueMatchdays.map(md => groupFixtures.filter(f => f.matchday_id === md.id));
+        const savedRematches = markRematches(
+          savedByMatchday.map(fixtures => fixtures.map(f => [f.team_a_id, f.team_b_id]))
+        );
 
         return (
           <section className="bg-surface rounded-xl p-6 space-y-5">
             <div>
               <h2 className="text-lg font-semibold text-primary">Calendario de la fase de liga</h2>
               <p className="text-xs text-muted mt-1">
-                Sortea los enfrentamientos H2H de las {leagueMatchdays.length} jornadas de liga. Ningún
-                rival se repite en toda la fase.
+                Sortea los enfrentamientos H2H de las {leagueMatchdays.length} jornadas de liga.{' '}
+                {repeatRounds > 0
+                  ? `Con ${knockoutTeams.length} equipos sólo hay ${knockoutTeams.length - 1} rivales distintos, así que ${repeatRounds === 1 ? 'la última jornada repite' : `las ${repeatRounds} últimas jornadas repiten`} rival (sorteadas al azar).`
+                  : 'Ningún rival se repite en toda la fase.'}
               </p>
             </div>
 
@@ -2712,8 +2734,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
               <div className="space-y-4">
                 {!canDraw && (
                   <p className="text-tertiary text-sm">
-                    Se necesita un número par de equipos (mínimo 4) y al menos una jornada de liga, con
-                    como máximo {Math.max(knockoutTeams.length - 1, 0)} jornadas para {knockoutTeams.length} equipos.
+                    Se necesita un número par de equipos (mínimo 4) y al menos una jornada de liga.
                   </p>
                 )}
 
@@ -2728,6 +2749,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
                               <span className="text-primary">{teamNameById[a]}</span>
                               <span className="text-muted"> vs </span>
                               <span className="text-primary">{teamNameById[b]}</span>
+                              {previewRematches[mdIdx][i] && <span className="text-muted"> · revancha</span>}
                             </div>
                           ))}
                         </div>
@@ -2767,18 +2789,19 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
             ) : (
               <div className="space-y-4">
                 <div className="space-y-3">
-                  {leagueMatchdays.map(md => {
-                    const fixtures = groupFixtures.filter(f => f.matchday_id === md.id);
+                  {leagueMatchdays.map((md, mdIdx) => {
+                    const fixtures = savedByMatchday[mdIdx];
                     if (fixtures.length === 0) return null;
                     return (
                       <div key={md.id}>
                         <p className="text-label-caps text-muted uppercase tracking-wide mb-2">{md.name}</p>
                         <div className="grid grid-cols-2 gap-2">
-                          {fixtures.map(f => (
+                          {fixtures.map((f, i) => (
                             <div key={f.id} className="bg-surface-hover rounded-lg px-3 py-2 text-xs">
                               <span className="text-primary">{teamNameById[f.team_a_id]}</span>
                               <span className="text-muted"> vs </span>
                               <span className="text-primary">{teamNameById[f.team_b_id]}</span>
+                              {savedRematches[mdIdx][i] && <span className="text-muted"> · revancha</span>}
                             </div>
                           ))}
                         </div>

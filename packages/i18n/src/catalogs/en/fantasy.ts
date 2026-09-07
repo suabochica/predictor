@@ -130,6 +130,8 @@ export default {
     leagueStageCompleteNotice: 'League stage complete',
     afterLeagueH2h:
       'The top {n} advance directly to the quarterfinals. The rest play the play-off. Transfer window 1 is open.',
+    afterLeagueH2hAllDirect:
+      'All {n} advance to the quarterfinals. Transfer window 1 is open.',
     afterLeagueCumulative:
       'The top {championship} advance to the championship bracket. The bottom {relegation} enter the relegation bracket. Transfer window 1 is open.',
   },

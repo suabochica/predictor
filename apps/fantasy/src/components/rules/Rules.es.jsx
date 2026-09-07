@@ -15,6 +15,7 @@ export default function RulesEs({
   h2hNarrowMargin,
   leagueMatchdayCount,
   eliminatedCount,
+  rivalsRepeat,
   copy,
   compositeRows,
 }) {
@@ -242,7 +243,9 @@ export default function RulesEs({
       <Section title="Fase de liga">
         {isH2H ? (
           <ul className="space-y-2 text-secondary">
-            <li><Bullet />Los {maxParticipants} participantes juegan una liga <strong className="text-primary">cabeza a cabeza (H2H)</strong> durante <strong className="text-primary">{leagueMatchdayCount} jornadas</strong>: cada jornada te enfrentas a un rival distinto y nunca repites rival en toda la fase.</li>
+            <li><Bullet />Los {maxParticipants} participantes juegan una liga <strong className="text-primary">cabeza a cabeza (H2H)</strong> durante <strong className="text-primary">{leagueMatchdayCount} jornadas</strong>: {rivalsRepeat
+              ? <>cada jornada te enfrentas a un rival sorteado; con {maxParticipants} participantes sólo hay {maxParticipants - 1} rivales distintos, así que las últimas jornadas repiten rival.</>
+              : <>cada jornada te enfrentas a un rival distinto y nunca repites rival en toda la fase.</>}</li>
             <li><Bullet />En cada enfrentamiento se comparan los puntos fantasy de <strong className="text-primary">esa jornada</strong> (no el total acumulado):
               <ul className="mt-1 ml-4 space-y-0.5">
                 <li>Ganas el enfrentamiento → <strong className="text-primary">{h2hWinPts} pts</strong></li>
@@ -252,7 +255,9 @@ export default function RulesEs({
               </ul>
             </li>
             <li><Bullet />Clasificación por puntos de liga. En caso de empate: (1) puntos fantasy totales de la fase de liga, (2) goles anotados por los jugadores propios, (3) puntos del capitán acumulados en la fase de liga.</li>
-            <li><Bullet />Los <strong className="text-primary">8 primeros</strong> pasan a la eliminatoria. Los <strong className="text-primary">{eliminatedCount} últimos</strong> quedan eliminados de la competición.</li>
+            <li><Bullet />{eliminatedCount === 0
+              ? <>Los <strong className="text-primary">8</strong> pasan todos a la eliminatoria; nadie queda eliminado en la fase de liga.</>
+              : <>Los <strong className="text-primary">8 primeros</strong> pasan a la eliminatoria. Los <strong className="text-primary">{eliminatedCount} últimos</strong> quedan eliminados de la competición.</>}</li>
           </ul>
         ) : (
           <ul className="space-y-2 text-secondary">

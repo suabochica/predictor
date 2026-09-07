@@ -199,10 +199,12 @@ export default function Leaderboard() {
                 <span className="w-3 h-3 rounded-full bg-tertiary inline-block" />
                 {t('fantasy.leaderboard.bracketKey.directQuarterfinal', { n: directSpots })}
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-warning/30 inline-block" />
-                {t('fantasy.leaderboard.bracketKey.playoff', { from: directSpots + 1, to: totalParticipants })}
-              </span>
+              {directSpots < totalParticipants && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-warning/30 inline-block" />
+                  {t('fantasy.leaderboard.bracketKey.playoff', { from: directSpots + 1, to: totalParticipants })}
+                </span>
+              )}
             </>
           ) : (
             <>
@@ -477,7 +479,9 @@ export default function Leaderboard() {
           <p className="text-tertiary font-semibold">{t('fantasy.leaderboard.leagueStageCompleteNotice')}</p>
           <p className="text-secondary mt-1">
             {isH2H
-              ? t('fantasy.leaderboard.afterLeagueH2h', { n: directSpots })
+              ? directSpots >= totalParticipants
+                ? t('fantasy.leaderboard.afterLeagueH2hAllDirect', { n: totalParticipants })
+                : t('fantasy.leaderboard.afterLeagueH2h', { n: directSpots })
               : t('fantasy.leaderboard.afterLeagueCumulative', {
                   championship: CHAMPIONSHIP_SPOTS,
                   relegation: RELEGATION_SPOTS,

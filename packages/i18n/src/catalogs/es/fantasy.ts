@@ -138,6 +138,8 @@ export default {
     leagueStageCompleteNotice: 'Fase de liga completada',
     afterLeagueH2h:
       'Los mejores {n} avanzan directo a cuartos de final. El resto disputa el play-off. Ventana de fichajes 1 abierta.',
+    afterLeagueH2hAllDirect:
+      'Los {n} clasifican a cuartos de final. Ventana de fichajes 1 abierta.',
     afterLeagueCumulative:
       'Los mejores {championship} avanzan al cuadro de campeonato. Los últimos {relegation} entran al cuadro de descenso. Ventana de fichajes 1 abierta.',
   },

@@ -15,6 +15,7 @@ export default function RulesEn({
   h2hNarrowMargin,
   leagueMatchdayCount,
   eliminatedCount,
+  rivalsRepeat,
   copy,
   compositeRows,
 }) {
@@ -242,7 +243,9 @@ export default function RulesEn({
       <Section title="League stage">
         {isH2H ? (
           <ul className="space-y-2 text-secondary">
-            <li><Bullet />The {maxParticipants} participants play a <strong className="text-primary">head-to-head (H2H)</strong> league over <strong className="text-primary">{leagueMatchdayCount} matchdays</strong>: each matchday you face a different rival, and you never repeat an opponent during the whole stage.</li>
+            <li><Bullet />The {maxParticipants} participants play a <strong className="text-primary">head-to-head (H2H)</strong> league over <strong className="text-primary">{leagueMatchdayCount} matchdays</strong>: {rivalsRepeat
+              ? <>each matchday you face a rival drawn at random; with {maxParticipants} participants there are only {maxParticipants - 1} distinct opponents, so the final matchdays repeat an opponent.</>
+              : <>each matchday you face a different rival, and you never repeat an opponent during the whole stage.</>}</li>
             <li><Bullet />Each fixture compares fantasy points for <strong className="text-primary">that matchday only</strong> (not the cumulative total):
               <ul className="mt-1 ml-4 space-y-0.5">
                 <li>Win the fixture → <strong className="text-primary">{h2hWinPts} pts</strong></li>
@@ -252,7 +255,9 @@ export default function RulesEn({
               </ul>
             </li>
             <li><Bullet />Ranked by league points. Tiebreaker: (1) total fantasy points in the league stage, (2) goals scored by your own players, (3) accumulated captain points in the league stage.</li>
-            <li><Bullet />The <strong className="text-primary">top 8</strong> advance to the knockout. The <strong className="text-primary">bottom {eliminatedCount}</strong> are eliminated from the competition.</li>
+            <li><Bullet />{eliminatedCount === 0
+              ? <>All <strong className="text-primary">8</strong> advance to the knockout; nobody is eliminated in the league stage.</>
+              : <>The <strong className="text-primary">top 8</strong> advance to the knockout. The <strong className="text-primary">bottom {eliminatedCount}</strong> are eliminated from the competition.</>}</li>
           </ul>
         ) : (
           <ul className="space-y-2 text-secondary">
