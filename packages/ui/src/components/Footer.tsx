@@ -8,7 +8,7 @@ const DEFAULT_LABEL = 'Mundial 2026';
 const DEFAULT_START_ISO = '2026-06-11';
 const DEFAULT_END_ISO = '2026-07-19';
 
-const LAST_UPDATED_ISO = '2026-06-17';
+const LAST_UPDATED_ISO = '2026-09-07';
 
 function formatDate(iso: string, lang: Locale): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString(localeTag(lang), {
