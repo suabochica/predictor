@@ -3,12 +3,15 @@
 Process the raw UCL 2026/27 metadata dumps in apps/fantasy/data/UCL_metadata/
 into files ready for the Admin Panel:
 
-  UCLplayers_V2.txt             — UEFA gaming-API player list, all 36
-                                   league-phase clubs (935 players; supersedes
-                                   UCLplayers.txt/UCL2026teams.txt, which only
-                                   covered 29 clubs snapshotted before the
-                                   playoff round concluded — kept in the repo
-                                   for history, no longer read here)
+  UCLplayers_V3.txt              — UEFA gaming-API player list, all 36
+                                   league-phase clubs (1007 players; supersedes
+                                   UCLplayers_V2.txt, which had 4 clubs with
+                                   thin active-player counts — Fenerbahçe,
+                                   LASK, Bodø/Glimt, Sabah — before those
+                                   squads were topped up upstream. V2 and the
+                                   older UCLplayers.txt/UCL2026teams.txt are
+                                   kept in the repo for history, no longer
+                                   read here)
   uefa_champions_league_calendar.json — full 206-fixture ICS-derived calendar
                                    (qualifying + playoffs + 144 league-phase
                                    matches, all 36 clubs)
@@ -35,7 +38,7 @@ import os
 from collections import defaultdict
 
 BASE = os.path.join(os.path.dirname(__file__), "../UCL_metadata")
-PLAYERS_FILE = os.path.join(BASE, "UCLplayers_V2.txt")
+PLAYERS_FILE = os.path.join(BASE, "UCLplayers_V3.txt")
 CALENDAR_FILE = os.path.join(BASE, "uefa_champions_league_calendar.json")
 OUT_DIR = os.path.join(BASE, "processed")
 
