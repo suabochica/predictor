@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AuctionProvider, useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import { supabase } from '@predictor/supabase';
 import {
   AUCTION_STATUSES,
-  AUTO_BID_DELAY_SECONDS,
   DEFAULT_ROUND_DURATION_SECONDS,
   MAX_LEAGUE_PARTICIPANTS,
   MAX_SQUAD_SIZE,
@@ -14,6 +13,8 @@ import {
   TRANSFER_CAP_KNOCKOUT,
   TRANSFER_CAP_ROUND_ROBIN,
 } from '../config/constants';
+import { parseDbTimestamp } from '../lib/utils';
+import { useAutoBidTicker } from '../hooks/useAutoBidTicker';
 import { calculatePlayerPoints, calculateCompositePoints } from '../lib/scoring';
 import { buildDefaultLineup, ensureStartingGk } from '../lib/defaultLineup';
 import { calculateTeamMatchdayPoints } from '../lib/matchday';
@@ -78,6 +79,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
     endRound,
     resolveRound,
     runAutoBids,
+    runDueAutoBids,
     autoCompleteSquads,
   } = useAuction();
 
@@ -201,44 +203,28 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
   // ── Auto-bid 90s trigger ──────────────────────────────────────────────────
   const [autoBidRunning, setAutoBidRunning] = useState(false);
   const [autoBidResult, setAutoBidResult]   = useState(null);
-  const autoBidFiredRef = useRef({});
 
   async function handleRunAutoBids() {
     setAutoBidRunning(true);
     setAutoBidResult(null);
-    const { data } = await runAutoBids();
-    setAutoBidResult(data);
+    // The discarded `error` here is why the failed UCL pass rendered nothing at
+    // all: a thrown RPC left `data` null and the banner simply didn't appear,
+    // which reads exactly like "the pass never ran".
+    const { data, error } = await runAutoBids();
+    setAutoBidResult(error ? { error: error.message } : data);
     setAutoBidRunning(false);
   }
 
   // Fires for the ADMINISTERED competition's auction — auctionState and
-  // runAutoBids both come from the AuctionProvider the parent scopes to
+  // runDueAutoBids both come from the AuctionProvider the parent scopes to
   // `adminCompetitionId`, so the ticker follows the panel selector. Switching
   // the selector remounts the panel and re-points the ticker with it.
-  useEffect(() => {
-    if (!auctionState) return;
-    const { status, current_round, round_started_at } = auctionState;
-    if (status !== AUCTION_STATUSES.ACTIVE || !round_started_at) return;
-
-    const guardKey = `${current_round}-${round_started_at}`;
-
-    const checkAndFire = () => {
-      if (autoBidFiredRef.current[guardKey]) return;
-      const elapsed = (Date.now() - new Date(round_started_at).getTime()) / 1000;
-      if (elapsed >= AUTO_BID_DELAY_SECONDS) {
-        autoBidFiredRef.current[guardKey] = true;
-        handleRunAutoBids();
-      }
-    };
-
-    checkAndFire();
-    const interval = setInterval(() => {
-      if (autoBidFiredRef.current[guardKey]) { clearInterval(interval); return; }
-      checkAndFire();
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [auctionState?.status, auctionState?.current_round, auctionState?.round_started_at]);
+  //
+  // This is now one trigger among many (every participant's Auction page runs
+  // the same hook) rather than the only one, and it calls the self-guarding
+  // `run_due_auto_bids` instead of the admin override, so an admin who happens
+  // to be watching does not produce a second pass.
+  useAutoBidTicker(auctionState, runDueAutoBids);
   // ──────────────────────────────────────────────────────────────────────────
 
   // ── League Participants ────────────────────────────────────────────────────
@@ -1823,7 +1809,7 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
             ) : (
               <p className="text-primary font-medium">
                 {round_started_at
-                  ? new Date(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                  ? parseDbTimestamp(round_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                   : '—'}
               </p>
             )}
@@ -1901,11 +1887,45 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
           )}
         </div>
 
+        {/* The old version of this banner showed only `bids_placed` and `note`,
+            and rendered nothing at all when the RPC threw — which is how a pass
+            that placed zero bids for five auto-bidding teams looked identical
+            to a pass that never ran. It now reports every outcome the RPC
+            distinguishes. */}
         {autoBidResult && (
-          <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info">
-            Auto-pujas: <span className="font-semibold">{autoBidResult.bids_placed ?? 0} realizadas</span>
-            {autoBidResult.note && <span className="ml-2 text-muted">({autoBidResult.note})</span>}
-          </div>
+          autoBidResult.error ? (
+            <div className="bg-error/10 border border-error/30 rounded-lg px-4 py-3 text-xs text-error space-y-1">
+              <p className="font-semibold">Auto-pujas: fallo</p>
+              <p className="font-mono break-all">{autoBidResult.error}</p>
+            </div>
+          ) : (
+            <div className="bg-info/10 border border-info/30 rounded-lg px-4 py-3 text-xs text-info space-y-1">
+              <p>
+                Auto-pujas: <span className="font-semibold">{autoBidResult.bids_placed ?? 0} realizadas</span>
+                {autoBidResult.users_processed != null && (
+                  <span className="ml-2 text-muted">({autoBidResult.users_processed} equipos evaluados)</span>
+                )}
+                {autoBidResult.note && <span className="ml-2 text-muted">({autoBidResult.note})</span>}
+              </p>
+              {autoBidResult.skipped?.length > 0 && (
+                <p className="text-muted">
+                  Omitidos: {autoBidResult.skipped.map((sk) => sk.reason).join(', ')}
+                </p>
+              )}
+              {autoBidResult.failed?.length > 0 && (
+                <div className="pt-1 border-t border-info/20 space-y-0.5">
+                  <p className="font-semibold text-warning">
+                    {autoBidResult.failed.length} puja(s) rechazada(s) por el servidor:
+                  </p>
+                  {autoBidResult.failed.map((f, i) => (
+                    <p key={i} className="text-warning font-mono">
+                      jugador #{f.player_id} @ {f.amount} — {f.error}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
         )}
 
         {lineupWarnings.length > 0 && (

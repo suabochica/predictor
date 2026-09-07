@@ -95,10 +95,32 @@ export function useProxyTargets() {
     await fetchTargets();
   }
 
+  // Reconcile from the returned row rather than assuming the write landed.
+  // Migration 063:47-55 gates this UPDATE on `is_competition_writable`, so on an
+  // archived competition RLS silently matches zero rows — and the optimistic
+  // `setAutoBidEnabled(enabled)` this used to do would leave the switch showing
+  // green while the DB said false, i.e. a manager believing their pista was
+  // armed when it was not.
   async function toggleAutoBid(enabled) {
-    if (!team) return;
-    await db.from('teams').update({ auto_bid_enabled: enabled }).eq('id', team.id);
-    setAutoBidEnabled(enabled);
+    if (!team) return { error: null };
+    const { data, error } = await db
+      .from('teams')
+      .update({ auto_bid_enabled: enabled })
+      .eq('id', team.id)
+      .select('auto_bid_enabled')
+      .maybeSingle();
+
+    if (error) {
+      setAutoBidEnabled(!!team.auto_bid_enabled);
+      return { error };
+    }
+    if (!data) {
+      // No row came back: the update matched nothing (RLS, or a stale team id).
+      setAutoBidEnabled(!!team.auto_bid_enabled);
+      return { error: new Error('No se pudo cambiar la puja automática.') };
+    }
+    setAutoBidEnabled(!!data.auto_bid_enabled);
+    return { error: null };
   }
 
   return {

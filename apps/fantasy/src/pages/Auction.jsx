@@ -6,6 +6,7 @@ import { useAuction } from '../context/AuctionContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTeam } from '../hooks/useTeam';
 import { useProxyTargets } from '../hooks/useProxyTargets';
+import { useAutoBidTicker } from '../hooks/useAutoBidTicker';
 import { useCompetition } from '../context/CompetitionContext';
 import AuctionTimer from '../components/auction/AuctionTimer';
 import AuctionPlayerRow from '../components/auction/AuctionPlayerRow';
@@ -39,7 +40,7 @@ export default function Auction() {
   const maxSquadSize    = competition?.max_squad_size ?? MAX_SQUAD_SIZE;
   const minBidIncrement = Number(competition?.min_bid_increment ?? MIN_BID_INCREMENT);
   const { team, players: teamPlayers } = useTeam();
-  const { auctionState, bids, ownedPlayerIds, playerOwners, loading, getHighestBid, getContestFloor, placeBid, refreshBids } = useAuction();
+  const { auctionState, bids, ownedPlayerIds, playerOwners, loading, getHighestBid, getContestFloor, placeBid, refreshBids, runDueAutoBids } = useAuction();
   const { players, loading: playersLoading } = usePlayers();
   const { targets, autoBidEnabled, addTarget, removeTarget, reorder, setMaxPrice, toggleAutoBid } = useProxyTargets();
 
@@ -56,6 +57,15 @@ export default function Auction() {
   const handleRoundExpire = useCallback(() => setRoundExpired(true), []);
 
   useEffect(() => { setRoundExpired(false); }, [auctionState?.current_round, auctionState?.round_started_at]);
+
+  // Every participant's open Auction page is a trigger for the half-point
+  // auto-bid pass. Before this, the pass ran only from the admin's own Admin
+  // page, so an admin who started a round and closed the tab meant no auto-bids
+  // for anyone. The RPC's advisory lock and once-per-round stamp make the
+  // duplication harmless — whoever gets there first does the work.
+  //
+  // Must stay above the `loading` early return below: it is a hook.
+  useAutoBidTicker(auctionState, runDueAutoBids);
 
   if (loading || !auctionState) {
     return <div className="text-secondary p-6">{t('fantasy.auction.loading')}</div>;

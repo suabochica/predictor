@@ -35,3 +35,18 @@ export function sortByTotalPoints(teams) {
     return b.goals_scored - a.goals_scored;
   });
 }
+
+// PostgREST returns naked `TIMESTAMP` columns (auction_state.round_started_at,
+// 001:84) with no offset — "2026-09-06T20:06:16.833". `new Date()` reads that
+// as LOCAL time, so at Europe/Vilnius (+03:00) it lands 10800s off, which is
+// what stopped the UCL round-1 auto-bid pass from ever waiting for its 90s
+// threshold. The values are UTC, so say so explicitly.
+//
+// Guarded so it stays correct if the column is ever widened to `timestamptz`:
+// a string that already carries `Z` or a ±HH:MM offset is left alone.
+export function parseDbTimestamp(value) {
+  if (!value) return null;
+  const s = String(value).trim().replace(' ', 'T');
+  const hasOffset = /(?:Z|[+-]\d{2}:?\d{2})$/.test(s);
+  return new Date(hasOffset ? s : `${s}Z`);
+}

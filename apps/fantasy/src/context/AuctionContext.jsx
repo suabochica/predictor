@@ -428,6 +428,18 @@ export function AuctionProvider({ children, competitionId: overrideId = null, sc
     return { data, error };
   }
 
+  // The self-guarding counterpart to runAutoBids: safe for any participant to
+  // call on a ticker. Migration 072's guards (advisory lock, half-point
+  // threshold, once-per-round stamp) decide whether it does anything, so this
+  // deliberately sends no round number — the server reads the live one under
+  // its own lock rather than trusting a client that may be a round behind.
+  async function runDueAutoBids() {
+    const { data, error } = await supabase.rpc('run_due_auto_bids', {
+      p_competition_id: competitionId,
+    });
+    return { data, error };
+  }
+
   async function autoCompleteSquads() {
     const { data, error } = await supabase.rpc('auto_complete_squads', {
       p_competition_id: competitionId,
@@ -501,6 +513,7 @@ export function AuctionProvider({ children, competitionId: overrideId = null, sc
     endRound,
     resolveRound,
     runAutoBids,
+    runDueAutoBids,
     autoCompleteSquads,
     refreshBids: fetchBids,
   };

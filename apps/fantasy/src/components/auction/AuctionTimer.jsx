@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { parseDbTimestamp } from '../../lib/utils';
 
 /**
  * Derives remaining time from round_started_at (source of truth).
@@ -16,9 +17,10 @@ export default function AuctionTimer({ roundStartedAt, roundDurationSeconds, onE
         setRemaining(roundDurationSeconds);
         return;
       }
-      // Supabase returns timestamps without a Z suffix — treat as UTC explicitly.
-      const utcStr = roundStartedAt.endsWith('Z') ? roundStartedAt : roundStartedAt + 'Z';
-      const elapsed = Math.floor((Date.now() - new Date(utcStr).getTime()) / 1000);
+      // Supabase returns timestamps without a Z suffix — parseDbTimestamp
+      // treats them as UTC. Shared with Admin's auto-bid ticker so the two
+      // readings of the same column can never drift apart again.
+      const elapsed = Math.floor((Date.now() - parseDbTimestamp(roundStartedAt).getTime()) / 1000);
       const left = Math.max(0, roundDurationSeconds - elapsed);
       setRemaining(left);
       if (left === 0 && !expiredRef.current) {
