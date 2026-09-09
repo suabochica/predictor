@@ -671,13 +671,16 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
   const [fixtureLoading, setFixtureLoading] = useState(false);
   const [fixtureSavingIds, setFixtureSavingIds] = useState(new Set());
   const [matchesWithStats, setMatchesWithStats] = useState(new Set());
+  // Every country_code in this competition's player pool. team_a/team_b must be
+  // one of these or the kickoff locks can never fire for that fixture.
+  const [knownTeamCodes, setKnownTeamCodes] = useState(new Set());
 
   const matchSig = (mdId, a, b) => `${mdId}:${[a, b].sort().join('-')}`;
   const normName = (s) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
   const fetchFixtureMatches = useCallback(async () => {
     setFixtureLoading(true);
-    const [{ data: matchData }, { data: metaData }, { data: playersData }] = await Promise.all([
+    const [{ data: matchData }, { data: metaData }, playersData] = await Promise.all([
       adb
         .from('matches')
         .select('id, match_code, team_a, team_b, match_date, matchday_id')
@@ -685,16 +688,22 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
       adb
         .from('match_metadata')
         .select('matchday_id, home_team, away_team'),
-      adb
-        .from('players')
-        .select('country, country_code'),
+      // Paginated: a plain .select() caps at 1000 rows and the WC roster is 1229,
+      // which silently dropped the alphabetical tail from both maps below.
+      fetchAllPages((from, to) =>
+        adb.from('players').select('country, country_code').range(from, to)
+      ),
     ]);
     setFixtureMatches(matchData ?? []);
 
     const nameToCode = {};
+    const codes = new Set();
     for (const p of playersData ?? []) {
       if (p.country && p.country_code) nameToCode[normName(p.country)] = p.country_code;
+      if (p.country_code) codes.add(p.country_code);
     }
+    setKnownTeamCodes(codes);
+
     const statsSet = new Set();
     for (const m of metaData ?? []) {
       const a = nameToCode[normName(m.home_team)];
@@ -2282,7 +2291,10 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
           <h2 className="text-lg font-semibold text-primary">Partidos de la jornada</h2>
           <p className="text-xs text-muted mt-1">
             Asigna partidos de la polla a las jornadas fantasy. Los tiempos de bloqueo de jugadores se derivan de los horarios de inicio —
-            los nombres de equipos deben coincidir exactamente con <code className="text-secondary">players.country</code>.
+            <code className="text-secondary">team_a</code> y <code className="text-secondary">team_b</code> deben ser el código de 3 letras
+            del equipo (<code className="text-secondary">MEX</code>, <code className="text-secondary">MCI</code>), es decir coincidir
+            exactamente con <code className="text-secondary">players.country_code</code> de esta competencia — no el nombre del equipo.
+            Si no coinciden, los bloqueos nunca se activan (falla en silencio).
           </p>
         </div>
 
@@ -2306,6 +2318,15 @@ function AdminPanel({ adminCompetitionId, adminCompetition }) {
                   <tr key={match.id} className="text-secondary hover:bg-surface-hover/40">
                     <td className="py-2.5 pr-4 text-primary font-medium">
                       {match.team_a} vs {match.team_b}
+                      {knownTeamCodes.size > 0 &&
+                        (!knownTeamCodes.has(match.team_a) || !knownTeamCodes.has(match.team_b)) && (
+                        <span
+                          title="team_a/team_b no coincide con ningún players.country_code de esta competencia — los bloqueos por hora de inicio nunca se activarán para este partido."
+                          className="ml-2 text-label-caps font-semibold text-warning bg-warning/10 border border-warning/30 rounded px-1.5 py-0.5 whitespace-nowrap"
+                        >
+                          ⚠ sin lock
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 pr-4 text-xs text-secondary">
                       {new Date(match.match_date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}

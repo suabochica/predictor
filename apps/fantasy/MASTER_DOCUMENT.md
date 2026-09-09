@@ -382,6 +382,10 @@ A player becomes **non-transferable** (in or out) once their World Cup game kick
 
 This means within a single matchday window, you can freely transfer players from teams that haven't played yet, but not players whose games have already started.
 
+**Join key (fixture data contract).** The lock is derived at read time, not stored: kickoff times come from `matches.match_date` for the matchday's fixtures, and a player is matched to a fixture by `players.country_code = matches.team_a OR matches.team_b`, within the same `competition_id`. `country_code` is the 3-letter **team** code — a FIFA country code in the World Cup (`MEX`), a club code in the UCL (`MCI`). The same comparison appears in `useMatchdayLocks.js` (client), and in `execute_transfer` and `save_lineup` (migration 063, authoritative).
+
+This supersedes the note in `023_match_matchday_link.sql` that `team_a`/`team_b` must match `players.country` — every consumer moved to `country_code` in June 2026. Importing fixtures with team *names* makes the lock system fail **open**: no error, nothing ever locks (which is exactly what happened to UCL's league phase — repaired by `supabase/manual/06_ucl_match_team_codes.sql`). Admin → "Partidos de la jornada" now flags any fixture whose team key matches no `players.country_code` with a `⚠ sin lock` badge.
+
 ### 8.4 Eliminated World Cup Players
 
 If a player's national team is eliminated from the World Cup, they earn 0 points for remaining matchdays. You can use a transfer to replace them (counts against the window limit), or keep them.

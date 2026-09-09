@@ -42,6 +42,17 @@ fixtures from `matches_schedule.csv` inserted into `matches` with
 (`total=144, unmatched=0`). See "UCL data pipeline" below for how. Admin's
 Partidos de la jornada section is no longer empty for UCL.
 
+> ⚠️ **Correction (2026-09-10):** those fixtures went in with `team_a`/`team_b`
+> = club **names**, which silently disabled every kickoff lock in UCL — the
+> client hook and both RPCs join on `players.country_code` (club **codes**), so
+> `lockTimeFor()` returned `NULL` and the server `EXISTS` checks were always
+> false. MD1 was played with no locks at all. Repaired by
+> `supabase/manual/06_ucl_match_team_codes.sql` (names → codes, 144 rows ×2).
+> **Any future UCL fixture import — Play-off, R16, and the rest of the knockout
+> bracket — must insert 3-letter codes** (`MCI`, `AEK`), matching
+> `players.country_code` for `competition_id=2`. Admin now shows a `⚠ sin lock`
+> badge on any fixture whose team key matches no player code.
+
 ---
 
 ## Uncommitted work (as of 2026-09-01)
@@ -126,7 +137,9 @@ touches no DB) turns these into `apps/fantasy/data/UCL_metadata/processed/`:
       `INSERT ... WHERE NOT EXISTS` statements into `matches`:
       `competition_id=2`, `team_a`/`team_b` = club names (verified byte-
       identical to `players.country` for all 36 clubs beforehand — no mapping
-      needed), `match_code` derived from the UEFA match id in `match_url`
+      needed) — ⚠️ **this was the wrong key and broke all UCL locks; converted
+      to `players.country_code` on 2026-09-10, see the correction near the top
+      of this file**, `match_code` derived from the UEFA match id in `match_url`
       (e.g. `UCL2049558`, avoids any collision with the WC's `M##`/group-letter
       codes), `stage='group'` (closest fit — the column's CHECK constraint
       only knows WC bracket stages, league phase has no equivalent), and
@@ -136,7 +149,8 @@ touches no DB) turns these into `apps/fantasy/data/UCL_metadata/processed/`:
       first try — the 8 matchdays' names matched the CSV labels exactly).
       Admin → Partidos de la jornada now lists all 144 UCL fixtures
       pre-assigned when the selector is on UCL; `useMatchdayLocks` can derive
-      real kickoff-lock times for UCL lineups.
+      real kickoff-lock times for UCL lineups (only true once the team keys were
+      converted to codes on 2026-09-10).
 
 ---
 
