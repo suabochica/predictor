@@ -130,7 +130,7 @@ export default function Leaderboard() {
   // between the header and every row via the same computed style.
   const matchdayColCount = groupMatchdays.length > 0 ? groupMatchdays.length : 3;
   const fixedCols = isH2H
-    ? [...Array(matchdayColCount).fill(2.5), 2.25, 2.25, 2.25, 2.25, 2.75, 2.75, 2.5]
+    ? [2.75, 2.75, 2.5, 2.25, 2.25, 2.25, 2.25, ...Array(matchdayColCount).fill(2.5)]
     : [...Array(matchdayColCount).fill(2.5), 3, 2.5];
   const gridTemplateColumns = ['2rem', '1fr', ...fixedCols.map((r) => `${r}rem`)].join(' ');
   // Manager gets a 19rem floor — matches the old hardcoded `min-w-[34rem]`
@@ -246,19 +246,15 @@ export default function Leaderboard() {
           >
             <span>#</span>
             <span>Manager</span>
-            {groupMatchdays.length > 0
-              ? groupMatchdays.map((md) => (
-                  <span key={md.id} className="text-center truncate" title={md.name}>
-                    {md.name.replace(/matchday\s*/i, t('fantasy.leaderboard.matchdayAbbrev')).replace(/group stage /i, '')}
-                  </span>
-                ))
-              : [1, 2, 3].map((n) => (
-                  <span key={n} className="text-center text-secondary">
-                    {t('fantasy.leaderboard.matchdayAbbrev')}{n}
-                  </span>
-                ))}
-            {isH2H && (
+            {isH2H ? (
               <>
+                <span className="text-center">{t('fantasy.leaderboard.columns.points')}</span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.fantasyPoints.title')}>
+                  {t('fantasy.leaderboard.columns.fantasyPoints.abbrev')}
+                </span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.goalsScored.title')}>
+                  {t('fantasy.leaderboard.columns.goalsScored.abbrev')}
+                </span>
                 <span className="text-center" title={t('fantasy.leaderboard.columns.played.title')}>
                   {t('fantasy.leaderboard.columns.played.abbrev')}
                 </span>
@@ -271,17 +267,37 @@ export default function Leaderboard() {
                 <span className="text-center" title={t('fantasy.leaderboard.columns.lost.title')}>
                   {t('fantasy.leaderboard.columns.lost.abbrev')}
                 </span>
+                {groupMatchdays.length > 0
+                  ? groupMatchdays.map((md) => (
+                      <span key={md.id} className="text-center truncate" title={md.name}>
+                        {md.name.replace(/matchday\s*/i, t('fantasy.leaderboard.matchdayAbbrev')).replace(/group stage /i, '')}
+                      </span>
+                    ))
+                  : [1, 2, 3].map((n) => (
+                      <span key={n} className="text-center text-secondary">
+                        {t('fantasy.leaderboard.matchdayAbbrev')}{n}
+                      </span>
+                    ))}
+              </>
+            ) : (
+              <>
+                {groupMatchdays.length > 0
+                  ? groupMatchdays.map((md) => (
+                      <span key={md.id} className="text-center truncate" title={md.name}>
+                        {md.name.replace(/matchday\s*/i, t('fantasy.leaderboard.matchdayAbbrev')).replace(/group stage /i, '')}
+                      </span>
+                    ))
+                  : [1, 2, 3].map((n) => (
+                      <span key={n} className="text-center text-secondary">
+                        {t('fantasy.leaderboard.matchdayAbbrev')}{n}
+                      </span>
+                    ))}
+                <span className="text-center">{t('fantasy.leaderboard.columns.points')}</span>
+                <span className="text-center" title={t('fantasy.leaderboard.columns.goalsScored.title')}>
+                  {t('fantasy.leaderboard.columns.goalsScored.abbrev')}
+                </span>
               </>
             )}
-            <span className="text-center">{t('fantasy.leaderboard.columns.points')}</span>
-            {isH2H && (
-              <span className="text-center" title={t('fantasy.leaderboard.columns.fantasyPoints.title')}>
-                {t('fantasy.leaderboard.columns.fantasyPoints.abbrev')}
-              </span>
-            )}
-            <span className="text-center" title={t('fantasy.leaderboard.columns.goalsScored.title')}>
-              {t('fantasy.leaderboard.columns.goalsScored.abbrev')}
-            </span>
           </div>
 
           {/* Rows */}
@@ -324,81 +340,97 @@ export default function Leaderboard() {
                     <BracketBadge bracket={bracket} />
                   </div>
 
-                  {/* Per-matchday points */}
-                  {groupMatchdays.length > 0
-                    ? groupMatchdays.map((md) => {
-                        const ownPts = entry.matchday_points[md.id];
-                        const hasPts = ownPts != null;
+                  {(() => {
+                    const matchdayCells =
+                      groupMatchdays.length > 0
+                        ? groupMatchdays.map((md) => {
+                            const ownPts = entry.matchday_points[md.id];
+                            const hasPts = ownPts != null;
 
-                        let resultClass = '';
-                        if (isH2H && hasPts) {
-                          const oppId = fixtureLookup[md.id]?.[entry.team_id];
-                          const oppPts =
-                            oppId != null ? standingsByTeamId[oppId]?.matchday_points?.[md.id] : undefined;
-                          if (oppPts != null) {
-                            const { result } = h2hResult(ownPts, oppPts, cfg);
-                            resultClass =
-                              result === 'W'
-                                ? 'bg-success/10 text-success'
-                                : result === 'D'
-                                ? 'bg-warning/10 text-warning'
-                                : 'bg-error/10 text-error';
-                          }
-                        }
-
-                        return (
-                          <span
-                            key={md.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (hasPts) openTeam(entry, md.id, md.name);
-                            }}
-                            className={
-                              isH2H
-                                ? `text-center text-sm rounded font-medium py-0.5 ${
-                                    resultClass || 'text-secondary'
-                                  } ${hasPts ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'}`
-                                : `text-center text-sm text-secondary ${
-                                    hasPts ? 'hover:text-primary cursor-pointer' : 'cursor-default'
-                                  }`
+                            let resultClass = '';
+                            if (isH2H && hasPts) {
+                              const oppId = fixtureLookup[md.id]?.[entry.team_id];
+                              const oppPts =
+                                oppId != null ? standingsByTeamId[oppId]?.matchday_points?.[md.id] : undefined;
+                              if (oppPts != null) {
+                                const { result } = h2hResult(ownPts, oppPts, cfg);
+                                resultClass =
+                                  result === 'W'
+                                    ? 'bg-success/10 text-success'
+                                    : result === 'D'
+                                    ? 'bg-warning/10 text-warning'
+                                    : 'bg-error/10 text-error';
+                              }
                             }
+
+                            return (
+                              <span
+                                key={md.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (hasPts) openTeam(entry, md.id, md.name);
+                                }}
+                                className={
+                                  isH2H
+                                    ? `text-center text-sm rounded font-medium py-0.5 ${
+                                        resultClass || 'text-secondary'
+                                      } ${hasPts ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'}`
+                                    : `text-center text-sm text-secondary ${
+                                        hasPts ? 'hover:text-primary cursor-pointer' : 'cursor-default'
+                                      }`
+                                }
+                              >
+                                {fmtPts(ownPts)}
+                              </span>
+                            );
+                          })
+                        : [1, 2, 3].map((n) => (
+                            <span key={n} className="text-center text-sm text-secondary">
+                              —
+                            </span>
+                          ));
+
+                    if (isH2H) {
+                      return (
+                        <>
+                          {/* League points */}
+                          <span
+                            className={`text-center text-sm font-bold ${
+                              hasScores ? 'text-tertiary' : 'text-muted'
+                            }`}
                           >
-                            {fmtPts(ownPts)}
+                            {fmtPts(entry.h2h_points)}
                           </span>
-                        );
-                      })
-                    : [1, 2, 3].map((n) => (
-                        <span key={n} className="text-center text-sm text-secondary">
-                          —
+                          <span className="text-center text-xs text-muted">{fmtPts(entry.total_points)}</span>
+                          {/* Goals scored (tiebreaker) */}
+                          <span className="text-center text-xs text-muted">{entry.goals_scored}</span>
+                          <span className="text-center text-xs text-secondary">{entry.played ?? 0}</span>
+                          <span className="text-center text-xs text-secondary">{entry.won ?? 0}</span>
+                          <span className="text-center text-xs text-secondary">{entry.drawn ?? 0}</span>
+                          <span className="text-center text-xs text-secondary">{entry.lost ?? 0}</span>
+                          {/* Per-matchday points */}
+                          {matchdayCells}
+                        </>
+                      );
+                    }
+
+                    return (
+                      <>
+                        {/* Per-matchday points */}
+                        {matchdayCells}
+                        {/* League/total points */}
+                        <span
+                          className={`text-center text-sm font-bold ${
+                            hasScores ? 'text-tertiary' : 'text-muted'
+                          }`}
+                        >
+                          {fmtPts(entry.total_points)}
                         </span>
-                      ))}
-
-                  {isH2H && (
-                    <>
-                      <span className="text-center text-xs text-secondary">{entry.played ?? 0}</span>
-                      <span className="text-center text-xs text-secondary">{entry.won ?? 0}</span>
-                      <span className="text-center text-xs text-secondary">{entry.drawn ?? 0}</span>
-                      <span className="text-center text-xs text-secondary">{entry.lost ?? 0}</span>
-                    </>
-                  )}
-
-                  {/* League/total points */}
-                  <span
-                    className={`text-center text-sm font-bold ${
-                      hasScores ? 'text-tertiary' : 'text-muted'
-                    }`}
-                  >
-                    {isH2H ? fmtPts(entry.h2h_points) : fmtPts(entry.total_points)}
-                  </span>
-
-                  {isH2H && (
-                    <span className="text-center text-xs text-muted">{fmtPts(entry.total_points)}</span>
-                  )}
-
-                  {/* Goals scored (tiebreaker) */}
-                  <span className="text-center text-xs text-muted">
-                    {entry.goals_scored}
-                  </span>
+                        {/* Goals scored (tiebreaker) */}
+                        <span className="text-center text-xs text-muted">{entry.goals_scored}</span>
+                      </>
+                    );
+                  })()}
                 </div>
               );
             })}
